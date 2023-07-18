@@ -36,6 +36,18 @@ impl SbmlDocument {
         }
     }
 
+    pub fn write_path(&self, path: &str) {
+        // TODO: Error handling
+        let doc = self.xml.read().unwrap();
+        doc.write_file(path).unwrap();
+    }
+
+    pub fn to_xml_string(&self) -> String {
+        // TODO: Error handling?
+        let doc = self.xml.read().unwrap();
+        doc.write_str().unwrap()
+    }
+
     pub fn get_model(&self) -> SbmlModel {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
@@ -107,5 +119,12 @@ mod tests {
         assert_eq!("model_id", model.get_id().as_str());
         model.set_id("model_6431");
         assert_eq!("model_6431", model.get_id().as_str());
+        std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
+        doc.write_path("test-inputs/model-modified.sbml");
+        let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml");
+        let model2 = doc2.get_model();
+        assert_eq!(model.get_id(), model2.get_id());
+        assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
+        std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
     }
 }
