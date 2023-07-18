@@ -6,4 +6,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xml-doc = "0.2.0"
+xml-doc = { git = "https://github.com/daemontus/xml-doc" }
