@@ -18,12 +18,12 @@ pub trait SBase {
     fn get_sboterm(&self) -> Option<String>;
     fn get_notes(&self) -> Option<String>;
     fn get_annotation(&self) -> Option<String>;
-    fn set_id(&self, id: String) -> ();
-    fn set_name(&self, name: String) -> ();
-    fn set_metaid(&self, metaid: String) -> ();
-    fn set_sboterm(&self, sboterm: String) -> ();
-    fn set_notes(&self, notes: String) -> ();
-    fn set_annotation(&self, annotation: String) -> ();
+    fn set_id(&self, value: String) -> ();
+    fn set_name(&self, value: String) -> ();
+    fn set_metaid(&self, value: String) -> ();
+    fn set_sboterm(&self, value: String) -> ();
+    fn set_notes(&self, value: String) -> ();
+    fn set_annotation(&self, value: String) -> ();
 }
 
 /// The object that "wraps" an XML document in a SBML-specific API.
@@ -74,6 +74,25 @@ pub struct SbmlModel {
     element: Element,
     units: SbmlModelUnits,
     lists: SbmlModelLists,
+}
+
+impl SBase for SbmlModel {
+    fn get_id(&self) -> Option<String> {
+        let xml = self.xml.read().unwrap();
+        // Unfortunately, here the reference returned by the `attribute` function is only
+        // valid for as long as the `xml` document is locked. Hence we can't return it,
+        // because once this function completes, the lock is released and the reference becomes
+        // unsafe to access. We thus have to copy the contents of the string using `to_string`.
+        match self.element.attribute(xml.deref(), "id") {
+            Some(str) => Some(str.to_string()),
+            None => None,
+        }
+    }
+
+    fn set_id(&self, value: String) -> () {
+        let mut xml = self.xml.write().unwrap();
+        self.element.set_attribute(xml.deref_mut(), "id", value);
+    }
 }
 
 impl SbmlDocument {
