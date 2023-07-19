@@ -9,6 +9,23 @@ use xml_doc::{Document, Element};
 /// of Rust's borrow checker capabilities.
 type XmlDocument = Arc<RwLock<Document>>;
 
+/// Abstract class SBase that is the parent of most of the elements in SBML.
+/// Thus there is no need to implement concrete strucutre.
+pub trait SBase {
+    fn get_id(&self) -> Option<String>;
+    fn get_name(&self) -> Option<String>;
+    fn get_metaid(&self) -> Option<String>;
+    fn get_sboterm(&self) -> Option<String>;
+    fn get_notes(&self) -> Option<String>;
+    fn get_annotation(&self) -> Option<String>;
+    fn set_id(&self, id: String) -> ();
+    fn set_name(&self, name: String) -> ();
+    fn set_metaid(&self, metaid: String) -> ();
+    fn set_sboterm(&self, sboterm: String) -> ();
+    fn set_notes(&self, notes: String) -> ();
+    fn set_annotation(&self, annotation: String) -> ();
+}
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
@@ -17,6 +34,9 @@ type XmlDocument = Arc<RwLock<Document>>;
 #[derive(Clone, Debug)]
 pub struct SbmlDocument {
     xml: XmlDocument,
+    xmlns: String,
+    level: u32,
+    version: u32,
 }
 
 /// A type-safe representation of an SBML `model` element.
@@ -27,25 +47,72 @@ pub struct SbmlModel {
 }
 
 impl SbmlDocument {
-    pub fn read_path(path: &str) -> SbmlDocument {
-        // TODO: Error handling
-        let file_contents = std::fs::read_to_string(path).unwrap();
-        let doc = Document::from_str(file_contents.as_str()).unwrap();
-        SbmlDocument {
+    pub fn read_path(path: &str) -> Result<SbmlDocument, String> {
+        let file_contents = match std::fs::read_to_string(path) {
+            Ok(file_contents) => file_contents,
+            Err(why) => return Err(why.to_string()),
+        };
+        let doc = match Document::from_str(file_contents.as_str()) {
+            Ok(doc) => doc,
+            Err(why) => return Err(why.to_string()),
+        };
+        let sbml_element = match doc.root_element() {
+            None => return Err("No root <sbml> element present.".to_string()),
+            Some(element) => element,
+        };
+        let xmlns = match sbml_element.namespace_decls(&doc).get("") {
+            Some(xmlns) => xmlns.to_string(),
+            None => {
+                return Err("No xmlns namespace attribute present in <sbml> element".to_string())
+            }
+        };
+        let level: u32 = match sbml_element.attribute(&doc, "level") {
+            None => {
+                return Err("<sbml> element does not contain info about level used.".to_string())
+            }
+            Some(level) => match level.parse() {
+                Ok(number) => number,
+                Err(why) => return Err(why.to_string()), // more specific error message needed ?
+            },
+        };
+        let version: u32 = match sbml_element.attribute(&doc, "version") {
+            None => {
+                return Err("<sbml> element does not contain info about version used.".to_string())
+            }
+            Some(version) => match version.parse() {
+                Ok(number) => number,
+                Err(why) => return Err(why.to_string()), // more specific error message needed ?
+            },
+        };
+
+        Ok(SbmlDocument {
             xml: Arc::new(RwLock::new(doc)),
+            xmlns,
+            level,
+            version,
+        })
+    }
+
+    pub fn write_path(&self, path: &str) -> Result<(), String> {
+        let doc = match self.xml.read() {
+            Ok(doc) => doc,
+            Err(why) => return Err(why.to_string()),
+        };
+        match doc.write_file(path) {
+            Ok(()) => Ok(()),
+            Err(why) => return Err(why.to_string()),
         }
     }
 
-    pub fn write_path(&self, path: &str) {
-        // TODO: Error handling
-        let doc = self.xml.read().unwrap();
-        doc.write_file(path).unwrap();
-    }
-
-    pub fn to_xml_string(&self) -> String {
-        // TODO: Error handling?
-        let doc = self.xml.read().unwrap();
-        doc.write_str().unwrap()
+    pub fn to_xml_string(&self) -> Result<String, String> {
+        let doc = match self.xml.read() {
+            Ok(doc) => doc,
+            Err(why) => return Err(why.to_string()),
+        };
+        match doc.write_str() {
+            Ok(str) => Ok(str),
+            Err(why) => return Err(why.to_string()),
+        }
     }
 
     pub fn get_model(&self) -> SbmlModel {
@@ -114,14 +181,14 @@ mod tests {
 
     #[test]
     pub fn test_model_id() {
-        let doc = SbmlDocument::read_path("test-inputs/model.sbml");
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
         let model = doc.get_model();
         assert_eq!("model_id", model.get_id().as_str());
         model.set_id("model_6431");
         assert_eq!("model_6431", model.get_id().as_str());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml");
-        let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml");
+        let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
         let model2 = doc2.get_model();
         assert_eq!(model.get_id(), model2.get_id());
         assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
