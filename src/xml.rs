@@ -124,7 +124,7 @@ pub struct XmlList<Type: From<XmlElement> + XmlWrapper> {
     // However, it is still a relatively common use case for generic collections like this one.
     // So they allow to specify that the type *should* be unused by using this special
     // `PhantomData` type that actually stores nothing.
-    _marker: PhantomData<Type>
+    _marker: PhantomData<Type>,
 }
 
 /// Any [XmlList] type can be constructed from any [XmlElement]. The correctness of this
@@ -147,7 +147,10 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlWrapper for XmlList<Type> {
 //  idea how error handling will look like.
 impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     pub fn new(element: XmlElement) -> Self {
-        XmlList { element, _marker: PhantomData::default() }
+        XmlList {
+            element,
+            _marker: PhantomData::default(),
+        }
     }
 
     /// Get the element of this list at position `index`.
