@@ -1,4 +1,4 @@
-use crate::xml::{XmlDocument, XmlElement, XmlWrapper};
+use crate::xml::{XmlDocument, XmlElement, XmlList, XmlWrapper};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
@@ -155,6 +155,38 @@ impl XmlWrapper for SbmlModel {
 
 /// Adds the default implementation of [SBase] to the [SbmlModel].
 impl SBaseDefault for SbmlModel {}
+
+#[derive(Clone, Debug)]
+pub struct SbmlFunctionDefinition {
+    xml: XmlElement,
+}
+
+impl XmlWrapper for SbmlFunctionDefinition {
+    fn as_xml(&self) -> &XmlElement {
+        &self.xml
+    }
+}
+
+impl From<XmlElement> for SbmlFunctionDefinition {
+    fn from(xml: XmlElement) -> Self {
+        SbmlFunctionDefinition { xml }
+    }
+}
+
+/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
+impl SBaseDefault for SbmlFunctionDefinition {}
+
+impl SbmlModel {
+    pub fn get_function_definitions(&self) -> XmlList<SbmlFunctionDefinition> {
+        let list_element = {
+            let xml = self.read_doc();
+            self.element()
+                .find(xml.deref(), "ListOfFunctionDefinitions")
+                .unwrap()
+        };
+        XmlList::from(self.as_xml().derive(list_element))
+    }
+}
 
 impl SbmlDocument {
     pub fn read_path(path: &str) -> Result<SbmlDocument, String> {
