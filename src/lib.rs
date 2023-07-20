@@ -1,16 +1,15 @@
+use crate::xml::{XmlDocument, XmlElement, XmlWrapper};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use xml_doc::{Document, Element};
+use xml_doc::Document;
 
-/// A type alias which defines `XmlDocument` as a `xml_doc::Document` object
-/// that is wrapped in a reference-counted read-write lock. This makes the
-/// document (1) thread safe for parallel computing and (2) memory safe outside
-/// of Rust's borrow checker capabilities.
-type XmlDocument = Arc<RwLock<Document>>;
+/// A module with useful types that are not directly part of the SBML specification, but help
+/// us work with XML documents in a sane and safe way.
+pub mod xml;
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
-/// Thus there is no need to implement concrete strucutre.
+/// Thus there is no need to implement concrete structure.
 pub trait SBase {
     fn get_id(&self) -> Option<String>;
     fn get_name(&self) -> Option<String>;
@@ -24,6 +23,79 @@ pub trait SBase {
     fn set_sboterm(&self, value: String) -> ();
     fn set_notes(&self, value: String) -> ();
     fn set_annotation(&self, value: String) -> ();
+}
+
+/// A trait implemented by types that should implement [SBase] using the default functionality
+/// provided by the [XmlWrapper] trait.
+///
+/// This is a so-called "marker trait". On its own, it does nothing. However, it is used as
+/// a "marker" for the compiler to indicate that we want something to only hold for types
+/// where we explicitly include this trait.
+///
+/// The trait itself does not need to be public as long as [SBase] itself is public. However,
+/// we could make it public if we wanted to enable other libraries to use the default [SBase]
+/// implementation (e.g. if we wanted to implement SBML extensions as separate libraries and still
+/// allow them to implement [SBase] the "default" way).
+trait SBaseDefault {}
+
+/// A generic "default" implementation of [SBase] for any type that implements both
+/// [XmlWrapper] and [SBaseDefault].
+impl<T: SBaseDefault + XmlWrapper> SBase for T {
+    fn get_id(&self) -> Option<String> {
+        let doc = self.read_doc();
+        // Unfortunately, here the reference returned by the `attribute` function is only
+        // valid for as long as the `xml` document is locked. Hence we can't return it,
+        // because once this function completes, the lock is released and the reference becomes
+        // unsafe to access. We thus have to copy the contents of the string using `to_string`.
+        self.element()
+            .attribute(doc.deref(), "id")
+            .map(|it| it.to_string())
+    }
+
+    fn get_name(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn get_metaid(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn get_sboterm(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn get_notes(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn get_annotation(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn set_id(&self, value: String) -> () {
+        let mut doc = self.write_doc();
+        self.element().set_attribute(doc.deref_mut(), "id", value);
+    }
+
+    fn set_name(&self, value: String) -> () {
+        todo!()
+    }
+
+    fn set_metaid(&self, value: String) -> () {
+        todo!()
+    }
+
+    fn set_sboterm(&self, value: String) -> () {
+        todo!()
+    }
+
+    fn set_notes(&self, value: String) -> () {
+        todo!()
+    }
+
+    fn set_annotation(&self, value: String) -> () {
+        todo!()
+    }
 }
 
 /// The object that "wraps" an XML document in a SBML-specific API.
@@ -70,30 +142,19 @@ struct SbmlModelLists {
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug)]
 pub struct SbmlModel {
-    xml: XmlDocument,
-    element: Element,
+    xml: XmlElement,
     units: SbmlModelUnits,
     lists: SbmlModelLists,
 }
 
-impl SBase for SbmlModel {
-    fn get_id(&self) -> Option<String> {
-        let xml = self.xml.read().unwrap();
-        // Unfortunately, here the reference returned by the `attribute` function is only
-        // valid for as long as the `xml` document is locked. Hence we can't return it,
-        // because once this function completes, the lock is released and the reference becomes
-        // unsafe to access. We thus have to copy the contents of the string using `to_string`.
-        match self.element.attribute(xml.deref(), "id") {
-            Some(str) => Some(str.to_string()),
-            None => None,
-        }
-    }
-
-    fn set_id(&self, value: String) -> () {
-        let mut xml = self.xml.write().unwrap();
-        self.element.set_attribute(xml.deref_mut(), "id", value);
+impl XmlWrapper for SbmlModel {
+    fn as_xml(&self) -> &XmlElement {
+        &self.xml
     }
 }
+
+/// Adds the default implementation of [SBase] to the [SbmlModel].
+impl SBaseDefault for SbmlModel {}
 
 impl SbmlDocument {
     pub fn read_path(path: &str) -> Result<SbmlDocument, String> {
@@ -193,52 +254,26 @@ impl SbmlDocument {
             // Due to the reference-counting implemented in `Arc`, this does not actually create
             // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
             // same underlying document object.
-            xml: self.xml.clone(),
-            element: model_element,
+            xml: XmlElement::new(self.xml.clone(), model_element),
             units: Default::default(),
             lists: Default::default(),
         }
     }
 }
 
-impl SbmlModel {
-    pub fn get_id(&self) -> String {
-        let xml = self.xml.read().unwrap();
-        // Unfortunately, here the reference returned by the `attribute` function is only
-        // valid for as long as the `xml` document is locked. Hence we can't return it,
-        // because once this function completes, the lock is released and the reference becomes
-        // unsafe to access. We thus have to copy the contents of the string using `to_string`.
-        self.element
-            .attribute(xml.deref(), "id")
-            .unwrap()
-            .to_string()
-    }
-
-    pub fn set_id(&self, value: &str) {
-        // Here, we are locking for writing. Note that we don't need a `&mut self` reference for
-        // this, because this "bypasses" normal borrow checker rules. So we can safely create
-        // a mutable reference and the caller of this function does not have to care if his
-        // reference to the document is mutable or not (that's the primary purpose of the RwLock,
-        // because to pass the borrow checker rules, all data shared between threads must be
-        // "read only"; in this way, we can make a "read only" object that has internal mutability).
-        let mut xml = self.xml.write().unwrap();
-        self.element.set_attribute(xml.deref_mut(), "id", value);
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::SbmlDocument;
+    use crate::{SBase, SbmlDocument};
 
     #[test]
     pub fn test_model_id() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
         let model = doc.get_model();
-        assert_eq!("model_id", model.get_id().as_str());
-        model.set_id("model_6431");
-        assert_eq!("model_6431", model.get_id().as_str());
+        assert_eq!("model_id", model.get_id().unwrap().as_str());
+        model.set_id("model_6431".to_string());
+        assert_eq!("model_6431", model.get_id().unwrap().as_str());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
-        doc.write_path("test-inputs/model-modified.sbml");
+        doc.write_path("test-inputs/model-modified.sbml").unwrap();
         let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
         let model2 = doc2.get_model();
         assert_eq!(model.get_id(), model2.get_id());
