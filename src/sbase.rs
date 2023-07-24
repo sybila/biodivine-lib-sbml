@@ -16,7 +16,7 @@ pub trait SBase {
     fn set_name(&self, value: String) -> ();
     fn set_metaid(&self, value: String) -> ();
     fn set_sboterm(&self, value: String) -> ();
-    fn set_notes(&self, value: String) -> ();
+    fn set_notes(&self, value: Element) -> ();
     fn set_annotation(&self, value: String) -> ();
 }
 
@@ -100,8 +100,15 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
             .set_attribute(doc.deref_mut(), "sboTerm", value);
     }
 
-    fn set_notes(&self, value: String) -> () {
-        todo!()
+    fn set_notes(&self, value: Element) -> () {
+        let mut doc = self.write_doc();
+        match self.get_notes() {
+            Some(notes) => {
+                notes.detatch(doc.deref_mut()).unwrap();
+            }
+            None => (),
+        };
+        self.element().push_child(doc.deref_mut(), value.as_node()).unwrap()
     }
 
     fn set_annotation(&self, value: String) -> () {
