@@ -1,3 +1,5 @@
+use xml_doc::Element;
+
 use crate::xml::XmlWrapper;
 use std::ops::{Deref, DerefMut};
 
@@ -8,7 +10,7 @@ pub trait SBase {
     fn get_name(&self) -> Option<String>;
     fn get_metaid(&self) -> Option<String>;
     fn get_sboterm(&self) -> Option<String>;
-    fn get_notes(&self) -> Option<String>;
+    fn get_notes(&self) -> Option<Element>;
     fn get_annotation(&self) -> Option<String>;
     fn set_id(&self, value: String) -> ();
     fn set_name(&self, value: String) -> ();
@@ -66,8 +68,9 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
             .map(|it| it.to_string())
     }
 
-    fn get_notes(&self) -> Option<String> {
-        todo!()
+    fn get_notes(&self) -> Option<Element> {
+        let doc = self.read_doc();
+        self.element().find(doc.deref(), "notes")
     }
 
     fn get_annotation(&self) -> Option<String> {
