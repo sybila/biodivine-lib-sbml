@@ -136,9 +136,6 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
 #[derive(Clone, Debug)]
 pub struct SbmlDocument {
     xml: XmlDocument,
-    xmlns: String,
-    level: u32,
-    version: u32,
 }
 
 /// Representation of all optional unit definitions + conversion factor of SBML model
@@ -228,40 +225,8 @@ impl SbmlDocument {
             Ok(doc) => doc,
             Err(why) => return Err(why.to_string()),
         };
-        let sbml_element = match doc.root_element() {
-            None => return Err("No root <sbml> element present.".to_string()),
-            Some(element) => element,
-        };
-        let xmlns = match sbml_element.namespace_decls(&doc).get("") {
-            Some(xmlns) => xmlns.to_string(),
-            None => {
-                return Err("No xmlns namespace attribute present in <sbml> element".to_string())
-            }
-        };
-        let level: u32 = match sbml_element.attribute(&doc, "level") {
-            None => {
-                return Err("<sbml> element does not contain info about level used.".to_string())
-            }
-            Some(level) => match level.parse() {
-                Ok(number) => number,
-                Err(why) => return Err(why.to_string()), // more specific error message needed ?
-            },
-        };
-        let version: u32 = match sbml_element.attribute(&doc, "version") {
-            None => {
-                return Err("<sbml> element does not contain info about version used.".to_string())
-            }
-            Some(version) => match version.parse() {
-                Ok(number) => number,
-                Err(why) => return Err(why.to_string()), // more specific error message needed ?
-            },
-        };
-
         Ok(SbmlDocument {
             xml: Arc::new(RwLock::new(doc)),
-            xmlns,
-            level,
-            version,
         })
     }
 
@@ -324,7 +289,12 @@ impl SbmlDocument {
 
     pub fn get_xmlns(&self) -> Result<String, String> {
         let doc = self.xml.read().unwrap();
-        match doc.root_element().unwrap().namespace_decls(doc.deref()).get("") {
+        match doc
+            .root_element()
+            .unwrap()
+            .namespace_decls(doc.deref())
+            .get("")
+        {
             Some(xmlns) => Ok(xmlns.to_string()),
             None => return Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
         }
@@ -340,7 +310,11 @@ impl SbmlDocument {
 
     pub fn get_version(&self) -> Result<u32, String> {
         let doc = self.xml.read().unwrap();
-        match doc.root_element().unwrap().attribute(doc.deref(), "version") {
+        match doc
+            .root_element()
+            .unwrap()
+            .attribute(doc.deref(), "version")
+        {
             Some(level) => Ok(level.parse().unwrap()),
             None => return Err("Required attribute \"version\" not specified.".to_string()),
         }
