@@ -322,14 +322,13 @@ impl SbmlDocument {
         }
     }
 
-    pub fn get_xmlns(&self) -> String {
+    pub fn get_xmlns(&self) -> Result<String, String> {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().namespace_decls(doc.deref()).get("") {
-            Some(xmlns) => xmlns.to_string(),
-            None => panic!("Required namespace xmlns not specified."),
+            Some(xmlns) => Ok(xmlns.to_string()),
+            None => return Err("Required namespace xmlns not specified.".to_string()),
         }
     }
-    
 }
 
 #[cfg(test)]
