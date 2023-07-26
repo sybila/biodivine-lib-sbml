@@ -53,7 +53,10 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
     }
 
     fn get_name(&self) -> Option<String> {
-        todo!()
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "name")
+            .map(|it| it.to_string())
     }
 
     fn get_metaid(&self) -> Option<String> {
