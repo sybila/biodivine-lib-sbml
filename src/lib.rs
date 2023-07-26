@@ -321,6 +321,15 @@ impl SbmlDocument {
             lists: Default::default(),
         }
     }
+
+    pub fn get_xmlns(&self) -> String {
+        let doc = self.xml.read().unwrap();
+        match doc.root_element().unwrap().namespace_decls(doc.deref()).get("") {
+            Some(xmlns) => xmlns.to_string(),
+            None => panic!("Required namespace xmlns not specified."),
+        }
+    }
+    
 }
 
 #[cfg(test)]
