@@ -2,7 +2,7 @@ use crate::xml::{XmlDocument, XmlElement, XmlList, XmlWrapper};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use xml_doc::Document;
+use xml_doc::{Document, Element};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way.
@@ -15,7 +15,7 @@ pub trait SBase {
     fn get_name(&self) -> Option<String>;
     fn get_metaid(&self) -> Option<String>;
     fn get_sboterm(&self) -> Option<String>;
-    fn get_notes(&self) -> Option<String>;
+    fn get_notes(&self) -> Option<Element>;
     fn get_annotation(&self) -> Option<String>;
     fn set_id(&self, value: String) -> ();
     fn set_name(&self, value: String) -> ();
@@ -73,8 +73,9 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
             .map(|it| it.to_string())
     }
 
-    fn get_notes(&self) -> Option<String> {
-        todo!()
+    fn get_notes(&self) -> Option<Element> {
+        let doc = self.read_doc();
+        self.element().find(doc.deref(), "notes")
     }
 
     fn get_annotation(&self) -> Option<String> {
