@@ -326,7 +326,7 @@ impl SbmlDocument {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().namespace_decls(doc.deref()).get("") {
             Some(xmlns) => Ok(xmlns.to_string()),
-            None => return Err("Required attribute namespace xmlns not specified.".to_string()),
+            None => return Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
         }
     }
 
@@ -334,7 +334,15 @@ impl SbmlDocument {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().attribute(doc.deref(), "level") {
             Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute level not specified.".to_string()),
+            None => return Err("Required attribute \"level\" not specified.".to_string()),
+        }
+    }
+
+    pub fn get_version(&self) -> Result<u32, String> {
+        let doc = self.xml.read().unwrap();
+        match doc.root_element().unwrap().attribute(doc.deref(), "version") {
+            Some(level) => Ok(level.parse().unwrap()),
+            None => return Err("Required attribute \"version\" not specified.".to_string()),
         }
     }
 }
