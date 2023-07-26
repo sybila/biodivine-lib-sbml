@@ -90,11 +90,13 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
 
     fn set_name(&self, value: String) -> () {
         let mut doc = self.write_doc();
-        self.element().set_attribute(doc.deref_mut(), "name", value); 
+        self.element().set_attribute(doc.deref_mut(), "name", value);
     }
 
     fn set_metaid(&self, value: String) -> () {
-        todo!()
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), "metaid", value);
     }
 
     fn set_sboterm(&self, value: String) -> () {
