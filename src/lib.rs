@@ -16,7 +16,7 @@ pub trait SBase {
     fn get_metaid(&self) -> Option<String>;
     fn get_sboterm(&self) -> Option<String>;
     fn get_notes(&self) -> Option<Element>;
-    fn get_annotation(&self) -> Option<String>;
+    fn get_annotation(&self) -> Option<Element>;
     fn set_id(&self, value: String) -> ();
     fn set_name(&self, value: String) -> ();
     fn set_metaid(&self, value: String) -> ();
@@ -78,8 +78,9 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
         self.element().find(doc.deref(), "notes")
     }
 
-    fn get_annotation(&self) -> Option<String> {
-        todo!()
+    fn get_annotation(&self) -> Option<Element> {
+        let doc = self.read_doc();
+        self.element().find(doc.deref(), "annotation")
     }
 
     fn set_id(&self, value: String) -> () {
