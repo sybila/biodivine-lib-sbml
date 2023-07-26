@@ -22,7 +22,7 @@ pub trait SBase {
     fn set_metaid(&self, value: String) -> ();
     fn set_sboterm(&self, value: String) -> ();
     fn set_notes(&self, value: Element) -> ();
-    fn set_annotation(&self, value: String) -> ();
+    fn set_annotation(&self, value: Element) -> ();
 }
 
 /// A trait implemented by types that should implement [SBase] using the default functionality
@@ -109,12 +109,22 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
         let mut doc = self.write_doc();
         match &self.element().find(doc.deref(), "notes") {
             Some(mut _notes) => _notes = value, // valid ?
-            None => self.element().push_child(doc.deref_mut(), value.as_node()).unwrap(),
+            None => self
+                .element()
+                .push_child(doc.deref_mut(), value.as_node())
+                .unwrap(),
         }
     }
 
-    fn set_annotation(&self, value: String) -> () {
-        todo!()
+    fn set_annotation(&self, value: Element) -> () {
+        let mut doc = self.write_doc();
+        match &self.element().find(doc.deref(), "annotation") {
+            Some(mut _annotation) => _annotation = value, // valid ?
+            None => self
+                .element()
+                .push_child(doc.deref_mut(), value.as_node())
+                .unwrap(),
+        }
     }
 }
 
