@@ -88,6 +88,11 @@ pub trait XmlWrapper {
             .write()
             .expect("Underlying document lock is corrupted. Cannot recover.")
     }
+
+    fn child_element(&self, name: &str) -> Element {
+        self.element().find(self.read_doc().deref(), name).unwrap()
+        
+    }
 }
 
 /// Implements a wrapper for XML elements that represent a typed list. That is, their child nodes
