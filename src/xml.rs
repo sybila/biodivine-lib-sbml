@@ -187,4 +187,10 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         let removed = self.as_xml().derive(removed);
         Type::from(removed)
     }
+
+    /// Get number of elements contained in the list
+    pub fn len(&self) -> usize {
+        let doc = self.read_doc();
+        self.element().child_elements(doc.deref()).len()
+    }
 }
