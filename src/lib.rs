@@ -170,6 +170,22 @@ impl From<XmlElement> for SbmlFunctionDefinition {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct SbmlUnitDefinition {
+    xml: XmlElement,
+}
+
+impl XmlWrapper for SbmlUnitDefinition {
+    fn as_xml(&self) -> &XmlElement {
+        &self.xml
+    }
+}
+
+impl From<XmlElement> for SbmlUnitDefinition {
+    fn from(xml: XmlElement) -> Self {
+        SbmlUnitDefinition { xml }
+    }
+}
 /// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
 impl SBaseDefault for SbmlFunctionDefinition {}
 
@@ -182,6 +198,11 @@ impl SbmlModel {
                 .unwrap()
         };
         XmlList::from(self.as_xml().derive(list_element))
+    }
+
+    pub fn get_unit_definitions(&self) -> XmlList<SbmlUnitDefinition> {
+        let list = self.child_element("ListOfUnitDefinitions");
+        XmlList::from(self.as_xml().derive(list))
     }
 }
 
