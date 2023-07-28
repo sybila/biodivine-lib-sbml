@@ -138,40 +138,10 @@ pub struct SbmlDocument {
     xml: XmlDocument,
 }
 
-/// Representation of all optional unit definitions + conversion factor of SBML model
-#[derive(Clone, Debug, Default)]
-struct SbmlModelUnits {
-    // use enums of recommended units + functions to map values to string ?
-    substance_units: Option<String>,
-    time_units: Option<String>,
-    volume_units: Option<String>,
-    area_units: Option<String>,
-    length_units: Option<String>,
-    extent_units: Option<String>,
-    conversion_factor: Option<String>, // use of enum also possible here ?
-}
-
-/// Representation of all optional list of SBML model
-#[derive(Clone, Debug, Default)]
-struct SbmlModelLists {
-    function_definitions: Option<Vec<()>>, // TODO: define type for individial function def
-    unit_definitions: Option<Vec<()>>,     // TODO: define type for individual unit def
-    compartments: Option<Vec<()>>,         // TODO: define type for individual compartment
-    species: Option<Vec<()>>,              // TODO: define type for individial specie
-    parameters: Option<Vec<()>>,           // TODO: define type for individual parameter
-    initial_assignments: Option<Vec<()>>,  // TODO: define type for individual initial assignment
-    rules: Option<Vec<()>>,                // TODO: define type for individual rule
-    constraints: Option<Vec<()>>,          // TODO: define type for individual constraint
-    reactions: Option<Vec<()>>,            // TODO: define type for individual reaction
-    events: Option<Vec<()>>,               // TODO: define type for individual event
-}
-
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug)]
 pub struct SbmlModel {
-    xml: XmlElement,
-    units: SbmlModelUnits,
-    lists: SbmlModelLists,
+    xml: XmlElement
 }
 
 impl XmlWrapper for SbmlModel {
@@ -281,9 +251,7 @@ impl SbmlDocument {
             // Due to the reference-counting implemented in `Arc`, this does not actually create
             // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
             // same underlying document object.
-            xml: XmlElement::new(self.xml.clone(), model_element),
-            units: Default::default(),
-            lists: Default::default(),
+            xml: XmlElement::new(self.xml.clone(), model_element)
         }
     }
 
