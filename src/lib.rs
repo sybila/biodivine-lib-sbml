@@ -141,7 +141,7 @@ pub struct SbmlDocument {
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug)]
 pub struct SbmlModel {
-    xml: XmlElement
+    xml: XmlElement,
 }
 
 impl XmlWrapper for SbmlModel {
@@ -186,6 +186,47 @@ impl From<XmlElement> for SbmlUnitDefinition {
         SbmlUnitDefinition { xml }
     }
 }
+
+impl SbmlUnitDefinition {
+    pub fn get_units(&self) -> XmlList<Unit> {
+        let list = self.child_element("listOfUnits");
+        XmlList::from(self.as_xml().derive(list))
+    }
+}
+
+pub struct Unit {
+    xml: XmlElement,
+}
+
+impl XmlWrapper for Unit {
+    fn as_xml(&self) -> &XmlElement {
+        &self.xml
+    }
+}
+
+impl From<XmlElement> for Unit {
+    fn from(xml: XmlElement) -> Self {
+        Unit { xml }
+    }
+}
+
+impl Unit {
+    pub fn get_kind(&self) {
+        todo!()
+    }
+
+    pub fn get_exponent(&self) {
+        todo!()
+    }
+
+    pub fn get_scale(&self) {
+        todo!()
+    }
+
+    pub fn get_multiplier(&self) {
+        todo!()
+    }
+}
 /// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
 impl SBaseDefault for SbmlFunctionDefinition {}
 
@@ -194,14 +235,14 @@ impl SbmlModel {
         let list_element = {
             let xml = self.read_doc();
             self.element()
-                .find(xml.deref(), "ListOfFunctionDefinitions")
+                .find(xml.deref(), "listOfFunctionDefinitions")
                 .unwrap()
         };
         XmlList::from(self.as_xml().derive(list_element))
     }
 
     pub fn get_unit_definitions(&self) -> XmlList<SbmlUnitDefinition> {
-        let list = self.child_element("ListOfUnitDefinitions");
+        let list = self.child_element("listOfUnitDefinitions");
         XmlList::from(self.as_xml().derive(list))
     }
 }
@@ -272,7 +313,7 @@ impl SbmlDocument {
             // Due to the reference-counting implemented in `Arc`, this does not actually create
             // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
             // same underlying document object.
-            xml: XmlElement::new(self.xml.clone(), model_element)
+            xml: XmlElement::new(self.xml.clone(), model_element),
         }
     }
 
