@@ -1,6 +1,6 @@
-use crate::xml::{XmlDocument, XmlElement, XmlList, XmlWrapper};
-use crate::sbase::SBaseDefault;
-use std::ops::{Deref, DerefMut};
+use crate::model::SbmlModel;
+use crate::xml::{XmlDocument, XmlElement};
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use xml_doc::Document;
@@ -11,6 +11,8 @@ pub mod xml;
 
 pub mod sbase;
 
+pub mod model;
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
@@ -19,115 +21,6 @@ pub mod sbase;
 #[derive(Clone, Debug)]
 pub struct SbmlDocument {
     xml: XmlDocument,
-}
-
-/// A type-safe representation of an SBML <model> element.
-#[derive(Clone, Debug)]
-pub struct SbmlModel {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlModel {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-/// Adds the default implementation of [SBase] to the [SbmlModel].
-impl SBaseDefault for SbmlModel {}
-
-#[derive(Clone, Debug)]
-pub struct SbmlFunctionDefinition {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlFunctionDefinition {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for SbmlFunctionDefinition {
-    fn from(xml: XmlElement) -> Self {
-        SbmlFunctionDefinition { xml }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SbmlUnitDefinition {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlUnitDefinition {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for SbmlUnitDefinition {
-    fn from(xml: XmlElement) -> Self {
-        SbmlUnitDefinition { xml }
-    }
-}
-
-impl SbmlUnitDefinition {
-    pub fn get_units(&self) -> XmlList<Unit> {
-        let list = self.child_element("listOfUnits");
-        XmlList::from(self.as_xml().derive(list))
-    }
-}
-
-pub struct Unit {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for Unit {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for Unit {
-    fn from(xml: XmlElement) -> Self {
-        Unit { xml }
-    }
-}
-
-impl Unit {
-    pub fn get_kind(&self) {
-        todo!()
-    }
-
-    pub fn get_exponent(&self) {
-        todo!()
-    }
-
-    pub fn get_scale(&self) {
-        todo!()
-    }
-
-    pub fn get_multiplier(&self) {
-        todo!()
-    }
-}
-/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
-impl SBaseDefault for SbmlFunctionDefinition {}
-
-impl SbmlModel {
-    pub fn get_function_definitions(&self) -> XmlList<SbmlFunctionDefinition> {
-        let list_element = {
-            let xml = self.read_doc();
-            self.element()
-                .find(xml.deref(), "listOfFunctionDefinitions")
-                .unwrap()
-        };
-        XmlList::from(self.as_xml().derive(list_element))
-    }
-
-    pub fn get_unit_definitions(&self) -> XmlList<SbmlUnitDefinition> {
-        let list = self.child_element("listOfUnitDefinitions");
-        XmlList::from(self.as_xml().derive(list))
-    }
 }
 
 impl SbmlDocument {
@@ -192,12 +85,13 @@ impl SbmlDocument {
                 .unwrap()
         };
 
-        SbmlModel {
-            // Due to the reference-counting implemented in `Arc`, this does not actually create
-            // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
-            // same underlying document object.
-            xml: XmlElement::new(self.xml.clone(), model_element),
-        }
+        SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
+        // SbmlModel {
+        //     // Due to the reference-counting implemented in `Arc`, this does not actually create
+        //     // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
+        //     // same underlying document object.
+        //     xml: XmlElement::new(self.xml.clone(), model_element),
+        // }
     }
 
     pub fn get_xmlns(&self) -> Result<String, String> {
