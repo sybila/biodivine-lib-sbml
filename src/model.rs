@@ -13,6 +13,8 @@ pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
 #[child(listOfUnitDefinitions : XmlList<SbmlUnitDefinition>)]
 pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
+/// Public functions to manipulate with the contents of [SbmlModel]
+/// i.e., optional lists inside SBML model + constructor new() 
 impl SbmlModel {
     pub fn new(xml: XmlElement) -> SbmlModel {
         SbmlModel::from(xml)
