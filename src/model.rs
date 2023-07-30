@@ -255,4 +255,11 @@ impl Compartment {
         self.element()
             .set_attribute(doc.deref_mut(), "exponent", value)
     }
+
+    /// pass Integer (and convert) or String as a value for numeric attributes ?
+    pub fn set_scale(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), "scale", value)
+    }
 }
