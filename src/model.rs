@@ -249,10 +249,10 @@ impl Compartment {
             .map(|it| it.to_string())
     }
 
-    /// In following 3 functions: 
-    /// pass an Integer (and convert) or a String as the value for numeric attributes ?
-    /// If we choose passing a String, then perform input-check or assume valid input
-    /// and leave any invalid values to be detected by some validator ?
+    /// In following 3 functions:
+    ///     - Pass an Integer (and convert) or a String as the value for numeric attributes ?
+    ///     - If we choose passing a String, then perform input-check or assume valid input
+    ///       and leave any invalid values to be detected by some validator ?
     pub fn set_exponent(&self, value: &String) {
         let mut doc = self.write_doc();
         self.element()
