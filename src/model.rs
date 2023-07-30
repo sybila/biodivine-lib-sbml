@@ -14,6 +14,12 @@ impl XmlWrapper for SbmlModel {
     }
 }
 
+impl From<XmlElement> for SbmlModel {
+    fn from(xml: XmlElement) -> Self {
+        SbmlModel { xml }
+    }
+}
+
 /// Adds the default implementation of [SBase] to the [SbmlModel].
 /// Allows to get/set id, name, etc. of [SbmlModel]
 impl SBaseDefault for SbmlModel {}
@@ -60,6 +66,8 @@ impl From<XmlElement> for SbmlFunctionDefinition {
     }
 }
 
+impl SBaseDefault for SbmlFunctionDefinition {}
+
 /// 2.) Unit definition data type
 #[derive(Clone, Debug)]
 pub struct SbmlUnitDefinition {
@@ -77,6 +85,8 @@ impl From<XmlElement> for SbmlUnitDefinition {
         SbmlUnitDefinition { xml }
     }
 }
+
+impl SBaseDefault for SbmlUnitDefinition {}
 
 impl SbmlUnitDefinition {
     /// Get inner list of [Unit] elements.
@@ -102,6 +112,8 @@ impl From<XmlElement> for Unit {
         Unit { xml }
     }
 }
+
+impl SBaseDefault for Unit {}
 
 impl Unit {
     /// TODO: create an enum of reserved words for a [kind] and make it a return type (documentation p. 43)
@@ -168,5 +180,3 @@ impl Unit {
             .set_attribute(doc.deref_mut(), "multiplier", value)
     }
 }
-/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
-impl SBaseDefault for SbmlFunctionDefinition {}
