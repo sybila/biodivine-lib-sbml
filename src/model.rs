@@ -1,6 +1,6 @@
-use std::ops::Deref;
-use crate::xml::{XmlElement, XmlWrapper, XmlList};
 use crate::sbase::SBaseDefault;
+use crate::xml::{XmlElement, XmlList, XmlWrapper};
+use std::ops::Deref;
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug)]
@@ -19,7 +19,7 @@ impl XmlWrapper for SbmlModel {
 impl SBaseDefault for SbmlModel {}
 
 /// Public functions to manipulate with the contents of [SbmlModel]
-/// i.e., optional lists inside SBML model + constructor new() 
+/// i.e., optional lists inside SBML model + constructor new()
 impl SbmlModel {
     pub fn new(xml: XmlElement) -> SbmlModel {
         SbmlModel { xml }
@@ -60,7 +60,7 @@ impl From<XmlElement> for SbmlFunctionDefinition {
     }
 }
 
-/// 2.) Unit definition data type 
+/// 2.) Unit definition data type
 #[derive(Clone, Debug)]
 pub struct SbmlUnitDefinition {
     xml: XmlElement,
@@ -104,23 +104,43 @@ impl From<XmlElement> for Unit {
 }
 
 impl Unit {
+    /// TODO: create an enum of reserved words for a kind and make it a return type (documentation p. 43)
     pub fn get_kind(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "kind").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "kind")
+            .unwrap()
+            .to_string()
     }
 
+    /// return String or integer when numeric values ?
+    /// probably required attribute
     pub fn get_exponent(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "exponent").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "exponent")
+            .unwrap()
+            .to_string()
     }
 
+    /// return String or integer when numeric values ?
+    /// probably required attribute
     pub fn get_scale(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "scale").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "scale")
+            .unwrap()
+            .to_string()
     }
 
-    pub fn get_multiplier(&self) {
-        todo!()
+    /// return String or integer when numeric values ?
+    /// probably required attribute
+    pub fn get_multiplier(&self) -> String {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "multiplier")
+            .unwrap()
+            .to_string()
     }
 }
 /// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
