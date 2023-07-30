@@ -42,7 +42,7 @@ impl SbmlModel {
     }
 }
 
-
+/// 1.) Function definition data type
 #[derive(Clone, Debug)]
 pub struct SbmlFunctionDefinition {
     xml: XmlElement,
@@ -60,6 +60,7 @@ impl From<XmlElement> for SbmlFunctionDefinition {
     }
 }
 
+/// 2.) Unit definition data type 
 #[derive(Clone, Debug)]
 pub struct SbmlUnitDefinition {
     xml: XmlElement,
@@ -78,12 +79,14 @@ impl From<XmlElement> for SbmlUnitDefinition {
 }
 
 impl SbmlUnitDefinition {
+    /// Get inner list of [Unit] elements.
     pub fn get_units(&self) -> XmlList<Unit> {
         let list = self.child_element("listOfUnits");
         XmlList::from(self.as_xml().derive(list))
     }
 }
 
+/// 2.1.) Unit data type
 pub struct Unit {
     xml: XmlElement,
 }
@@ -101,8 +104,9 @@ impl From<XmlElement> for Unit {
 }
 
 impl Unit {
-    pub fn get_kind(&self) {
-        todo!()
+    pub fn get_kind(&self) -> String {
+        let doc = self.read_doc();
+        self.element().attribute(doc.deref(), "kind").unwrap().to_string()
     }
 
     pub fn get_exponent(&self) {
