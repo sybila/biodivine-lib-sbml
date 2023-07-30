@@ -51,6 +51,7 @@ impl SbmlModel {
 }
 
 /// 1.) Function definition data type
+/// Rename to just "FunctionDefinition" in accordance with the documentation ?
 #[derive(Clone, Debug)]
 pub struct SbmlFunctionDefinition {
     xml: XmlElement,
@@ -91,6 +92,7 @@ impl SbmlFunctionDefinition {
     }
 }
 /// 2.) Unit definition data type
+/// Rename to just "UnitDefinition" in accordance with the documentation ?
 #[derive(Clone, Debug)]
 pub struct SbmlUnitDefinition {
     xml: XmlElement,
