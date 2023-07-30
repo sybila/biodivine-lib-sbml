@@ -117,5 +117,3 @@ impl Unit {
             .set_attribute(doc.deref_mut(), "multiplier", value)
     }
 }
-/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
-impl SBaseDefault for SbmlFunctionDefinition {}
