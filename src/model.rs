@@ -94,17 +94,25 @@ impl Unit {
         self.element().set_attribute(doc.deref_mut(), "kind", value)
     }
 
-    /// pass Integer (and convert) or String as a value for numeric attributes ?
+    /// In following 3 functions: 
+    /// pass an Integer (and convert) or a String as the value for numeric attributes ?
+    /// If we choose passing a String, then perform input-check or assume valid input
+    /// and leave any invalid values to be detected by some validator ?
     pub fn set_exponent(&self, value: &String) {
         let mut doc = self.write_doc();
         self.element()
             .set_attribute(doc.deref_mut(), "exponent", value)
     }
 
-    /// pass Integer (and convert) or String as a value for numeric attributes ?
     pub fn set_scale(&self, value: &String) {
         let mut doc = self.write_doc();
         self.element()
             .set_attribute(doc.deref_mut(), "scale", value)
+    }
+
+    pub fn set_multiplier(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), "multiplier", value)
     }
 }
