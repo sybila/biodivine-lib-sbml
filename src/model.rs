@@ -104,7 +104,7 @@ impl From<XmlElement> for Unit {
 }
 
 impl Unit {
-    /// TODO: create an enum of reserved words for a kind and make it a return type (documentation p. 43)
+    /// TODO: create an enum of reserved words for a [kind] and make it a return type (documentation p. 43)
     pub fn get_kind(&self) -> String {
         let doc = self.read_doc();
         self.element()
@@ -113,8 +113,9 @@ impl Unit {
             .to_string()
     }
 
-    /// return String or integer when numeric values ?
-    /// probably required attribute
+    /// In following 3 functions:
+    ///     - Return String or integer when numeric values ?
+    ///     - Probably required attributes
     pub fn get_exponent(&self) -> String {
         let doc = self.read_doc();
         self.element()
@@ -123,8 +124,6 @@ impl Unit {
             .to_string()
     }
 
-    /// return String or integer when numeric values ?
-    /// probably required attribute
     pub fn get_scale(&self) -> String {
         let doc = self.read_doc();
         self.element()
@@ -133,8 +132,6 @@ impl Unit {
             .to_string()
     }
 
-    /// return String or integer when numeric values ?
-    /// probably required attribute
     pub fn get_multiplier(&self) -> String {
         let doc = self.read_doc();
         self.element()
@@ -149,10 +146,10 @@ impl Unit {
         self.element().set_attribute(doc.deref_mut(), "kind", value)
     }
 
-    /// In following 3 functions: 
-    /// pass an Integer (and convert) or a String as the value for numeric attributes ?
-    /// If we choose passing a String, then perform input-check or assume valid input
-    /// and leave any invalid values to be detected by some validator ?
+    /// In following 3 functions:
+    ///     - Pass an Integer (and convert) or a String as the value for numeric attributes ?
+    ///     - If we choose passing a String, then perform input-check or assume valid input
+    ///       and leave any invalid values to be detected by some validator ?
     pub fn set_exponent(&self, value: &String) {
         let mut doc = self.write_doc();
         self.element()
