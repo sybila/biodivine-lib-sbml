@@ -1,6 +1,6 @@
-use crate::xml::{XmlDocument, XmlElement, XmlList, XmlWrapper};
-use crate::sbase::{SBase, SBaseDefault};
-use std::ops::{Deref, DerefMut};
+use crate::model::SbmlModel;
+use crate::xml::{XmlDocument, XmlElement};
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use xml_doc::Document;
@@ -8,7 +8,10 @@ use xml_doc::Document;
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way.
 pub mod xml;
+
 pub mod sbase;
+
+pub mod model;
 
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
@@ -18,86 +21,6 @@ pub mod sbase;
 #[derive(Clone, Debug)]
 pub struct SbmlDocument {
     xml: XmlDocument,
-    xmlns: String,
-    level: u32,
-    version: u32,
-}
-
-/// Representation of all optional unit definitions + conversion factor of SBML model
-#[derive(Clone, Debug, Default)]
-struct SbmlModelUnits {
-    // use enums of recommended units + functions to map values to string ?
-    substance_units: Option<String>,
-    time_units: Option<String>,
-    volume_units: Option<String>,
-    area_units: Option<String>,
-    length_units: Option<String>,
-    extent_units: Option<String>,
-    conversion_factor: Option<String>, // use of enum also possible here ?
-}
-
-/// Representation of all optional list of SBML model
-#[derive(Clone, Debug, Default)]
-struct SbmlModelLists {
-    function_definitions: Option<Vec<()>>, // TODO: define type for individial function def
-    unit_definitions: Option<Vec<()>>,     // TODO: define type for individual unit def
-    compartments: Option<Vec<()>>,         // TODO: define type for individual compartment
-    species: Option<Vec<()>>,              // TODO: define type for individial specie
-    parameters: Option<Vec<()>>,           // TODO: define type for individual parameter
-    initial_assignments: Option<Vec<()>>,  // TODO: define type for individual initial assignment
-    rules: Option<Vec<()>>,                // TODO: define type for individual rule
-    constraints: Option<Vec<()>>,          // TODO: define type for individual constraint
-    reactions: Option<Vec<()>>,            // TODO: define type for individual reaction
-    events: Option<Vec<()>>,               // TODO: define type for individual event
-}
-
-/// A type-safe representation of an SBML <model> element.
-#[derive(Clone, Debug)]
-pub struct SbmlModel {
-    xml: XmlElement,
-    units: SbmlModelUnits,
-    lists: SbmlModelLists,
-}
-
-impl XmlWrapper for SbmlModel {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-/// Adds the default implementation of [SBase] to the [SbmlModel].
-impl SBaseDefault for SbmlModel {}
-
-#[derive(Clone, Debug)]
-pub struct SbmlFunctionDefinition {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlFunctionDefinition {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for SbmlFunctionDefinition {
-    fn from(xml: XmlElement) -> Self {
-        SbmlFunctionDefinition { xml }
-    }
-}
-
-/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
-impl SBaseDefault for SbmlFunctionDefinition {}
-
-impl SbmlModel {
-    pub fn get_function_definitions(&self) -> XmlList<SbmlFunctionDefinition> {
-        let list_element = {
-            let xml = self.read_doc();
-            self.element()
-                .find(xml.deref(), "ListOfFunctionDefinitions")
-                .unwrap()
-        };
-        XmlList::from(self.as_xml().derive(list_element))
-    }
 }
 
 impl SbmlDocument {
@@ -110,40 +33,8 @@ impl SbmlDocument {
             Ok(doc) => doc,
             Err(why) => return Err(why.to_string()),
         };
-        let sbml_element = match doc.root_element() {
-            None => return Err("No root <sbml> element present.".to_string()),
-            Some(element) => element,
-        };
-        let xmlns = match sbml_element.namespace_decls(&doc).get("") {
-            Some(xmlns) => xmlns.to_string(),
-            None => {
-                return Err("No xmlns namespace attribute present in <sbml> element".to_string())
-            }
-        };
-        let level: u32 = match sbml_element.attribute(&doc, "level") {
-            None => {
-                return Err("<sbml> element does not contain info about level used.".to_string())
-            }
-            Some(level) => match level.parse() {
-                Ok(number) => number,
-                Err(why) => return Err(why.to_string()), // more specific error message needed ?
-            },
-        };
-        let version: u32 = match sbml_element.attribute(&doc, "version") {
-            None => {
-                return Err("<sbml> element does not contain info about version used.".to_string())
-            }
-            Some(version) => match version.parse() {
-                Ok(number) => number,
-                Err(why) => return Err(why.to_string()), // more specific error message needed ?
-            },
-        };
-
         Ok(SbmlDocument {
             xml: Arc::new(RwLock::new(doc)),
-            xmlns,
-            level,
-            version,
         })
     }
 
@@ -194,20 +85,52 @@ impl SbmlDocument {
                 .unwrap()
         };
 
-        SbmlModel {
-            // Due to the reference-counting implemented in `Arc`, this does not actually create
-            // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
-            // same underlying document object.
-            xml: XmlElement::new(self.xml.clone(), model_element),
-            units: Default::default(),
-            lists: Default::default(),
+        SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
+        // SbmlModel {
+        //     // Due to the reference-counting implemented in `Arc`, this does not actually create
+        //     // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
+        //     // same underlying document object.
+        //     xml: XmlElement::new(self.xml.clone(), model_element),
+        // }
+    }
+
+    pub fn get_xmlns(&self) -> Result<String, String> {
+        let doc = self.xml.read().unwrap();
+        match doc
+            .root_element()
+            .unwrap()
+            .namespace_decls(doc.deref())
+            .get("")
+        {
+            Some(xmlns) => Ok(xmlns.to_string()),
+            None => return Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
+        }
+    }
+
+    pub fn get_level(&self) -> Result<u32, String> {
+        let doc = self.xml.read().unwrap();
+        match doc.root_element().unwrap().attribute(doc.deref(), "level") {
+            Some(level) => Ok(level.parse().unwrap()),
+            None => return Err("Required attribute \"level\" not specified.".to_string()),
+        }
+    }
+
+    pub fn get_version(&self) -> Result<u32, String> {
+        let doc = self.xml.read().unwrap();
+        match doc
+            .root_element()
+            .unwrap()
+            .attribute(doc.deref(), "version")
+        {
+            Some(level) => Ok(level.parse().unwrap()),
+            None => return Err("Required attribute \"version\" not specified.".to_string()),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{SBase, SbmlDocument};
+    use crate::{sbase::SBase, SbmlDocument};
 
     #[test]
     pub fn test_model_id() {

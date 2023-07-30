@@ -1,7 +1,6 @@
-use xml_doc::Element;
-
-use crate::xml::XmlWrapper;
 use std::ops::{Deref, DerefMut};
+use crate::xml::XmlWrapper;
+use xml_doc::Element;
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus there is no need to implement concrete structure.
@@ -17,7 +16,7 @@ pub trait SBase {
     fn set_metaid(&self, value: String) -> ();
     fn set_sboterm(&self, value: String) -> ();
     fn set_notes(&self, value: Element) -> ();
-    fn set_annotation(&self, value: String) -> ();
+    fn set_annotation(&self, value: Element) -> ();
 }
 
 /// A trait implemented by types that should implement [SBase] using the default functionality
@@ -80,18 +79,18 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
 
     fn set_id(&self, value: String) -> () {
         let mut doc = self.write_doc();
-        self.element().set_attribute(doc.deref_mut(), "id", value)
+        self.element().set_attribute(doc.deref_mut(), "id", value);
     }
 
     fn set_name(&self, value: String) -> () {
         let mut doc = self.write_doc();
-        self.element().set_attribute(doc.deref_mut(), "name", value)
+        self.element().set_attribute(doc.deref_mut(), "name", value);
     }
 
     fn set_metaid(&self, value: String) -> () {
         let mut doc = self.write_doc();
         self.element()
-            .set_attribute(doc.deref_mut(), "metaid", value)
+            .set_attribute(doc.deref_mut(), "metaid", value);
     }
 
     fn set_sboterm(&self, value: String) -> () {
@@ -102,16 +101,23 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
 
     fn set_notes(&self, value: Element) -> () {
         let mut doc = self.write_doc();
-        match self.get_notes() {
-            Some(notes) => {
-                notes.detatch(doc.deref_mut()).unwrap();
-            }
-            None => (),
-        };
-        self.element().push_child(doc.deref_mut(), value.as_node()).unwrap()
+        match &self.element().find(doc.deref(), "notes") {
+            Some(mut _notes) => _notes = value, // valid ?
+            None => self
+                .element()
+                .push_child(doc.deref_mut(), value.as_node())
+                .unwrap(),
+        }
     }
 
-    fn set_annotation(&self, value: String) -> () {
-        todo!()
+    fn set_annotation(&self, value: Element) -> () {
+        let mut doc = self.write_doc();
+        match &self.element().find(doc.deref(), "annotation") {
+            Some(mut _annotation) => _annotation = value, // valid ?
+            None => self
+                .element()
+                .push_child(doc.deref_mut(), value.as_node())
+                .unwrap(),
+        }
     }
 }

@@ -88,6 +88,11 @@ pub trait XmlWrapper {
             .write()
             .expect("Underlying document lock is corrupted. Cannot recover.")
     }
+
+    fn child_element(&self, name: &str) -> Element {
+        self.element().find(self.read_doc().deref(), name).unwrap()
+        
+    }
 }
 
 /// Implements a wrapper for XML elements that represent a typed list. That is, their child nodes
@@ -186,5 +191,11 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         let removed = removed.as_element().unwrap();
         let removed = self.as_xml().derive(removed);
         Type::from(removed)
+    }
+
+    /// Get number of elements contained in the list
+    pub fn len(&self) -> usize {
+        let doc = self.read_doc();
+        self.element().child_elements(doc.deref()).len()
     }
 }
