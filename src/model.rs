@@ -148,6 +148,13 @@ impl Unit {
         let mut doc = self.write_doc();
         self.element().set_attribute(doc.deref_mut(), "kind", value)
     }
+
+    /// pass Integer (and convert) or String as a value for numeric attributes ?
+    pub fn set_exponent(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), "exponent", value)
+    }
 }
 /// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
 impl SBaseDefault for SbmlFunctionDefinition {}
