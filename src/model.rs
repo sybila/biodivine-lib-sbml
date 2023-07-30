@@ -14,7 +14,7 @@ pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
 pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
 /// Public functions to manipulate with the contents of [SbmlModel]
-/// i.e., optional lists inside SBML model + constructor new() 
+/// i.e., optional lists inside SBML model + constructor new()
 impl SbmlModel {
     pub fn new(xml: XmlElement) -> SbmlModel {
         SbmlModel::from(xml)
@@ -49,22 +49,42 @@ impl SbmlUnitDefinition {
 pub struct Unit(XmlElement);
 
 impl Unit {
+    /// TODO: create an enum of reserved words for a kind and make it a return type (documentation p. 43)
     pub fn get_kind(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "kind").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "kind")
+            .unwrap()
+            .to_string()
     }
 
+    /// return String or integer when numeric values ?
+    /// probably required attribute
     pub fn get_exponent(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "exponent").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "exponent")
+            .unwrap()
+            .to_string()
     }
 
+    /// return String or integer when numeric values ?
+    /// probably required attribute
     pub fn get_scale(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "scale").unwrap().to_string()
+        self.element()
+            .attribute(doc.deref(), "scale")
+            .unwrap()
+            .to_string()
     }
 
-    pub fn get_multiplier(&self) {
-        todo!()
+    /// return String or integer when numeric values ?
+    /// probably required attribute
+    pub fn get_multiplier(&self) -> String {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "multiplier")
+            .unwrap()
+            .to_string()
     }
 }
