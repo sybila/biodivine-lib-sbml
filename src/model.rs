@@ -87,4 +87,10 @@ impl Unit {
             .unwrap()
             .to_string()
     }
+
+    /// TODO: pass enum type parameter of reserver words as a value
+    pub fn set_kind(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element().set_attribute(doc.deref_mut(), "kind", value)
+    }
 }
