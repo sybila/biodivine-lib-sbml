@@ -1,3 +1,5 @@
+use xml_doc::Element;
+
 use crate::sbase::SBaseDefault;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use std::ops::{Deref, DerefMut};
@@ -68,6 +70,15 @@ impl From<XmlElement> for SbmlFunctionDefinition {
 
 impl SBaseDefault for SbmlFunctionDefinition {}
 
+impl SbmlFunctionDefinition {
+    /// Return optional [Element] or better optional [XmlELement] ?
+    /// What to do next with Math element ? Create a new struct for Math 
+    /// elements and provide API for get/set functionality ?
+    pub fn get_math(&self) -> Option<Element> {
+        let doc = self.read_doc();
+        self.element().find(doc.deref(), "math")
+    }
+}
 /// 2.) Unit definition data type
 #[derive(Clone, Debug)]
 pub struct SbmlUnitDefinition {
