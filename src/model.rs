@@ -64,7 +64,8 @@ impl Unit {
     }
 
     pub fn get_scale(&self) {
-        todo!()
+        let doc = self.read_doc();
+        self.element().attribute(doc.deref(), "scale").unwrap().to_string();
     }
 
     pub fn get_multiplier(&self) {
