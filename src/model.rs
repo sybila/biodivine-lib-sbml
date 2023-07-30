@@ -49,8 +49,9 @@ impl SbmlUnitDefinition {
 pub struct Unit(XmlElement);
 
 impl Unit {
-    pub fn get_kind(&self) {
-        todo!()
+    pub fn get_kind(&self) -> String {
+        let doc = self.read_doc();
+        self.element().attribute(doc.deref(), "kind").unwrap().to_string()
     }
 
     pub fn get_exponent(&self) {
