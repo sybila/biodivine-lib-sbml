@@ -1,6 +1,6 @@
 use crate::sbase::SBaseDefault;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug)]
@@ -141,6 +141,12 @@ impl Unit {
             .attribute(doc.deref(), "multiplier")
             .unwrap()
             .to_string()
+    }
+
+    /// TODO: pass enum type parameter of reserver words as a value
+    pub fn set_kind(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element().set_attribute(doc.deref_mut(), "kind", value)
     }
 }
 /// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
