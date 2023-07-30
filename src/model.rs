@@ -248,4 +248,11 @@ impl Compartment {
             .attribute(doc.deref(), "constant")
             .map(|it| it.to_string())
     }
+
+    /// pass Integer (and convert) or String as a value for numeric attributes ?
+    pub fn set_exponent(&self, value: &String) {
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), "exponent", value)
+    }
 }
