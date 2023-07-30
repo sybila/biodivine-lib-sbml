@@ -63,9 +63,9 @@ impl Unit {
         self.element().attribute(doc.deref(), "exponent").unwrap().to_string()
     }
 
-    pub fn get_scale(&self) {
+    pub fn get_scale(&self) -> String {
         let doc = self.read_doc();
-        self.element().attribute(doc.deref(), "scale").unwrap().to_string();
+        self.element().attribute(doc.deref(), "scale").unwrap().to_string()
     }
 
     pub fn get_multiplier(&self) {
