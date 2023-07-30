@@ -1,3 +1,5 @@
+use xml_doc::Element;
+
 use crate::sbase::SBaseDefault;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::XmlWrapper;
