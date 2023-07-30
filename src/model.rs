@@ -78,6 +78,17 @@ impl SbmlFunctionDefinition {
         let doc = self.read_doc();
         self.element().find(doc.deref(), "math")
     }
+
+    pub fn set_math(&self, value: Element) {
+        let mut doc = self.write_doc();
+        match &self.element().find(doc.deref(), "math") {
+            Some(mut _math) => _math = value, // valid ?
+            None => self
+                .element()
+                .push_child(doc.deref_mut(), value.as_node())
+                .unwrap(),
+        }
+    }
 }
 /// 2.) Unit definition data type
 #[derive(Clone, Debug)]
