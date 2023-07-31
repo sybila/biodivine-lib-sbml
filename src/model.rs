@@ -208,6 +208,7 @@ impl From<XmlElement> for Compartment {
 impl SBaseDefault for Compartment {}
 
 impl Compartment {
+    /// override default implementation as compartment id is required
     pub fn get_id(&self) -> String {
         let doc = self.read_doc();
         self.element()
@@ -216,6 +217,7 @@ impl Compartment {
             .unwrap()
     }
 
+    /// return String or Double ?
     pub fn get_spatial_dimensions(&self) -> Option<String> {
         let doc = self.read_doc();
         self.element()
@@ -223,6 +225,7 @@ impl Compartment {
             .map(|it| it.to_string())
     }
 
+    /// return String or Double
     pub fn get_size(&self) -> Option<String> {
         let doc = self.read_doc();
         self.element()
@@ -230,6 +233,7 @@ impl Compartment {
             .map(|it| it.to_string())
     }
 
+    /// TODO: implement units lookup in model according to documentation
     pub fn get_units(&self) -> Option<String> {
         let doc = self.read_doc();
         self.element()
@@ -237,6 +241,7 @@ impl Compartment {
             .map(|it| it.to_string())
     }
 
+    /// return String or Boolean ?
     pub fn get_constant(&self) -> Option<String> {
         let doc = self.read_doc();
         self.element()
