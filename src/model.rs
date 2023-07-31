@@ -273,71 +273,71 @@ impl Compartment {
 }
 
 #[derive(Display, EnumString)]
-enum BaseUnit {
-    #[strum(serialize="ampere")]
+pub enum BaseUnit {
+    #[strum(serialize = "ampere")]
     Ampere,
-    #[strum(serialize="avogadro")]
+    #[strum(serialize = "avogadro")]
     Avogadro,
-    #[strum(serialize="becquerel")]
+    #[strum(serialize = "becquerel")]
     Becquerel,
-    #[strum(serialize="candela")]
+    #[strum(serialize = "candela")]
     Candela,
-    #[strum(serialize="coulomb")]
+    #[strum(serialize = "coulomb")]
     Coulomb,
-    #[strum(serialize="dimensionless")]
+    #[strum(serialize = "dimensionless")]
     Dimensionless,
-    #[strum(serialize="farad")]
+    #[strum(serialize = "farad")]
     Farad,
-    #[strum(serialize="gram")]
+    #[strum(serialize = "gram")]
     Gram,
-    #[strum(serialize="gray")]
+    #[strum(serialize = "gray")]
     Gray,
-    #[strum(serialize="hertz")]
+    #[strum(serialize = "hertz")]
     Hertz,
-    #[strum(serialize="henry")]
+    #[strum(serialize = "henry")]
     Henry,
-    #[strum(serialize="item")]
+    #[strum(serialize = "item")]
     Item,
-    #[strum(serialize="joule")]
+    #[strum(serialize = "joule")]
     Joule,
-    #[strum(serialize="katal")]
+    #[strum(serialize = "katal")]
     Katal,
-    #[strum(serialize="kelvin")]
+    #[strum(serialize = "kelvin")]
     Kelvin,
-    #[strum(serialize="kilogram")]
+    #[strum(serialize = "kilogram")]
     Kilogram,
-    #[strum(serialize="litre")]
+    #[strum(serialize = "litre")]
     Litre,
-    #[strum(serialize="lumen")]
+    #[strum(serialize = "lumen")]
     Lumen,
-    #[strum(serialize="lux")]
+    #[strum(serialize = "lux")]
     Lux,
-    #[strum(serialize="metre")]
+    #[strum(serialize = "metre")]
     Metre,
-    #[strum(serialize="mole")]
+    #[strum(serialize = "mole")]
     Mole,
-    #[strum(serialize="newton")]
+    #[strum(serialize = "newton")]
     Newton,
-    #[strum(serialize="ohm")]
+    #[strum(serialize = "ohm")]
     Ohm,
-    #[strum(serialize="pascal")]
+    #[strum(serialize = "pascal")]
     Pascal,
-    #[strum(serialize="radian")]
+    #[strum(serialize = "radian")]
     Radian,
-    #[strum(serialize="second")]
+    #[strum(serialize = "second")]
     Second,
-    #[strum(serialize="siemens")]
+    #[strum(serialize = "siemens")]
     Siemens,
-    #[strum(serialize="sievert")]
+    #[strum(serialize = "sievert")]
     Sievert,
-    #[strum(serialize="steradian")]
+    #[strum(serialize = "steradian")]
     Steradian,
-    #[strum(serialize="tesla")]
+    #[strum(serialize = "tesla")]
     Tesla,
-    #[strum(serialize="volt")]
+    #[strum(serialize = "volt")]
     Volt,
-    #[strum(serialize="watt")]
+    #[strum(serialize = "watt")]
     Watt,
-    #[strum(serialize="weber")]
+    #[strum(serialize = "weber")]
     Weber,
 }
