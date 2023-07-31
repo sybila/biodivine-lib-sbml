@@ -4,7 +4,8 @@ use crate::sbase::SBaseDefault;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::XmlWrapper;
 use std::ops::{Deref, DerefMut};
-use strum_macros::{EnumString, Display};
+use std::str::FromStr;
+use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper)]
@@ -56,13 +57,14 @@ impl SbmlUnitDefinition {
 pub struct Unit(XmlElement);
 
 impl Unit {
-    /// TODO: create an enum of reserved words for a [kind] and make it a return type (documentation p. 43)
-    pub fn get_kind(&self) -> String {
+    pub fn get_kind(&self) -> BaseUnit {
         let doc = self.read_doc();
-        self.element()
+        let raw_kind = self
+            .element()
             .attribute(doc.deref(), "kind")
             .unwrap()
-            .to_string()
+            .to_string();
+        BaseUnit::from_str(&raw_kind).unwrap()
     }
 
     /// In following 3 functions:
@@ -92,10 +94,10 @@ impl Unit {
             .to_string()
     }
 
-    /// TODO: pass enum type parameter of reserver words as a value
-    pub fn set_kind(&self, value: &String) {
+    pub fn set_kind(&self, value: BaseUnit) {
         let mut doc = self.write_doc();
-        self.element().set_attribute(doc.deref_mut(), "kind", value)
+        self.element()
+            .set_attribute(doc.deref_mut(), "kind", value.to_string())
     }
 
     /// In following 3 functions:
@@ -122,71 +124,71 @@ impl Unit {
 }
 
 #[derive(Display, EnumString)]
-enum BaseUnit {
-    #[strum(serialize="ampere")]
+pub enum BaseUnit {
+    #[strum(serialize = "ampere")]
     Ampere,
-    #[strum(serialize="avogadro")]
+    #[strum(serialize = "avogadro")]
     Avogadro,
-    #[strum(serialize="becquerel")]
+    #[strum(serialize = "becquerel")]
     Becquerel,
-    #[strum(serialize="candela")]
+    #[strum(serialize = "candela")]
     Candela,
-    #[strum(serialize="coulomb")]
+    #[strum(serialize = "coulomb")]
     Coulomb,
-    #[strum(serialize="dimensionless")]
+    #[strum(serialize = "dimensionless")]
     Dimensionless,
-    #[strum(serialize="farad")]
+    #[strum(serialize = "farad")]
     Farad,
-    #[strum(serialize="gram")]
+    #[strum(serialize = "gram")]
     Gram,
-    #[strum(serialize="gray")]
+    #[strum(serialize = "gray")]
     Gray,
-    #[strum(serialize="hertz")]
+    #[strum(serialize = "hertz")]
     Hertz,
-    #[strum(serialize="henry")]
+    #[strum(serialize = "henry")]
     Henry,
-    #[strum(serialize="item")]
+    #[strum(serialize = "item")]
     Item,
-    #[strum(serialize="joule")]
+    #[strum(serialize = "joule")]
     Joule,
-    #[strum(serialize="katal")]
+    #[strum(serialize = "katal")]
     Katal,
-    #[strum(serialize="kelvin")]
+    #[strum(serialize = "kelvin")]
     Kelvin,
-    #[strum(serialize="kilogram")]
+    #[strum(serialize = "kilogram")]
     Kilogram,
-    #[strum(serialize="litre")]
+    #[strum(serialize = "litre")]
     Litre,
-    #[strum(serialize="lumen")]
+    #[strum(serialize = "lumen")]
     Lumen,
-    #[strum(serialize="lux")]
+    #[strum(serialize = "lux")]
     Lux,
-    #[strum(serialize="metre")]
+    #[strum(serialize = "metre")]
     Metre,
-    #[strum(serialize="mole")]
+    #[strum(serialize = "mole")]
     Mole,
-    #[strum(serialize="newton")]
+    #[strum(serialize = "newton")]
     Newton,
-    #[strum(serialize="ohm")]
+    #[strum(serialize = "ohm")]
     Ohm,
-    #[strum(serialize="pascal")]
+    #[strum(serialize = "pascal")]
     Pascal,
-    #[strum(serialize="radian")]
+    #[strum(serialize = "radian")]
     Radian,
-    #[strum(serialize="second")]
+    #[strum(serialize = "second")]
     Second,
-    #[strum(serialize="siemens")]
+    #[strum(serialize = "siemens")]
     Siemens,
-    #[strum(serialize="sievert")]
+    #[strum(serialize = "sievert")]
     Sievert,
-    #[strum(serialize="steradian")]
+    #[strum(serialize = "steradian")]
     Steradian,
-    #[strum(serialize="tesla")]
+    #[strum(serialize = "tesla")]
     Tesla,
-    #[strum(serialize="volt")]
+    #[strum(serialize = "volt")]
     Volt,
-    #[strum(serialize="watt")]
+    #[strum(serialize = "watt")]
     Watt,
-    #[strum(serialize="weber")]
+    #[strum(serialize = "weber")]
     Weber,
 }
