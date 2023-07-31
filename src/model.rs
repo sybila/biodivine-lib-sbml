@@ -205,8 +205,6 @@ impl From<XmlElement> for Compartment {
     }
 }
 
-impl SBaseDefault for Compartment {}
-
 impl Compartment {
     /// override default implementation as compartment id is required
     pub fn get_id(&self) -> String {
@@ -270,74 +268,4 @@ impl Compartment {
         self.element()
             .set_attribute(doc.deref_mut(), "multiplier", value)
     }
-}
-
-#[derive(Display, EnumString)]
-pub enum BaseUnit {
-    #[strum(serialize = "ampere")]
-    Ampere,
-    #[strum(serialize = "avogadro")]
-    Avogadro,
-    #[strum(serialize = "becquerel")]
-    Becquerel,
-    #[strum(serialize = "candela")]
-    Candela,
-    #[strum(serialize = "coulomb")]
-    Coulomb,
-    #[strum(serialize = "dimensionless")]
-    Dimensionless,
-    #[strum(serialize = "farad")]
-    Farad,
-    #[strum(serialize = "gram")]
-    Gram,
-    #[strum(serialize = "gray")]
-    Gray,
-    #[strum(serialize = "hertz")]
-    Hertz,
-    #[strum(serialize = "henry")]
-    Henry,
-    #[strum(serialize = "item")]
-    Item,
-    #[strum(serialize = "joule")]
-    Joule,
-    #[strum(serialize = "katal")]
-    Katal,
-    #[strum(serialize = "kelvin")]
-    Kelvin,
-    #[strum(serialize = "kilogram")]
-    Kilogram,
-    #[strum(serialize = "litre")]
-    Litre,
-    #[strum(serialize = "lumen")]
-    Lumen,
-    #[strum(serialize = "lux")]
-    Lux,
-    #[strum(serialize = "metre")]
-    Metre,
-    #[strum(serialize = "mole")]
-    Mole,
-    #[strum(serialize = "newton")]
-    Newton,
-    #[strum(serialize = "ohm")]
-    Ohm,
-    #[strum(serialize = "pascal")]
-    Pascal,
-    #[strum(serialize = "radian")]
-    Radian,
-    #[strum(serialize = "second")]
-    Second,
-    #[strum(serialize = "siemens")]
-    Siemens,
-    #[strum(serialize = "sievert")]
-    Sievert,
-    #[strum(serialize = "steradian")]
-    Steradian,
-    #[strum(serialize = "tesla")]
-    Tesla,
-    #[strum(serialize = "volt")]
-    Volt,
-    #[strum(serialize = "watt")]
-    Watt,
-    #[strum(serialize = "weber")]
-    Weber,
 }
