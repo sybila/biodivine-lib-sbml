@@ -187,3 +187,60 @@ pub enum BaseUnit {
     #[strum(serialize = "weber")]
     Weber,
 }
+
+/// 3.) Compartment data type
+pub struct Compartment {
+    xml: XmlElement,
+}
+
+impl XmlWrapper for Compartment {
+    fn as_xml(&self) -> &XmlElement {
+        &self.xml
+    }
+}
+
+impl From<XmlElement> for Compartment {
+    fn from(xml: XmlElement) -> Self {
+        Compartment { xml }
+    }
+}
+
+impl SBaseDefault for Compartment {}
+
+impl Compartment {
+    pub fn get_id(&self) -> String {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "id")
+            .map(|it| it.to_string())
+            .unwrap()
+    }
+
+    pub fn get_spatial_dimensions(&self) -> Option<String> {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "spatialDimensions")
+            .map(|it| it.to_string())
+    }
+
+    pub fn get_size(&self) -> Option<String> {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "size")
+            .map(|it| it.to_string())
+    }
+
+    pub fn get_units(&self) -> Option<String> {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "units")
+            .map(|it| it.to_string())
+    }
+
+    pub fn get_constant(&self) -> Option<String> {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), "constant")
+            .map(|it| it.to_string())
+    }
+}
