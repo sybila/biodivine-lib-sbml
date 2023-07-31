@@ -73,7 +73,7 @@ impl SBaseDefault for SbmlFunctionDefinition {}
 
 impl SbmlFunctionDefinition {
     /// Return optional [Element] or better optional [XmlELement] ?
-    /// What to do next with Math element ? Create a new struct for Math 
+    /// What to do next with Math element ? Create a new struct for Math
     /// elements and provide API for get/set functionality ?
     pub fn get_math(&self) -> Option<Element> {
         let doc = self.read_doc();
@@ -203,4 +203,40 @@ impl Unit {
         self.element()
             .set_attribute(doc.deref_mut(), "multiplier", value)
     }
+}
+
+enum BaseUnit {
+    Ampere,
+    Avogadro,
+    Becquerel,
+    Candela,
+    Coulomb,
+    Dimensionless,
+    Farad,
+    Gram,
+    Gray,
+    Hertz,
+    Henry,
+    Item,
+    Joule,
+    Katal,
+    Kelvin,
+    Kilogram,
+    Litre,
+    Lumen,
+    Lux,
+    Metre,
+    Mole,
+    Newton,
+    Ohm,
+    Pascal,
+    Radian,
+    Second,
+    Siemens,
+    Sievert,
+    Steradian,
+    Tesla,
+    Volt,
+    Watt,
+    Weber,
 }
