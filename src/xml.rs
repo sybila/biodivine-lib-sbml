@@ -68,6 +68,22 @@ pub trait XmlWrapper {
         self.as_xml().element
     }
 
+    /// Get a copy of the string value of the XML attribute of the given [name], or `None` if such
+    /// attribute is not defined.
+    fn get_attribute(&self, name: &str) -> Option<String> {
+        let doc = self.read_doc();
+        self.element()
+            .attribute(doc.deref(), name)
+            .map(|it| it.to_string())
+    }
+
+    /// Set the [value] of the XML attribute of the given [name].
+    fn set_attribute(&self, name: &str, value: String) {
+        let mut doc = self.write_doc();
+        self.element()
+            .set_attribute(doc.deref_mut(), name, value)
+    }
+
     /// Obtain a read-only reference to the underlying [Document].
     fn read_doc(&self) -> RwLockReadGuard<Document> {
         // Error handling note: In general, lock access will fail only when some other part
@@ -203,3 +219,96 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         self.len() == 0
     }
 }
+
+/// Any [XmlProperty] object provides type-safe access to a single XML attribute
+/// of an underlying tag.
+///
+/// [XmlProperty] objects maintain a reference to the underlying [XmlElement] with lifetime `'a`
+/// and thus cannot be stored or passed around independently.
+///
+/// [XmlProperty] is also parametrized by a type `T` which is the underlying type of the property.
+/// It is up to the implementation to perform a safe conversion between a string attribute and `T`.
+///
+/// In theory, an [XmlProperty] can be also backed by a combination of *multiple* XML attributes,
+/// but this is not advised as the individual state each attribute is not clear in such case.
+///
+/// ## On missing attributes and value validity
+///
+/// Note that whether a missing value is considered valid is implementation specific and
+/// depends on `T`. I.e. there can be types that always *require* some value, while there
+/// can be types where a missing value represents some sort of default.
+///
+/// In general, it is recommended that when a missing value is considered valid but there
+/// is no suitable `T::default()` value, we should have `T = Option<R>` (i.e. `T` is an
+/// optional type). If there is a `T::default()` value, it is possible to return this value
+/// when the attribute value is missing.
+///
+/// Similarly, when writing a property, if the property is optional (i.e. `T = Option<R>`), then
+/// write functions are allowed to erase the attribute if `None` is being written, assuming there
+/// is no other appropriate value that represents `None`. However, for other
+/// instances, it is recommended to always write the full value, even if it equals the default
+/// (i.e. missing) value. One can always explicitly remove the value by calling [Self::clear].
+///
+pub trait XmlProperty<'a, T> {
+
+    /// Returns `true` if the underlying XML attribute has a known set value, even if such
+    /// value is invalid.
+    ///
+    /// Note that this refers directly to value in the underlying document. When the attribute
+    /// value is missing, this function must return `false`, even if a missing value
+    /// is valid for type `T`.
+    fn is_set(&self) -> bool {
+        self.read_raw().is_some()
+    }
+
+    /// Returns `true` if the underlying XML attribute represents a valid value of type `T`.
+    ///
+    /// See the overall discussion in [XmlProperty] regarding how to treat validity of missing
+    /// attribute values.
+    fn is_valid(&self) -> bool {
+        self.read_checked().is_some()
+    }
+
+    /// Read the value of this [XmlProperty].
+    ///
+    /// # Panics
+    ///
+    /// The function should panic if the underlying attribute value is invalid for type `T`.
+    fn read(&self) -> T {
+        self.read_checked().unwrap()
+    }
+
+    /// Read the value of this [XmlProperty], or `None` if the underlying value is invalid.
+    ///
+    /// See the overall discussion in [XmlProperty] regarding how to treat validity of missing
+    /// attribute values.
+    fn read_checked(&self) -> Option<T>;
+
+    /// Read the "raw" underlying attribute value of this [XmlProperty], or `None` if the value
+    /// is not set.
+    fn read_raw(&self) -> Option<String>;
+
+    /// Remove the underlying XML attribute completely.
+    ///
+    /// # Safety
+    ///
+    /// Note that this function can make the underlying property *invalid* if a missing attribute
+    /// does not map to any valid property value.
+    fn clear(&self);
+
+    /// Write given [value] into this [XmlProperty].
+    ///
+    /// See the overall discussion in [XmlProperty] regarding how to treat missing/default
+    /// attribute values.
+    fn write(&self, value: &T);
+
+    /// Write a raw [value] into this [XmlProperty].
+    ///
+    /// # Safety
+    ///
+    /// Obviously, this function can be used to set the property to an invalid value.
+    fn write_raw(&self, value: String);
+}
+
+// TODO: We will need a macro that implements XmlProperty for us. For that we need derive
+// macros with arguments: https://stackoverflow.com/questions/56188700/how-do-i-make-my-custom-derive-macro-accept-trait-generic-parameters
