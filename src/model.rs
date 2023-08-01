@@ -1,25 +1,18 @@
-use std::ops::Deref;
-use crate::xml::{XmlElement, XmlWrapper, XmlList};
 use crate::sbase::SBaseDefault;
+use crate::xml::{XmlElement, XmlList, XmlWrapper};
+use macros::XmlWrapper;
+use std::ops::Deref;
 
 /// A type-safe representation of an SBML <model> element.
-#[derive(Clone, Debug)]
-pub struct SbmlModel {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlModel {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
+#[derive(Clone, Debug, XmlWrapper)]
+pub struct SbmlModel(XmlElement);
 
 /// Adds the default implementation of [SBase] to the [SbmlModel].
 impl SBaseDefault for SbmlModel {}
 
 impl SbmlModel {
     pub fn new(xml: XmlElement) -> SbmlModel {
-        SbmlModel { xml }
+        SbmlModel::from(xml)
     }
     pub fn get_function_definitions(&self) -> XmlList<SbmlFunctionDefinition> {
         let list_element = {
@@ -37,40 +30,11 @@ impl SbmlModel {
     }
 }
 
+#[derive(Clone, Debug, XmlWrapper)]
+pub struct SbmlFunctionDefinition(XmlElement);
 
-#[derive(Clone, Debug)]
-pub struct SbmlFunctionDefinition {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlFunctionDefinition {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for SbmlFunctionDefinition {
-    fn from(xml: XmlElement) -> Self {
-        SbmlFunctionDefinition { xml }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SbmlUnitDefinition {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for SbmlUnitDefinition {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for SbmlUnitDefinition {
-    fn from(xml: XmlElement) -> Self {
-        SbmlUnitDefinition { xml }
-    }
-}
+#[derive(Clone, Debug, XmlWrapper)]
+pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
     pub fn get_units(&self) -> XmlList<Unit> {
@@ -79,21 +43,8 @@ impl SbmlUnitDefinition {
     }
 }
 
-pub struct Unit {
-    xml: XmlElement,
-}
-
-impl XmlWrapper for Unit {
-    fn as_xml(&self) -> &XmlElement {
-        &self.xml
-    }
-}
-
-impl From<XmlElement> for Unit {
-    fn from(xml: XmlElement) -> Self {
-        Unit { xml }
-    }
-}
+#[derive(Clone, Debug, XmlWrapper)]
+pub struct Unit(XmlElement);
 
 impl Unit {
     pub fn get_kind(&self) {

@@ -91,7 +91,6 @@ pub trait XmlWrapper {
 
     fn child_element(&self, name: &str) -> Element {
         self.element().find(self.read_doc().deref(), name).unwrap()
-        
     }
 }
 

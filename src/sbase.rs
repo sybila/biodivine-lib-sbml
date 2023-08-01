@@ -1,5 +1,5 @@
-use std::ops::{Deref, DerefMut};
 use crate::xml::XmlWrapper;
+use std::ops::{Deref, DerefMut};
 use xml_doc::Element;
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.

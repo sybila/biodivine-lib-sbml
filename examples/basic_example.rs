@@ -1,6 +1,6 @@
+use biodivine_lib_sbml::sbase::SBase;
 use biodivine_lib_sbml::xml::XmlWrapper;
 use biodivine_lib_sbml::SbmlDocument;
-use biodivine_lib_sbml::sbase::SBase;
 
 // To run this example, execute `cargo run --example basic_example`.
 // If you want to add command line arguments, you can use
