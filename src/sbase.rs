@@ -11,12 +11,12 @@ pub trait SBase {
     fn get_sboterm(&self) -> Option<String>;
     fn get_notes(&self) -> Option<Element>;
     fn get_annotation(&self) -> Option<Element>;
-    fn set_id(&self, value: String) -> ();
-    fn set_name(&self, value: String) -> ();
-    fn set_metaid(&self, value: String) -> ();
-    fn set_sboterm(&self, value: String) -> ();
-    fn set_notes(&self, value: Element) -> ();
-    fn set_annotation(&self, value: Element) -> ();
+    fn set_id(&self, value: String);
+    fn set_name(&self, value: String);
+    fn set_metaid(&self, value: String);
+    fn set_sboterm(&self, value: String);
+    fn set_notes(&self, value: Element);
+    fn set_annotation(&self, value: Element);
 }
 
 /// A trait implemented by types that should implement [SBase] using the default functionality
@@ -77,29 +77,29 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
         self.element().find(doc.deref(), "annotation")
     }
 
-    fn set_id(&self, value: String) -> () {
+    fn set_id(&self, value: String) {
         let mut doc = self.write_doc();
         self.element().set_attribute(doc.deref_mut(), "id", value);
     }
 
-    fn set_name(&self, value: String) -> () {
+    fn set_name(&self, value: String) {
         let mut doc = self.write_doc();
         self.element().set_attribute(doc.deref_mut(), "name", value);
     }
 
-    fn set_metaid(&self, value: String) -> () {
+    fn set_metaid(&self, value: String) {
         let mut doc = self.write_doc();
         self.element()
             .set_attribute(doc.deref_mut(), "metaid", value);
     }
 
-    fn set_sboterm(&self, value: String) -> () {
+    fn set_sboterm(&self, value: String) {
         let mut doc = self.write_doc();
         self.element()
             .set_attribute(doc.deref_mut(), "sboTerm", value);
     }
 
-    fn set_notes(&self, value: Element) -> () {
+    fn set_notes(&self, value: Element) {
         let mut doc = self.write_doc();
         match &self.element().find(doc.deref(), "notes") {
             Some(mut _notes) => _notes = value, // valid ?
@@ -110,7 +110,7 @@ impl<T: SBaseDefault + XmlWrapper> SBase for T {
         }
     }
 
-    fn set_annotation(&self, value: Element) -> () {
+    fn set_annotation(&self, value: Element) {
         let mut doc = self.write_doc();
         match &self.element().find(doc.deref(), "annotation") {
             Some(mut _annotation) => _annotation = value, // valid ?

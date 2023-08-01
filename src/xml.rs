@@ -153,7 +153,7 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     pub fn new(element: XmlElement) -> Self {
         XmlList {
             element,
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 
@@ -196,5 +196,10 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     pub fn len(&self) -> usize {
         let doc = self.read_doc();
         self.element().child_elements(doc.deref()).len()
+    }
+
+    /// Check if the list is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
