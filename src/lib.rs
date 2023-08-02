@@ -130,20 +130,28 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
+    use crate::xml::{XmlChild, XmlProperty};
     use crate::{sbase::SBase, SbmlDocument};
 
     #[test]
     pub fn test_model_id() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
         let model = doc.get_model();
-        assert_eq!("model_id", model.get_id().unwrap().as_str());
-        model.set_id("model_6431".to_string());
-        assert_eq!("model_6431", model.get_id().unwrap().as_str());
+
+        // This is a "qualitative" model so there are no function definitions or units.
+        assert!(!model.function_definitions().is_set());
+        assert!(!model.unit_definitions().is_set());
+
+        let original_id = Some("model_id".to_string());
+        let modified_id = Some("model_6431".to_string());
+        assert_eq!(original_id, model.id().read());
+        model.id().write(&modified_id);
+        assert_eq!(modified_id, model.id().read());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();
         let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
         let model2 = doc2.get_model();
-        assert_eq!(model.get_id(), model2.get_id());
+        assert_eq!(model.id().read(), model2.id().read());
         assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
         std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
     }
