@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 macros = { path = "macros" }
+strum = "0.25.0"
+strum_macros = "0.25"
 xml-doc = { git = "https://github.com/daemontus/xml-doc" }
