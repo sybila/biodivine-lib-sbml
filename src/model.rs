@@ -1,4 +1,4 @@
-use crate::sbase::SBaseDefault;
+use crate::sbase::SBase;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::XmlWrapper;
 use std::ops::{Deref, DerefMut};
@@ -11,7 +11,7 @@ pub struct SbmlModel(XmlElement);
 
 /// Adds the default implementation of [SBase] to the [SbmlModel].
 /// Allows to get/set id, name, etc. of [SbmlModel]
-impl SBaseDefault for SbmlModel {}
+impl SBase for SbmlModel {}
 
 /// Public functions to manipulate with the contents of [SbmlModel]
 /// i.e., optional lists inside SBML model + constructor new()
@@ -53,6 +53,8 @@ impl SbmlUnitDefinition {
 
 #[derive(Clone, Debug, XmlWrapper)]
 pub struct Unit(XmlElement);
+
+impl SBase for Unit {}
 
 impl Unit {
     pub fn get_kind(&self) -> BaseUnit {
@@ -208,9 +210,7 @@ impl From<XmlElement> for Compartment {
     }
 }
 
-impl SBaseDefault for Unit {}
-
-impl SBaseDefault for Compartment {}
+impl SBase for Compartment {}
 
 impl Compartment {
     /// override default implementation as compartment id is required
