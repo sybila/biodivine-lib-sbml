@@ -12,6 +12,17 @@ pub struct GenericChild<'a, T: XmlWrapper> {
     _marker: PhantomData<T>,
 }
 
+impl<T: XmlWrapper> GenericChild<'_, T> {
+    /// Create a new instance of a [GenericChild] for the given `element` and `name`.
+    pub fn new<'a>(element: &'a XmlElement, name: &str) -> GenericChild<'a, T> {
+        GenericChild {
+            element,
+            name: name.to_string(),
+            _marker: PhantomData,
+        }
+    }
+}
+
 impl<T: XmlWrapper> XmlChild<T> for GenericChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.element

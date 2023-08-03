@@ -1,5 +1,4 @@
-use crate::xml::{GenericProperty, XmlDocument, XmlElement, XmlPropertyType};
-use std::ops::Deref;
+use crate::xml::{GenericChild, GenericProperty, XmlDocument, XmlElement, XmlPropertyType};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use xml_doc::{Document, Element};
 
@@ -32,6 +31,10 @@ pub trait XmlWrapper: From<XmlElement> + Into<XmlElement> {
         GenericProperty::new(self.as_xml(), name)
     }
 
+    fn child<T: XmlWrapper>(&self, name: &str) -> GenericChild<T> {
+        GenericChild::new(self.as_xml(), name)
+    }
+
     /// Obtain a read-only reference to the underlying [Document].
     fn read_doc(&self) -> RwLockReadGuard<Document> {
         // Error handling note: In general, lock access will fail only when some other part
@@ -51,10 +54,6 @@ pub trait XmlWrapper: From<XmlElement> + Into<XmlElement> {
             .document
             .write()
             .expect("Underlying document lock is corrupted. Cannot recover.")
-    }
-
-    fn child_element(&self, name: &str) -> Element {
-        self.element().find(self.read_doc().deref(), name).unwrap()
     }
 }
 

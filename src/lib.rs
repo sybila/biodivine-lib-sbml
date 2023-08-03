@@ -130,7 +130,8 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::{XmlChild, XmlProperty};
+    use std::ops::Deref;
+    use crate::xml::{XmlChild, XmlElement, XmlProperty, XmlWrapper};
     use crate::{sbase::SBase, SbmlDocument};
 
     #[test]
@@ -141,6 +142,17 @@ mod tests {
         // This is a "qualitative" model so there are no function definitions or units.
         assert!(!model.function_definitions().is_set());
         assert!(!model.unit_definitions().is_set());
+
+        assert!(model.notes().is_set());
+        {
+            let notes = model.notes().get();
+            let body = notes.child::<XmlElement>("body").get();
+            let p = body.child::<XmlElement>("p").get();
+            let doc = model.read_doc();
+            let content = p.element().text_content(doc.deref());
+            assert!(content.starts_with("This model"));
+        }
+
 
         let original_id = Some("model_id".to_string());
         let modified_id = Some("model_6431".to_string());

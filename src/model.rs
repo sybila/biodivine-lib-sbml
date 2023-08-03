@@ -35,10 +35,14 @@ pub struct SbmlFunctionDefinition(XmlElement);
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlUnitDefinition(XmlElement);
 
+#[derive(XmlChild)]
+#[child_name("listOfUnits")]
+#[child_type(XmlList<Unit>)]
+pub struct ListOfUnits<'a>(&'a XmlElement);
+
 impl SbmlUnitDefinition {
-    pub fn get_units(&self) -> XmlList<Unit> {
-        let list = self.child_element("listOfUnits");
-        XmlList::from(XmlElement::new(self.document(), list))
+    pub fn units(&self) -> ListOfUnits {
+        ListOfUnits::for_element(self.as_xml())
     }
 }
 

@@ -13,7 +13,7 @@ pub struct GenericProperty<'a, T: XmlPropertyType> {
 }
 
 impl<'a, T: XmlPropertyType> GenericProperty<'a, T> {
-    /// Create a new instance of a [GenericProperty] for a given `element` and `name`.
+    /// Create a new instance of a [GenericProperty] for the given `element` and `name`.
     pub fn new(element: &'a XmlElement, name: &str) -> GenericProperty<'a, T> {
         GenericProperty {
             element,
