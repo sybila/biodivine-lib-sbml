@@ -6,7 +6,23 @@ use std::sync::{Arc, RwLock};
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
-/// us work with XML documents in a sane and safe way.
+/// us work with XML documents in a sane and safe way. In particular:
+///  - [XmlDocument] | A thread and memory safe reference to a [Document].
+///  - [XmlElement] | A thread and memory safe reference to an [xml_doc::Element].
+///  - [xml::XmlWrapper] | A trait with utility functions for working with types
+///  derived from [XmlElement].
+///  - [xml::XmlDefault] | An extension of [xml::XmlWrapper] which allows creation of "default"
+///  value for the derived type.
+///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
+///  accessing properties stored in XML attributes. Implementation can be generated using a derive
+///  macro.
+///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
+///  child tags. Implementation can be generated using a derive macro.
+///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
+///  a typed list of elements.
+///  - [xml::GenericChild] and [xml::GenericProperty] | Generic implementations of
+///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
+///  is not known at compile time.
 pub mod xml;
 
 pub mod sbase;
