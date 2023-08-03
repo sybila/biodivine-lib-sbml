@@ -44,7 +44,9 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     ///
     /// See the overall discussion in [XmlProperty] regarding how to treat validity of missing
     /// attribute values.
-    fn is_valid(&self) -> bool;
+    fn is_valid(&self) -> bool {
+        self.read_checked().is_ok()
+    }
 
     /// Read the value of this [XmlProperty].
     ///

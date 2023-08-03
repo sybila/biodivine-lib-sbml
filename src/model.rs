@@ -6,13 +6,11 @@ use macros::{SBase, XmlChild, XmlWrapper};
 pub struct SbmlModel(XmlElement);
 
 #[derive(XmlChild)]
-#[child_name("listOfFunctionDefinitions")]
-#[child_type(XmlList<SbmlFunctionDefinition>)]
+#[child(listOfFunctionDefinitions : XmlList<SbmlFunctionDefinition>)]
 pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
 
 #[derive(XmlChild)]
-#[child_name("listOfUnitDefinitions")]
-#[child_type(XmlList<SbmlUnitDefinition>)]
+#[child(listOfUnitDefinitions : XmlList<SbmlUnitDefinition>)]
 pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
 impl SbmlModel {
@@ -36,8 +34,7 @@ pub struct SbmlFunctionDefinition(XmlElement);
 pub struct SbmlUnitDefinition(XmlElement);
 
 #[derive(XmlChild)]
-#[child_name("listOfUnits")]
-#[child_type(XmlList<Unit>)]
+#[child(listOfUnits : XmlList<Unit>)]
 pub struct ListOfUnits<'a>(&'a XmlElement);
 
 impl SbmlUnitDefinition {

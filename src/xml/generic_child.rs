@@ -21,6 +21,11 @@ impl<T: XmlWrapper> GenericChild<'_, T> {
             _marker: PhantomData,
         }
     }
+
+    /// Read the name of this [GenericChild].
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
 }
 
 impl<T: XmlWrapper> XmlChild<T> for GenericChild<'_, T> {
@@ -29,69 +34,97 @@ impl<T: XmlWrapper> XmlChild<T> for GenericChild<'_, T> {
     }
 
     fn is_set(&self) -> bool {
-        let doc = self.element.read_doc();
-        self.element
-            .element()
-            .find(doc.deref(), self.name.as_str())
-            .is_some()
+        is_set(self.element, self.name())
     }
 
     fn clear(&self) {
-        let mut doc = self.element.write_doc();
-        let parent = self.element.element();
-        let Some(to_remove) = parent.find(doc.deref(), self.name.as_str()) else {
-            return;
-        };
-        to_remove
-            .detatch(doc.deref_mut())
-            .expect("You can't detach the container element.");
+        clear(self.element, self.name());
     }
 
     fn get(&self) -> T {
-        self.get_raw()
-            .map(|it| it.into())
-            .unwrap_or_else(|| panic!("Child element `{}` is missing.", self.name))
+        get(self.element, self.name())
     }
 
     fn get_raw(&self) -> Option<XmlElement> {
-        let doc = self.element.read_doc();
-        let parent = self.element.element();
-        parent
-            .find(doc.deref(), self.name.as_str())
-            .map(|it| XmlElement::new(self.element.document(), it))
+        get_raw(self.element, self.name())
     }
 
     fn set(&self, element: T) -> Option<T> {
-        self.set_raw(element.into()).map(|it| it.into())
+        set(self.element, self.name(), element)
     }
 
     fn set_raw(&self, element: XmlElement) -> Option<XmlElement> {
-        let mut doc = self.element.write_doc();
-        let parent = self.element.element();
-
-        // First, remove the existing child.
-        let removed = if let Some(to_remove) = parent.find(doc.deref(), self.name.as_str()) {
-            to_remove
-                .detatch(doc.deref_mut())
-                .expect("You can't detach the container element.");
-            Some(XmlElement::new(self.element.document(), to_remove))
-        } else {
-            None
-        };
-
-        // Now, push the new child and check that the result is ok.
-        let result = parent.push_child(doc.deref_mut(), element.element().as_node());
-        match result {
-            Err(xml_doc::Error::HasAParent) => {
-                panic!("Cannot set child. The given element already has a parent.")
-            }
-            Err(xml_doc::Error::ContainerCannotMove) => {
-                panic!("Cannot attach the container element to a parent.")
-            }
-            _ => (),
-        };
-
-        // Return the old child.
-        removed
+        set_raw(self.element, self.name(), element)
     }
+}
+
+/*
+   The following functions implement [XmlChild] in both the [GenericChild] and
+   all macro implementations. They are only visible to the crate code (`pub(crate)`),
+   i.e. they are private within this library.
+*/
+
+pub(crate) fn is_set(element: &XmlElement, name: &str) -> bool {
+    let doc = element.read_doc();
+    element.element().find(doc.deref(), name).is_some()
+}
+
+pub(crate) fn clear(element: &XmlElement, name: &str) {
+    let mut doc = element.write_doc();
+    let parent = element.element();
+    let Some(to_remove) = parent.find(doc.deref(), name) else {
+        return;
+    };
+    to_remove
+        .detatch(doc.deref_mut())
+        .expect("You can't detach the container element.");
+}
+
+pub(crate) fn get<T: XmlWrapper>(element: &XmlElement, name: &str) -> T {
+    get_raw(element, name)
+        .map(|it| it.into())
+        .unwrap_or_else(|| panic!("Child element `{}` is missing.", name))
+}
+
+pub(crate) fn get_raw(element: &XmlElement, name: &str) -> Option<XmlElement> {
+    let doc = element.read_doc();
+    let parent = element.element();
+    parent
+        .find(doc.deref(), name)
+        .map(|it| XmlElement::new(element.document(), it))
+}
+
+pub(crate) fn set<T: XmlWrapper>(element: &XmlElement, name: &str, value: T) -> Option<T> {
+    set_raw(element, name, value.into()).map(|it| it.into())
+}
+
+pub(crate) fn set_raw(element: &XmlElement, name: &str, value: XmlElement) -> Option<XmlElement> {
+    let mut doc = element.write_doc();
+    let parent = element.element();
+
+    // First, remove the existing child.
+    let removed = if let Some(to_remove) = parent.find(doc.deref(), name) {
+        to_remove
+            .detatch(doc.deref_mut())
+            .expect("You can't detach the container element.");
+        Some(XmlElement::new(element.document(), to_remove))
+    } else {
+        None
+    };
+
+    // Now, push the new child and check that the result is ok.
+    let value = value.element.as_node();
+    let result = parent.push_child(doc.deref_mut(), value);
+    match result {
+        Err(xml_doc::Error::HasAParent) => {
+            panic!("Cannot set child. The given element already has a parent.")
+        }
+        Err(xml_doc::Error::ContainerCannotMove) => {
+            panic!("Cannot attach the container element to a parent.")
+        }
+        _ => (),
+    };
+
+    // Return the old child.
+    removed
 }

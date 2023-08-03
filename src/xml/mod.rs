@@ -19,10 +19,14 @@ mod xml_property;
 mod xml_child;
 
 /// Implementation of the [GenericProperty] struct.
-mod generic_property;
+///
+/// The module is `pub(crate)` because it is used by some macro generated code.
+pub(crate) mod generic_property;
 
 /// Implementation of the [GenericChild] struct.
-mod generic_child;
+///
+/// The module is `pub(crate)` because it is used by some macro generated code.
+pub(crate) mod generic_child;
 
 /// Some primitive [XmlPropertyType] implementations, as declared in SBML
 /// specification Section 3.1.

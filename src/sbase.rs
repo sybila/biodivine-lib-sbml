@@ -7,33 +7,27 @@ use macros::{XmlChild, XmlProperty};
 //      types that are "string like", e.g. meta id and sboTerm.
 
 #[derive(XmlProperty)]
-#[property_name("id")]
-#[property_type(Option<String>)]
+#[property(id: Option<String>)]
 pub struct Id<'a>(&'a XmlElement);
 
 #[derive(XmlProperty)]
-#[property_name("name")]
-#[property_type(Option<String>)]
+#[property(name: Option<String>)]
 pub struct Name<'a>(&'a XmlElement);
 
 #[derive(XmlProperty)]
-#[property_name("metaid")]
-#[property_type(Option<String>)]
+#[property(metaid: Option<String>)]
 pub struct MetaId<'a>(&'a XmlElement);
 
 #[derive(XmlProperty)]
-#[property_name("sboTerm")]
-#[property_type(Option<String>)]
+#[property(sboTerm: Option<String>)]
 pub struct SboTerm<'a>(&'a XmlElement);
 
 #[derive(XmlChild)]
-#[child_name("notes")]
-#[child_type(XmlElement)]
+#[child(notes: XmlElement)]
 pub struct Notes<'a>(&'a XmlElement);
 
 #[derive(XmlChild)]
-#[child_name("annotation")]
-#[child_type(XmlElement)]
+#[child(annotation: XmlElement)]
 pub struct Annotation<'a>(&'a XmlElement);
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.

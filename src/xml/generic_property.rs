@@ -34,64 +34,92 @@ impl<T: XmlPropertyType> XmlProperty<T> for GenericProperty<'_, T> {
     }
 
     fn is_set(&self) -> bool {
-        // As opposed to `self.read_raw().is_some()`, this does not need to copy.
-        let doc = self.element.read_doc();
-        self.element
-            .element()
-            .attribute(doc.deref(), self.name.as_str())
-            .is_some()
-    }
-
-    fn is_valid(&self) -> bool {
-        self.read_checked().is_ok()
+        is_set(self.element, self.name())
     }
 
     fn read(&self) -> T {
-        match self.read_checked() {
-            Ok(result) => result,
-            Err(message) => {
-                panic!("Cannot read property `{}`: {}", self.name, message)
-            }
-        }
+        read(self.element, self.name())
     }
 
     fn read_checked(&self) -> Result<T, String> {
-        let doc = self.element.read_doc();
-        let value = self
-            .element
-            .element()
-            .attribute(doc.deref(), self.name.as_str());
-        XmlPropertyType::try_read(value)
+        read_checked(self.element, self.name())
     }
 
     fn read_raw(&self) -> Option<String> {
-        let doc = self.element.read_doc();
-        self.element
-            .element()
-            .attribute(doc.deref(), self.name.as_str())
-            .map(|it| it.to_string())
+        read_raw(self.element, self.name())
     }
 
     fn clear(&self) {
-        let mut doc = self.element.write_doc();
-        self.element
-            .element()
-            .mut_attributes(doc.deref_mut())
-            .remove(&self.name);
+        clear(self.element, self.name());
     }
 
     fn write(&self, value: &T) {
-        if let Some(value) = XmlPropertyType::write(value) {
-            self.write_raw(value);
-        } else {
-            self.clear();
-        }
+        write(self.element, self.name(), value);
     }
 
     fn write_raw(&self, value: String) {
-        let mut doc = self.element.write_doc();
-        self.element
-            .element()
-            .set_attribute(doc.deref_mut(), self.name.as_str(), value);
+        write_raw(self.element, self.name(), value);
     }
+}
+
+/*
+   The following functions implement [XmlProperty] in both the [GenericProperty] and
+   all macro implementations. They are only visible to the crate code (`pub(crate)`),
+   i.e. they are private within this library. They are inlined just to make extra sure
+   the string names are not re-allocated when not necessary.
+*/
+
+pub(crate) fn is_set(element: &XmlElement, name: &str) -> bool {
+    // As opposed to `self.read_raw().is_some()`, this does not need to copy.
+    let doc = element.read_doc();
+    element.element().attribute(doc.deref(), name).is_some()
+}
+
+pub(crate) fn read<T: XmlPropertyType>(element: &XmlElement, name: &str) -> T {
+    match read_checked(element, name) {
+        Ok(result) => result,
+        Err(message) => {
+            panic!("Cannot read property `{}`: {}", name, message)
+        }
+    }
+}
+
+pub(crate) fn read_checked<T: XmlPropertyType>(
+    element: &XmlElement,
+    name: &str,
+) -> Result<T, String> {
+    let doc = element.read_doc();
+    let value = element.element().attribute(doc.deref(), name);
+    XmlPropertyType::try_read(value)
+}
+
+pub(crate) fn read_raw(element: &XmlElement, name: &str) -> Option<String> {
+    let doc = element.read_doc();
+    element
+        .element()
+        .attribute(doc.deref(), name)
+        .map(|it| it.to_string())
+}
+
+pub(crate) fn clear(element: &XmlElement, name: &str) {
+    let mut doc = element.write_doc();
+    element
+        .element()
+        .mut_attributes(doc.deref_mut())
+        .remove(name);
+}
+
+pub(crate) fn write<T: XmlPropertyType>(element: &XmlElement, name: &str, value: &T) {
+    if let Some(value) = XmlPropertyType::write(value) {
+        write_raw(element, name, value);
+    } else {
+        clear(element, name);
+    }
+}
+
+pub(crate) fn write_raw(element: &XmlElement, name: &str, value: String) {
+    let mut doc = element.write_doc();
+    element
+        .element()
+        .set_attribute(doc.deref_mut(), name, value);
 }

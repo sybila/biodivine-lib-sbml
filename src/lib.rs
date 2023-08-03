@@ -134,9 +134,9 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
     use crate::xml::{XmlChild, XmlElement, XmlProperty, XmlWrapper};
     use crate::{sbase::SBase, SbmlDocument};
+    use std::ops::Deref;
 
     #[test]
     pub fn test_model_id() {
@@ -156,7 +156,6 @@ mod tests {
             let content = p.element().text_content(doc.deref());
             assert!(content.starts_with("This model"));
         }
-
 
         let original_id = Some("model_id".to_string());
         let modified_id = Some("model_6431".to_string());
