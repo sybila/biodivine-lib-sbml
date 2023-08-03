@@ -13,6 +13,10 @@ pub mod sbase;
 
 pub mod model;
 
+/// Declares the [SbmlValidate] trait and should also contain other relevant
+/// algorithms/implementations for validation.
+pub mod validation;
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
