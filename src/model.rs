@@ -51,6 +51,8 @@ impl SbmlUnitDefinition {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Unit(XmlElement);
 
+impl SBase for Unit {}
+
 impl Unit {
     pub fn get_kind(&self) -> BaseUnit {
         let doc = self.read_doc();
