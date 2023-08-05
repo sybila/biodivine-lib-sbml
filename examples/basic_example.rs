@@ -1,5 +1,5 @@
 use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::xml::XmlWrapper;
+use biodivine_lib_sbml::xml::{XmlProperty, XmlWrapper};
 use biodivine_lib_sbml::SbmlDocument;
 
 // To run this example, execute `cargo run --example basic_example`.
@@ -10,7 +10,7 @@ use biodivine_lib_sbml::SbmlDocument;
 fn main() {
     let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
     let model = doc.get_model();
-    assert_eq!("model_id", model.get_id().unwrap().as_str());
+    assert_eq!("model_id", model.id().read().unwrap().as_str());
     // Print the whole document:
     println!("{}", model.read_doc().write_str().unwrap());
 }

@@ -1,49 +1,49 @@
-use crate::sbase::SBaseDefault;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use macros::XmlWrapper;
-use std::ops::Deref;
+use macros::{SBase, XmlChild, XmlWrapper};
 
 /// A type-safe representation of an SBML <model> element.
-#[derive(Clone, Debug, XmlWrapper)]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlModel(XmlElement);
 
-/// Adds the default implementation of [SBase] to the [SbmlModel].
-impl SBaseDefault for SbmlModel {}
+#[derive(XmlChild)]
+#[child(listOfFunctionDefinitions : XmlList<SbmlFunctionDefinition>)]
+pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
+
+#[derive(XmlChild)]
+#[child(listOfUnitDefinitions : XmlList<SbmlUnitDefinition>)]
+pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
 impl SbmlModel {
     pub fn new(xml: XmlElement) -> SbmlModel {
         SbmlModel::from(xml)
     }
-    pub fn get_function_definitions(&self) -> XmlList<SbmlFunctionDefinition> {
-        let list_element = {
-            let xml = self.read_doc();
-            self.element()
-                .find(xml.deref(), "listOfFunctionDefinitions")
-                .unwrap()
-        };
-        XmlList::from(self.as_xml().derive(list_element))
+
+    pub fn function_definitions(&self) -> ListOfFunctionDefinitions {
+        ListOfFunctionDefinitions::for_element(self.as_xml())
     }
 
-    pub fn get_unit_definitions(&self) -> XmlList<SbmlUnitDefinition> {
-        let list = self.child_element("listOfUnitDefinitions");
-        XmlList::from(self.as_xml().derive(list))
+    pub fn unit_definitions(&self) -> ListOfUnitDefinitions {
+        ListOfUnitDefinitions::for_element(self.as_xml())
     }
 }
 
-#[derive(Clone, Debug, XmlWrapper)]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlFunctionDefinition(XmlElement);
 
-#[derive(Clone, Debug, XmlWrapper)]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlUnitDefinition(XmlElement);
 
+#[derive(XmlChild)]
+#[child(listOfUnits : XmlList<Unit>)]
+pub struct ListOfUnits<'a>(&'a XmlElement);
+
 impl SbmlUnitDefinition {
-    pub fn get_units(&self) -> XmlList<Unit> {
-        let list = self.child_element("listOfUnits");
-        XmlList::from(self.as_xml().derive(list))
+    pub fn units(&self) -> ListOfUnits {
+        ListOfUnits::for_element(self.as_xml())
     }
 }
 
-#[derive(Clone, Debug, XmlWrapper)]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Unit(XmlElement);
 
 impl Unit {
@@ -63,5 +63,3 @@ impl Unit {
         todo!()
     }
 }
-/// TODO: If I recall correctly, these should also implement SBase, but remove if that's not true.
-impl SBaseDefault for SbmlFunctionDefinition {}

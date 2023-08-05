@@ -6,12 +6,32 @@ use std::sync::{Arc, RwLock};
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
-/// us work with XML documents in a sane and safe way.
+/// us work with XML documents in a sane and safe way. In particular:
+///  - [XmlDocument] | A thread and memory safe reference to a [Document].
+///  - [XmlElement] | A thread and memory safe reference to an [xml_doc::Element].
+///  - [xml::XmlWrapper] | A trait with utility functions for working with types
+///  derived from [XmlElement].
+///  - [xml::XmlDefault] | An extension of [xml::XmlWrapper] which allows creation of "default"
+///  value for the derived type.
+///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
+///  accessing properties stored in XML attributes. Implementation can be generated using a derive
+///  macro.
+///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
+///  child tags. Implementation can be generated using a derive macro.
+///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
+///  a typed list of elements.
+///  - [xml::GenericChild] and [xml::GenericProperty] | Generic implementations of
+///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
+///  is not known at compile time.
 pub mod xml;
 
 pub mod sbase;
 
 pub mod model;
+
+/// Declares the [SbmlValidate] trait and should also contain other relevant
+/// algorithms/implementations for validation.
+pub mod validation;
 
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
@@ -130,20 +150,39 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
+    use crate::xml::{XmlChild, XmlElement, XmlProperty, XmlWrapper};
     use crate::{sbase::SBase, SbmlDocument};
+    use std::ops::Deref;
 
     #[test]
     pub fn test_model_id() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
         let model = doc.get_model();
-        assert_eq!("model_id", model.get_id().unwrap().as_str());
-        model.set_id("model_6431".to_string());
-        assert_eq!("model_6431", model.get_id().unwrap().as_str());
+
+        // This is a "qualitative" model so there are no function definitions or units.
+        assert!(!model.function_definitions().is_set());
+        assert!(!model.unit_definitions().is_set());
+
+        assert!(model.notes().is_set());
+        {
+            let notes = model.notes().get();
+            let body = notes.child::<XmlElement>("body").get();
+            let p = body.child::<XmlElement>("p").get();
+            let doc = model.read_doc();
+            let content = p.element().text_content(doc.deref());
+            assert!(content.starts_with("This model"));
+        }
+
+        let original_id = Some("model_id".to_string());
+        let modified_id = Some("model_6431".to_string());
+        assert_eq!(original_id, model.id().read());
+        model.id().write(&modified_id);
+        assert_eq!(modified_id, model.id().read());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();
         let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
         let model2 = doc2.get_model();
-        assert_eq!(model.get_id(), model2.get_id());
+        assert_eq!(model.id().read(), model2.id().read());
         assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
         std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
     }
