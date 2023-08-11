@@ -2,33 +2,55 @@ use crate::xml::{XmlElement, XmlProperty, XmlPropertyType, XmlWrapper};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
-/// [GenericProperty] is an implementation of [XmlProperty] that uses an attribute name given
+/// [DynamicProperty] is an implementation of [XmlProperty] that uses an attribute name given
 /// at runtime. It is less efficient (and idiomatic) than using a special type for
 /// individual properties, but it is useful if the attribute name is dynamic or otherwise
 /// not known at compile time.
-pub struct GenericProperty<'a, T: XmlPropertyType> {
+pub struct DynamicProperty<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: String,
     _marker: PhantomData<T>,
 }
 
-impl<'a, T: XmlPropertyType> GenericProperty<'a, T> {
-    /// Create a new instance of a [GenericProperty] for the given `element` and `name`.
-    pub fn new(element: &'a XmlElement, name: &str) -> GenericProperty<'a, T> {
-        GenericProperty {
+/// [Property] is an implementation of [XmlProperty] that uses an attribute name known
+/// at compile time. As such, it is faster than [DynamicProperty], but less flexible.
+pub struct Property<'a, T: XmlPropertyType> {
+    element: &'a XmlElement,
+    name: &'static str,
+    _marker: PhantomData<T>,
+}
+
+impl<'a, T: XmlPropertyType> DynamicProperty<'a, T> {
+    /// Create a new instance of a [DynamicProperty] for the given `element` and `name`.
+    pub fn new(element: &'a XmlElement, name: &str) -> DynamicProperty<'a, T> {
+        DynamicProperty {
             element,
             name: name.to_string(),
             _marker: PhantomData,
         }
     }
 
-    /// Read the name of this [GenericProperty].
+    /// Read the name of this [DynamicProperty].
     pub fn name(&self) -> &str {
         self.name.as_str()
     }
 }
 
-impl<T: XmlPropertyType> XmlProperty<T> for GenericProperty<'_, T> {
+impl<'a, T: XmlPropertyType> Property<'a, T> {
+    pub fn new(element: &'a XmlElement, name: &'static str) -> Property<'a, T> {
+        Property {
+            element,
+            name,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+}
+
+impl<T: XmlPropertyType> XmlProperty<T> for DynamicProperty<'_, T> {
     fn element(&self) -> &XmlElement {
         self.element
     }
@@ -62,6 +84,40 @@ impl<T: XmlPropertyType> XmlProperty<T> for GenericProperty<'_, T> {
     }
 }
 
+impl<T: XmlPropertyType> XmlProperty<T> for Property<'_, T> {
+    fn element(&self) -> &XmlElement {
+        self.element
+    }
+
+    fn is_set(&self) -> bool {
+        is_set(self.element, self.name)
+    }
+
+    fn read(&self) -> T {
+        read(self.element, self.name)
+    }
+
+    fn read_checked(&self) -> Result<T, String> {
+        read_checked(self.element, self.name)
+    }
+
+    fn read_raw(&self) -> Option<String> {
+        read_raw(self.element, self.name)
+    }
+
+    fn clear(&self) {
+        clear(self.element, self.name);
+    }
+
+    fn write(&self, value: &T) {
+        write(self.element, self.name, value);
+    }
+
+    fn write_raw(&self, value: String) {
+        write_raw(self.element, self.name, value);
+    }
+}
+
 /*
    The following functions implement [XmlProperty] in both the [GenericProperty] and
    all macro implementations. They are only visible to the crate code (`pub(crate)`),
@@ -69,13 +125,13 @@ impl<T: XmlPropertyType> XmlProperty<T> for GenericProperty<'_, T> {
    the string names are not re-allocated when not necessary.
 */
 
-pub(crate) fn is_set(element: &XmlElement, name: &str) -> bool {
+fn is_set(element: &XmlElement, name: &str) -> bool {
     // As opposed to `self.read_raw().is_some()`, this does not need to copy.
     let doc = element.read_doc();
     element.element().attribute(doc.deref(), name).is_some()
 }
 
-pub(crate) fn read<T: XmlPropertyType>(element: &XmlElement, name: &str) -> T {
+fn read<T: XmlPropertyType>(element: &XmlElement, name: &str) -> T {
     match read_checked(element, name) {
         Ok(result) => result,
         Err(message) => {
@@ -84,16 +140,13 @@ pub(crate) fn read<T: XmlPropertyType>(element: &XmlElement, name: &str) -> T {
     }
 }
 
-pub(crate) fn read_checked<T: XmlPropertyType>(
-    element: &XmlElement,
-    name: &str,
-) -> Result<T, String> {
+fn read_checked<T: XmlPropertyType>(element: &XmlElement, name: &str) -> Result<T, String> {
     let doc = element.read_doc();
     let value = element.element().attribute(doc.deref(), name);
     XmlPropertyType::try_read(value)
 }
 
-pub(crate) fn read_raw(element: &XmlElement, name: &str) -> Option<String> {
+fn read_raw(element: &XmlElement, name: &str) -> Option<String> {
     let doc = element.read_doc();
     element
         .element()
@@ -101,7 +154,7 @@ pub(crate) fn read_raw(element: &XmlElement, name: &str) -> Option<String> {
         .map(|it| it.to_string())
 }
 
-pub(crate) fn clear(element: &XmlElement, name: &str) {
+fn clear(element: &XmlElement, name: &str) {
     let mut doc = element.write_doc();
     element
         .element()
@@ -109,7 +162,7 @@ pub(crate) fn clear(element: &XmlElement, name: &str) {
         .remove(name);
 }
 
-pub(crate) fn write<T: XmlPropertyType>(element: &XmlElement, name: &str, value: &T) {
+fn write<T: XmlPropertyType>(element: &XmlElement, name: &str, value: &T) {
     if let Some(value) = XmlPropertyType::write(value) {
         write_raw(element, name, value);
     } else {
@@ -117,7 +170,7 @@ pub(crate) fn write<T: XmlPropertyType>(element: &XmlElement, name: &str, value:
     }
 }
 
-pub(crate) fn write_raw(element: &XmlElement, name: &str, value: String) {
+fn write_raw(element: &XmlElement, name: &str, value: String) {
     let mut doc = element.write_doc();
     element
         .element()
