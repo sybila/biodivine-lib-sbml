@@ -2,8 +2,6 @@ use crate::xml::impl_xml_child::Child;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::{SBase, XmlWrapper};
 use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
-use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -68,7 +66,6 @@ impl Unit {
             .attribute(doc.deref(), "constant")
             .map(|it| it.to_string())
     }
-}
 
     pub fn set_multiplier(&self, value: &String) {
         let mut doc = self.write_doc();
