@@ -58,7 +58,7 @@ pub trait XmlChild<T: XmlWrapper> {
 }
 
 /// Expands the capabilities of [XmlChild] when `T` implements [XmlDefault].
-pub trait XmlChildDefault<T: XmlDefault>: XmlChild<T> {
+pub trait XmlChildDefault<T: XmlWrapper>: XmlChild<T> {
     /// The same as [XmlChild::get], but if the child does not exist, it is created using
     /// [XmlDefault::default].
     ///
@@ -71,13 +71,15 @@ pub trait XmlChildDefault<T: XmlDefault>: XmlChild<T> {
     /// Creates the child element using [XmlDefault::default] if it does not exist.
     ///
     /// *Warning:* If a new element is created, it is typically inserted as the *last* child.
+    fn ensure(&self);
+}
+
+/// Implement [XmlChildDefault] for any suitable combination of [XmlDefault] and [XmlChild] types.
+impl<Element: XmlDefault, Child: XmlChild<Element>> XmlChildDefault<Element> for Child {
     fn ensure(&self) {
         if !self.is_set() {
-            let default = T::default(self.parent().document());
+            let default = Element::default(self.parent().document());
             self.set(default);
         }
     }
 }
-
-/// Implement [XmlChildDefault] for any suitable combination of [XmlDefault] and [XmlChild] types.
-impl<T: XmlDefault, R: XmlChild<T>> XmlChildDefault<T> for R {}

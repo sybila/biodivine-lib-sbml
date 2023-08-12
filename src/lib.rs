@@ -20,7 +20,7 @@ use xml_doc::Document;
 ///  child tags. Implementation can be generated using a derive macro.
 ///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
 ///  a typed list of elements.
-///  - [xml::GenericChild] and [xml::GenericProperty] | Generic implementations of
+///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
 ///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
 ///  is not known at compile time.
 pub mod xml;

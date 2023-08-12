@@ -1,21 +1,11 @@
-use crate::sbase::SBase;
+use crate::xml::impl_xml_child::Child;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use macros::XmlWrapper;
+use macros::{SBase, XmlWrapper};
 use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
-use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlModel(XmlElement);
-
-#[derive(XmlChild)]
-#[child(listOfFunctionDefinitions : XmlList<SbmlFunctionDefinition>)]
-pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
-
-#[derive(XmlChild)]
-#[child(listOfUnitDefinitions : XmlList<SbmlUnitDefinition>)]
-pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
 /// Public functions to manipulate with the contents of [SbmlModel]
 /// i.e., optional lists inside SBML model + constructor new()
@@ -24,12 +14,12 @@ impl SbmlModel {
         SbmlModel::from(xml)
     }
 
-    pub fn function_definitions(&self) -> ListOfFunctionDefinitions {
-        ListOfFunctionDefinitions::for_element(self.as_xml())
+    pub fn function_definitions(&self) -> Child<XmlList<SbmlFunctionDefinition>> {
+        Child::new(self.as_xml(), "listOfFunctionDefinitions")
     }
 
-    pub fn unit_definitions(&self) -> ListOfUnitDefinitions {
-        ListOfUnitDefinitions::for_element(self.as_xml())
+    pub fn unit_definitions(&self) -> Child<XmlList<SbmlUnitDefinition>> {
+        Child::new(self.as_xml(), "listOfUnitDefinitions")
     }
 }
 
@@ -39,13 +29,9 @@ pub struct SbmlFunctionDefinition(XmlElement);
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlUnitDefinition(XmlElement);
 
-#[derive(XmlChild)]
-#[child(listOfUnits : XmlList<Unit>)]
-pub struct ListOfUnits<'a>(&'a XmlElement);
-
 impl SbmlUnitDefinition {
-    pub fn units(&self) -> ListOfUnits {
-        ListOfUnits::for_element(self.as_xml())
+    pub fn units(&self) -> Child<XmlList<Unit>> {
+        Child::new(self.as_xml(), "listOfUnits")
     }
 }
 
@@ -80,7 +66,6 @@ impl Unit {
             .attribute(doc.deref(), "constant")
             .map(|it| it.to_string())
     }
-}
 
     pub fn set_multiplier(&self, value: &String) {
         let mut doc = self.write_doc();
