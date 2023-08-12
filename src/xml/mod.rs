@@ -19,19 +19,15 @@ mod xml_child;
 /// Implementation of the [XmlList] struct.
 mod xml_list;
 
-/// Implementation of the [GenericProperty] struct.
-///
-/// The module is `pub(crate)` because it is used by some macro generated code.
-pub(crate) mod generic_property;
+/// Implementation of the [DynamicProperty] struct.
+pub mod impl_xml_property;
 
-/// Implementation of the [GenericChild] struct.
-///
-/// The module is `pub(crate)` because it is used by some macro generated code.
-pub(crate) mod generic_child;
+/// Implementation of the [DynamicChild] struct.
+pub mod impl_xml_child;
 
 /// Some primitive [XmlPropertyType] implementations, as declared in SBML
 /// specification Section 3.1.
-mod impl_property_type;
+mod impl_xml_property_type;
 
 pub use crate::xml::xml_child::XmlChild;
 pub use crate::xml::xml_child::XmlChildDefault;
@@ -42,8 +38,8 @@ pub use crate::xml::xml_property_type::XmlPropertyType;
 pub use crate::xml::xml_wrapper::XmlDefault;
 pub use crate::xml::xml_wrapper::XmlWrapper;
 
-pub use crate::xml::generic_child::GenericChild;
-pub use crate::xml::generic_property::GenericProperty;
+pub use crate::xml::impl_xml_child::DynamicChild;
+pub use crate::xml::impl_xml_property::DynamicProperty;
 
 /// A type alias which defines `XmlDocument` as a `xml_doc::Document` object
 /// that is wrapped in a reference-counted read-write lock. This makes the

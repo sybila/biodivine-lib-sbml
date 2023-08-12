@@ -1,7 +1,7 @@
+use crate::xml::impl_xml_child::Child;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use macros::{SBase, XmlChild, XmlWrapper};
+use macros::{SBase, XmlWrapper};
 use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
@@ -15,23 +15,18 @@ impl SbmlModel {
         SbmlModel::from(xml)
     }
 
-    pub fn function_definitions(&self) -> ListOfFunctionDefinitions {
-        ListOfFunctionDefinitions::for_element(self.as_xml())
+    pub fn function_definitions(&self) -> Child<XmlList<SbmlFunctionDefinition>> {
+        Child::new(self.as_xml(), "listOfFunctionDefinitions")
     }
 
-    pub fn unit_definitions(&self) -> ListOfUnitDefinitions {
-        ListOfUnitDefinitions::for_element(self.as_xml())
+    pub fn unit_definitions(&self) -> Child<XmlList<SbmlUnitDefinition>> {
+        Child::new(self.as_xml(), "listOfUnitDefinitions")
     }
 
-    pub fn compartments(&self) -> ListOfCompartments {
-        ListOfCompartments::for_element(self.as_xml())
+    pub fn compartments(&self) -> Child<XmlList<Compartment>> {
+        Child::new(self.as_xml(), "listOfCompartments")
     }
 }
-
-/// 1.) Optional list of SBML function definitions
-#[derive(XmlChild)]
-#[child(listOfFunctionDefinitions : XmlList<SbmlFunctionDefinition>)]
-pub struct ListOfFunctionDefinitions<'a>(&'a XmlElement);
 
 /// 1.1.) Individual function definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -46,11 +41,6 @@ impl SbmlFunctionDefinition {
         todo!()
     }
 }
-
-/// 2.) Optional list of SBML unit definitions
-#[derive(XmlChild)]
-#[child(listOfUnitDefinitions : XmlList<SbmlUnitDefinition>)]
-pub struct ListOfUnitDefinitions<'a>(&'a XmlElement);
 
 /// 2.1.) Individual unit definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -194,20 +184,12 @@ pub enum BaseUnit {
     Weber,
 }
 /// 3.) Optional list of SBMl compartments
-#[derive(XmlChild)]
-#[child(listOfCompartments : XmlList<Compartment>)]
-pub struct ListOfCompartments<'a>(&'a XmlElement);
-
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlUnitDefinition(XmlElement);
 
-#[derive(XmlChild)]
-#[child(listOfUnits : XmlList<Unit>)]
-pub struct ListOfUnits<'a>(&'a XmlElement);
-
 impl SbmlUnitDefinition {
-    pub fn units(&self) -> ListOfUnits {
-        ListOfUnits::for_element(self.as_xml())
+    pub fn units(&self) -> Child<XmlList<Unit>> {
+        Child::new(self.as_xml(), "listOfUnits")
     }
 }
 
@@ -256,5 +238,3 @@ impl Compartment {
             .map(|it| it.to_string())
     }
 }
-
-

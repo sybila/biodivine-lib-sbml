@@ -1,4 +1,4 @@
-use crate::xml::{GenericChild, GenericProperty, XmlDocument, XmlElement, XmlPropertyType};
+use crate::xml::{DynamicChild, DynamicProperty, XmlDocument, XmlElement, XmlPropertyType};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use xml_doc::{Document, Element};
 
@@ -26,13 +26,13 @@ pub trait XmlWrapper: From<XmlElement> + Into<XmlElement> {
     ///
     /// Note that individual [XmlWrapper] implementations should provide type safe access
     /// to their known/required properties through specialised [XmlProperty] implementations
-    /// instead of relying on [GenericProperty].
-    fn property<T: XmlPropertyType>(&self, name: &str) -> GenericProperty<T> {
-        GenericProperty::new(self.as_xml(), name)
+    /// instead of relying on [DynamicProperty].
+    fn property<T: XmlPropertyType>(&self, name: &str) -> DynamicProperty<T> {
+        DynamicProperty::new(self.as_xml(), name)
     }
 
-    fn child<T: XmlWrapper>(&self, name: &str) -> GenericChild<T> {
-        GenericChild::new(self.as_xml(), name)
+    fn child<T: XmlWrapper>(&self, name: &str) -> DynamicChild<T> {
+        DynamicChild::new(self.as_xml(), name)
     }
 
     /// Obtain a read-only reference to the underlying [Document].
