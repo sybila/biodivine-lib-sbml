@@ -122,6 +122,14 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         Type::from(XmlElement::new(self.document(), removed))
     }
 
+    pub fn push(&self, value: Type) {
+        self.insert(self.len() - 1, value)
+    }
+
+    pub fn pop(&self) -> Type {
+        self.remove(self.len() - 1)
+    }
+
     /// Get number of elements contained in the list.
     pub fn len(&self) -> usize {
         let doc = self.read_doc();
