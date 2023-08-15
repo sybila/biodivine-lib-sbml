@@ -1,3 +1,4 @@
+use crate::sbase::SBase;
 use crate::xml::{XmlElement, XmlWrapper};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
@@ -141,3 +142,5 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         self.len() == 0
     }
 }
+
+impl<T: XmlWrapper> SBase for XmlList<T> {}
