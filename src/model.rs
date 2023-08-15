@@ -26,6 +26,10 @@ impl SbmlModel {
     pub fn compartments(&self) -> Child<XmlList<Compartment>> {
         Child::new(self.as_xml(), "listOfCompartments")
     }
+
+    pub fn species(&self) -> Child<XmlList<Specie>> {
+        Child::new(self.as_xml(), "listOfSpecies")
+    }
 }
 
 /// Individual function definition
@@ -103,7 +107,7 @@ impl Unit {
 }
 
 /// Set of pre-defined base units that are allowed for unit definition
-#[derive(Display, EnumString)]
+#[derive(Debug, Display, EnumString)]
 pub enum BaseUnit {
     #[strum(serialize = "ampere")]
     Ampere,
@@ -178,7 +182,7 @@ pub enum BaseUnit {
 pub struct Compartment(XmlElement);
 
 impl Compartment {
-    /// override default implementation as compartment id is required
+    // override default behaviour (inherited from SBase) as compartment id is required.
     pub fn id(&self) -> Property<String> {
         Property::new(self.as_xml(), "id")
     }
@@ -198,5 +202,50 @@ impl Compartment {
 
     pub fn constant(&self) -> Property<bool> {
         Property::new(self.as_xml(), "constant")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Specie(XmlElement);
+
+impl Specie {
+    // override default behaviour (inherited from SBase) as specie id is required.
+    pub fn id(&self) -> Property<String> {
+        Property::new(self.as_xml(), "id")
+    }
+
+    // would it be useful to return Property<Compartment> ? If so, then how to find compartment
+    // by id ?
+    pub fn compartment(&self) -> Property<String> {
+        Property::new(self.as_xml(), "compartment")
+    }
+
+    pub fn initial_amount(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "initialAmount")
+    }
+
+    pub fn initial_concentration(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "initialConcentration")
+    }
+
+    // TODO: need to embrace recommended units (p. 148)
+    pub fn substance_units(&self) -> Property<Option<BaseUnit>> {
+        Property::new(self.as_xml(), "substanceUnits")
+    }
+
+    pub fn has_only_substance_units(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "hasOnlySubstanceUnits")
+    }
+
+    pub fn boundary_condition(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "boundaryCondition")
+    }
+
+    pub fn constant(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "constant")
+    }
+
+    pub fn conversion_factor(&self) -> Property<Option<String>> {
+        Property::new(self.as_xml(), "conversionFactor")
     }
 }
