@@ -34,6 +34,10 @@ impl SbmlModel {
     pub fn parameters(&self) -> Child<XmlList<Parameter>> {
         Child::new(self.as_xml(), "listOfParameters")
     }
+
+    pub fn initial_assignments(&self) -> Child<XmlList<InitialAssignment>> {
+        Child::new(self.as_xml(), "listOfInitialAssignments")
+    }
 }
 
 /// Individual function definition
@@ -46,7 +50,7 @@ impl SbmlFunctionDefinition {
     }
 }
 
-/// A [Math] element represents an [XmlElement] related to MathML which is 
+/// A [Math] element represents an [XmlElement] related to MathML which is
 /// separated from SBML specification.
 #[derive(Clone, Debug, XmlWrapper)]
 pub struct Math(XmlElement);
@@ -60,6 +64,7 @@ impl SbmlUnitDefinition {
         Child::new(self.as_xml(), "listOfUnits")
     }
 }
+
 /// Unit representation
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Unit(XmlElement);
@@ -275,5 +280,18 @@ impl Parameter {
 
     pub fn constant(&self) -> Property<bool> {
         Property::new(self.as_xml(), "constant")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct InitialAssignment(XmlElement);
+
+impl InitialAssignment {
+    pub fn symbol(&self) -> Property<String> {
+        Property::new(self.as_xml(), "symbol")
+    }
+
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
     }
 }
