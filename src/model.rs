@@ -46,6 +46,10 @@ impl SbmlModel {
     pub fn constraints(&self) -> Child<XmlList<Constraint>> {
         Child::new(self.as_xml(), "listOfConstraints")
     }
+
+    pub fn reactions(&self) -> Child<XmlList<Reaction>> {
+        Child::new(self.as_xml(), "listOfReactions")
+    }
 }
 
 /// Individual function definition
