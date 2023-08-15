@@ -97,34 +97,6 @@ impl Unit {
     pub fn multiplier(&self) -> Property<f64> {
         Property::new(self.as_xml(), "multiplier")
     }
-
-    // pub fn set_kind(&self, value: BaseUnit) {
-    //     let mut doc = self.write_doc();
-    //     self.element()
-    //         .set_attribute(doc.deref_mut(), "kind", value.to_string())
-    // }
-
-    // /// In following 3 functions:
-    // ///     - Pass an Integer (and convert) or a String as the value for numeric attributes ?
-    // ///     - If we choose passing a String, then perform input-check or assume valid input
-    // ///       and leave any invalid values to be detected by some validator ?
-    // pub fn set_exponent(&self, value: &String) {
-    //     let mut doc = self.write_doc();
-    //     self.element()
-    //         .set_attribute(doc.deref_mut(), "exponent", value)
-    // }
-
-    // pub fn set_scale(&self, value: &String) {
-    //     let mut doc = self.write_doc();
-    //     self.element()
-    //         .set_attribute(doc.deref_mut(), "scale", value)
-    // }
-
-    // pub fn set_multiplier(&self, value: &String) {
-    //     let mut doc = self.write_doc();
-    //     self.element()
-    //         .set_attribute(doc.deref_mut(), "multiplier", value)
-    // }
 }
 
 /// Set of pre-defined base units that are allowed for unit definition
