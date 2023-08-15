@@ -1,7 +1,7 @@
 use crate::xml::impl_xml_child::Child;
+use crate::xml::impl_xml_property::Property;
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::{SBase, XmlWrapper};
-use std::ops::{Deref, DerefMut};
 use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
@@ -28,92 +28,81 @@ impl SbmlModel {
     }
 }
 
-/// 1.1.) Individual function definition
+/// Individual function definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlFunctionDefinition(XmlElement);
 
 impl SbmlFunctionDefinition {
-    fn get_math(&self) -> XmlElement {
-        todo!()
-    }
-
-    fn set_math(&self, value: XmlElement) {
-        todo!()
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
     }
 }
 
-/// 2.1.) Individual unit definition
+/// A [Math] element represents an [XmlElement] related to MathML which is 
+/// separated from SBML specification.
+#[derive(Clone, Debug, XmlWrapper)]
+pub struct Math(XmlElement);
+
+/// Individual unit definition
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct SbmlUnitDefinition(XmlElement);
+
+impl SbmlUnitDefinition {
+    pub fn units(&self) -> Child<XmlList<Unit>> {
+        Child::new(self.as_xml(), "listOfUnits")
+    }
+}
+/// Unit representation
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Unit(XmlElement);
 
 impl Unit {
-    pub fn get_kind(&self) -> BaseUnit {
-        let doc = self.read_doc();
-        let raw_kind = self
-            .element()
-            .attribute(doc.deref(), "kind")
-            .unwrap()
-            .to_string();
-        BaseUnit::from_str(&raw_kind).unwrap()
+    pub fn kind(&self) -> Property<BaseUnit> {
+        Property::new(self.as_xml(), "kind")
     }
 
-    /// In following 3 functions:
-    ///     - Return String or integer/double when numeric values ?
-    ///     - Probably required attributes
-    pub fn get_exponent(&self) -> String {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "exponent")
-            .unwrap()
-            .to_string()
+    pub fn exponent(&self) -> Property<f64> {
+        Property::new(self.as_xml(), "exponent")
     }
 
-    pub fn get_scale(&self) -> String {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "scale")
-            .unwrap()
-            .to_string()
+    pub fn scale(&self) -> Property<i32> {
+        Property::new(self.as_xml(), "scale")
     }
 
-    pub fn get_multiplier(&self) -> String {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "multiplier")
-            .unwrap()
-            .to_string()
+    pub fn multiplier(&self) -> Property<f64> {
+        Property::new(self.as_xml(), "multiplier")
     }
 
-    pub fn set_kind(&self, value: BaseUnit) {
-        let mut doc = self.write_doc();
-        self.element()
-            .set_attribute(doc.deref_mut(), "kind", value.to_string())
-    }
+    // pub fn set_kind(&self, value: BaseUnit) {
+    //     let mut doc = self.write_doc();
+    //     self.element()
+    //         .set_attribute(doc.deref_mut(), "kind", value.to_string())
+    // }
 
-    /// In following 3 functions:
-    ///     - Pass an Integer (and convert) or a String as the value for numeric attributes ?
-    ///     - If we choose passing a String, then perform input-check or assume valid input
-    ///       and leave any invalid values to be detected by some validator ?
-    pub fn set_exponent(&self, value: &String) {
-        let mut doc = self.write_doc();
-        self.element()
-            .set_attribute(doc.deref_mut(), "exponent", value)
-    }
+    // /// In following 3 functions:
+    // ///     - Pass an Integer (and convert) or a String as the value for numeric attributes ?
+    // ///     - If we choose passing a String, then perform input-check or assume valid input
+    // ///       and leave any invalid values to be detected by some validator ?
+    // pub fn set_exponent(&self, value: &String) {
+    //     let mut doc = self.write_doc();
+    //     self.element()
+    //         .set_attribute(doc.deref_mut(), "exponent", value)
+    // }
 
-    pub fn set_scale(&self, value: &String) {
-        let mut doc = self.write_doc();
-        self.element()
-            .set_attribute(doc.deref_mut(), "scale", value)
-    }
+    // pub fn set_scale(&self, value: &String) {
+    //     let mut doc = self.write_doc();
+    //     self.element()
+    //         .set_attribute(doc.deref_mut(), "scale", value)
+    // }
 
-    pub fn set_multiplier(&self, value: &String) {
-        let mut doc = self.write_doc();
-        self.element()
-            .set_attribute(doc.deref_mut(), "multiplier", value)
-    }
+    // pub fn set_multiplier(&self, value: &String) {
+    //     let mut doc = self.write_doc();
+    //     self.element()
+    //         .set_attribute(doc.deref_mut(), "multiplier", value)
+    // }
 }
 
-/// 2.2.) Set of pre-defined base units that are allowed for unit definition
+/// Set of pre-defined base units that are allowed for unit definition
 #[derive(Display, EnumString)]
 pub enum BaseUnit {
     #[strum(serialize = "ampere")]
@@ -183,58 +172,31 @@ pub enum BaseUnit {
     #[strum(serialize = "weber")]
     Weber,
 }
-/// 3.) Optional list of SBMl compartments
-#[derive(Clone, Debug, XmlWrapper, SBase)]
-pub struct SbmlUnitDefinition(XmlElement);
 
-impl SbmlUnitDefinition {
-    pub fn units(&self) -> Child<XmlList<Unit>> {
-        Child::new(self.as_xml(), "listOfUnits")
-    }
-}
-
+/// Individual compartment definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Compartment(XmlElement);
 
 impl Compartment {
     /// override default implementation as compartment id is required
-    pub fn id(&self) -> String {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "id")
-            .map(|it| it.to_string())
-            .unwrap()
+    pub fn id(&self) -> Property<String> {
+        Property::new(self.as_xml(), "id")
     }
 
-    /// return String or Double ?
-    pub fn spatial_dimensions(&self) -> Option<String> {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "spatialDimensions")
-            .map(|it| it.to_string())
+    pub fn spatial_dimensions(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "spatialDimensions")
     }
 
-    /// return String or Double
-    pub fn size(&self) -> Option<String> {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "size")
-            .map(|it| it.to_string())
+    pub fn size(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "size")
     }
 
     /// TODO: implement units lookup in model according to documentation
-    pub fn units(&self) -> Option<String> {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "units")
-            .map(|it| it.to_string())
+    pub fn units(&self) -> Property<Option<String>> {
+        Property::new(self.as_xml(), "units")
     }
 
-    /// return String or Boolean ?
-    pub fn constant(&self) -> Option<String> {
-        let doc = self.read_doc();
-        self.element()
-            .attribute(doc.deref(), "constant")
-            .map(|it| it.to_string())
+    pub fn constant(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "constant")
     }
 }
