@@ -304,7 +304,7 @@ impl InitialAssignment {
     }
 }
 
-pub trait Rule : XmlWrapper {
+trait Rule : XmlWrapper {
     fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
@@ -381,5 +381,26 @@ impl Reaction {
 
     pub fn kinetic_law(&self) -> Child<KineticLaw> {
         Child::new(self.as_xml(), "kineticLaw")
+    }
+}
+
+trait SimpleSpeciesReference : XmlWrapper {
+    fn species(&self) -> Property<String> {
+        Property::new(self.as_xml(), "species")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct SpeciesReference(XmlElement);
+
+impl SimpleSpeciesReference for SpeciesReference {}
+
+impl SpeciesReference {
+    pub fn stochiometry(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "stochiometry")
+    }
+
+    pub fn constant(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "constant")
     }
 }
