@@ -42,6 +42,10 @@ impl SbmlModel {
     pub fn rules<T: Rule>(&self) -> Child<XmlList<T>> {
         Child::new(self.as_xml(), "listOfRules")
     }
+
+    pub fn constraints(&self) -> Child<XmlList<Constraint>> {
+        Child::new(self.as_xml(), "listOfConstraints")
+    }
 }
 
 /// Individual function definition
@@ -330,5 +334,18 @@ impl Rule for RateRule {}
 impl RateRule {
     pub fn variable(&self) -> Property<String> {
         Property::new(self.as_xml(), "variable")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Constraint(XmlElement);
+
+impl Constraint {
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+
+    pub fn message(&self) -> Child<XmlElement> {
+        Child::new(self.as_xml(), "message")
     }
 }
