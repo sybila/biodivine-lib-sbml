@@ -304,7 +304,7 @@ impl InitialAssignment {
     }
 }
 
-trait Rule : XmlWrapper {
+pub trait Rule : XmlWrapper {
     fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
@@ -420,5 +420,22 @@ impl KineticLaw {
 
     pub fn local_parameters(&self) -> Child<XmlList<LocalParameter>> {
         Child::new(self.as_xml(), "listOfLocalParameters")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct LocalParameter(XmlElement);
+
+impl LocalParameter {
+    pub fn id(&self) -> Property<String> {
+        Property::new(self.as_xml(), "id")
+    }
+
+    pub fn value(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "value")
+    }
+
+    pub fn units(&self) -> Property<Option<String>> {
+        Property::new(self.as_xml(), "units")
     }
 }
