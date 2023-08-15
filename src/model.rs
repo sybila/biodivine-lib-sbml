@@ -404,3 +404,9 @@ impl SpeciesReference {
         Property::new(self.as_xml(), "constant")
     }
 }
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct ModifierSpeciesReference(XmlElement);
+
+impl SimpleSpeciesReference for ModifierSpeciesReference {}
+
