@@ -93,7 +93,7 @@ impl XmlPropertyType for i32 {
     }
 }
 
-/// A "trivial" conversion between an XML attribute and a `f64` floating-point number (`double` 
+/// A "trivial" conversion between an XML attribute and a `f64` floating-point number (`double`
 /// type in the SBML specification). Missing attribute value is interpreted as an error.
 ///
 /// ## Specification
@@ -135,9 +135,9 @@ impl XmlPropertyType for Option<f64> {
     }
 }
 
-/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is 
-/// interpreted as an error. 
-/// 
+/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
+/// interpreted as an error.
+///
 /// ## Specification
 ///  - Section 4.4.2
 impl XmlPropertyType for BaseUnit {
@@ -163,7 +163,7 @@ impl XmlPropertyType for Option<BaseUnit> {
     fn try_read(value: Option<&str>) -> Result<Self, String> {
         match value {
             Some(_) => Ok(Some(BaseUnit::try_read(value).unwrap())),
-            None => Ok(None)
+            None => Ok(None),
         }
     }
 
