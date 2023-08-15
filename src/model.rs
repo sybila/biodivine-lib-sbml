@@ -27,7 +27,7 @@ impl SbmlModel {
         Child::new(self.as_xml(), "listOfCompartments")
     }
 
-    pub fn species(&self) -> Child<XmlList<Specie>> {
+    pub fn species(&self) -> Child<XmlList<Species>> {
         Child::new(self.as_xml(), "listOfSpecies")
     }
 
@@ -224,9 +224,9 @@ impl Compartment {
 
 /// Individual specie definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
-pub struct Specie(XmlElement);
+pub struct Species(XmlElement);
 
-impl Specie {
+impl Species {
     // override default behaviour (inherited from SBase) as specie id is required.
     pub fn id(&self) -> Property<String> {
         Property::new(self.as_xml(), "id")
@@ -347,5 +347,39 @@ impl Constraint {
 
     pub fn message(&self) -> Child<XmlElement> {
         Child::new(self.as_xml(), "message")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Reaction(XmlElement);
+
+impl Reaction {
+    // override default behaviour (inherited from SBase) as specie id is required.
+    pub fn id(&self) -> Property<String> {
+        Property::new(self.as_xml(), "id")
+    }
+
+    pub fn reversible(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "reversible")
+    }
+
+    pub fn compartment(&self) -> Property<Option<String>> {
+        Property::new(self.as_xml(), "compratment")
+    }
+
+    pub fn reactants(&self) -> Child<XmlList<SpeciesReference>> {
+        Child::new(self.as_xml(), "listOfReactants")
+    }
+
+    pub fn products(&self) -> Child<XmlList<SpeciesReference>> {
+        Child::new(self.as_xml(), "listOfProducts")
+    }
+
+    pub fn modifiers(&self) -> Child<XmlList<ModifierSpeciesReference>> {
+        Child::new(self.as_xml(), "listOfModifiers")
+    }
+
+    pub fn kinetic_law(&self) -> Child<KineticLaw> {
+        Child::new(self.as_xml(), "kineticLaw")
     }
 }
