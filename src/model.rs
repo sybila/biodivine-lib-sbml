@@ -30,6 +30,10 @@ impl SbmlModel {
     pub fn species(&self) -> Child<XmlList<Specie>> {
         Child::new(self.as_xml(), "listOfSpecies")
     }
+
+    pub fn parameters(&self) -> Child<XmlList<Parameter>> {
+        Child::new(self.as_xml(), "listOfParameters")
+    }
 }
 
 /// Individual function definition
@@ -205,6 +209,7 @@ impl Compartment {
     }
 }
 
+/// Individual specie definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Specie(XmlElement);
 
@@ -247,5 +252,28 @@ impl Specie {
 
     pub fn conversion_factor(&self) -> Property<Option<String>> {
         Property::new(self.as_xml(), "conversionFactor")
+    }
+}
+
+/// Individual parameter definition
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Parameter(XmlElement);
+
+impl Parameter {
+    // override default behaviour (inherited from SBase) as specie id is required.
+    pub fn id(&self) -> Property<String> {
+        Property::new(self.as_xml(), "id")
+    }
+
+    pub fn value(&self) -> Property<Option<f64>> {
+        Property::new(self.as_xml(), "value")
+    }
+
+    pub fn units(&self) -> Property<Option<BaseUnit>> {
+        Property::new(self.as_xml(), "units")
+    }
+
+    pub fn constant(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "constant")
     }
 }
