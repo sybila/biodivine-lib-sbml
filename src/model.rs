@@ -38,6 +38,10 @@ impl SbmlModel {
     pub fn initial_assignments(&self) -> Child<XmlList<InitialAssignment>> {
         Child::new(self.as_xml(), "listOfInitialAssignments")
     }
+
+    pub fn rules<T: Rule>(&self) -> Child<XmlList<T>> {
+        Child::new(self.as_xml(), "listOfRules")
+    }
 }
 
 /// Individual function definition
@@ -293,5 +297,38 @@ impl InitialAssignment {
 
     pub fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
+    }
+}
+
+pub trait Rule : XmlWrapper {
+    fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct AlgebraicRule(XmlElement);
+
+impl Rule for AlgebraicRule {}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct AssignmentRule(XmlElement);
+
+impl Rule for AssignmentRule {}
+
+impl AssignmentRule {
+    pub fn variable(&self) -> Property<String> {
+        Property::new(self.as_xml(), "variable")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct RateRule(XmlElement);
+
+impl Rule for RateRule {}
+
+impl RateRule {
+    pub fn variable(&self) -> Property<String> {
+        Property::new(self.as_xml(), "variable")
     }
 }
