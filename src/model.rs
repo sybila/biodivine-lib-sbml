@@ -410,3 +410,15 @@ pub struct ModifierSpeciesReference(XmlElement);
 
 impl SimpleSpeciesReference for ModifierSpeciesReference {}
 
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct KineticLaw(XmlElement);
+
+impl KineticLaw {
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+
+    pub fn local_parameters(&self) -> Child<XmlList<LocalParameter>> {
+        Child::new(self.as_xml(), "listOfLocalParameters")
+    }
+}
