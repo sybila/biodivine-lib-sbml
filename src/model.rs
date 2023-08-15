@@ -50,6 +50,10 @@ impl SbmlModel {
     pub fn reactions(&self) -> Child<XmlList<Reaction>> {
         Child::new(self.as_xml(), "listOfReactions")
     }
+
+    pub fn events(&self) -> Child<XmlList<Event>> {
+        Child::new(self.as_xml(), "listOfEvents")
+    }
 }
 
 /// Individual function definition
@@ -413,5 +417,30 @@ impl LocalParameter {
 
     pub fn units(&self) -> Property<Option<String>> {
         Property::new(self.as_xml(), "units")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Event(XmlElement);
+
+impl Event {
+    pub fn use_values_from_trigger_time(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "useValuesFromTriggerTime")
+    }
+
+    pub fn trigger(&self) -> Child<Trigger> {
+        Child::new(self.as_xml(), "trigger")
+    }
+
+    pub fn priority(&self) -> Child<Priority> {
+        Child::new(self.as_xml(), "priority")
+    }
+
+    pub fn delay(&self) -> Child<Delay> {
+        Child::new(self.as_xml(), "delay")
+    }
+
+    pub fn event_assignments(&self) -> Child<XmlList<EventAssignments>> {
+        Child::new(self.as_xml(), "listOfEventAssignemnts")
     }
 }
