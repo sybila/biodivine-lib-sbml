@@ -449,6 +449,14 @@ impl Event {
 pub struct Trigger(XmlElement);
 
 impl Trigger {
+    pub fn initial_value(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "initialValue")
+    }
+
+    pub fn persistent(&self) -> Property<bool> {
+        Property::new(self.as_xml(), "persistent")
+    }
+
     pub fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
