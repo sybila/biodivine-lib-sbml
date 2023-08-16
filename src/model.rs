@@ -470,3 +470,12 @@ impl Priority {
         Child::new(self.as_xml(), "math")
     }
 }
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Delay(XmlElement);
+
+impl Delay {
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+}
