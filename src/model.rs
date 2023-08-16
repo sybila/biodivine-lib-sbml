@@ -284,7 +284,7 @@ impl InitialAssignment {
     }
 }
 
-pub trait Rule : XmlWrapper {
+pub trait Rule: XmlWrapper {
     fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
@@ -364,7 +364,7 @@ impl Reaction {
     }
 }
 
-trait SimpleSpeciesReference : XmlWrapper {
+trait SimpleSpeciesReference: XmlWrapper {
     fn species(&self) -> Property<String> {
         Property::new(self.as_xml(), "species")
     }
@@ -457,6 +457,15 @@ impl Trigger {
         Property::new(self.as_xml(), "persistent")
     }
 
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Priority(XmlElement);
+
+impl Priority {
     pub fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
