@@ -444,3 +444,12 @@ impl Event {
         Child::new(self.as_xml(), "listOfEventAssignemnts")
     }
 }
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct Trigger(XmlElement);
+
+impl Trigger {
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+}
