@@ -440,7 +440,7 @@ impl Event {
         Child::new(self.as_xml(), "delay")
     }
 
-    pub fn event_assignments(&self) -> Child<XmlList<EventAssignments>> {
+    pub fn event_assignments(&self) -> Child<XmlList<EventAssignment>> {
         Child::new(self.as_xml(), "listOfEventAssignemnts")
     }
 }
@@ -475,6 +475,19 @@ impl Priority {
 pub struct Delay(XmlElement);
 
 impl Delay {
+    pub fn math(&self) -> Child<Math> {
+        Child::new(self.as_xml(), "math")
+    }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct EventAssignment(XmlElement);
+
+impl EventAssignment {
+    pub fn variable(&self) -> Property<String> {
+        Property::new(self.as_xml(), "value")
+    }
+
     pub fn math(&self) -> Child<Math> {
         Child::new(self.as_xml(), "math")
     }
