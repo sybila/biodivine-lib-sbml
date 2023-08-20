@@ -35,6 +35,7 @@ pub use crate::xml::xml_child::XmlChildDefault;
 pub use crate::xml::xml_element::XmlElement;
 pub use crate::xml::xml_list::XmlList;
 pub use crate::xml::xml_property::XmlProperty;
+pub use crate::xml::xml_property::OptionalXmlProperty;
 pub use crate::xml::xml_property_type::XmlPropertyType;
 pub use crate::xml::xml_wrapper::XmlDefault;
 pub use crate::xml::xml_wrapper::XmlWrapper;

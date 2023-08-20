@@ -78,9 +78,6 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     fn clear(&self);
 
     /// Write given [value] into this [XmlProperty].
-    ///
-    /// See the overall discussion in [XmlProperty] regarding how to treat missing/default
-    /// attribute values.
     fn write(&self, value: &T);
 
     /// Write a raw [value] into this [XmlProperty].
@@ -88,5 +85,27 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// # Safety
     ///
     /// Obviously, this function can be used to set the property to an invalid value.
+    fn write_raw(&self, value: String);
+}
+
+pub trait OptionalXmlProperty<T: XmlPropertyType>: Sized {
+    fn element(&self) ->&XmlElement;
+
+    fn is_set(&self) -> bool;
+
+    fn is_valid(&self) -> bool {
+        self.read_checked().is_ok()
+    }
+
+    fn read(&self) -> Option<T>;
+
+    fn read_checked(&self) -> Result<Option<T>, String>;
+
+    fn read_raw(&self) -> Option<String>;
+
+    fn clear(&self);
+
+    fn write(&self, value: &T);
+
     fn write_raw(&self, value: String);
 }

@@ -19,7 +19,7 @@ pub trait XmlPropertyType: Sized {
     /// Note that it is up to the implementation how it treats missing values. In some cases,
     /// there can be a suitable "default" value that is returned. In other cases,
     /// the appropriate result is an error.
-    fn try_read(value: Option<&str>) -> Result<Self, String>;
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String>;
 
     /// Convert the value of `Self` into a [String], or `None` when the value should be
     /// represented as a missing attribute.
