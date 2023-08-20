@@ -150,7 +150,7 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::{XmlChild, XmlElement, XmlProperty, XmlWrapper};
+    use crate::xml::{XmlChild, XmlChildOptional, XmlElement, XmlProperty, XmlWrapper};
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::Deref;
 

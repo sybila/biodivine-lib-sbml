@@ -1,4 +1,4 @@
-use crate::xml::impl_xml_child::Child;
+use crate::xml::impl_xml_child::{Child, ChildOptional};
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
 use macros::{SBase, XmlWrapper};
 
@@ -11,8 +11,8 @@ impl SbmlModel {
         SbmlModel::from(xml)
     }
 
-    pub fn function_definitions(&self) -> Child<XmlList<SbmlFunctionDefinition>> {
-        Child::new(self.as_xml(), "listOfFunctionDefinitions")
+    pub fn function_definitions(&self) -> ChildOptional<XmlList<SbmlFunctionDefinition>> {
+        ChildOptional::new(self.as_xml(), "listOfFunctionDefinitions")
     }
 
     pub fn unit_definitions(&self) -> Child<XmlList<SbmlUnitDefinition>> {
