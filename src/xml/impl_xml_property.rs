@@ -1,6 +1,6 @@
-use crate::xml::{XmlElement, XmlProperty, XmlPropertyType, XmlWrapper};
+use crate::xml::xml_property::RequiredXmlProperty;
+use crate::xml::{XmlElement, XmlProperty, XmlPropertyType};
 use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
 
 use super::xml_property::OptionalXmlProperty;
 
@@ -22,17 +22,15 @@ pub struct Property<'a, T: XmlPropertyType> {
     _marker: PhantomData<T>,
 }
 
-pub struct OptionalDynamicProperty<'a, T: XmlPropertyType> {
-    element: &'a XmlElement,
-    name: String,
-    _marker: PhantomData<T>,
-}
+/// An extension of [DynamicProperty] that implements [OptionalXmlProperty].
+pub struct OptionalDynamicProperty<'a, T: XmlPropertyType>(DynamicProperty<'a, T>);
+/// An extension of [DynamicProperty] that implements [RequiredXmlProperty].
+pub struct RequiredDynamicProperty<'a, T: XmlPropertyType>(DynamicProperty<'a, T>);
 
-pub struct OptionalProperty<'a, T: XmlPropertyType> {
-    element: &'a XmlElement,
-    name: &'static str,
-    _marker: PhantomData<T>,
-}
+/// An extension of [Property] that implements [OptionalXmlProperty].
+pub struct OptionalProperty<'a, T: XmlPropertyType>(Property<'a, T>);
+/// An extension of [Property] that implements [RequiredXmlProperty].
+pub struct RequiredProperty<'a, T: XmlPropertyType>(Property<'a, T>);
 
 impl<'a, T: XmlPropertyType> DynamicProperty<'a, T> {
     /// Create a new instance of a [DynamicProperty] for the given `element` and `name`.
@@ -42,25 +40,6 @@ impl<'a, T: XmlPropertyType> DynamicProperty<'a, T> {
             name: name.to_string(),
             _marker: PhantomData,
         }
-    }
-
-    /// Read the name of this [DynamicProperty].
-    pub fn name(&self) -> &str {
-        self.name.as_str()
-    }
-}
-
-impl<'a, T: XmlPropertyType> OptionalDynamicProperty<'a, T> {
-    pub fn new(element: &'a XmlElement, name: &str) -> OptionalDynamicProperty<'a, T> {
-        OptionalDynamicProperty {
-            element,
-            name: name.to_string(),
-            _marker: PhantomData,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.name.as_str()
     }
 }
 
@@ -72,23 +51,29 @@ impl<'a, T: XmlPropertyType> Property<'a, T> {
             _marker: PhantomData,
         }
     }
-
-    pub fn name(&self) -> &'static str {
-        self.name
-    }
 }
 
 impl<'a, T: XmlPropertyType> OptionalProperty<'a, T> {
     pub fn new(element: &'a XmlElement, name: &'static str) -> OptionalProperty<'a, T> {
-        OptionalProperty {
-            element,
-            name,
-            _marker: PhantomData,
-        }
+        OptionalProperty(Property::new(element, name))
     }
+}
 
-    pub fn name(&self) -> &'static str {
-        self.name
+impl<'a, T: XmlPropertyType> RequiredProperty<'a, T> {
+    pub fn new(element: &'a XmlElement, name: &'static str) -> RequiredProperty<'a, T> {
+        RequiredProperty(Property::new(element, name))
+    }
+}
+
+impl<'a, T: XmlPropertyType> OptionalDynamicProperty<'a, T> {
+    pub fn new(element: &'a XmlElement, name: &str) -> OptionalDynamicProperty<'a, T> {
+        OptionalDynamicProperty(DynamicProperty::new(element, name))
+    }
+}
+
+impl<'a, T: XmlPropertyType> RequiredDynamicProperty<'a, T> {
+    pub fn new(element: &'a XmlElement, name: &str) -> RequiredDynamicProperty<'a, T> {
+        RequiredDynamicProperty(DynamicProperty::new(element, name))
     }
 }
 
@@ -97,71 +82,8 @@ impl<T: XmlPropertyType> XmlProperty<T> for DynamicProperty<'_, T> {
         self.element
     }
 
-    fn is_set(&self) -> bool {
-        is_set(self.element, self.name())
-    }
-
-    fn read(&self) -> T {
-        read(self.element, self.name())
-            .unwrap_or_else(|| panic!("Property `{}` is missing.", self.name))
-    }
-
-    fn read_checked(&self) -> Result<T, String> {
-        match read_checked(self.element, self.name()) {
-            Ok(Some(value)) => Ok(value),
-            Ok(None) => Err(format!("Property `{}` is missing.", self.name).to_string()),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn read_raw(&self) -> Option<String> {
-        read_raw(self.element, self.name())
-    }
-
-    fn clear(&self) {
-        clear(self.element, self.name());
-    }
-
-    fn write(&self, value: &T) {
-        write(self.element, self.name(), value);
-    }
-
-    fn write_raw(&self, value: String) {
-        write_raw(self.element, self.name(), value);
-    }
-}
-
-impl<T: XmlPropertyType> OptionalXmlProperty<T> for OptionalDynamicProperty<'_, T> {
-    fn element(&self) -> &XmlElement {
-        self.element
-    }
-
-    fn is_set(&self) -> bool {
-        is_set(self.element, self.name())
-    }
-
-    fn read(&self) -> Option<T> {
-        read(self.element, self.name())
-    }
-
-    fn read_checked(&self) -> Result<Option<T>, String> {
-        read_checked(self.element, self.name())
-    }
-
-    fn read_raw(&self) -> Option<String> {
-        read_raw(self.element, self.name())
-    }
-
-    fn clear(&self) {
-        clear(self.element, self.name())
-    }
-
-    fn write(&self, value: &T) {
-        write(self.element, self.name(), value)
-    }
-
-    fn write_raw(&self, value: String) {
-        write_raw(self.element, self.name(), value)
+    fn name(&self) -> &str {
+        self.name.as_str()
     }
 }
 
@@ -170,129 +92,52 @@ impl<T: XmlPropertyType> XmlProperty<T> for Property<'_, T> {
         self.element
     }
 
-    fn is_set(&self) -> bool {
-        is_set(self.element, self.name)
-    }
-
-    fn read(&self) -> T {
-        read(self.element, self.name)
-            .unwrap_or_else(|| panic!("Property `{}` is missing.", self.name))
-    }
-
-    fn read_checked(&self) -> Result<T, String> {
-        match read_checked(self.element, self.name()) {
-            Ok(Some(value)) => Ok(value),
-            Ok(None) => Err(format!("Property `{}` is missing.", self.name).to_string()),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn read_raw(&self) -> Option<String> {
-        read_raw(self.element, self.name)
-    }
-
-    fn clear(&self) {
-        clear(self.element, self.name);
-    }
-
-    fn write(&self, value: &T) {
-        write(self.element, self.name, value);
-    }
-
-    fn write_raw(&self, value: String) {
-        write_raw(self.element, self.name, value);
+    fn name(&self) -> &str {
+        self.name
     }
 }
 
-impl<T: XmlPropertyType> OptionalXmlProperty<T> for OptionalProperty<'_, T> {
+impl<T: XmlPropertyType> XmlProperty<T> for OptionalDynamicProperty<'_, T> {
     fn element(&self) -> &XmlElement {
-        self.element
+        self.0.element
     }
 
-    fn is_set(&self) -> bool {
-        is_set(self.element, self.name())
-    }
-
-    fn read(&self) -> Option<T> {
-        read(self.element, self.name())
-    }
-
-    fn read_checked(&self) -> Result<Option<T>, String> {
-        read_checked(self.element, self.name())
-    }
-
-    fn read_raw(&self) -> Option<String> {
-        read_raw(self.element, self.name())
-    }
-
-    fn clear(&self) {
-        clear(self.element, self.name())
-    }
-
-    fn write(&self, value: &T) {
-        write(self.element, self.name(), value)
-    }
-
-    fn write_raw(&self, value: String) {
-        write_raw(self.element, self.name(), value)
+    fn name(&self) -> &str {
+        self.0.name.as_str()
     }
 }
 
-/*
-   The following functions implement [XmlProperty] in both the [GenericProperty] and
-   all macro implementations. They are only visible to the crate code (`pub(crate)`),
-   i.e. they are private within this library. They are inlined just to make extra sure
-   the string names are not re-allocated when not necessary.
-*/
+impl<T: XmlPropertyType> XmlProperty<T> for RequiredDynamicProperty<'_, T> {
+    fn element(&self) -> &XmlElement {
+        self.0.element
+    }
 
-fn is_set(element: &XmlElement, name: &str) -> bool {
-    // As opposed to `self.read_raw().is_some()`, this does not need to copy.
-    let doc = element.read_doc();
-    element.element().attribute(doc.deref(), name).is_some()
-}
-
-fn read<T: XmlPropertyType>(element: &XmlElement, name: &str) -> Option<T> {
-    match read_checked(element, name) {
-        Ok(result) => result,
-        Err(message) => {
-            panic!("Cannot read property `{}`: {}", name, message)
-        }
+    fn name(&self) -> &str {
+        self.0.name.as_str()
     }
 }
 
-fn read_checked<T: XmlPropertyType>(element: &XmlElement, name: &str) -> Result<Option<T>, String> {
-    let doc = element.read_doc();
-    let value = element.element().attribute(doc.deref(), name);
-    XmlPropertyType::try_read(value)
-}
+impl<T: XmlPropertyType> XmlProperty<T> for OptionalProperty<'_, T> {
+    fn element(&self) -> &XmlElement {
+        self.0.element
+    }
 
-fn read_raw(element: &XmlElement, name: &str) -> Option<String> {
-    let doc = element.read_doc();
-    element
-        .element()
-        .attribute(doc.deref(), name)
-        .map(|it| it.to_string())
-}
-
-fn clear(element: &XmlElement, name: &str) {
-    let mut doc = element.write_doc();
-    element
-        .element()
-        .mut_attributes(doc.deref_mut())
-        .remove(name);
-}
-
-fn write<T: XmlPropertyType>(element: &XmlElement, name: &str, value: &T) {
-    if let Some(value) = XmlPropertyType::write(value) {
-        write_raw(element, name, value);
-    } else {
-        clear(element, name);
+    fn name(&self) -> &str {
+        self.0.name
     }
 }
 
-fn write_raw(element: &XmlElement, name: &str, value: String) {
-    let mut doc = element.write_doc();
-    element
-        .element()
-        .set_attribute(doc.deref_mut(), name, value);
+impl<T: XmlPropertyType> XmlProperty<T> for RequiredProperty<'_, T> {
+    fn element(&self) -> &XmlElement {
+        self.0.element
+    }
+
+    fn name(&self) -> &str {
+        self.0.name
+    }
 }
+
+impl<T: XmlPropertyType> RequiredXmlProperty<T> for RequiredDynamicProperty<'_, T> {}
+impl<T: XmlPropertyType> RequiredXmlProperty<T> for RequiredProperty<'_, T> {}
+impl<T: XmlPropertyType> OptionalXmlProperty<T> for OptionalDynamicProperty<'_, T> {}
+impl<T: XmlPropertyType> OptionalXmlProperty<T> for OptionalProperty<'_, T> {}

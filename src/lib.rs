@@ -176,7 +176,7 @@ mod tests {
         let original_id = Some("model_id".to_string());
         let modified_id = "model_6431".to_string();
         assert_eq!(original_id, model.id().read());
-        model.id().write(&modified_id);
+        model.id().write(Some(&modified_id));
         assert_eq!(modified_id, model.id().read().unwrap());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();

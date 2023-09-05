@@ -5,17 +5,13 @@
 
 use crate::xml::XmlPropertyType;
 
-/// A "trivial" conversion between an XML attribute and a `String`. When the attribute value
-/// is missing, returns a "Value missing." error.
+/// A "trivial" conversion between an XML attribute and a `String`.
 ///
 /// ## Specification
 ///  - Section 3.1.1
 impl XmlPropertyType for String {
     fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
-        match value {
-            Some(value) => Ok(Some(value.to_string())),
-            None => Ok(None),
-        }
+        Ok(value.map(|it| it.to_string()))
     }
 
     fn write(&self) -> Option<String> {
@@ -23,23 +19,7 @@ impl XmlPropertyType for String {
     }
 }
 
-// /// A "trivial" conversion between an XML attribute and an optional `String`. The `None` value
-// /// maps to a missing XML attribute.
-// ///
-// /// ## Specification
-// ///  - Section 3.1.1
-// impl XmlPropertyType for Option<String> {
-//     fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
-//         Ok(value.map(|it| it.to_string()))
-//     }
-
-//     fn write(&self) -> Option<String> {
-//         self.clone()
-//     }
-// }
-
-/// A "trivial conversion between an XML attribute and a `bool`. Missing attribute value is
-/// interpreted as an error.
+/// A "trivial conversion between an XML attribute and a `bool`.
 ///
 /// Note that (per specification), both `0/1` and `true/false` are allowed here. However, when
 /// writing, `true/false` notation is preferred. This ensures that the output is compatible with
@@ -65,7 +45,7 @@ impl XmlPropertyType for bool {
 }
 
 /// A "trivial" conversion between an XML attribute and a `i32` integer (`int` type in the SBML
-/// specification). Missing attribute value is interpreted as an error.
+/// specification).
 ///
 /// As far as I know, the default algorithm for parsing/printing integers should be equivalent
 /// to the representation expected by SBML.

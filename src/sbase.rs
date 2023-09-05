@@ -1,6 +1,5 @@
 use crate::xml::impl_xml_child::Child;
-use crate::xml::impl_xml_property::OptionalProperty;
-use crate::xml::{XmlElement, XmlWrapper};
+use crate::xml::{OptionalProperty, XmlElement, XmlWrapper};
 
 // TODO:
 //      At some point, we should probably have an `SId` type instead of using a string here,
