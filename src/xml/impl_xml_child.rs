@@ -221,8 +221,9 @@ impl<T: XmlWrapper> XmlChildOptional<T> for ChildOptional<'_, T> {
     }
 }
 
-
-impl<Inner: XmlWrapper> XmlChildDefault<XmlList<Inner>> for DynamicChildOptional<'_, XmlList<Inner>> {
+impl<Inner: XmlWrapper> XmlChildDefault<XmlList<Inner>>
+    for DynamicChildOptional<'_, XmlList<Inner>>
+{
     fn ensure(&self) {
         ensure(self.element, self.name())
     }

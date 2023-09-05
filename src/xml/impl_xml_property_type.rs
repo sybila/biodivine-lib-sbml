@@ -55,7 +55,7 @@ impl XmlPropertyType for bool {
             Some(value) => Err(format!(
                 "Value `{value}` does not represent a valid `bool`."
             )),
-            None => Ok(None)
+            None => Ok(None),
         }
     }
 

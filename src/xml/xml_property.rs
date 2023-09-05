@@ -89,7 +89,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
 }
 
 pub trait OptionalXmlProperty<T: XmlPropertyType>: Sized {
-    fn element(&self) ->&XmlElement;
+    fn element(&self) -> &XmlElement;
 
     fn is_set(&self) -> bool;
 
