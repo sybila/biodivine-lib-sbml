@@ -1,5 +1,5 @@
 use crate::xml::impl_xml_child::Child;
-use crate::xml::impl_xml_property::{OptionalProperty, Property};
+use crate::xml::impl_xml_property::OptionalProperty;
 use crate::xml::{XmlElement, XmlWrapper};
 
 // TODO:
