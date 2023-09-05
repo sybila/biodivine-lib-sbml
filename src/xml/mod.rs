@@ -19,31 +19,32 @@ mod xml_child;
 /// Implementation of the [XmlList] struct.
 mod xml_list;
 
-/// Implementation of the [Property] and [DynamicProperty] structs.
+/// Implementation of the [Property] and [DynamicProperty] structs,
+/// including required/optional variants.
 mod impl_xml_property;
 
-/// Implementation of the [DynamicChild] struct.
-pub mod impl_xml_child;
+/// Implementation of the [Child] and [DynamicChild] structs,
+/// including required/optional variants.
+mod impl_xml_child;
 
 /// Some primitive [XmlPropertyType] implementations, as declared in SBML
 /// specification Section 3.1.
 mod impl_xml_property_type;
 
+pub use crate::xml::impl_xml_child::{
+    Child, DynamicChild, OptionalChild, OptionalDynamicChild, RequiredChild, RequiredDynamicChild,
+};
 pub use crate::xml::impl_xml_property::{
     DynamicProperty, OptionalDynamicProperty, OptionalProperty, Property, RequiredDynamicProperty,
     RequiredProperty,
 };
-pub use crate::xml::xml_child::XmlChild;
-pub use crate::xml::xml_child::XmlChildDefault;
-pub use crate::xml::xml_child::XmlChildOptional;
+pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild};
 pub use crate::xml::xml_element::XmlElement;
 pub use crate::xml::xml_list::XmlList;
 pub use crate::xml::xml_property::{OptionalXmlProperty, RequiredXmlProperty, XmlProperty};
 pub use crate::xml::xml_property_type::XmlPropertyType;
 pub use crate::xml::xml_wrapper::XmlDefault;
 pub use crate::xml::xml_wrapper::XmlWrapper;
-
-pub use crate::xml::impl_xml_child::DynamicChild;
 
 /// A type alias which defines `XmlDocument` as a `xml_doc::Document` object
 /// that is wrapped in a reference-counted read-write lock. This makes the

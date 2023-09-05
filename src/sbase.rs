@@ -1,5 +1,4 @@
-use crate::xml::impl_xml_child::Child;
-use crate::xml::{OptionalProperty, XmlElement, XmlWrapper};
+use crate::xml::{OptionalChild, OptionalProperty, XmlElement, XmlWrapper};
 
 // TODO:
 //      At some point, we should probably have an `SId` type instead of using a string here,
@@ -25,11 +24,11 @@ pub trait SBase: XmlWrapper {
         OptionalProperty::new(self.as_xml(), "sboTerm")
     }
 
-    fn notes(&self) -> Child<XmlElement> {
-        Child::new(self.as_xml(), "notes")
+    fn notes(&self) -> OptionalChild<XmlElement> {
+        OptionalChild::new(self.as_xml(), "notes")
     }
 
-    fn annotation(&self) -> Child<XmlElement> {
-        Child::new(self.as_xml(), "annotation")
+    fn annotation(&self) -> OptionalChild<XmlElement> {
+        OptionalChild::new(self.as_xml(), "annotation")
     }
 }

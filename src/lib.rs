@@ -150,7 +150,9 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::{OptionalXmlProperty, XmlChild, XmlChildOptional, XmlElement, XmlWrapper};
+    use crate::xml::{
+        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
+    };
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::Deref;
 
@@ -165,9 +167,9 @@ mod tests {
 
         assert!(model.notes().is_set());
         {
-            let notes = model.notes().get();
-            let body = notes.child::<XmlElement>("body").get();
-            let p = body.child::<XmlElement>("p").get();
+            let notes = model.notes().get().unwrap();
+            let body = notes.required_child::<XmlElement>("body").get();
+            let p = body.required_child::<XmlElement>("p").get();
             let doc = model.read_doc();
             let content = p.element().text_content(doc.deref());
             assert!(content.starts_with("This model"));
