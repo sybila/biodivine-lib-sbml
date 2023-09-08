@@ -38,7 +38,7 @@ pub use crate::xml::impl_xml_property::{
     DynamicProperty, OptionalDynamicProperty, OptionalProperty, Property, RequiredDynamicProperty,
     RequiredProperty,
 };
-pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild};
+pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild, XmlChildDefault};
 pub use crate::xml::xml_element::XmlElement;
 pub use crate::xml::xml_list::XmlList;
 pub use crate::xml::xml_property::{OptionalXmlProperty, RequiredXmlProperty, XmlProperty};
