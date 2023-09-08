@@ -1,4 +1,7 @@
-use crate::xml::{DynamicChild, DynamicProperty, XmlDocument, XmlElement, XmlPropertyType};
+use crate::xml::{
+    OptionalDynamicChild, OptionalDynamicProperty, RequiredDynamicChild, RequiredDynamicProperty,
+    XmlDocument, XmlElement, XmlPropertyType,
+};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use xml_doc::{Document, Element};
 
@@ -26,13 +29,21 @@ pub trait XmlWrapper: From<XmlElement> + Into<XmlElement> {
     ///
     /// Note that individual [XmlWrapper] implementations should provide type safe access
     /// to their known/required properties through specialised [XmlProperty] implementations
-    /// instead of relying on [DynamicProperty].
-    fn property<T: XmlPropertyType>(&self, name: &str) -> DynamicProperty<T> {
-        DynamicProperty::new(self.as_xml(), name)
+    /// instead of relying on [RequiredDynamicProperty].
+    fn required_property<T: XmlPropertyType>(&self, name: &str) -> RequiredDynamicProperty<T> {
+        RequiredDynamicProperty::new(self.as_xml(), name)
     }
 
-    fn child<T: XmlWrapper>(&self, name: &str) -> DynamicChild<T> {
-        DynamicChild::new(self.as_xml(), name)
+    fn optional_property<T: XmlPropertyType>(&self, name: &str) -> OptionalDynamicProperty<T> {
+        OptionalDynamicProperty::new(self.as_xml(), name)
+    }
+
+    fn optional_child<T: XmlWrapper>(&self, name: &str) -> OptionalDynamicChild<T> {
+        OptionalDynamicChild::new(self.as_xml(), name)
+    }
+
+    fn required_child<T: XmlWrapper>(&self, name: &str) -> RequiredDynamicChild<T> {
+        RequiredDynamicChild::new(self.as_xml(), name)
     }
 
     /// Obtain a read-only reference to the underlying [Document].

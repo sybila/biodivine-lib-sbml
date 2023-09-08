@@ -1,6 +1,4 @@
-use crate::xml::impl_xml_child::Child;
-use crate::xml::impl_xml_property::Property;
-use crate::xml::{XmlElement, XmlWrapper};
+use crate::xml::{OptionalChild, OptionalProperty, XmlElement, XmlWrapper};
 
 // TODO:
 //      At some point, we should probably have an `SId` type instead of using a string here,
@@ -10,27 +8,27 @@ use crate::xml::{XmlElement, XmlWrapper};
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
-    fn id(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "id")
+    fn id(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "id")
     }
 
-    fn name(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "name")
+    fn name(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "name")
     }
 
-    fn meta_id(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "metaid")
+    fn meta_id(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "metaid")
     }
 
-    fn sbo_term(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "sboTerm")
+    fn sbo_term(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "sboTerm")
     }
 
-    fn notes(&self) -> Child<XmlElement> {
-        Child::new(self.as_xml(), "notes")
+    fn notes(&self) -> OptionalChild<XmlElement> {
+        OptionalChild::new(self.as_xml(), "notes")
     }
 
-    fn annotation(&self) -> Child<XmlElement> {
-        Child::new(self.as_xml(), "annotation")
+    fn annotation(&self) -> OptionalChild<XmlElement> {
+        OptionalChild::new(self.as_xml(), "annotation")
     }
 }

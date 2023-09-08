@@ -1,5 +1,5 @@
 use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::xml::{XmlProperty, XmlWrapper};
+use biodivine_lib_sbml::xml::{OptionalXmlProperty, XmlWrapper};
 use biodivine_lib_sbml::SbmlDocument;
 
 // To run this example, execute `cargo run --example basic_example`.

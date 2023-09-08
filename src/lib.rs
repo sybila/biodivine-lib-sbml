@@ -150,7 +150,9 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::{XmlChild, XmlElement, XmlProperty, XmlWrapper};
+    use crate::xml::{
+        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
+    };
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::Deref;
 
@@ -165,19 +167,19 @@ mod tests {
 
         assert!(model.notes().is_set());
         {
-            let notes = model.notes().get();
-            let body = notes.child::<XmlElement>("body").get();
-            let p = body.child::<XmlElement>("p").get();
+            let notes = model.notes().get().unwrap();
+            let body = notes.required_child::<XmlElement>("body").get();
+            let p = body.required_child::<XmlElement>("p").get();
             let doc = model.read_doc();
             let content = p.element().text_content(doc.deref());
             assert!(content.starts_with("This model"));
         }
 
         let original_id = Some("model_id".to_string());
-        let modified_id = Some("model_6431".to_string());
+        let modified_id = "model_6431".to_string();
         assert_eq!(original_id, model.id().read());
-        model.id().write(&modified_id);
-        assert_eq!(modified_id, model.id().read());
+        model.id().write(Some(&modified_id));
+        assert_eq!(modified_id, model.id().read().unwrap());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();
         let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
