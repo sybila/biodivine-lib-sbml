@@ -80,10 +80,10 @@ impl XmlPropertyType for i32 {
 /// ## Specification
 ///  - Section 3.1.5
 impl XmlPropertyType for f64 {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some(value) => match value.parse::<f64>() {
-                Ok(x) => Ok(x),
+                Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
                     "Value `{value}` does not represent a valid signed integer ({}).",
                     e
@@ -98,34 +98,16 @@ impl XmlPropertyType for f64 {
     }
 }
 
-/// A "trivial" conversion between an XML attribute and a `f64` floating-point number (`double`
-/// type in the SBML specification).
-///
-/// ## Specification
-///  - Section 3.1.5
-impl XmlPropertyType for Option<f64> {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
-        match value {
-            Some(_) => Ok(Some(f64::try_read(value).unwrap())),
-            None => Ok(None),
-        }
-    }
-
-    fn write(&self) -> Option<String> {
-        Some(format!("{:#?}", self))
-    }
-}
-
 /// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
 /// interpreted as an error.
 ///
 /// ## Specification
 ///  - Section 4.4.2
 impl XmlPropertyType for BaseUnit {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some(value) => match BaseUnit::from_str(value) {
-                Ok(unit) => Ok(unit),
+                Ok(unit) => Ok(Some(unit)),
                 Err(e) => Err(format!(
                     "Value `{value}` does not represent a valid base unit ({})",
                     e
@@ -137,18 +119,5 @@ impl XmlPropertyType for BaseUnit {
 
     fn write(&self) -> Option<String> {
         Some(format!("{}", self))
-    }
-}
-
-impl XmlPropertyType for Option<BaseUnit> {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
-        match value {
-            Some(_) => Ok(Some(BaseUnit::try_read(value).unwrap())),
-            None => Ok(None),
-        }
-    }
-
-    fn write(&self) -> Option<String> {
-        Some(format!("{:#?}", self))
     }
 }
