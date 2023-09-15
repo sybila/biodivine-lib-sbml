@@ -1,4 +1,4 @@
-use crate::xml::{OptionalChild, RequiredChild, XmlElement, XmlList, XmlWrapper};
+use crate::xml::{OptionalChild, XmlElement, XmlList, XmlWrapper, RequiredProperty, OptionalProperty};
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
 
@@ -17,40 +17,40 @@ impl SbmlModel {
         OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions")
     }
 
-    pub fn unit_definitions(&self) -> RequiredChild<XmlList<SbmlUnitDefinition>> {
-        RequiredChild::new(self.as_xml(), "listOfUnitDefinitions")
+    pub fn unit_definitions(&self) -> OptionalChild<XmlList<SbmlUnitDefinition>> {
+        OptionalChild::new(self.as_xml(), "listOfUnitDefinitions")
     }
 
-    pub fn compartments(&self) -> Child<XmlList<Compartment>> {
-        Child::new(self.as_xml(), "listOfCompartments")
+    pub fn compartments(&self) -> OptionalChild<XmlList<Compartment>> {
+        OptionalChild::new(self.as_xml(), "listOfCompartments")
     }
 
-    pub fn species(&self) -> Child<XmlList<Species>> {
-        Child::new(self.as_xml(), "listOfSpecies")
+    pub fn species(&self) -> OptionalChild<XmlList<Species>> {
+        OptionalChild::new(self.as_xml(), "listOfSpecies")
     }
 
-    pub fn parameters(&self) -> Child<XmlList<Parameter>> {
-        Child::new(self.as_xml(), "listOfParameters")
+    pub fn parameters(&self) -> OptionalChild<XmlList<Parameter>> {
+        OptionalChild::new(self.as_xml(), "listOfParameters")
     }
 
-    pub fn initial_assignments(&self) -> Child<XmlList<InitialAssignment>> {
-        Child::new(self.as_xml(), "listOfInitialAssignments")
+    pub fn initial_assignments(&self) -> OptionalChild<XmlList<InitialAssignment>> {
+        OptionalChild::new(self.as_xml(), "listOfInitialAssignments")
     }
 
-    pub fn rules<T: Rule>(&self) -> Child<XmlList<T>> {
-        Child::new(self.as_xml(), "listOfRules")
+    pub fn rules<T: Rule>(&self) -> OptionalChild<XmlList<T>> {
+        OptionalChild::new(self.as_xml(), "listOfRules")
     }
 
-    pub fn constraints(&self) -> Child<XmlList<Constraint>> {
-        Child::new(self.as_xml(), "listOfConstraints")
+    pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
+        OptionalChild::new(self.as_xml(), "listOfConstraints")
     }
 
-    pub fn reactions(&self) -> Child<XmlList<Reaction>> {
-        Child::new(self.as_xml(), "listOfReactions")
+    pub fn reactions(&self) -> OptionalChild<XmlList<Reaction>> {
+        OptionalChild::new(self.as_xml(), "listOfReactions")
     }
 
-    pub fn events(&self) -> Child<XmlList<Event>> {
-        Child::new(self.as_xml(), "listOfEvents")
+    pub fn events(&self) -> OptionalChild<XmlList<Event>> {
+        OptionalChild::new(self.as_xml(), "listOfEvents")
     }
 }
 
@@ -59,8 +59,8 @@ impl SbmlModel {
 pub struct SbmlFunctionDefinition(XmlElement);
 
 impl SbmlFunctionDefinition {
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
@@ -74,8 +74,8 @@ pub struct Math(XmlElement);
 pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
-    pub fn units(&self) -> RequiredChild<XmlList<Unit>> {
-        RequiredChild::new(self.as_xml(), "listOfUnits")
+    pub fn units(&self) -> OptionalChild<XmlList<Unit>> {
+        OptionalChild::new(self.as_xml(), "listOfUnits")
     }
 }
 
@@ -84,20 +84,20 @@ impl SbmlUnitDefinition {
 pub struct Unit(XmlElement);
 
 impl Unit {
-    pub fn kind(&self) -> Property<BaseUnit> {
-        Property::new(self.as_xml(), "kind")
+    pub fn kind(&self) -> RequiredProperty<BaseUnit> {
+        RequiredProperty::new(self.as_xml(), "kind")
     }
 
-    pub fn exponent(&self) -> Property<f64> {
-        Property::new(self.as_xml(), "exponent")
+    pub fn exponent(&self) -> RequiredProperty<f64> {
+        RequiredProperty::new(self.as_xml(), "exponent")
     }
 
-    pub fn scale(&self) -> Property<i32> {
-        Property::new(self.as_xml(), "scale")
+    pub fn scale(&self) -> RequiredProperty<i32> {
+        RequiredProperty::new(self.as_xml(), "scale")
     }
 
-    pub fn multiplier(&self) -> Property<f64> {
-        Property::new(self.as_xml(), "multiplier")
+    pub fn multiplier(&self) -> RequiredProperty<f64> {
+        RequiredProperty::new(self.as_xml(), "multiplier")
     }
 }
 
@@ -178,25 +178,25 @@ pub struct Compartment(XmlElement);
 
 impl Compartment {
     // override default behaviour (inherited from SBase) as compartment id is required.
-    pub fn id(&self) -> Property<String> {
-        Property::new(self.as_xml(), "id")
+    pub fn id(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "id")
     }
 
-    pub fn spatial_dimensions(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "spatialDimensions")
+    pub fn spatial_dimensions(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "spatialDimensions")
     }
 
-    pub fn size(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "size")
+    pub fn size(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "size")
     }
 
     /// TODO: implement units lookup in model according to documentation
-    pub fn units(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "units")
+    pub fn units(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "units")
     }
 
-    pub fn constant(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "constant")
+    pub fn constant(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "constant")
     }
 }
 
@@ -206,43 +206,43 @@ pub struct Species(XmlElement);
 
 impl Species {
     // override default behaviour (inherited from SBase) as specie id is required.
-    pub fn id(&self) -> Property<String> {
-        Property::new(self.as_xml(), "id")
+    pub fn id(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "id")
     }
 
     // would it be useful to return Property<Compartment> ? If so, then how to find compartment
     // by id ?
-    pub fn compartment(&self) -> Property<String> {
-        Property::new(self.as_xml(), "compartment")
+    pub fn compartment(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "compartment")
     }
 
-    pub fn initial_amount(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "initialAmount")
+    pub fn initial_amount(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "initialAmount")
     }
 
-    pub fn initial_concentration(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "initialConcentration")
+    pub fn initial_concentration(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "initialConcentration")
     }
 
     // TODO: need to embrace recommended units (p. 148)
-    pub fn substance_units(&self) -> Property<Option<BaseUnit>> {
-        Property::new(self.as_xml(), "substanceUnits")
+    pub fn substance_units(&self) -> OptionalProperty<BaseUnit> {
+        OptionalProperty::new(self.as_xml(), "substanceUnits")
     }
 
-    pub fn has_only_substance_units(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "hasOnlySubstanceUnits")
+    pub fn has_only_substance_units(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "hasOnlySubstanceUnits")
     }
 
-    pub fn boundary_condition(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "boundaryCondition")
+    pub fn boundary_condition(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "boundaryCondition")
     }
 
-    pub fn constant(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "constant")
+    pub fn constant(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "constant")
     }
 
-    pub fn conversion_factor(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "conversionFactor")
+    pub fn conversion_factor(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "conversionFactor")
     }
 }
 
@@ -252,20 +252,20 @@ pub struct Parameter(XmlElement);
 
 impl Parameter {
     // override default behaviour (inherited from SBase) as specie id is required.
-    pub fn id(&self) -> Property<String> {
-        Property::new(self.as_xml(), "id")
+    pub fn id(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "id")
     }
 
-    pub fn value(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "value")
+    pub fn value(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "value")
     }
 
-    pub fn units(&self) -> Property<Option<BaseUnit>> {
-        Property::new(self.as_xml(), "units")
+    pub fn units(&self) -> OptionalProperty<BaseUnit> {
+        OptionalProperty::new(self.as_xml(), "units")
     }
 
-    pub fn constant(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "constant")
+    pub fn constant(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "constant")
     }
 }
 
@@ -273,18 +273,18 @@ impl Parameter {
 pub struct InitialAssignment(XmlElement);
 
 impl InitialAssignment {
-    pub fn symbol(&self) -> Property<String> {
-        Property::new(self.as_xml(), "symbol")
+    pub fn symbol(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "symbol")
     }
 
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
 pub trait Rule: XmlWrapper {
-    fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
@@ -299,8 +299,8 @@ pub struct AssignmentRule(XmlElement);
 impl Rule for AssignmentRule {}
 
 impl AssignmentRule {
-    pub fn variable(&self) -> Property<String> {
-        Property::new(self.as_xml(), "variable")
+    pub fn variable(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "variable")
     }
 }
 
@@ -310,8 +310,8 @@ pub struct RateRule(XmlElement);
 impl Rule for RateRule {}
 
 impl RateRule {
-    pub fn variable(&self) -> Property<String> {
-        Property::new(self.as_xml(), "variable")
+    pub fn variable(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "variable")
     }
 }
 
@@ -319,12 +319,12 @@ impl RateRule {
 pub struct Constraint(XmlElement);
 
 impl Constraint {
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 
-    pub fn message(&self) -> Child<XmlElement> {
-        Child::new(self.as_xml(), "message")
+    pub fn message(&self) -> OptionalChild<XmlElement> {
+        OptionalChild::new(self.as_xml(), "message")
     }
 }
 
@@ -332,39 +332,38 @@ impl Constraint {
 pub struct Reaction(XmlElement);
 
 impl Reaction {
-    // override default behaviour (inherited from SBase) as specie id is required.
-    pub fn id(&self) -> Property<String> {
-        Property::new(self.as_xml(), "id")
+        pub fn id(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "id")
     }
 
-    pub fn reversible(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "reversible")
+    pub fn reversible(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "reversible")
     }
 
-    pub fn compartment(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "compratment")
+    pub fn compartment(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "compratment")
     }
 
-    pub fn reactants(&self) -> Child<XmlList<SpeciesReference>> {
-        Child::new(self.as_xml(), "listOfReactants")
+    pub fn reactants(&self) -> OptionalChild<XmlList<SpeciesReference>> {
+        OptionalChild::new(self.as_xml(), "listOfReactants")
     }
 
-    pub fn products(&self) -> Child<XmlList<SpeciesReference>> {
-        Child::new(self.as_xml(), "listOfProducts")
+    pub fn products(&self) -> OptionalChild<XmlList<SpeciesReference>> {
+        OptionalChild::new(self.as_xml(), "listOfProducts")
     }
 
-    pub fn modifiers(&self) -> Child<XmlList<ModifierSpeciesReference>> {
-        Child::new(self.as_xml(), "listOfModifiers")
+    pub fn modifiers(&self) -> OptionalChild<XmlList<ModifierSpeciesReference>> {
+        OptionalChild::new(self.as_xml(), "listOfModifiers")
     }
 
-    pub fn kinetic_law(&self) -> Child<KineticLaw> {
-        Child::new(self.as_xml(), "kineticLaw")
+    pub fn kinetic_law(&self) -> OptionalChild<KineticLaw> {
+        OptionalChild::new(self.as_xml(), "kineticLaw")
     }
 }
 
 trait SimpleSpeciesReference: XmlWrapper {
-    fn species(&self) -> Property<String> {
-        Property::new(self.as_xml(), "species")
+    fn species(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "species")
     }
 }
 
@@ -374,12 +373,12 @@ pub struct SpeciesReference(XmlElement);
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
-    pub fn stochiometry(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "stochiometry")
+    pub fn stochiometry(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "stochiometry")
     }
 
-    pub fn constant(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "constant")
+    pub fn constant(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "constant")
     }
 }
 
@@ -392,12 +391,12 @@ impl SimpleSpeciesReference for ModifierSpeciesReference {}
 pub struct KineticLaw(XmlElement);
 
 impl KineticLaw {
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 
-    pub fn local_parameters(&self) -> Child<XmlList<LocalParameter>> {
-        Child::new(self.as_xml(), "listOfLocalParameters")
+    pub fn local_parameters(&self) -> OptionalChild<XmlList<LocalParameter>> {
+        OptionalChild::new(self.as_xml(), "listOfLocalParameters")
     }
 }
 
@@ -405,16 +404,16 @@ impl KineticLaw {
 pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {
-    pub fn id(&self) -> Property<String> {
-        Property::new(self.as_xml(), "id")
+    pub fn id(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "id")
     }
 
-    pub fn value(&self) -> Property<Option<f64>> {
-        Property::new(self.as_xml(), "value")
+    pub fn value(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "value")
     }
 
-    pub fn units(&self) -> Property<Option<String>> {
-        Property::new(self.as_xml(), "units")
+    pub fn units(&self) -> OptionalProperty<String> {
+        OptionalProperty::new(self.as_xml(), "units")
     }
 }
 
@@ -422,24 +421,24 @@ impl LocalParameter {
 pub struct Event(XmlElement);
 
 impl Event {
-    pub fn use_values_from_trigger_time(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "useValuesFromTriggerTime")
+    pub fn use_values_from_trigger_time(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "useValuesFromTriggerTime")
     }
 
-    pub fn trigger(&self) -> Child<Trigger> {
-        Child::new(self.as_xml(), "trigger")
+    pub fn trigger(&self) -> OptionalChild<Trigger> {
+        OptionalChild::new(self.as_xml(), "trigger")
     }
 
-    pub fn priority(&self) -> Child<Priority> {
-        Child::new(self.as_xml(), "priority")
+    pub fn priority(&self) -> OptionalChild<Priority> {
+        OptionalChild::new(self.as_xml(), "priority")
     }
 
-    pub fn delay(&self) -> Child<Delay> {
-        Child::new(self.as_xml(), "delay")
+    pub fn delay(&self) -> OptionalChild<Delay> {
+        OptionalChild::new(self.as_xml(), "delay")
     }
 
-    pub fn event_assignments(&self) -> Child<XmlList<EventAssignment>> {
-        Child::new(self.as_xml(), "listOfEventAssignemnts")
+    pub fn event_assignments(&self) -> OptionalChild<XmlList<EventAssignment>> {
+        OptionalChild::new(self.as_xml(), "listOfEventAssignemnts")
     }
 }
 
@@ -447,16 +446,16 @@ impl Event {
 pub struct Trigger(XmlElement);
 
 impl Trigger {
-    pub fn initial_value(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "initialValue")
+    pub fn initial_value(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "initialValue")
     }
 
-    pub fn persistent(&self) -> Property<bool> {
-        Property::new(self.as_xml(), "persistent")
+    pub fn persistent(&self) -> RequiredProperty<bool> {
+        RequiredProperty::new(self.as_xml(), "persistent")
     }
 
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
@@ -464,8 +463,8 @@ impl Trigger {
 pub struct Priority(XmlElement);
 
 impl Priority {
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
@@ -473,8 +472,8 @@ impl Priority {
 pub struct Delay(XmlElement);
 
 impl Delay {
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
 
@@ -482,11 +481,11 @@ impl Delay {
 pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
-    pub fn variable(&self) -> Property<String> {
-        Property::new(self.as_xml(), "value")
+    pub fn variable(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(self.as_xml(), "value")
     }
 
-    pub fn math(&self) -> Child<Math> {
-        Child::new(self.as_xml(), "math")
+    pub fn math(&self) -> OptionalChild<Math> {
+        OptionalChild::new(self.as_xml(), "math")
     }
 }
