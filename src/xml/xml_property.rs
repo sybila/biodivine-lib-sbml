@@ -1,92 +1,153 @@
-use crate::xml::{XmlElement, XmlPropertyType};
+use crate::xml::{XmlElement, XmlPropertyType, XmlWrapper};
+use std::ops::{Deref, DerefMut};
 
 /// Any [XmlProperty] object provides type-safe access to a single XML attribute
 /// of an underlying tag.
 ///
-/// [XmlProperty] objects typically maintain a reference to the underlying [XmlElement]
-/// and thus cannot be stored or passed around independently.
+/// Note that implementations of [XmlProperty] do not store the value of the attribute.
+/// Instead, [XmlProperty] objects maintain a reference to the underlying [XmlElement] and
+/// manipulate this element directly.
 ///
 /// [XmlProperty] is also parametrized by a type `T` which is the underlying "type" of
 /// the property. This type `T` must then implement [XmlPropertyType], which is used
-/// to facilitate the conversion. There could be safety checks that cannot be performed by
-/// [XmlPropertyType] directly. These should be performed separately by the underlying
-/// [XmlElement]/[XmlDocument] (e.g. if an ID is required to be unique in the whole document).
+/// to facilitate the conversion. However, note that this conversion process only detects
+/// "local" data integrity errors (e.g. invalid integer). More "global" checks are handled
+/// through a separate document-wide validation.
 ///
-/// TODO: Document the derive macro.
+/// In practice, we use two derived "variants" inheriting from [XmlProperty]:
+/// [RequiredXmlProperty] and [OptionalXmlProperty]. These provide the two common "default"
+/// behaviours for treating missing values.
 ///
-/// ## On missing attributes and value validity
-///
-/// Note that whether a missing value is considered valid is implementation specific and
-/// depends on `T`. I.e. there can be types that always *require* some value, while there
-/// can be types where a missing value represents some sort of default.
-///
-/// In general, it is recommended that when a missing value is considered valid but there
-/// is no suitable `T::default()` value, one should use `T = Option<R>` (i.e. `T` is an
-/// optional type). If there is a `T::default()` value, it is possible to return this value
-/// when the attribute value is missing.
-///
-/// Similarly, when writing a value, if the property is optional (e.g. `T = Option<R>`), then
-/// write functions are allowed to erase the attribute if `None` is being written, assuming there
-/// is no other appropriate value that represents `None`.
 pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// Returns a reference to the underlying [XmlElement].
     fn element(&self) -> &XmlElement;
 
-    /// Returns `true` if the underlying XML attribute has a known set value, even if such
-    /// value is invalid.
-    ///
-    /// Note that this refers directly to value in the underlying document. When the attribute
-    /// value is missing, this function must return `false`, even if a missing value
-    /// is valid for type `T`.
-    fn is_set(&self) -> bool;
+    /// Returns the name of the underlying XML attribute.
+    fn name(&self) -> &str;
 
-    /// Returns `true` if the underlying XML attribute represents a valid value of type `T`.
+    /// Returns `true` if the underlying XML attribute has a known, set value.
     ///
-    /// See the overall discussion in [XmlProperty] regarding how to treat validity of missing
-    /// attribute values.
-    fn is_valid(&self) -> bool {
-        self.read_checked().is_ok()
+    /// This refers directly to the value in the underlying XML document, not the value produced
+    /// by the [XmlPropertyType] conversion. The conversion can still yield a default value even
+    /// if the attribute is missing, or give an error if the value is invalid.
+    fn is_set(&self) -> bool {
+        let element = self.element();
+        let name = self.name();
+        // As opposed to `self.read_raw().is_some()`, this does not need to copy the attribute.
+        let doc = element.read_doc();
+        element.element().attribute(doc.deref(), name).is_some()
     }
 
-    /// Read the value of this [XmlProperty].
-    ///
-    /// # Panics
-    ///
-    /// The function should panic if the underlying attribute value is invalid for type `T`.
-    fn read(&self) -> T;
-
     /// Read the value of this [XmlProperty], or a `String` error if the underlying value
-    /// is invalid.
+    /// is invalid. The function can return `None` if the attribute is missing, or if an
+    /// equivalent to the `None` value is written in the document.
     ///
-    ///  > The `String` error should be a full English sentence (or sentences). It should contain
-    ///  the name of the XML attribute, it's current value, and the reason why the value is invalid.
-    ///
-    /// See the overall discussion in [XmlProperty] regarding how to treat validity of missing
-    /// attribute values.
-    fn read_checked(&self) -> Result<T, String>;
+    ///  > See [XmlPropertyType] for constraints on the error format and general notes about
+    ///  > value conversion.
+    fn read_checked(&self) -> Result<Option<T>, String> {
+        let element = self.element();
+        let name = self.name();
+        let doc = element.read_doc();
+        let value = element.element().attribute(doc.deref(), name);
+        XmlPropertyType::try_read(value)
+    }
 
     /// Read the "raw" underlying attribute value of this [XmlProperty], or `None` if the value
     /// is not set.
-    fn read_raw(&self) -> Option<String>;
+    fn read_raw(&self) -> Option<String> {
+        let element = self.element();
+        let name = self.name();
+        let doc = element.read_doc();
+        element
+            .element()
+            .attribute(doc.deref(), name)
+            .map(|it| it.to_string())
+    }
 
     /// Remove the underlying XML attribute completely.
     ///
-    /// # Safety
+    /// # Document validity
     ///
-    /// Note that this function can make the underlying property *invalid* if a missing attribute
+    /// This function can make the underlying property *invalid* if a missing attribute
     /// does not map to any valid property value.
-    fn clear(&self);
-
-    /// Write given [value] into this [XmlProperty].
-    ///
-    /// See the overall discussion in [XmlProperty] regarding how to treat missing/default
-    /// attribute values.
-    fn write(&self, value: &T);
+    fn clear(&self) {
+        let element = self.element();
+        let name = self.name();
+        let mut doc = element.write_doc();
+        element
+            .element()
+            .mut_attributes(doc.deref_mut())
+            .remove(name);
+    }
 
     /// Write a raw [value] into this [XmlProperty].
     ///
-    /// # Safety
+    /// # Document validity
     ///
-    /// Obviously, this function can be used to set the property to an invalid value.
-    fn write_raw(&self, value: String);
+    /// Obviously, this function can be used to set the property to a completely invalid value.
+    fn write_raw(&self, value: String) {
+        let element = self.element();
+        let name = self.name();
+        let mut doc = element.write_doc();
+        element
+            .element()
+            .set_attribute(doc.deref_mut(), name, value);
+    }
+}
+
+/// A variant of [XmlProperty] that covers a property that can be missing in a valid document.
+pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
+    /// Read the value of an optional XML property.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the [XmlProperty::read_checked] produces an error.
+    fn read(&self) -> Option<T> {
+        match self.read_checked() {
+            Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
+            Ok(value) => value,
+        }
+    }
+
+    /// Write the value of an optional XML property.
+    ///
+    /// TODO: I'm not sure whether `Option<&T>` or `&Option<T>` is better here. The time will tell.
+    fn write(&self, value: Option<&T>) {
+        match value.and_then(|it| it.write()) {
+            None => self.clear(),
+            Some(value) => self.write_raw(value),
+        }
+    }
+}
+
+/// A variant of [XmlProperty] that covers a property that is required to have a value in
+/// a valid document.
+///
+/// Note that this value can be a default value, in which case the property may not actually be
+/// set in the document; it merely has a default value.
+pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
+    /// Read the value of a required XML property.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the [XmlProperty::read_checked] method produces an error or a `None` value.
+    fn read(&self) -> T {
+        match self.read_checked() {
+            Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
+            Ok(None) => panic!("Missing value for attribute `{}`.", self.name()),
+            Ok(Some(value)) => value,
+        }
+    }
+
+    /// Write the value of a required XML property.
+    ///
+    /// Note that the method can actually erase the XML attribute if the written value represents
+    /// the "default" value for this type, and it can be correctly represented by
+    /// a missing attribute.
+    fn write(&self, value: &T) {
+        match value.write() {
+            None => self.clear(),
+            Some(value) => self.write_raw(value),
+        };
+    }
 }

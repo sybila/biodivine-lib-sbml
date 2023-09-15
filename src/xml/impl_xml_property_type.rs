@@ -7,16 +7,13 @@ use std::str::FromStr;
 
 use crate::{model::BaseUnit, xml::XmlPropertyType};
 
-/// A "trivial" conversion between an XML attribute and a `String`. When the attribute value
-/// is missing, returns a "Value missing." error.
+/// A "trivial" conversion between an XML attribute and a `String`.
 ///
 /// ## Specification
 ///  - Section 3.1.1
 impl XmlPropertyType for String {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
-        value
-            .map(|it| it.to_string())
-            .ok_or("Value missing.".to_string())
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+        Ok(value.map(|it| it.to_string()))
     }
 
     fn write(&self) -> Option<String> {
@@ -24,23 +21,7 @@ impl XmlPropertyType for String {
     }
 }
 
-/// A "trivial" conversion between an XML attribute and an optional `String`. The `None` value
-/// maps to a missing XML attribute.
-///
-/// ## Specification
-///  - Section 3.1.1
-impl XmlPropertyType for Option<String> {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
-        Ok(value.map(|it| it.to_string()))
-    }
-
-    fn write(&self) -> Option<String> {
-        self.clone()
-    }
-}
-
-/// A "trivial conversion between an XML attribute and a `bool`. Missing attribute value is
-/// interpreted as an error.
+/// A "trivial conversion between an XML attribute and a `bool`.
 ///
 /// Note that (per specification), both `0/1` and `true/false` are allowed here. However, when
 /// writing, `true/false` notation is preferred. This ensures that the output is compatible with
@@ -49,14 +30,14 @@ impl XmlPropertyType for Option<String> {
 /// ## Specification
 ///  - Section 3.1.2
 impl XmlPropertyType for bool {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
-            None => Err("Value missing.".to_string()),
-            Some("1") | Some("true") => Ok(true),
-            Some("0") | Some("false") => Ok(false),
+            Some("1") | Some("true") => Ok(Some(true)),
+            Some("0") | Some("false") => Ok(Some(false)),
             Some(value) => Err(format!(
                 "Value `{value}` does not represent a valid `bool`."
             )),
+            None => Ok(None),
         }
     }
 
@@ -66,7 +47,7 @@ impl XmlPropertyType for bool {
 }
 
 /// A "trivial" conversion between an XML attribute and a `i32` integer (`int` type in the SBML
-/// specification). Missing attribute value is interpreted as an error.
+/// specification).
 ///
 /// As far as I know, the default algorithm for parsing/printing integers should be equivalent
 /// to the representation expected by SBML.
@@ -74,17 +55,17 @@ impl XmlPropertyType for bool {
 /// ## Specification
 ///  - Section 3.1.3
 impl XmlPropertyType for i32 {
-    fn try_read(value: Option<&str>) -> Result<Self, String> {
+    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
         if let Some(value) = value {
             match value.parse::<i32>() {
-                Ok(x) => Ok(x),
+                Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
                     "Value `{value}` does not represent a valid signed integer ({}).",
                     e
                 )),
             }
         } else {
-            Err("Value missing".to_string())
+            Ok(None)
         }
     }
 

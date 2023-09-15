@@ -1,6 +1,4 @@
-use crate::xml::impl_xml_child::Child;
-use crate::xml::impl_xml_property::Property;
-use crate::xml::{XmlElement, XmlList, XmlWrapper};
+use crate::xml::{OptionalChild, RequiredChild, XmlElement, XmlList, XmlWrapper};
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
 
@@ -15,12 +13,12 @@ impl SbmlModel {
         SbmlModel::from(xml)
     }
 
-    pub fn function_definitions(&self) -> Child<XmlList<SbmlFunctionDefinition>> {
-        Child::new(self.as_xml(), "listOfFunctionDefinitions")
+    pub fn function_definitions(&self) -> OptionalChild<XmlList<SbmlFunctionDefinition>> {
+        OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions")
     }
 
-    pub fn unit_definitions(&self) -> Child<XmlList<SbmlUnitDefinition>> {
-        Child::new(self.as_xml(), "listOfUnitDefinitions")
+    pub fn unit_definitions(&self) -> RequiredChild<XmlList<SbmlUnitDefinition>> {
+        RequiredChild::new(self.as_xml(), "listOfUnitDefinitions")
     }
 
     pub fn compartments(&self) -> Child<XmlList<Compartment>> {
@@ -76,8 +74,8 @@ pub struct Math(XmlElement);
 pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
-    pub fn units(&self) -> Child<XmlList<Unit>> {
-        Child::new(self.as_xml(), "listOfUnits")
+    pub fn units(&self) -> RequiredChild<XmlList<Unit>> {
+        RequiredChild::new(self.as_xml(), "listOfUnits")
     }
 }
 
