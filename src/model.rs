@@ -1,4 +1,6 @@
-use crate::xml::{OptionalChild, XmlElement, XmlList, XmlWrapper, RequiredProperty, OptionalProperty};
+use crate::xml::{
+    OptionalChild, OptionalProperty, RequiredProperty, XmlElement, XmlList, XmlWrapper,
+};
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
 
@@ -177,7 +179,6 @@ pub enum BaseUnit {
 pub struct Compartment(XmlElement);
 
 impl Compartment {
-    // override default behaviour (inherited from SBase) as compartment id is required.
     pub fn id(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "id")
     }
@@ -205,13 +206,10 @@ impl Compartment {
 pub struct Species(XmlElement);
 
 impl Species {
-    // override default behaviour (inherited from SBase) as specie id is required.
     pub fn id(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "id")
     }
 
-    // would it be useful to return Property<Compartment> ? If so, then how to find compartment
-    // by id ?
     pub fn compartment(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "compartment")
     }
@@ -251,7 +249,6 @@ impl Species {
 pub struct Parameter(XmlElement);
 
 impl Parameter {
-    // override default behaviour (inherited from SBase) as specie id is required.
     pub fn id(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "id")
     }
@@ -332,7 +329,7 @@ impl Constraint {
 pub struct Reaction(XmlElement);
 
 impl Reaction {
-        pub fn id(&self) -> RequiredProperty<String> {
+    pub fn id(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "id")
     }
 

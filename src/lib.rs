@@ -3,6 +3,7 @@ use crate::xml::{XmlDocument, XmlElement};
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
+use xml::OptionalChild;
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
@@ -80,7 +81,7 @@ impl SbmlDocument {
         }
     }
 
-    pub fn get_model(&self) -> SbmlModel {
+    pub fn model(&self) -> SbmlModel {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
         //  of the model element as well, but it's good enough for a demo. Also, some of this
@@ -114,7 +115,7 @@ impl SbmlDocument {
         // }
     }
 
-    pub fn get_xmlns(&self) -> Result<String, String> {
+    pub fn xmlns(&self) -> Result<String, String> {
         let doc = self.xml.read().unwrap();
         match doc
             .root_element()
@@ -127,7 +128,7 @@ impl SbmlDocument {
         }
     }
 
-    pub fn get_level(&self) -> Result<u32, String> {
+    pub fn level(&self) -> Result<u32, String> {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().attribute(doc.deref(), "level") {
             Some(level) => Ok(level.parse().unwrap()),
@@ -135,7 +136,7 @@ impl SbmlDocument {
         }
     }
 
-    pub fn get_version(&self) -> Result<u32, String> {
+    pub fn version(&self) -> Result<u32, String> {
         let doc = self.xml.read().unwrap();
         match doc
             .root_element()
@@ -159,7 +160,7 @@ mod tests {
     #[test]
     pub fn test_model_id() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.get_model();
+        let model = doc.model();
 
         // This is a "qualitative" model so there are no function definitions or units.
         assert!(!model.function_definitions().is_set());
@@ -183,9 +184,34 @@ mod tests {
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();
         let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
-        let model2 = doc2.get_model();
+        let model2 = doc2.model();
         assert_eq!(model.id().read(), model2.id().read());
         assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
         std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
+    }
+
+    #[test]
+    pub fn test_sbml() {
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
+
+        let xmlns = doc.xmlns().unwrap();
+        let level = doc.level().unwrap();
+        let version = doc.version().unwrap();
+
+        assert_eq!(
+            xmlns, "http://www.sbml.org/sbml/level3/version1/core",
+            "Wrong xmlns of SBML.\nActual: {}\nExpected: {}",
+            xmlns, "http://www.sbml.org/sbml/level3/version1/core"
+        );
+        assert_eq!(
+            level, 3,
+            "Wrong level of SBML.\nActual: {}\nExpected: {}",
+            level, 3
+        );
+        assert_eq!(
+            version, 1,
+            "Wrong version of SBML.\nActual: {}\nExpected: {}",
+            version, 1
+        );
     }
 }
