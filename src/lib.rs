@@ -3,7 +3,6 @@ use crate::xml::{XmlDocument, XmlElement};
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use xml::OptionalChild;
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
@@ -151,11 +150,14 @@ impl SbmlDocument {
 
 #[cfg(test)]
 mod tests {
+    use xml_doc::Element;
+
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
+        OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild,
+        XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, SbmlDocument};
-    use std::ops::Deref;
+    use std::ops::{Deref, DerefMut};
 
     #[test]
     pub fn test_model_id() {
@@ -213,5 +215,130 @@ mod tests {
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
             version, 1
         );
+    }
+
+    #[test]
+    pub fn test_sbase_id() {
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model();
+
+        let id: OptionalProperty<String> = model.id();
+
+        assert_eq!(
+            id.element().element(),
+            model.element(),
+            "Wrong underlying element.\nActual: {}\nExpected: {}",
+            id.element().element().name(id.element().read_doc().deref()),
+            "model"
+        );
+        assert!(id.is_set(), "Property [id] is not set.");
+        assert_eq!(
+            id.name(),
+            "id",
+            "Wrong name of the property [id].\nActual: {}\nExpected: {}",
+            id.name(),
+            "id"
+        );
+        assert_eq!(
+            id.read().unwrap(),
+            "model_id",
+            "Wrong id of the Model.\nActual: {}\nExpected: {}",
+            id.read().unwrap(),
+            "model_id"
+        );
+        assert_eq!(
+            id.read_checked().unwrap().unwrap(),
+            "model_id",
+            "Wrong id of the Model.\nActual: {}\nExpected: {}",
+            id.read_checked().unwrap().unwrap(),
+            "model_id"
+        );
+        assert_eq!(
+            id.read_raw().unwrap(),
+            "model_id",
+            "Wrong id of the Model.\nActual: {}\nExpected: {}",
+            id.read_raw().unwrap(),
+            "model_id"
+        );
+
+        id.clear();
+        assert!(!id.is_set());
+        assert!(id.read().is_none());
+
+        id.write(Some(&"model_id_write".to_string()));
+        assert_eq!(
+            id.read().unwrap(),
+            "model_id_write",
+            "Wrong id of the Model.\nActual: {}\nExpected: {}",
+            id.read().unwrap(),
+            "model_id_write"
+        );
+
+        id.write_raw("model_id_write_raw".to_string());
+        assert_eq!(
+            id.read().unwrap(),
+            "model_id_write_raw",
+            "Wrong id of the Model.\nActual: {}\nExpected: {}",
+            id.read().unwrap(),
+            "model_id_write_raw"
+        );
+    }
+
+    #[test]
+    pub fn test_sbase_notes() {
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model();
+
+        let notes: OptionalChild<XmlElement> = model.notes();
+
+        assert!(notes.is_set());
+        {
+            let body = notes
+                .get()
+                .unwrap()
+                .required_child::<XmlElement>("body")
+                .get();
+            let p = body.required_child::<XmlElement>("p").get();
+            let content = p.element().text_content(model.read_doc().deref());
+            assert!(content.starts_with("This model is an adapted version"));
+        }
+        assert_eq!(
+            notes.name(),
+            "notes",
+            "Wrong name of the child [notes].\nActual: {}\nExpected: {}",
+            notes.name(),
+            "notes"
+        );
+        assert_eq!(
+            notes.parent().element(),
+            model.element(),
+            "Wrong parent of the child [notes].\nActual: {}\nExpected: {}",
+            notes
+                .parent()
+                .element()
+                .name(notes.parent().read_doc().deref()),
+            "model"
+        );
+
+        let removed = notes.clear();
+        assert!(removed.is_some());
+        assert!(!notes.is_set());
+        let removed = removed.unwrap();
+        assert!(removed.required_child::<XmlElement>("body").is_set());
+
+        let new_notes = XmlElement::new(
+            doc.xml.clone(),
+            Element::new(model.write_doc().deref_mut(), "notes"),
+        );
+        let old_notes = notes.set(Some(new_notes));
+        assert!(notes.is_set());
+        assert!(old_notes.is_none());
+        let notes_xml = notes.get().unwrap();
+        let body = notes_xml.required_child::<XmlElement>("body");
+        let new_body = XmlElement::new(
+            doc.xml.clone(),
+            Element::new(model.write_doc().deref_mut(), "body"),
+        );
+        body.set(new_body); // panics. Unable to create required child.
     }
 }
