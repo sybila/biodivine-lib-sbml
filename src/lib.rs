@@ -80,6 +80,7 @@ impl SbmlDocument {
         }
     }
 
+    // TODO: return OptionalChild<SbmlModel> instead of SbmlModel
     pub fn model(&self) -> SbmlModel {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
@@ -123,7 +124,10 @@ impl SbmlDocument {
             .get("")
         {
             Some(xmlns) => Ok(xmlns.to_string()),
-            None => Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
+            None => {
+                Err("Required attribute \"namespace\" xmlns not specified."
+                    .to_string())
+            }
         }
     }
 
@@ -131,7 +135,9 @@ impl SbmlDocument {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().attribute(doc.deref(), "level") {
             Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"level\" not specified.".to_string()),
+            None => {
+                Err("Required attribute \"level\" not specified.".to_string())
+            }
         }
     }
 
@@ -143,21 +149,22 @@ impl SbmlDocument {
             .attribute(doc.deref(), "version")
         {
             Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"version\" not specified.".to_string()),
+            None => {
+                Err("Required attribute \"version\" not specified.".to_string())
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use xml_doc::Element;
-
     use crate::xml::{
-        OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild,
-        XmlChild, XmlElement, XmlProperty, XmlWrapper,
+        OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty,
+        RequiredXmlChild, XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::{Deref, DerefMut};
+    use xml_doc::Element;
 
     #[test]
     pub fn test_model_id() {
@@ -185,15 +192,18 @@ mod tests {
         assert_eq!(modified_id, model.id().read().unwrap());
         std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
         doc.write_path("test-inputs/model-modified.sbml").unwrap();
-        let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
+        let doc2 =
+            SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
         let model2 = doc2.model();
         assert_eq!(model.id().read(), model2.id().read());
         assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
         std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
     }
 
+    /// Checks `SbmlDocument`'s properties such as `xmlns`, `version` and `level`.
+    /// Additionaly checks if `Model` retrieval returns correct child.
     #[test]
-    pub fn test_sbml() {
+    pub fn test_document() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
 
         let xmlns = doc.xmlns().unwrap();
@@ -215,7 +225,86 @@ mod tests {
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
             version, 1
         );
+
+        let model = doc.model();
+        assert_eq!(model.id().read().unwrap(), "model_id", "Wrong model.");
     }
+
+    /// Tests read/write operations on `OptionalProperty<>` and `RequiredProperty<>`.
+    /// Attempts to remove and create a new custom `OptionalProperty<>` and `RequiredProperty<>`.
+    /// Additionaly checks if all existing `SBase` properties are correctly read and written.
+    #[test]
+    pub fn test_properties() {
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model();
+
+        let property = model.id();
+
+        assert!(property.is_set(), "Id is not set but it should be.");
+        assert_eq!(property.name(), "id", "Wrong name of the <id> property.");
+        assert_eq!(
+            property.element().element().name(model.read_doc().deref()),
+            "model",
+            "Wrong underlying element of the <id> property."
+        );
+
+        // try reading the <id> property
+        let property_val = property.read();
+        assert!(
+            property_val.is_some(),
+            "The <id> property is not set but it should be."
+        );
+        assert_eq!(
+            property_val,
+            Some("model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+
+        // try clearing the <id> property
+        property.clear();
+        assert!(
+            !property.is_set(),
+            "The <id> property should be unset (cleared)."
+        );
+        let property_val = property.read();
+        assert!(
+            property_val.is_none(),
+            "The <id> property should be unset and therefore shouldn't contain any value."
+        );
+        let property_val = property.read_raw();
+        assert!(
+            property_val.is_none(),
+            "The <id> property should be unset and therefore shouldn't contain any value."
+        );
+
+        // try overwriting the <id> property
+        property.write(Some(&"optional_model_id".to_string()));
+        let property_val = property.read();
+        assert_eq!(
+            property_val,
+            Some("optional_model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+        property.write_raw("raw_model_id".to_string());
+        let property_val = property.read();
+        assert_eq!(
+            property_val,
+            Some("raw_model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+    }
+
+    /// Tests get/set operations on `OptionalChild<>` and `RequiredChild<>`.
+    /// Attempts to remove and create a new custom `OptionalChild<>` and `RequiredChild<>`.
+    #[test]
+    pub fn test_children() {}
+
+    /// Tests get/set operations on special case of children `OptionalChild<XmlList>` and
+    /// `RequiredChild<XmlList>`. Checks if addition/removal/get/set methods work correctly
+    /// on lists. Attempts to remove and create a new custom `OptionalChild<XmlList>` and
+    /// `RequiredChild<XmlList>`.
+    #[test]
+    pub fn test_lists() {}
 
     #[test]
     pub fn test_sbase_id() {
