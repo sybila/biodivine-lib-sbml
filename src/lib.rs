@@ -160,7 +160,8 @@ impl SbmlDocument {
 mod tests {
     use crate::xml::{
         OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty,
-        RequiredXmlChild, XmlChild, XmlElement, XmlProperty, XmlWrapper,
+        RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty,
+        XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::{Deref, DerefMut};
@@ -230,24 +231,21 @@ mod tests {
         assert_eq!(model.id().read().unwrap(), "model_id", "Wrong model.");
     }
 
-    /// Tests read/write operations on `OptionalProperty<>` and `RequiredProperty<>`.
-    /// Attempts to remove and create a new custom `OptionalProperty<>` and `RequiredProperty<>`.
-    /// Additionaly checks if all existing `SBase` properties are correctly read and written.
+    /// Tests read/write operations on `OptionalProperty<>`.
+    /// Attempts to remove and create a new custom `OptionalProperty<>`.
     #[test]
-    pub fn test_properties() {
+    pub fn test_optional_property() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
         let model = doc.model();
-
         let property = model.id();
 
         assert!(property.is_set(), "Id is not set but it should be.");
         assert_eq!(property.name(), "id", "Wrong name of the <id> property.");
         assert_eq!(
-            property.element().element().name(model.read_doc().deref()),
-            "model",
+            property.element().element(),
+            model.element(),
             "Wrong underlying element of the <id> property."
         );
-
         // try reading the <id> property
         let property_val = property.read();
         assert!(
@@ -259,13 +257,13 @@ mod tests {
             Some("model_id".to_string()),
             "Wrong value of the <id> property."
         );
-
         // try clearing the <id> property
         property.clear();
         assert!(
             !property.is_set(),
             "The <id> property should be unset (cleared)."
         );
+        assert!(property.read().is_none());
         let property_val = property.read();
         assert!(
             property_val.is_none(),
@@ -294,83 +292,72 @@ mod tests {
         );
     }
 
+    /// Tests read/write operations on `RequiredProperty<>`.
+    /// Attempts to remove and create a new custom `RequiredProperty<>`.
+    #[test]
+    pub fn test_required_property() {
+        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model();
+        // create a new required property
+        let property: RequiredDynamicProperty<'_, String> =
+            model.required_property("required_property");
+        assert!(
+            !property.is_set(),
+            "Required property shouldn't be set at this point."
+        );
+        assert_eq!(
+            property.name(),
+            "required_property",
+            "Wrong name of the required property."
+        );
+        assert_eq!(
+            property.element().element(),
+            model.element(),
+            "Wrong underlying element of the required property."
+        );
+        // try to write and read to/from poperty
+        property.write(&"REQ_12345".to_string());
+        let property_val = property.read();
+        assert_eq!(
+            property_val, "REQ_12345",
+            "Wrong value of required property."
+        );
+        let property_val = property.read_raw();
+        assert!(property_val.is_some());
+        assert_eq!(
+            property_val,
+            Some("REQ_12345".to_string()),
+            "Wrong value of the required property."
+        );
+        // try to clear the property
+        property.clear();
+        assert!(
+            !property.is_set(),
+            "Property shouln't be set at this point."
+        );
+        // and write a new value to the property
+        property.write_raw("new_req_value".to_string());
+        let property_val = property.read();
+        assert_eq!(
+            property_val, "new_req_value",
+            "Wrong value of the required property."
+        );
+    }
+
     /// Tests get/set operations on `OptionalChild<>` and `RequiredChild<>`.
     /// Attempts to remove and create a new custom `OptionalChild<>` and `RequiredChild<>`.
     #[test]
-    pub fn test_children() {}
+    pub fn test_children() {
+        todo!()
+    }
 
     /// Tests get/set operations on special case of children `OptionalChild<XmlList>` and
     /// `RequiredChild<XmlList>`. Checks if addition/removal/get/set methods work correctly
     /// on lists. Attempts to remove and create a new custom `OptionalChild<XmlList>` and
     /// `RequiredChild<XmlList>`.
     #[test]
-    pub fn test_lists() {}
-
-    #[test]
-    pub fn test_sbase_id() {
-        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
-
-        let id: OptionalProperty<String> = model.id();
-
-        assert_eq!(
-            id.element().element(),
-            model.element(),
-            "Wrong underlying element.\nActual: {}\nExpected: {}",
-            id.element().element().name(id.element().read_doc().deref()),
-            "model"
-        );
-        assert!(id.is_set(), "Property [id] is not set.");
-        assert_eq!(
-            id.name(),
-            "id",
-            "Wrong name of the property [id].\nActual: {}\nExpected: {}",
-            id.name(),
-            "id"
-        );
-        assert_eq!(
-            id.read().unwrap(),
-            "model_id",
-            "Wrong id of the Model.\nActual: {}\nExpected: {}",
-            id.read().unwrap(),
-            "model_id"
-        );
-        assert_eq!(
-            id.read_checked().unwrap().unwrap(),
-            "model_id",
-            "Wrong id of the Model.\nActual: {}\nExpected: {}",
-            id.read_checked().unwrap().unwrap(),
-            "model_id"
-        );
-        assert_eq!(
-            id.read_raw().unwrap(),
-            "model_id",
-            "Wrong id of the Model.\nActual: {}\nExpected: {}",
-            id.read_raw().unwrap(),
-            "model_id"
-        );
-
-        id.clear();
-        assert!(!id.is_set());
-        assert!(id.read().is_none());
-
-        id.write(Some(&"model_id_write".to_string()));
-        assert_eq!(
-            id.read().unwrap(),
-            "model_id_write",
-            "Wrong id of the Model.\nActual: {}\nExpected: {}",
-            id.read().unwrap(),
-            "model_id_write"
-        );
-
-        id.write_raw("model_id_write_raw".to_string());
-        assert_eq!(
-            id.read().unwrap(),
-            "model_id_write_raw",
-            "Wrong id of the Model.\nActual: {}\nExpected: {}",
-            id.read().unwrap(),
-            "model_id_write_raw"
-        );
+    pub fn test_lists() {
+        todo!()
     }
 
     #[test]
