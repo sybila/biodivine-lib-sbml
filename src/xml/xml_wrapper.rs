@@ -38,12 +38,20 @@ pub trait XmlWrapper: From<XmlElement> + Into<XmlElement> {
         OptionalDynamicProperty::new(self.as_xml(), name)
     }
 
-    fn optional_child<T: XmlWrapper>(&self, name: &str) -> OptionalDynamicChild<T> {
-        OptionalDynamicChild::new(self.as_xml(), name)
+    fn optional_child<T: XmlWrapper>(
+        &self,
+        name: &str,
+        namespace_url: &str,
+    ) -> OptionalDynamicChild<T> {
+        OptionalDynamicChild::new(self.as_xml(), name, namespace_url)
     }
 
-    fn required_child<T: XmlWrapper>(&self, name: &str) -> RequiredDynamicChild<T> {
-        RequiredDynamicChild::new(self.as_xml(), name)
+    fn required_child<T: XmlWrapper>(
+        &self,
+        name: &str,
+        namespace_url: &str,
+    ) -> RequiredDynamicChild<T> {
+        RequiredDynamicChild::new(self.as_xml(), name, namespace_url)
     }
 
     /// Obtain a read-only reference to the underlying [Document].

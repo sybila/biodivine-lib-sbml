@@ -33,6 +33,9 @@ pub mod model;
 /// algorithms/implementations for validation.
 pub mod validation;
 
+pub const NS_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
+pub const NS_HTML: &str = "http://www.w3.org/1999/xhtml";
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
@@ -153,7 +156,7 @@ mod tests {
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
     };
-    use crate::{sbase::SBase, SbmlDocument};
+    use crate::{sbase::SBase, SbmlDocument, NS_HTML};
     use std::ops::Deref;
 
     #[test]
@@ -168,8 +171,8 @@ mod tests {
         assert!(model.notes().is_set());
         {
             let notes = model.notes().get().unwrap();
-            let body = notes.required_child::<XmlElement>("body").get();
-            let p = body.required_child::<XmlElement>("p").get();
+            let body = notes.required_child::<XmlElement>("body", NS_HTML).get();
+            let p = body.required_child::<XmlElement>("p", NS_HTML).get();
             let doc = model.read_doc();
             let content = p.element().text_content(doc.deref());
             assert!(content.starts_with("This model"));

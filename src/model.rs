@@ -1,4 +1,5 @@
 use crate::xml::{OptionalChild, RequiredChild, XmlElement, XmlList, XmlWrapper};
+use crate::NS_SBML_CORE;
 use macros::{SBase, XmlWrapper};
 
 /// A type-safe representation of an SBML <model> element.
@@ -11,11 +12,11 @@ impl SbmlModel {
     }
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<SbmlFunctionDefinition>> {
-        OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions")
+        OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions", NS_SBML_CORE)
     }
 
     pub fn unit_definitions(&self) -> RequiredChild<XmlList<SbmlUnitDefinition>> {
-        RequiredChild::new(self.as_xml(), "listOfUnitDefinitions")
+        RequiredChild::new(self.as_xml(), "listOfUnitDefinitions", NS_SBML_CORE)
     }
 }
 
@@ -27,7 +28,7 @@ pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
     pub fn units(&self) -> RequiredChild<XmlList<Unit>> {
-        RequiredChild::new(self.as_xml(), "listOfUnits")
+        RequiredChild::new(self.as_xml(), "listOfUnits", NS_SBML_CORE)
     }
 }
 

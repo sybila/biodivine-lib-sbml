@@ -17,13 +17,20 @@ pub trait XmlChild<T: XmlWrapper> {
     /// Returns the name of the corresponding child tag.
     fn name(&self) -> &str;
 
+    /// Returns the URL of the namespace where this child belongs. The url can be empty,
+    /// in which case it translates to the "default namespace".
+    fn namespace_url(&self) -> &str;
+
     /// Returns `true` if the referenced child element exists
     /// (even if it is otherwise invalid).
     fn is_set(&self) -> bool {
         let element = self.parent();
-        let name = self.name();
         let doc = element.read_doc();
-        element.element().find(doc.deref(), name).is_some()
+        let (name, namespace) = (self.name(), self.namespace_url());
+        element
+            .element()
+            .find_quantified(doc.deref(), name, namespace)
+            .is_some()
     }
 
     /// Completely remove the referenced child element and return it (if it is present).
@@ -36,52 +43,51 @@ pub trait XmlChild<T: XmlWrapper> {
     /// If there is more then one child element of the same name (an invalid situation),
     /// only the first element is removed.
     fn clear(&self) -> Option<T> {
-        let element = self.parent();
-        let name = self.name();
-        let mut doc = element.write_doc();
-        let parent = element.element();
-        let Some(to_remove) = parent.find(doc.deref(), name) else {
+        let Some(to_remove) = self.get_raw() else {
             return None;
         };
+        let element = self.parent();
+        let mut doc = element.write_doc();
         to_remove
+            .element()
             .detatch(doc.deref_mut())
             .expect("You can't detach the container element.");
-        Some(XmlElement::new(element.document(), to_remove).into())
+        Some(T::from(to_remove))
     }
 
     /// Get the "raw" child [XmlElement] referenced by this [XmlChild], or `None` if the child
     /// is not present.
     fn get_raw(&self) -> Option<XmlElement> {
         let element = self.parent();
-        let name = self.name();
         let doc = element.read_doc();
+        let (name, namespace) = (self.name(), self.namespace_url());
         let parent = element.element();
-        parent
-            .find(doc.deref(), name)
-            .map(|it| XmlElement::new(element.document(), it))
+        let child = parent.find_quantified(doc.deref(), name, namespace);
+        child.map(|it| XmlElement::new(element.document(), it))
     }
 
     /// Replace the referenced child element with a new [XmlWrapper] element and return the
     /// previous value (if any).
     ///
     /// *Warning:* This may alter the order of child elements. The updated element is typically
-    /// inserted as the *last* child.
+    /// inserted as the *last* child. Furthermore, the neither the namespace of the child,
+    /// nor its name is checked against the expected values.
     ///
     /// # Document validity
     ///
     /// Obviously, this makes it possible to set the child into an invalid state.
     fn set_raw(&self, value: XmlElement) -> Option<XmlElement> {
         let element = self.parent();
-        let name = self.name();
         let mut doc = element.write_doc();
         let parent = element.element();
 
         // First, remove the existing child.
-        let removed = if let Some(to_remove) = parent.find(doc.deref(), name) {
+        let removed = if let Some(to_remove) = self.get_raw() {
             to_remove
+                .element()
                 .detatch(doc.deref_mut())
                 .expect("You can't detach the container element.");
-            Some(XmlElement::new(element.document(), to_remove))
+            Some(to_remove)
         } else {
             None
         };
@@ -121,13 +127,34 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     /// Replaces the current value of the referenced child element with a new one. Returns the
     /// old child element.
     ///
+    /// If this child is quantified with a namespace URL, then the method will automatically
+    /// set the prefix of the new element to the closest viable prefix in this subtree of the
+    /// document. However, the method will not create any new namespace declarations.
+    ///
     /// # Panics
     ///
-    /// Panics if the child element does not exist.
+    /// Panics if the child element does not exist, or if the new element is not compatible
+    /// with this `XmlChild` (i.e. different name). Also panics if the namespace of this child
+    /// is not declared in this subtree.
     fn set(&self, value: T) -> T {
         let Some(old_child) = self.set_raw(value.into()) else {
             panic!("Missing child element `{}`.", self.name());
         };
+        // If get_raw returns none, it means `value` was some invalid element
+        // that does not belong here.
+        let Some(current) = self.get_raw() else {
+            panic!(
+                "Invalid child used in document in place of `{}`.",
+                self.name()
+            );
+        };
+        let mut doc = current.write_doc();
+        let quantified = current
+            .element()
+            .quantify_with_closest(doc.deref_mut(), self.namespace_url());
+        if quantified.is_none() {
+            panic!("Namespace `{}` is not decalred.", self.namespace_url());
+        }
         T::from(old_child)
     }
 }
@@ -145,7 +172,23 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     fn set(&self, value: Option<T>) -> Option<T> {
         match value {
             None => self.clear(),
-            Some(new_child) => self.set_raw(new_child.into()).map(|it| T::from(it)),
+            Some(new_child) => {
+                let old_child = self.set_raw(new_child.into());
+                let Some(current) = self.get_raw() else {
+                    panic!(
+                        "Invalid child used in document in place of `{}`.",
+                        self.name()
+                    );
+                };
+                let mut doc = current.write_doc();
+                let quantified = current
+                    .element()
+                    .quantify_with_closest(doc.deref_mut(), self.namespace_url());
+                if quantified.is_none() {
+                    panic!("Namespace `{}` is not declared.", self.namespace_url());
+                }
+                old_child.map(|it| T::from(it))
+            }
         }
     }
 }
@@ -186,7 +229,15 @@ impl<Element: XmlWrapper, Child: OptionalXmlChild<XmlList<Element>>>
             let mut document = self.parent().write_doc();
             let element = xml_doc::Element::new(document.deref_mut(), self.name());
             let element = XmlElement::new(self.parent().document(), element);
-            self.set_raw(element);
+            self.set_raw(element.clone());
+            let mut doc = element.write_doc();
+            if element
+                .element()
+                .quantify_with_closest(doc.deref_mut(), self.namespace_url())
+                .is_none()
+            {
+                panic!("Namespace `{}` is not declared.", self.namespace_url());
+            }
         }
     }
 }
