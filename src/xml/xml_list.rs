@@ -124,7 +124,7 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     }
 
     pub fn push(&self, value: Type) {
-        self.insert(self.len() - 1, value)
+        self.insert(self.len(), value)
     }
 
     pub fn pop(&self) -> Type {
