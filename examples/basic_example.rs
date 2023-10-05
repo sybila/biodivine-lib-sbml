@@ -10,7 +10,7 @@ use biodivine_lib_sbml::SbmlDocument;
 fn main() {
     let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
     let model = doc.model();
-    assert_eq!("model_id", model.id().read().unwrap().as_str());
+    assert_eq!("model_id", model.id().get().unwrap().as_str());
     // Print the whole document:
     println!("{}", model.read_doc().write_str().unwrap());
 }

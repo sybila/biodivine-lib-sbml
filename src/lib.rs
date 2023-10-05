@@ -187,7 +187,7 @@ mod tests {
         );
 
         let model = doc.model();
-        assert_eq!(model.id().read().unwrap(), "model_id", "Wrong model.");
+        assert_eq!(model.id().get().unwrap(), "model_id", "Wrong model.");
     }
 
     /// Tests read/write operations on `OptionalProperty<>`.
@@ -206,7 +206,7 @@ mod tests {
             "Wrong underlying element of the <id> property."
         );
         // try reading the <id> property
-        let property_val = property.read();
+        let property_val = property.get();
         assert!(
             property_val.is_some(),
             "The <id> property is not set but it should be."
@@ -222,28 +222,28 @@ mod tests {
             !property.is_set(),
             "The <id> property should be unset (cleared)."
         );
-        assert!(property.read().is_none());
-        let property_val = property.read();
+        assert!(property.get().is_none());
+        let property_val = property.get();
         assert!(
             property_val.is_none(),
             "The <id> property should be unset and therefore shouldn't contain any value."
         );
-        let property_val = property.read_raw();
+        let property_val = property.get_raw();
         assert!(
             property_val.is_none(),
             "The <id> property should be unset and therefore shouldn't contain any value."
         );
 
         // try overwriting the <id> property
-        property.write(Some(&"optional_model_id".to_string()));
-        let property_val = property.read();
+        property.set(Some(&"optional_model_id".to_string()));
+        let property_val = property.get();
         assert_eq!(
             property_val,
             Some("optional_model_id".to_string()),
             "Wrong value of the <id> property."
         );
-        property.write_raw("raw_model_id".to_string());
-        let property_val = property.read();
+        property.set_raw("raw_model_id".to_string());
+        let property_val = property.get();
         assert_eq!(
             property_val,
             Some("raw_model_id".to_string()),
@@ -275,13 +275,13 @@ mod tests {
             "Wrong underlying element of the required property."
         );
         // try to write and read to/from poperty
-        property.write(&"REQ_12345".to_string());
-        let property_val = property.read();
+        property.set(&"REQ_12345".to_string());
+        let property_val = property.get();
         assert_eq!(
             property_val, "REQ_12345",
             "Wrong value of required property."
         );
-        let property_val = property.read_raw();
+        let property_val = property.get_raw();
         assert!(property_val.is_some());
         assert_eq!(
             property_val,
@@ -295,8 +295,8 @@ mod tests {
             "Property shouln't be set at this point."
         );
         // and write a new value to the property
-        property.write_raw("new_req_value".to_string());
-        let property_val = property.read();
+        property.set_raw("new_req_value".to_string());
+        let property_val = property.get();
         assert_eq!(
             property_val, "new_req_value",
             "Wrong value of the required property."
@@ -393,15 +393,15 @@ mod tests {
         assert!(!content.is_empty());
         assert_eq!(content.len(), 1);
         let compartment1 = content.get(0);
-        assert_eq!(compartment1.constant().read(), true);
-        assert_eq!(compartment1.id().read(), "comp1");
+        assert_eq!(compartment1.constant().get(), true);
+        assert_eq!(compartment1.id().get(), "comp1");
         let compartment2: Compartment = XmlElement::new(
             doc.xml,
             Element::new(model.write_doc().deref_mut(), "compartment"),
         )
         .into();
-        compartment2.constant().write_raw("false".to_string());
-        compartment2.id().write_raw("comp2".to_string());
+        compartment2.constant().set_raw("false".to_string());
+        compartment2.id().set_raw("comp2".to_string());
         content.insert(1, compartment2.clone());
         assert!(content.len() == 2);
         assert_eq!(content.get(0).element(), compartment1.element());

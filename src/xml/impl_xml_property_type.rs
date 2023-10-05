@@ -12,11 +12,11 @@ use crate::{model::BaseUnit, xml::XmlPropertyType};
 /// ## Specification
 ///  - Section 3.1.1
 impl XmlPropertyType for String {
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         Ok(value.map(|it| it.to_string()))
     }
 
-    fn write(&self) -> Option<String> {
+    fn set(&self) -> Option<String> {
         Some(self.clone())
     }
 }
@@ -30,7 +30,7 @@ impl XmlPropertyType for String {
 /// ## Specification
 ///  - Section 3.1.2
 impl XmlPropertyType for bool {
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some("1") | Some("true") => Ok(Some(true)),
             Some("0") | Some("false") => Ok(Some(false)),
@@ -41,7 +41,7 @@ impl XmlPropertyType for bool {
         }
     }
 
-    fn write(&self) -> Option<String> {
+    fn set(&self) -> Option<String> {
         Some(if *self { "true" } else { "false" }.to_string())
     }
 }
@@ -55,7 +55,7 @@ impl XmlPropertyType for bool {
 /// ## Specification
 ///  - Section 3.1.3
 impl XmlPropertyType for i32 {
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         if let Some(value) = value {
             match value.parse::<i32>() {
                 Ok(x) => Ok(Some(x)),
@@ -69,7 +69,7 @@ impl XmlPropertyType for i32 {
         }
     }
 
-    fn write(&self) -> Option<String> {
+    fn set(&self) -> Option<String> {
         Some(format!("{}", self))
     }
 }
@@ -80,7 +80,7 @@ impl XmlPropertyType for i32 {
 /// ## Specification
 ///  - Section 3.1.5
 impl XmlPropertyType for f64 {
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some(value) => match value.parse::<f64>() {
                 Ok(x) => Ok(Some(x)),
@@ -93,7 +93,7 @@ impl XmlPropertyType for f64 {
         }
     }
 
-    fn write(&self) -> Option<String> {
+    fn set(&self) -> Option<String> {
         Some(format!("{}", self))
     }
 }
@@ -104,7 +104,7 @@ impl XmlPropertyType for f64 {
 /// ## Specification
 ///  - Section 4.4.2
 impl XmlPropertyType for BaseUnit {
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String> {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some(value) => match BaseUnit::from_str(value) {
                 Ok(unit) => Ok(Some(unit)),
@@ -117,7 +117,7 @@ impl XmlPropertyType for BaseUnit {
         }
     }
 
-    fn write(&self) -> Option<String> {
+    fn set(&self) -> Option<String> {
         Some(format!("{}", self))
     }
 }
