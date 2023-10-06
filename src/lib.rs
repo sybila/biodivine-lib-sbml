@@ -3,6 +3,7 @@ use crate::xml::{XmlDocument, XmlElement};
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
+use xml::OptionalChild;
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
@@ -41,6 +42,7 @@ pub mod validation;
 #[derive(Clone, Debug)]
 pub struct SbmlDocument {
     xml: XmlDocument,
+    sbml_root: XmlElement,
 }
 
 impl SbmlDocument {
@@ -53,8 +55,11 @@ impl SbmlDocument {
             Ok(doc) => doc,
             Err(why) => return Err(why.to_string()),
         };
+        let root = doc.root_element().unwrap();
+        let xml_document = Arc::new(RwLock::new(doc));
         Ok(SbmlDocument {
-            xml: Arc::new(RwLock::new(doc)),
+            xml: xml_document.clone(),
+            sbml_root: XmlElement::new(xml_document, root),
         })
     }
 
@@ -81,32 +86,34 @@ impl SbmlDocument {
     }
 
     // TODO: return OptionalChild<SbmlModel> instead of SbmlModel
-    pub fn model(&self) -> SbmlModel {
+    pub fn model(&self) -> OptionalChild<SbmlModel> {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
         //  of the model element as well, but it's good enough for a demo. Also, some of this
         //  may need better error handling.
 
-        let model_element = {
-            // Lock the XML document for reading. The fact that we are doing this in
-            // an extra scope is not necessary for correctness, but it makes it easier
-            // for the compiler to infer when the lock should be released, hence we
-            // won't accidentally hold it longer than necessary (although, this method is
-            // so simple it does not really matter).
-            let xml = self.xml.read().unwrap();
-            // The `xml` variable here is actually a "read guard" object created by the RwLock.
-            // However, we should be able to use it more-or-less like any other reference to a
-            // `xml_doc::Document` (e.g., we can call `xml.root_element()` like we would on a
-            // "raw" `Document` object). The main difference is if we actually need to send it
-            // to a function that accepts a "true" &Document reference. In such case, we need to
-            // fake it a bit by calling the `.deref` function.
-            xml.root_element()
-                .unwrap()
-                .find(xml.deref(), "model")
-                .unwrap()
-        };
+        // let model_element = {
+        //     // Lock the XML document for reading. The fact that we are doing this in
+        //     // an extra scope is not necessary for correctness, but it makes it easier
+        //     // for the compiler to infer when the lock should be released, hence we
+        //     // won't accidentally hold it longer than necessary (although, this method is
+        //     // so simple it does not really matter).
+        //     let xml = self.xml.read().unwrap();
+        //     // The `xml` variable here is actually a "read guard" object created by the RwLock.
+        //     // However, we should be able to use it more-or-less like any other reference to a
+        //     // `xml_doc::Document` (e.g., we can call `xml.root_element()` like we would on a
+        //     // "raw" `Document` object). The main difference is if we actually need to send it
+        //     // to a function that accepts a "true" &Document reference. In such case, we need to
+        //     // fake it a bit by calling the `.deref` function.
+        //     xml.root_element()
+        //         .unwrap()
+        //         .find(xml.deref(), "model")
+        //         .unwrap()
+        // };
 
-        SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
+        OptionalChild::new(&self.sbml_root, "model")
+
+        // SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
         // SbmlModel {
         //     // Due to the reference-counting implemented in `Arc`, this does not actually create
         //     // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
@@ -124,7 +131,10 @@ impl SbmlDocument {
             .get("")
         {
             Some(xmlns) => Ok(xmlns.to_string()),
-            None => Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
+            None => {
+                Err("Required attribute \"namespace\" xmlns not specified."
+                    .to_string())
+            }
         }
     }
 
@@ -132,7 +142,9 @@ impl SbmlDocument {
         let doc = self.xml.read().unwrap();
         match doc.root_element().unwrap().attribute(doc.deref(), "level") {
             Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"level\" not specified.".to_string()),
+            None => {
+                Err("Required attribute \"level\" not specified.".to_string())
+            }
         }
     }
 
@@ -144,7 +156,9 @@ impl SbmlDocument {
             .attribute(doc.deref(), "version")
         {
             Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"version\" not specified.".to_string()),
+            None => {
+                Err("Required attribute \"version\" not specified.".to_string())
+            }
         }
     }
 }
@@ -153,8 +167,9 @@ impl SbmlDocument {
 mod tests {
     use crate::model::Compartment;
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
-        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlWrapper,
+        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild,
+        RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty,
+        XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, SbmlDocument};
     use std::ops::{Deref, DerefMut};
@@ -186,7 +201,7 @@ mod tests {
             version, 1
         );
 
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
         assert_eq!(model.id().get().unwrap(), "model_id", "Wrong model.");
     }
 
@@ -195,7 +210,7 @@ mod tests {
     #[test]
     pub fn test_optional_property() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
         let property = model.id();
 
         assert!(property.is_set(), "Id is not set but it should be.");
@@ -256,7 +271,8 @@ mod tests {
     #[test]
     pub fn test_required_property() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
+
         // create a new required property
         let property: RequiredDynamicProperty<'_, String> =
             model.required_property("required_property");
@@ -308,7 +324,7 @@ mod tests {
     #[test]
     pub fn test_optional_child() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
 
         // get child
         let notes = model.notes();
@@ -333,7 +349,8 @@ mod tests {
         assert!(!notes.is_set(), "Notes are still present after clear.");
 
         let element = Element::new(model.write_doc().deref_mut(), "notes");
-        element.set_text_content(model.write_doc().deref_mut(), "Some new text.");
+        element
+            .set_text_content(model.write_doc().deref_mut(), "Some new text.");
         let xml_element = XmlElement::new(doc.xml, element);
         // set child
         let notes_elem = notes.set(Some(xml_element));
@@ -346,10 +363,11 @@ mod tests {
     #[test]
     pub fn test_required_child() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
 
         // get child
-        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
+        let req_child: RequiredDynamicChild<'_, XmlElement> =
+            model.required_child("required");
         assert!(!req_child.is_set());
         assert_eq!(req_child.name(), "required");
         assert_eq!(req_child.parent().element(), model.element());
@@ -358,7 +376,10 @@ mod tests {
         // set child
         req_child.set_raw(xml_element);
         assert!(req_child.is_set());
-        element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
+        element.set_text_content(
+            model.write_doc().deref_mut(),
+            "Some additional content",
+        );
         let xml_element = XmlElement::new(doc.xml.clone(), element);
         let old_child = req_child.set(xml_element);
         assert_eq!(old_child.element(), element);
@@ -381,7 +402,7 @@ mod tests {
     #[test]
     pub fn test_lists() {
         let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.model();
+        let model = doc.model().get().unwrap();
         let list = model.compartments();
 
         assert!(list.is_set());

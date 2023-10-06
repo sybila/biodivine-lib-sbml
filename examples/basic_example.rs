@@ -1,5 +1,5 @@
 use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::xml::{OptionalXmlProperty, XmlWrapper};
+use biodivine_lib_sbml::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use biodivine_lib_sbml::SbmlDocument;
 
 // To run this example, execute `cargo run --example basic_example`.
@@ -9,7 +9,7 @@ use biodivine_lib_sbml::SbmlDocument;
 // for the example binary, not for `cargo` itself.
 fn main() {
     let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-    let model = doc.model();
+    let model = doc.model().get().unwrap();
     assert_eq!("model_id", model.id().get().unwrap().as_str());
     // Print the whole document:
     println!("{}", model.read_doc().write_str().unwrap());
