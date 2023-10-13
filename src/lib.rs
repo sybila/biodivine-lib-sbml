@@ -29,6 +29,8 @@ pub mod sbase;
 
 pub mod model;
 
+pub mod constants;
+
 /// Declares the [SbmlValidate] trait and should also contain other relevant
 /// algorithms/implementations for validation.
 pub mod validation;
@@ -45,6 +47,19 @@ pub struct Sbml {
 }
 
 impl Sbml {
+    /// Creates a new blank SBML document with initial skeleton consisting of valid
+    /// xml header and sbml root element.
+    pub fn new() -> Sbml {
+        print!("{}", constants::document::SBML_DEFAULT_DOCUMENT);
+        let doc = Document::from_str(constants::document::SBML_DEFAULT_DOCUMENT).unwrap();
+        let root = doc.root_element().unwrap();
+        let xml_document = Arc::new(RwLock::new(doc));
+        Sbml {
+            xml: xml_document.clone(),
+            sbml_root: XmlElement::new(xml_document, root),
+        }
+    }
+
     pub fn read_path(path: &str) -> Result<Sbml, String> {
         let file_contents = match std::fs::read_to_string(path) {
             Ok(file_contents) => file_contents,
@@ -135,17 +150,16 @@ impl Sbml {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::Compartment;
+    use crate::model::{Compartment, SbmlModel};
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild,
-        RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty,
-        XmlChild, XmlElement, XmlProperty, XmlWrapper,
+        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
+        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, Sbml};
     use std::ops::{Deref, DerefMut};
     use xml_doc::Element;
 
-    /// Checks `SbmlDocument`'s properties such as `xmlns`, `version` and `level`.
+    /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionaly checks if `Model` retrieval returns correct child.
     #[test]
     pub fn test_document() {
@@ -153,7 +167,7 @@ mod tests {
 
         let level = doc.level().get();
         let version = doc.version().get();
-        
+
         assert_eq!(
             level, "3",
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
@@ -313,8 +327,7 @@ mod tests {
         assert!(!notes.is_set(), "Notes are still present after clear.");
 
         let element = Element::new(model.write_doc().deref_mut(), "notes");
-        element
-            .set_text_content(model.write_doc().deref_mut(), "Some new text.");
+        element.set_text_content(model.write_doc().deref_mut(), "Some new text.");
         let xml_element = XmlElement::new(doc.xml, element);
         // set child
         let notes_elem = notes.set(Some(xml_element));
@@ -330,8 +343,7 @@ mod tests {
         let model = doc.model().get().unwrap();
 
         // get child
-        let req_child: RequiredDynamicChild<'_, XmlElement> =
-            model.required_child("required");
+        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
         assert!(!req_child.is_set());
         assert_eq!(req_child.name(), "required");
         assert_eq!(req_child.parent().element(), model.element());
@@ -340,10 +352,7 @@ mod tests {
         // set child
         req_child.set_raw(xml_element);
         assert!(req_child.is_set());
-        element.set_text_content(
-            model.write_doc().deref_mut(),
-            "Some additional content",
-        );
+        element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
         let xml_element = XmlElement::new(doc.xml.clone(), element);
         let old_child = req_child.set(xml_element);
         assert_eq!(old_child.element(), element);
@@ -401,5 +410,19 @@ mod tests {
         content.pop();
         assert!(content.len() == 1);
         assert_eq!(content.get(0).element(), compartment2.element());
+    }
+
+    #[test]
+    pub fn test_build_doc() {
+        let sbml_doc = Sbml::new();
+        let model = sbml_doc.model();
+        let element = Element::new(sbml_doc.xml.write().unwrap().deref_mut(), "model");
+        element.set_text_content(sbml_doc.xml.write().unwrap().deref_mut(), "This is a SBML model element");
+        let xml_element = XmlElement::new(sbml_doc.xml.clone(), element);
+        model.set(Some(SbmlModel::new(xml_element)));
+        let model_raw = model.get().unwrap();
+        model_raw.id().set(Some(&"model_id".to_string()));
+        
+        let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
     }
 }
