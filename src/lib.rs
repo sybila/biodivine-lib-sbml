@@ -124,10 +124,6 @@ impl Sbml {
         */
     }
 
-    pub fn xmlns(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(&self.sbml_root, "xmlns")
-    }
-
     pub fn level(&self) -> RequiredProperty<String> {
         RequiredProperty::new(&self.sbml_root, "level")
     }
@@ -155,15 +151,9 @@ mod tests {
     pub fn test_document() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
 
-        let xmlns = doc.xmlns().get();
         let level = doc.level().get();
         let version = doc.version().get();
-
-        assert_eq!(
-            xmlns, "http://www.sbml.org/sbml/level3/version1/core",
-            "Wrong xmlns of SBML.\nActual: {}\nExpected: {}",
-            xmlns, "http://www.sbml.org/sbml/level3/version1/core"
-        );
+        
         assert_eq!(
             level, "3",
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
