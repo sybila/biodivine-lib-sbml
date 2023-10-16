@@ -1,5 +1,5 @@
 use crate::xml::{OptionalChild, OptionalProperty, XmlElement, XmlWrapper};
-use crate::NS_SBML_CORE;
+use crate::URL_SBML_CORE;
 
 // TODO:
 //      At some point, we should probably have an `SId` type instead of using a string here,
@@ -26,10 +26,10 @@ pub trait SBase: XmlWrapper {
     }
 
     fn notes(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "notes", NS_SBML_CORE)
+        OptionalChild::new(self.as_xml(), "notes", URL_SBML_CORE)
     }
 
     fn annotation(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "annotation", NS_SBML_CORE)
+        OptionalChild::new(self.as_xml(), "annotation", URL_SBML_CORE)
     }
 }

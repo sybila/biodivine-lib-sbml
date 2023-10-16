@@ -1,5 +1,5 @@
 use crate::model::SbmlModel;
-use crate::xml::{XmlDocument, XmlElement};
+use crate::xml::{XmlDocument, XmlElement, XmlWrapper};
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
@@ -33,8 +33,10 @@ pub mod model;
 /// algorithms/implementations for validation.
 pub mod validation;
 
-pub const NS_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
-pub const NS_HTML: &str = "http://www.w3.org/1999/xhtml";
+pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
+pub const NS_SBML_CORE: (&str, &str) = ("", URL_SBML_CORE);
+pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
+pub const NS_HTML: (&str, &str) = ("", URL_HTML);
 
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
@@ -108,7 +110,7 @@ impl SbmlDocument {
                 .unwrap()
         };
 
-        SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
+        unsafe { SbmlModel::unchecked_cast(XmlElement::new_raw(self.xml.clone(), model_element)) }
         // SbmlModel {
         //     // Due to the reference-counting implemented in `Arc`, this does not actually create
         //     // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
@@ -154,9 +156,9 @@ impl SbmlDocument {
 #[cfg(test)]
 mod tests {
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
+        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlElement, XmlWrapper,
     };
-    use crate::{sbase::SBase, SbmlDocument, NS_HTML};
+    use crate::{sbase::SBase, SbmlDocument, URL_HTML};
     use std::ops::Deref;
 
     #[test]
@@ -171,10 +173,10 @@ mod tests {
         assert!(model.notes().is_set());
         {
             let notes = model.notes().get().unwrap();
-            let body = notes.required_child::<XmlElement>("body", NS_HTML).get();
-            let p = body.required_child::<XmlElement>("p", NS_HTML).get();
+            let body = notes.required_child::<XmlElement>("body", URL_HTML).get();
+            let p = body.required_child::<XmlElement>("p", URL_HTML).get();
             let doc = model.read_doc();
-            let content = p.element().text_content(doc.deref());
+            let content = p.raw_element().text_content(doc.deref());
             assert!(content.starts_with("This model"));
         }
 

@@ -31,6 +31,8 @@ mod impl_xml_child;
 /// specification Section 3.1.
 mod impl_xml_property_type;
 
+mod experiments;
+
 pub use crate::xml::impl_xml_child::{
     Child, DynamicChild, OptionalChild, OptionalDynamicChild, RequiredChild, RequiredDynamicChild,
 };
