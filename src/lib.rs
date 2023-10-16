@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use xml::{OptionalChild, RequiredProperty};
 use xml_doc::Document;
+use crate::constants::namespaces::URL_SBML_CORE;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -34,15 +35,6 @@ pub mod constants;
 /// Declares the [SbmlValidate] trait and should also contain other relevant
 /// algorithms/implementations for validation.
 pub mod validation;
-
-pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
-pub const NS_SBML_CORE: (&str, &str) = ("", URL_SBML_CORE);
-pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
-pub const NS_HTML: (&str, &str) = ("", URL_HTML);
-pub const URL_MATHML: &str = "http://www.w3.org/1998/Math/MathML";
-pub const NS_MATHML: (&str, &str) = ("", URL_MATHML);
-pub const URL_DEFAULT: &str = "";
-pub const NS_DEFAULT: (&str, &str) = ("", URL_DEFAULT);
 
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
@@ -171,8 +163,9 @@ mod tests {
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
         XmlWrapper,
     };
-    use crate::{sbase::SBase, Sbml, NS_DEFAULT, NS_SBML_CORE, URL_DEFAULT};
+    use crate::{sbase::SBase, Sbml};
     use std::ops::{Deref, DerefMut};
+    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY};
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionally checks if `Model` retrieval returns correct child.
@@ -357,11 +350,11 @@ mod tests {
 
         // get child
         let req_child: RequiredDynamicChild<'_, XmlElement> =
-            model.required_child("required", URL_DEFAULT);
+            model.required_child("required", URL_EMPTY);
         assert!(req_child.get_raw().is_none());
         assert_eq!(req_child.name(), "required");
         assert_eq!(req_child.parent().raw_element(), model.raw_element());
-        let xml_element = XmlElement::new_quantified(model.document(), "required", NS_DEFAULT);
+        let xml_element = XmlElement::new_quantified(model.document(), "required", NS_EMPTY);
         let inner_element = xml_element.raw_element();
         // set child
         req_child.set_raw(xml_element);

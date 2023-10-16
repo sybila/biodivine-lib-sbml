@@ -2,9 +2,9 @@ use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDefault, XmlDocument, XmlElement,
     XmlList, XmlWrapper,
 };
-use crate::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
+use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
