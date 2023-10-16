@@ -85,7 +85,7 @@ impl XmlPropertyType for f64 {
             Some(value) => match value.parse::<f64>() {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid signed integer ({}).",
+                    "Value `{value}` does not represent a valid floating point number ({}).",
                     e
                 )),
             },
