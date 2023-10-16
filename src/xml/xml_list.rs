@@ -143,4 +143,11 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     }
 }
 
+// TODO:
+//   This is fine for now, but I would very much like to remove this in the future.
+//   The problem is that now `XmlList` can be used *only* in places where it implements `SBase`.
+//   So any list of objects that are not `SBase` should not be represented as `XmlList`.
+//   A possible solution would be to implement `XmlList` as a trait, and then have a `SbmlList`
+//   struct that implements it together with `SBase`, and possibly other implementations that
+//   do not use `SBase`.
 impl<T: XmlWrapper> SBase for XmlList<T> {}
