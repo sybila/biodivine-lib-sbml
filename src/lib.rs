@@ -417,12 +417,15 @@ mod tests {
         let sbml_doc = Sbml::new();
         let model = sbml_doc.model();
         let element = Element::new(sbml_doc.xml.write().unwrap().deref_mut(), "model");
-        element.set_text_content(sbml_doc.xml.write().unwrap().deref_mut(), "This is a SBML model element");
+        element.set_text_content(
+            sbml_doc.xml.write().unwrap().deref_mut(),
+            "This is a SBML model element",
+        );
         let xml_element = XmlElement::new(sbml_doc.xml.clone(), element);
         model.set(Some(SbmlModel::new(xml_element)));
         let model_raw = model.get().unwrap();
         model_raw.id().set(Some(&"model_id".to_string()));
-        
+
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
     }
 }
