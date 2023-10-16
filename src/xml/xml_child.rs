@@ -98,7 +98,7 @@ pub trait XmlChild<T: XmlWrapper> {
         };
 
         // Now, push the new child and check that the result is ok.
-        if let Err(e) = value.try_attach_to(element, index) {
+        if let Err(e) = value.try_attach_at(element, index) {
             panic!("Cannot set value of child `{}`: {}", self.name(), e);
         }
 
@@ -145,7 +145,7 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     /// old child element.
     ///
     /// The method updates the namespace declarations based on
-    /// the rules of [XmlWrapper::try_attach_to].
+    /// the rules of [XmlWrapper::try_attach_at].
     ///
     /// # Panics
     ///

@@ -232,7 +232,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     ///
     /// Note that if the attached sub-tree has no default namespace, then it should have `xmlns=""`
     /// set. This then ensures the namespace information correctly propagates within the document.
-    fn try_attach_to<W: XmlWrapper>(
+    fn try_attach_at<W: XmlWrapper>(
         &self,
         parent: &W,
         position: Option<usize>,
