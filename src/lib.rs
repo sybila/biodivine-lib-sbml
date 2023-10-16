@@ -166,7 +166,7 @@ mod tests {
     use xml_doc::Element;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
-    /// Additionaly checks if `Model` retrieval returns correct child.
+    /// Additionally checks if `Model` retrieval returns correct child.
     #[test]
     pub fn test_document() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
@@ -274,7 +274,7 @@ mod tests {
             model.element(),
             "Wrong underlying element of the required property."
         );
-        // try to write and read to/from poperty
+        // try to write and read to/from property
         property.set(&"REQ_12345".to_string());
         let property_val = property.get();
         assert_eq!(
@@ -292,7 +292,7 @@ mod tests {
         property.clear();
         assert!(
             !property.is_set(),
-            "Property shouln't be set at this point."
+            "Property shouldn't be set at this point."
         );
         // and write a new value to the property
         property.set_raw("new_req_value".to_string());
@@ -403,18 +403,18 @@ mod tests {
         compartment2.constant().set_raw("false".to_string());
         compartment2.id().set_raw("comp2".to_string());
         content.insert(1, compartment2.clone());
-        assert!(content.len() == 2);
+        assert_eq!(content.len(), 2);
         assert_eq!(content.get(0).element(), compartment1.element());
         assert_eq!(content.get(1).element(), compartment2.element());
         content.remove(0);
-        assert!(content.len() == 1);
+        assert_eq!(content.len(), 1);
         assert_eq!(content.get(0).element(), compartment2.element());
         content.push(compartment1.clone());
-        assert!(content.len() == 2);
+        assert_eq!(content.len(), 2);
         assert_eq!(content.get(0).element(), compartment2.element());
         assert_eq!(content.get(1).element(), compartment1.element());
         content.pop();
-        assert!(content.len() == 1);
+        assert_eq!(content.len(), 1);
         assert_eq!(content.get(0).element(), compartment2.element());
     }
 

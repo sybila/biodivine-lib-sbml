@@ -338,7 +338,7 @@ impl Reaction {
     }
 
     pub fn compartment(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.as_xml(), "compratment")
+        OptionalProperty::new(self.as_xml(), "compartment")
     }
 
     pub fn reactants(&self) -> OptionalChild<XmlList<SpeciesReference>> {
@@ -370,8 +370,8 @@ pub struct SpeciesReference(XmlElement);
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
-    pub fn stochiometry(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.as_xml(), "stochiometry")
+    pub fn stoichiometry(&self) -> OptionalProperty<f64> {
+        OptionalProperty::new(self.as_xml(), "stoichiometry")
     }
 
     pub fn constant(&self) -> RequiredProperty<bool> {
@@ -435,7 +435,7 @@ impl Event {
     }
 
     pub fn event_assignments(&self) -> OptionalChild<XmlList<EventAssignment>> {
-        OptionalChild::new(self.as_xml(), "listOfEventAssignemnts")
+        OptionalChild::new(self.as_xml(), "listOfEventAssignments")
     }
 }
 
