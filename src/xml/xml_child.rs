@@ -80,11 +80,13 @@ pub trait XmlChild<T: XmlWrapper> {
 
         // Then, remove the existing child.
         let (removed, index) = if let Some(to_remove) = self.get_raw() {
-            let doc = self.parent().read_doc();
-            let index = parent
-                .child_elements(doc.deref())
-                .into_iter()
-                .position(|e| e == to_remove.raw_element());
+            let index = {
+                let doc = self.parent().read_doc();
+                parent
+                    .child_elements(doc.deref())
+                    .into_iter()
+                    .position(|e| e == to_remove.raw_element())
+            };
             if to_remove.try_detach().is_err() {
                 // The element should be always safe to detach assuming the document is in
                 // a consistent state.
@@ -102,6 +104,23 @@ pub trait XmlChild<T: XmlWrapper> {
 
         // Return the old child.
         removed
+    }
+
+    /// Completely remove the referenced child element and return it (if it is present).
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the child cannot be detached (should not happen in normal situations).
+    fn clear_raw(&self) -> Option<XmlElement> {
+        let Some(to_remove) = self.get_raw() else {
+            return None;
+        };
+        if let Err(e) = to_remove.try_detach() {
+            panic!("{}", e);
+        }
+
+        // See [RequiredXmlChild::get].
+        Some(to_remove)
     }
 }
 
@@ -166,44 +185,27 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     }
 
     /// Replace the current value of the referenced child element with a new one. Returns the
-    /// old child element.
+    /// old child element, if any.
     ///
     /// # Panics
     ///
     /// The method panics if:
-    ///  - The old child exists but is not compatible with type `T`.
     ///  - The new value is not compatible with this child (different name or namespace url).
     ///  - The new value is not detached.
-    fn set(&self, value: Option<T>) -> Option<T> {
-        match value {
-            None => self.clear(),
-            Some(value) => {
-                let Some(old) = self.set_raw(value.into()) else {
-                    panic!("Missing child element `{}`.", self.name());
-                };
-
-                // See [RequiredXmlChild::get].
-                unsafe { Some(T::unchecked_cast(old)) }
-            }
-        }
+    fn set(&self, value: T) -> Option<T> {
+        // See [RequiredXmlChild::get].
+        self.set_raw(value.into())
+            .map(|it| unsafe { T::unchecked_cast(it) })
     }
 
     /// Completely remove the referenced child element and return it (if it is present).
     ///
     /// # Panics
     ///
-    /// Can panic if the current value is not valid for type `T` or if the child cannot be
-    /// detached (although neather should happen in normal situations).
+    /// Can panic if the child cannot be detached (should not happen in normal situations).
     fn clear(&self) -> Option<T> {
-        let Some(to_remove) = self.get_raw() else {
-            return None;
-        };
-        if let Err(e) = to_remove.try_detach() {
-            panic!("{}", e);
-        }
-
         // See [RequiredXmlChild::get].
-        unsafe { Some(T::unchecked_cast(to_remove)) }
+        self.clear_raw().map(|it| unsafe { T::unchecked_cast(it) })
     }
 }
 
@@ -229,7 +231,7 @@ impl<Element: XmlDefault, Child: OptionalXmlChild<Element>> XmlChildDefault<Elem
     fn ensure(&self) {
         if self.get_raw().is_none() {
             let default = Element::default(self.parent().document());
-            self.set(Some(default));
+            self.set(default);
         }
     }
 }

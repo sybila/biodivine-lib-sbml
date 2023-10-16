@@ -15,5 +15,9 @@ Cargo.lock
 
 # MacOS metadata
 .DS_Store
+
 # IDEA project folder.
 .idea
+
+# VScode project folder
+.vscode

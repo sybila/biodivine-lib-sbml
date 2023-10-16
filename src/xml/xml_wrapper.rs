@@ -179,19 +179,21 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// The method fails if the element is already detached, or when the element is the
     /// document "container" element (which is, in theory, always detached).
     fn try_detach(&self) -> Result<(), String> {
+        // Note that we can't use methods like `Self::name` because they would need to lock
+        // the document and we already have it locked.
         let element = self.raw_element();
         let mut doc = self.write_doc();
         if element.parent(doc.deref()).is_none() {
             return Err(format!(
                 "Cannot detach `{}`. Already detached.",
-                self.name()
+                element.name(doc.deref())
             ));
         }
         let retain = element.collect_external_namespace_decls(doc.deref());
         if let Err(e) = element.detatch(doc.deref_mut()) {
             return Err(format!(
                 "Cannot detach `{}`. Internal XML error: `{}`.",
-                self.name(),
+                element.name(doc.deref()),
                 e
             ));
         }
@@ -235,21 +237,25 @@ pub trait XmlWrapper: Into<XmlElement> {
         parent: &W,
         position: Option<usize>,
     ) -> Result<(), String> {
+        // !! See `try_detach` note about deadlocks and self methods. !!
         let element = self.raw_element();
         let parent_element = parent.raw_element();
         let mut doc = self.write_doc();
 
         // First, check that everything is ok.
 
-        if !self.is_detached() {
-            return Err(format!("Cannot attach `{}`. Not detached.", self.name()));
+        if element.parent(doc.deref()).is_some() {
+            return Err(format!(
+                "Cannot attach `{}`. Not detached.",
+                element.name(doc.deref())
+            ));
         }
         let child_count = parent_element.children(doc.deref()).len();
         let position = position.unwrap_or(child_count);
         if position > child_count {
             return Err(format!(
                 "Cannot attach `{}`. Invalid position `{} > {}`.",
-                self.name(),
+                element.name(doc.deref()),
                 position,
                 child_count
             ));
@@ -260,7 +266,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         if let Err(e) = parent_element.insert_child(doc.deref_mut(), position, element.as_node()) {
             return Err(format!(
                 "Cannot detach `{}`. Internal XML error: `{}`.",
-                self.name(),
+                element.name(doc.deref()),
                 e
             ));
         }

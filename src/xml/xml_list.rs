@@ -1,3 +1,4 @@
+use crate::sbase::SBase;
 use crate::xml::{XmlElement, XmlWrapper};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
@@ -48,7 +49,7 @@ impl<Type: XmlWrapper> XmlWrapper for XmlList<Type> {
     }
 }
 
-impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
+impl<Type: XmlWrapper> XmlList<Type> {
     /// Get the element of this list at the position specified by `index`.
     ///
     /// # Panics
@@ -76,7 +77,10 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
                 let element = it.as_element().unwrap_or_else(|| {
                     panic!("Item at position {index} is not an XML element.");
                 });
-                Type::from(XmlElement::new_raw(self.document(), element))
+                unsafe {
+                    // TODO: This really is not safe at the moment.
+                    Type::unchecked_cast(XmlElement::new_raw(self.document(), element))
+                }
             })
     }
 
@@ -120,7 +124,18 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         let removed = removed.as_element().unwrap_or_else(|| {
             panic!("Item at position {index} is not an XML element.");
         });
-        Type::from(XmlElement::new_raw(self.document(), removed))
+        unsafe {
+            // TODO: This really is not safe at the moment.
+            Type::unchecked_cast(XmlElement::new_raw(self.document(), removed))
+        }
+    }
+
+    pub fn push(&self, value: Type) {
+        self.insert(self.len(), value)
+    }
+
+    pub fn pop(&self) -> Type {
+        self.remove(self.len() - 1)
     }
 
     /// Get number of elements contained in the list.
@@ -134,3 +149,12 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         self.len() == 0
     }
 }
+
+// TODO:
+//   This is fine for now, but I would very much like to remove this in the future.
+//   The problem is that now `XmlList` can be used *only* in places where it implements `SBase`.
+//   So any list of objects that are not `SBase` should not be represented as `XmlList`.
+//   A possible solution would be to implement `XmlList` as a trait, and then have a `SbmlList`
+//   struct that implements it together with `SBase`, and possibly other implementations that
+//   do not use `SBase`.
+impl<T: XmlWrapper> SBase for XmlList<T> {}

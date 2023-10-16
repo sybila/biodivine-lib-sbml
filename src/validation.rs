@@ -1,4 +1,4 @@
-use crate::SbmlDocument;
+use crate::Sbml;
 use xml_doc::Element;
 
 /// A trait implemented by SBML components that perform some form of validation.
@@ -13,7 +13,7 @@ pub trait SbmlValidate {
     ///
     /// For hierarchical components, it is the responsibility of the parent component to
     /// invoke the `validate` method on all of its child components.
-    fn validate(&self, document: &mut SbmlDocument, results: &mut Vec<SbmlIssue>);
+    fn validate(&self, document: &mut Sbml, results: &mut Vec<SbmlIssue>);
 }
 
 pub struct SbmlIssue {

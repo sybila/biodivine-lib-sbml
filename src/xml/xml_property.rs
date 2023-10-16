@@ -44,17 +44,17 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     ///
     ///  > See [XmlPropertyType] for constraints on the error format and general notes about
     ///  > value conversion.
-    fn read_checked(&self) -> Result<Option<T>, String> {
+    fn get_checked(&self) -> Result<Option<T>, String> {
         let element = self.element();
         let name = self.name();
         let doc = element.read_doc();
         let value = element.raw_element().attribute(doc.deref(), name);
-        XmlPropertyType::try_read(value)
+        XmlPropertyType::try_get(value)
     }
 
     /// Read the "raw" underlying attribute value of this [XmlProperty], or `None` if the value
     /// is not set.
-    fn read_raw(&self) -> Option<String> {
+    fn get_raw(&self) -> Option<String> {
         let element = self.element();
         let name = self.name();
         let doc = element.read_doc();
@@ -85,7 +85,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// # Document validity
     ///
     /// Obviously, this function can be used to set the property to a completely invalid value.
-    fn write_raw(&self, value: String) {
+    fn set_raw(&self, value: String) {
         let element = self.element();
         let name = self.name();
         let mut doc = element.write_doc();
@@ -102,8 +102,8 @@ pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// # Panics
     ///
     /// Panics if the [XmlProperty::read_checked] produces an error.
-    fn read(&self) -> Option<T> {
-        match self.read_checked() {
+    fn get(&self) -> Option<T> {
+        match self.get_checked() {
             Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
             Ok(value) => value,
         }
@@ -112,10 +112,10 @@ pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// Write the value of an optional XML property.
     ///
     /// TODO: I'm not sure whether `Option<&T>` or `&Option<T>` is better here. The time will tell.
-    fn write(&self, value: Option<&T>) {
-        match value.and_then(|it| it.write()) {
+    fn set(&self, value: Option<&T>) {
+        match value.and_then(|it| it.set()) {
             None => self.clear(),
-            Some(value) => self.write_raw(value),
+            Some(value) => self.set_raw(value),
         }
     }
 }
@@ -131,10 +131,12 @@ pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// # Panics
     ///
     /// Panics if the [XmlProperty::read_checked] method produces an error or a `None` value.
-    fn read(&self) -> T {
-        match self.read_checked() {
+    fn get(&self) -> T {
+        match self.get_checked() {
             Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
-            Ok(None) => panic!("Missing value for attribute `{}`.", self.name()),
+            Ok(None) => {
+                panic!("Missing value for attribute `{}`.", self.name())
+            }
             Ok(Some(value)) => value,
         }
     }
@@ -144,10 +146,10 @@ pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// Note that the method can actually erase the XML attribute if the written value represents
     /// the "default" value for this type, and it can be correctly represented by
     /// a missing attribute.
-    fn write(&self, value: &T) {
-        match value.write() {
+    fn set(&self, value: &T) {
+        match value.set() {
             None => self.clear(),
-            Some(value) => self.write_raw(value),
+            Some(value) => self.set_raw(value),
         };
     }
 }
