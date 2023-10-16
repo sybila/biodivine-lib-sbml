@@ -40,9 +40,9 @@ pub trait XmlPropertyType: Sized {
     ///  should also contain the current value of the XML attribute and an explanation why the
     ///  conversion failed for this specific value. The message can use Markdown syntax for
     ///  formatting (e.g. code/highlights, even paragraphs/headers if really necessary).
-    fn try_read(value: Option<&str>) -> Result<Option<Self>, String>;
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String>;
 
     /// Convert the value of `Self` into a [String], or `None` when the value should be
     /// represented as a missing attribute.
-    fn write(&self) -> Option<String>;
+    fn set(&self) -> Option<String>;
 }

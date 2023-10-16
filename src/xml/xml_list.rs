@@ -1,3 +1,4 @@
+use crate::sbase::SBase;
 use crate::xml::{XmlElement, XmlWrapper};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
@@ -122,6 +123,14 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         Type::from(XmlElement::new(self.document(), removed))
     }
 
+    pub fn push(&self, value: Type) {
+        self.insert(self.len(), value)
+    }
+
+    pub fn pop(&self) -> Type {
+        self.remove(self.len() - 1)
+    }
+
     /// Get number of elements contained in the list.
     pub fn len(&self) -> usize {
         let doc = self.read_doc();
@@ -133,3 +142,12 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
         self.len() == 0
     }
 }
+
+// TODO:
+//   This is fine for now, but I would very much like to remove this in the future.
+//   The problem is that now `XmlList` can be used *only* in places where it implements `SBase`.
+//   So any list of objects that are not `SBase` should not be represented as `XmlList`.
+//   A possible solution would be to implement `XmlList` as a trait, and then have a `SbmlList`
+//   struct that implements it together with `SBase`, and possibly other implementations that
+//   do not use `SBase`.
+impl<T: XmlWrapper> SBase for XmlList<T> {}

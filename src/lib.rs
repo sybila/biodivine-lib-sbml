@@ -1,8 +1,8 @@
 use crate::model::SbmlModel;
 use crate::xml::{XmlDocument, XmlElement};
-use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
+use xml::{OptionalChild, RequiredProperty};
 use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
@@ -29,6 +29,8 @@ pub mod sbase;
 
 pub mod model;
 
+pub mod constants;
+
 /// Declares the [SbmlValidate] trait and should also contain other relevant
 /// algorithms/implementations for validation.
 pub mod validation;
@@ -39,12 +41,26 @@ pub mod validation;
 /// what SBML extensions are being used. The actual content of the SBML model is
 /// then managed through the `SbmlModel` struct.
 #[derive(Clone, Debug)]
-pub struct SbmlDocument {
+pub struct Sbml {
     xml: XmlDocument,
+    sbml_root: XmlElement,
 }
 
-impl SbmlDocument {
-    pub fn read_path(path: &str) -> Result<SbmlDocument, String> {
+impl Sbml {
+    /// Creates a new blank SBML document with initial skeleton consisting of valid
+    /// xml header and sbml root element.
+    pub fn new() -> Sbml {
+        print!("{}", constants::document::SBML_DEFAULT_DOCUMENT);
+        let doc = Document::from_str(constants::document::SBML_DEFAULT_DOCUMENT).unwrap();
+        let root = doc.root_element().unwrap();
+        let xml_document = Arc::new(RwLock::new(doc));
+        Sbml {
+            xml: xml_document.clone(),
+            sbml_root: XmlElement::new(xml_document, root),
+        }
+    }
+
+    pub fn read_path(path: &str) -> Result<Sbml, String> {
         let file_contents = match std::fs::read_to_string(path) {
             Ok(file_contents) => file_contents,
             Err(why) => return Err(why.to_string()),
@@ -53,8 +69,11 @@ impl SbmlDocument {
             Ok(doc) => doc,
             Err(why) => return Err(why.to_string()),
         };
-        Ok(SbmlDocument {
-            xml: Arc::new(RwLock::new(doc)),
+        let root = doc.root_element().unwrap();
+        let xml_document = Arc::new(RwLock::new(doc));
+        Ok(Sbml {
+            xml: xml_document.clone(),
+            sbml_root: XmlElement::new(xml_document, root),
         })
     }
 
@@ -80,12 +99,13 @@ impl SbmlDocument {
         }
     }
 
-    pub fn get_model(&self) -> SbmlModel {
+    pub fn model(&self) -> OptionalChild<SbmlModel> {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
         //  of the model element as well, but it's good enough for a demo. Also, some of this
         //  may need better error handling.
 
+        /*
         let model_element = {
             // Lock the XML document for reading. The fact that we are doing this in
             // an extra scope is not necessary for correctness, but it makes it easier
@@ -104,88 +124,316 @@ impl SbmlDocument {
                 .find(xml.deref(), "model")
                 .unwrap()
         };
+        */
 
+        OptionalChild::new(&self.sbml_root, "model")
+
+        /*
         SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
-        // SbmlModel {
-        //     // Due to the reference-counting implemented in `Arc`, this does not actually create
-        //     // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
-        //     // same underlying document object.
-        //     xml: XmlElement::new(self.xml.clone(), model_element),
-        // }
+        SbmlModel {
+            // Due to the reference-counting implemented in `Arc`, this does not actually create
+            // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
+            // same underlying document object.
+            xml: XmlElement::new(self.xml.clone(), model_element),
+        }
+        */
     }
 
-    pub fn get_xmlns(&self) -> Result<String, String> {
-        let doc = self.xml.read().unwrap();
-        match doc
-            .root_element()
-            .unwrap()
-            .namespace_decls(doc.deref())
-            .get("")
-        {
-            Some(xmlns) => Ok(xmlns.to_string()),
-            None => Err("Required attribute \"namespace\" xmlns not specified.".to_string()),
-        }
+    pub fn level(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(&self.sbml_root, "level")
     }
 
-    pub fn get_level(&self) -> Result<u32, String> {
-        let doc = self.xml.read().unwrap();
-        match doc.root_element().unwrap().attribute(doc.deref(), "level") {
-            Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"level\" not specified.".to_string()),
-        }
+    pub fn version(&self) -> RequiredProperty<String> {
+        RequiredProperty::new(&self.sbml_root, "version")
     }
+}
 
-    pub fn get_version(&self) -> Result<u32, String> {
-        let doc = self.xml.read().unwrap();
-        match doc
-            .root_element()
-            .unwrap()
-            .attribute(doc.deref(), "version")
-        {
-            Some(level) => Ok(level.parse().unwrap()),
-            None => Err("Required attribute \"version\" not specified.".to_string()),
-        }
+impl Default for Sbml {
+    fn default() -> Self {
+        Sbml::new()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::model::{Compartment, SbmlModel};
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper,
+        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
+        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlWrapper,
     };
-    use crate::{sbase::SBase, SbmlDocument};
-    use std::ops::Deref;
+    use crate::{sbase::SBase, Sbml};
+    use std::ops::{Deref, DerefMut};
+    use xml_doc::Element;
+
+    /// Checks `SbmlDocument`'s properties such as `version` and `level`.
+    /// Additionally checks if `Model` retrieval returns correct child.
+    #[test]
+    pub fn test_document() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+
+        let level = doc.level().get();
+        let version = doc.version().get();
+
+        assert_eq!(
+            level, "3",
+            "Wrong level of SBML.\nActual: {}\nExpected: {}",
+            level, "3"
+        );
+        assert_eq!(
+            version, "1",
+            "Wrong version of SBML.\nActual: {}\nExpected: {}",
+            version, "1"
+        );
+
+        let model = doc.model().get().unwrap();
+        assert_eq!(model.id().get().unwrap(), "model_id", "Wrong model.");
+    }
+
+    /// Tests read/write operations on `OptionalProperty<>`.
+    /// Attempts to remove and create a new custom `OptionalProperty<>`.
+    #[test]
+    pub fn test_optional_property() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+        let property = model.id();
+
+        assert!(property.is_set(), "Id is not set but it should be.");
+        assert_eq!(property.name(), "id", "Wrong name of the <id> property.");
+        assert_eq!(
+            property.element().element(),
+            model.element(),
+            "Wrong underlying element of the <id> property."
+        );
+        // try reading the <id> property
+        let property_val = property.get();
+        assert!(
+            property_val.is_some(),
+            "The <id> property is not set but it should be."
+        );
+        assert_eq!(
+            property_val,
+            Some("model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+        // try clearing the <id> property
+        property.clear();
+        assert!(
+            !property.is_set(),
+            "The <id> property should be unset (cleared)."
+        );
+        assert!(property.get().is_none());
+        let property_val = property.get();
+        assert!(
+            property_val.is_none(),
+            "The <id> property should be unset and therefore shouldn't contain any value."
+        );
+        let property_val = property.get_raw();
+        assert!(
+            property_val.is_none(),
+            "The <id> property should be unset and therefore shouldn't contain any value."
+        );
+
+        // try overwriting the <id> property
+        property.set(Some(&"optional_model_id".to_string()));
+        let property_val = property.get();
+        assert_eq!(
+            property_val,
+            Some("optional_model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+        property.set_raw("raw_model_id".to_string());
+        let property_val = property.get();
+        assert_eq!(
+            property_val,
+            Some("raw_model_id".to_string()),
+            "Wrong value of the <id> property."
+        );
+    }
+
+    /// Tests read/write operations on `RequiredProperty<>`.
+    /// Attempts to remove and create a new custom `RequiredProperty<>`.
+    #[test]
+    pub fn test_required_property() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        // create a new required property
+        let property: RequiredDynamicProperty<'_, String> =
+            model.required_property("required_property");
+        assert!(
+            !property.is_set(),
+            "Required property shouldn't be set at this point."
+        );
+        assert_eq!(
+            property.name(),
+            "required_property",
+            "Wrong name of the required property."
+        );
+        assert_eq!(
+            property.element().element(),
+            model.element(),
+            "Wrong underlying element of the required property."
+        );
+        // try to write and read to/from property
+        property.set(&"REQ_12345".to_string());
+        let property_val = property.get();
+        assert_eq!(
+            property_val, "REQ_12345",
+            "Wrong value of required property."
+        );
+        let property_val = property.get_raw();
+        assert!(property_val.is_some());
+        assert_eq!(
+            property_val,
+            Some("REQ_12345".to_string()),
+            "Wrong value of the required property."
+        );
+        // try to clear the property
+        property.clear();
+        assert!(
+            !property.is_set(),
+            "Property shouldn't be set at this point."
+        );
+        // and write a new value to the property
+        property.set_raw("new_req_value".to_string());
+        let property_val = property.get();
+        assert_eq!(
+            property_val, "new_req_value",
+            "Wrong value of the required property."
+        );
+    }
+
+    /// Tests get/set operations on `OptionalChild<>`.
+    /// Attempts to remove and create a new custom `OptionalChild<>`.
+    #[test]
+    pub fn test_optional_child() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        // get child
+        let notes = model.notes();
+        assert!(notes.is_set(), "Notes in Model is not set.");
+        assert_eq!(notes.name(), "notes", "Wrong name of Notes child.");
+        assert_eq!(
+            notes.parent().element(),
+            model.element(),
+            "Wrong parent of Notes child."
+        );
+        // get child value
+        let notes_elem = notes.get();
+        assert!(notes_elem.is_some(), "Notes does not contain any element.");
+        assert_eq!(
+            notes_elem.unwrap().element().name(model.read_doc().deref()),
+            "notes",
+            "Wrong name of Notes child."
+        );
+        // clear child
+        let notes_elem = notes.set(None);
+        assert!(notes_elem.is_some(), "Old notes child is missing");
+        assert!(!notes.is_set(), "Notes are still present after clear.");
+
+        let element = Element::new(model.write_doc().deref_mut(), "notes");
+        element.set_text_content(model.write_doc().deref_mut(), "Some new text.");
+        let xml_element = XmlElement::new(doc.xml, element);
+        // set child
+        let notes_elem = notes.set(Some(xml_element));
+        assert!(notes_elem.is_none(), "Old Notes should be empty.");
+        assert!(notes.is_set(), "Notes should be set.");
+    }
+
+    /// Tests get/set operations on `RequiredChild<>`.
+    /// Attempts to remove and create a new custom `RequiredChild<>`.
+    #[test]
+    pub fn test_required_child() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        // get child
+        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
+        assert!(!req_child.is_set());
+        assert_eq!(req_child.name(), "required");
+        assert_eq!(req_child.parent().element(), model.element());
+        let element = Element::new(model.write_doc().deref_mut(), "required");
+        let xml_element = XmlElement::new(doc.xml.clone(), element);
+        // set child
+        req_child.set_raw(xml_element);
+        assert!(req_child.is_set());
+        element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
+        let xml_element = XmlElement::new(doc.xml.clone(), element);
+        let old_child = req_child.set(xml_element);
+        assert_eq!(old_child.element(), element);
+        assert!(req_child.is_set());
+        assert_eq!(
+            req_child
+                .get()
+                .element()
+                .text_content(model.read_doc().deref()),
+            "Some additional content"
+        );
+        req_child.clear();
+        assert!(!req_child.is_set());
+    }
+
+    /// Tests get/set operations on special case of children `OptionalChild<XmlList>` and
+    /// `RequiredChild<XmlList>`. Checks if addition/removal/get/set methods work correctly
+    /// on lists. Attempts to remove and create a new custom `OptionalChild<XmlList>` and
+    /// `RequiredChild<XmlList>`.
+    #[test]
+    pub fn test_lists() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+        let list = model.compartments();
+
+        assert!(list.is_set());
+        assert_eq!(list.name(), "listOfCompartments");
+        assert_eq!(list.parent().element(), model.element());
+        let content = list.get();
+        assert!(content.is_some());
+        let content = content.unwrap();
+        assert!(!content.is_empty());
+        assert_eq!(content.len(), 1);
+        let compartment1 = content.get(0);
+        assert_eq!(compartment1.constant().get(), true);
+        assert_eq!(compartment1.id().get(), "comp1");
+        let compartment2: Compartment = XmlElement::new(
+            doc.xml,
+            Element::new(model.write_doc().deref_mut(), "compartment"),
+        )
+        .into();
+        compartment2.constant().set_raw("false".to_string());
+        compartment2.id().set_raw("comp2".to_string());
+        content.insert(1, compartment2.clone());
+        assert_eq!(content.len(), 2);
+        assert_eq!(content.get(0).element(), compartment1.element());
+        assert_eq!(content.get(1).element(), compartment2.element());
+        content.remove(0);
+        assert_eq!(content.len(), 1);
+        assert_eq!(content.get(0).element(), compartment2.element());
+        content.push(compartment1.clone());
+        assert_eq!(content.len(), 2);
+        assert_eq!(content.get(0).element(), compartment2.element());
+        assert_eq!(content.get(1).element(), compartment1.element());
+        content.pop();
+        assert_eq!(content.len(), 1);
+        assert_eq!(content.get(0).element(), compartment2.element());
+    }
 
     #[test]
-    pub fn test_model_id() {
-        let doc = SbmlDocument::read_path("test-inputs/model.sbml").unwrap();
-        let model = doc.get_model();
+    pub fn test_build_doc() {
+        let sbml_doc = Sbml::new();
+        let model = sbml_doc.model();
+        let element = Element::new(sbml_doc.xml.write().unwrap().deref_mut(), "model");
+        element.set_text_content(
+            sbml_doc.xml.write().unwrap().deref_mut(),
+            "This is a SBML model element",
+        );
+        let xml_element = XmlElement::new(sbml_doc.xml.clone(), element);
+        model.set(Some(SbmlModel::new(xml_element)));
+        let model_raw = model.get().unwrap();
+        model_raw.id().set(Some(&"model_id".to_string()));
 
-        // This is a "qualitative" model so there are no function definitions or units.
-        assert!(!model.function_definitions().is_set());
-        assert!(!model.unit_definitions().is_set());
-
-        assert!(model.notes().is_set());
-        {
-            let notes = model.notes().get().unwrap();
-            let body = notes.required_child::<XmlElement>("body").get();
-            let p = body.required_child::<XmlElement>("p").get();
-            let doc = model.read_doc();
-            let content = p.element().text_content(doc.deref());
-            assert!(content.starts_with("This model"));
-        }
-
-        let original_id = Some("model_id".to_string());
-        let modified_id = "model_6431".to_string();
-        assert_eq!(original_id, model.id().read());
-        model.id().write(Some(&modified_id));
-        assert_eq!(modified_id, model.id().read().unwrap());
-        std::fs::write("test-inputs/model-modified.sbml", "dummy").unwrap();
-        doc.write_path("test-inputs/model-modified.sbml").unwrap();
-        let doc2 = SbmlDocument::read_path("test-inputs/model-modified.sbml").unwrap();
-        let model2 = doc2.get_model();
-        assert_eq!(model.id().read(), model2.id().read());
-        assert_eq!(doc.to_xml_string(), doc2.to_xml_string());
-        std::fs::remove_file("test-inputs/model-modified.sbml").unwrap();
+        let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
+        // Clean up the test file.
+        std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
     }
 }
