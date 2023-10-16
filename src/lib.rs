@@ -148,6 +148,12 @@ impl Sbml {
     }
 }
 
+impl Default for Sbml {
+    fn default() -> Self {
+        Sbml::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::model::{Compartment, SbmlModel};
