@@ -427,5 +427,7 @@ mod tests {
         model_raw.id().set(Some(&"model_id".to_string()));
 
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
+        // Clean up the test file.
+        std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
     }
 }
