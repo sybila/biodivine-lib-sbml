@@ -13,10 +13,10 @@ use std::ops::Deref;
 /// "no namespace"). The assumption is that this URL is resolved into a correct namespace prefix
 /// dynamically, based on the context in which the `XmlChild` resides.
 ///
-/// When the inner XML element is created/set/cleared, the name prefix is automatically
-/// updated to reflect the desired namespace (or an appropriate error is raised). When an element
-/// is detached (e.g. by the `clear` method), the namespace declarations are updated in its
-/// subtree to ensure
+/// Note that implementations of [XmlChild] do not update the namespace declarations on the
+/// elements in any way (in particular, we don't add any specific namespace declaration or prefix).
+/// However, they do use [XmlWrapper::try_detach] and [XmlWrapper::try_attach_at] to consistently
+/// maintain namespaces between different contexts.
 ///
 /// ### On singleton validation
 ///
@@ -33,13 +33,16 @@ pub trait XmlChild<T: XmlWrapper> {
     /// Returns the name of the corresponding child tag.
     ///
     /// It is expected that this name is immutable. That is, an `XmlChild` instance is associated
-    /// with a specific tag name, and this name must not change.
+    /// with a specific tag name, and this name must not change. It is also required that all
+    /// XML elements that appear in `get`/`set` methods use this tag name.
     fn name(&self) -> &str;
 
     /// Returns the namespace URL of this child.
     ///
     /// The url can be empty, in which case it corresponds to the "default" empty namespace
     /// (i.e. the namespace in which tags reside when there is no default namespace declared).
+    /// Just as the name, this value is considered immutable and all XML elements that appear
+    /// in the `get`/`set` methods must use this namespace.
     fn namespace_url(&self) -> &str;
 
     /// Get the "raw" child [XmlElement] referenced by this [XmlChild], or `None` if the child
@@ -57,12 +60,13 @@ pub trait XmlChild<T: XmlWrapper> {
     /// previous value (if any).
     ///
     /// If the corresponding child element already exists, it is replaced. Otherwise the element
-    /// is inserted as the last child.
+    /// is inserted as a new last child.
     ///
     /// # Panics
     ///
-    ///  - The inserted element must have the correct quantified name for this [XmlChild].
+    ///  - The inserted element must have the correct tag name and namespace url.
     ///  - The inserted element must be in a detached state.
+    ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn set_raw(&self, value: XmlElement) -> Option<XmlElement> {
         let element = self.parent();
         let parent = element.raw_element();
@@ -130,7 +134,7 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the child element does not exist, or if it is not compatible with type `T`.
+    /// Panics if the child element does not exist.
     fn get(&self) -> T {
         let Some(child) = self.get_raw() else {
             panic!("Missing child element `{}`.", self.name());
@@ -151,9 +155,9 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     ///
     /// The method panics if:
     ///  - The child does not exist (there is no old value to return).
-    ///  - The child exists but is not compatible with type `T`.
     ///  - The new value is not compatible with this child (different name or namespace url).
     ///  - The new value is not detached.
+    ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn set(&self, value: T) -> T {
         let Some(old) = self.set_raw(value.into()) else {
             panic!("Missing child element `{}`.", self.name());
@@ -172,11 +176,6 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     }
     /// Return the `T` wrapper for the underlying child element, or none if the element
     /// does not exist.
-    ///
-    /// # Panics
-    ///
-    /// Can still panic if the child is not compatible with type `T`. Although this should not
-    /// really happen.
     fn get(&self) -> Option<T> {
         self.get_raw().map(|it| {
             // See [RequiredXmlChild::get].
@@ -192,6 +191,7 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     /// The method panics if:
     ///  - The new value is not compatible with this child (different name or namespace url).
     ///  - The new value is not detached.
+    ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn set(&self, value: T) -> Option<T> {
         // See [RequiredXmlChild::get].
         self.set_raw(value.into())
@@ -202,7 +202,7 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     ///
     /// # Panics
     ///
-    /// Can panic if the child cannot be detached (should not happen in normal situations).
+    ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn clear(&self) -> Option<T> {
         // See [RequiredXmlChild::get].
         self.clear_raw().map(|it| unsafe { T::unchecked_cast(it) })

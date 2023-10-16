@@ -1,4 +1,3 @@
-
 /// A "namespace" is just a pair of strings which specify the (1) default prefix
 /// and (2) namespace url.
 type Namespace = (&'static str, &'static str);
@@ -17,7 +16,6 @@ pub const URL_EMPTY: &str = "";
 
 /// The "core" SBML namespace. Default prefix for this namespace is empty.
 pub const NS_SBML_CORE: Namespace = ("", URL_SBML_CORE);
-
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.
 pub const NS_HTML: Namespace = ("", URL_HTML);

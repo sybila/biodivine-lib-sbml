@@ -1,10 +1,10 @@
+use crate::constants::namespaces::URL_SBML_CORE;
 use crate::model::SbmlModel;
 use crate::xml::{XmlDocument, XmlElement};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use xml::{OptionalChild, RequiredProperty};
 use xml_doc::Document;
-use crate::constants::namespaces::URL_SBML_CORE;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -157,6 +157,7 @@ impl Default for Sbml {
 
 #[cfg(test)]
 mod tests {
+    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY};
     use crate::model::{Compartment, SbmlModel};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -165,7 +166,6 @@ mod tests {
     };
     use crate::{sbase::SBase, Sbml};
     use std::ops::{Deref, DerefMut};
-    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY};
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionally checks if `Model` retrieval returns correct child.
