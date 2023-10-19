@@ -1,7 +1,7 @@
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
-use std::sync::{Arc, RwLock};
-use xml_doc::{Document, Element};
+use std::ops::DerefMut;
+use xml_doc::Element;
 
 /// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [Document].
 ///
@@ -17,19 +17,30 @@ pub struct XmlElement {
 }
 
 impl XmlElement {
-    /// Create a new [XmlElement] from an existing [XmlDocument] and [Element].
-    pub fn new(document: XmlDocument, element: Element) -> XmlElement {
+    /// Wrap an existing [Element] as [XmlElement] in the context of the given [XmlDocument].
+    pub fn new_raw(document: XmlDocument, element: Element) -> XmlElement {
         XmlElement { document, element }
     }
 
-    /// Create a new [XmlElement] from an existing [Document] and [Element].
+    /// Create a new empty [XmlElement] in the given [XmlDocument] with the given
+    /// `name` and `namespace_prefix` + `namespace_url`. The element is created in a "detached"
+    /// state.
     ///
-    /// Note that this method takes the ownership of the whole XML [Document] and wraps it
-    /// into a thread-safe [XmlDocument]. However, the resulting document can be accessed
-    /// through [XmlWrapper::document].
-    pub fn build(document: Document, element: Element) -> XmlElement {
-        let document = Arc::new(RwLock::new(document));
-        Self::new(document, element)
+    /// You can use empty string as namespace URL if you want to use the document
+    /// namespace. Also, you can use empty string as namespace prefix if you want to
+    pub fn new_quantified(
+        document: XmlDocument,
+        name: &str,
+        namespace: (&str, &str),
+    ) -> XmlElement {
+        let element = {
+            let mut doc = document.write().unwrap();
+            Element::build(name)
+                .prefix(namespace.0)
+                .namespace_decl(namespace.0, namespace.1)
+                .finish(doc.deref_mut())
+        };
+        XmlElement::new_raw(document, element)
     }
 }
 
@@ -37,5 +48,9 @@ impl XmlElement {
 impl XmlWrapper for XmlElement {
     fn as_xml(&self) -> &XmlElement {
         self
+    }
+
+    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
+        element.as_xml().clone()
     }
 }

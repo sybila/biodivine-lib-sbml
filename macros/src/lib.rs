@@ -41,15 +41,13 @@ pub fn derive_xml_wrapper(item: TokenStream) -> TokenStream {
             }}
         }}
 
-        impl From<crate::xml::XmlElement> for {wrapper_type} {{
-            fn from(value: crate::xml::XmlElement) -> Self {{
-                {wrapper_type}(value)
-            }}
-        }}
-
         impl crate::xml::XmlWrapper for {wrapper_type} {{
             fn as_xml(&self) -> &crate::xml::XmlElement {{
                 &self.0
+            }}
+
+            unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {{
+                Self(element.as_xml().clone())
             }}
         }}
     "#

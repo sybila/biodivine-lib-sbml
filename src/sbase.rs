@@ -1,3 +1,4 @@
+use crate::constants::namespaces::URL_SBML_CORE;
 use crate::xml::{OptionalChild, OptionalProperty, XmlElement, XmlWrapper};
 
 // TODO:
@@ -25,10 +26,10 @@ pub trait SBase: XmlWrapper {
     }
 
     fn notes(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "notes")
+        OptionalChild::new(self.as_xml(), "notes", URL_SBML_CORE)
     }
 
     fn annotation(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "annotation")
+        OptionalChild::new(self.as_xml(), "annotation", URL_SBML_CORE)
     }
 }

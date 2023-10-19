@@ -1,5 +1,7 @@
+use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, XmlElement, XmlList, XmlWrapper,
+    OptionalChild, OptionalProperty, RequiredProperty, XmlDefault, XmlDocument, XmlElement,
+    XmlList, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
@@ -8,51 +10,55 @@ use strum_macros::{Display, EnumString};
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SbmlModel(XmlElement);
 
+impl XmlDefault for SbmlModel {
+    fn default(document: XmlDocument) -> Self {
+        unsafe {
+            SbmlModel::unchecked_cast(XmlElement::new_quantified(document, "model", NS_SBML_CORE))
+        }
+    }
+}
+
 /// Public functions to manipulate with the contents of [SbmlModel]
 /// i.e., optional lists inside SBML model + constructor new()
 impl SbmlModel {
-    pub fn new(xml: XmlElement) -> SbmlModel {
-        SbmlModel::from(xml)
-    }
-
     pub fn function_definitions(&self) -> OptionalChild<XmlList<SbmlFunctionDefinition>> {
-        OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions")
+        OptionalChild::new(self.as_xml(), "listOfFunctionDefinitions", URL_SBML_CORE)
     }
 
     pub fn unit_definitions(&self) -> OptionalChild<XmlList<SbmlUnitDefinition>> {
-        OptionalChild::new(self.as_xml(), "listOfUnitDefinitions")
+        OptionalChild::new(self.as_xml(), "listOfUnitDefinitions", URL_SBML_CORE)
     }
 
     pub fn compartments(&self) -> OptionalChild<XmlList<Compartment>> {
-        OptionalChild::new(self.as_xml(), "listOfCompartments")
+        OptionalChild::new(self.as_xml(), "listOfCompartments", URL_SBML_CORE)
     }
 
     pub fn species(&self) -> OptionalChild<XmlList<Species>> {
-        OptionalChild::new(self.as_xml(), "listOfSpecies")
+        OptionalChild::new(self.as_xml(), "listOfSpecies", URL_SBML_CORE)
     }
 
     pub fn parameters(&self) -> OptionalChild<XmlList<Parameter>> {
-        OptionalChild::new(self.as_xml(), "listOfParameters")
+        OptionalChild::new(self.as_xml(), "listOfParameters", URL_SBML_CORE)
     }
 
     pub fn initial_assignments(&self) -> OptionalChild<XmlList<InitialAssignment>> {
-        OptionalChild::new(self.as_xml(), "listOfInitialAssignments")
+        OptionalChild::new(self.as_xml(), "listOfInitialAssignments", URL_SBML_CORE)
     }
 
     pub fn rules<T: Rule>(&self) -> OptionalChild<XmlList<T>> {
-        OptionalChild::new(self.as_xml(), "listOfRules")
+        OptionalChild::new(self.as_xml(), "listOfRules", URL_SBML_CORE)
     }
 
     pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
-        OptionalChild::new(self.as_xml(), "listOfConstraints")
+        OptionalChild::new(self.as_xml(), "listOfConstraints", URL_SBML_CORE)
     }
 
     pub fn reactions(&self) -> OptionalChild<XmlList<Reaction>> {
-        OptionalChild::new(self.as_xml(), "listOfReactions")
+        OptionalChild::new(self.as_xml(), "listOfReactions", URL_SBML_CORE)
     }
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
-        OptionalChild::new(self.as_xml(), "listOfEvents")
+        OptionalChild::new(self.as_xml(), "listOfEvents", URL_SBML_CORE)
     }
 }
 
@@ -62,7 +68,7 @@ pub struct SbmlFunctionDefinition(XmlElement);
 
 impl SbmlFunctionDefinition {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
@@ -77,7 +83,7 @@ pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
     pub fn units(&self) -> OptionalChild<XmlList<Unit>> {
-        OptionalChild::new(self.as_xml(), "listOfUnits")
+        OptionalChild::new(self.as_xml(), "listOfUnits", URL_SBML_CORE)
     }
 }
 
@@ -178,6 +184,18 @@ pub enum BaseUnit {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Compartment(XmlElement);
 
+impl XmlDefault for Compartment {
+    fn default(document: XmlDocument) -> Self {
+        unsafe {
+            Compartment::unchecked_cast(XmlElement::new_quantified(
+                document,
+                "compartment",
+                NS_SBML_CORE,
+            ))
+        }
+    }
+}
+
 impl Compartment {
     pub fn id(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.as_xml(), "id")
@@ -275,13 +293,13 @@ impl InitialAssignment {
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
 pub trait Rule: XmlWrapper {
     fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
@@ -317,11 +335,11 @@ pub struct Constraint(XmlElement);
 
 impl Constraint {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 
     pub fn message(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "message")
+        OptionalChild::new(self.as_xml(), "message", URL_HTML)
     }
 }
 
@@ -342,19 +360,19 @@ impl Reaction {
     }
 
     pub fn reactants(&self) -> OptionalChild<XmlList<SpeciesReference>> {
-        OptionalChild::new(self.as_xml(), "listOfReactants")
+        OptionalChild::new(self.as_xml(), "listOfReactants", URL_SBML_CORE)
     }
 
     pub fn products(&self) -> OptionalChild<XmlList<SpeciesReference>> {
-        OptionalChild::new(self.as_xml(), "listOfProducts")
+        OptionalChild::new(self.as_xml(), "listOfProducts", URL_SBML_CORE)
     }
 
     pub fn modifiers(&self) -> OptionalChild<XmlList<ModifierSpeciesReference>> {
-        OptionalChild::new(self.as_xml(), "listOfModifiers")
+        OptionalChild::new(self.as_xml(), "listOfModifiers", URL_SBML_CORE)
     }
 
     pub fn kinetic_law(&self) -> OptionalChild<KineticLaw> {
-        OptionalChild::new(self.as_xml(), "kineticLaw")
+        OptionalChild::new(self.as_xml(), "kineticLaw", URL_SBML_CORE)
     }
 }
 
@@ -389,11 +407,11 @@ pub struct KineticLaw(XmlElement);
 
 impl KineticLaw {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 
     pub fn local_parameters(&self) -> OptionalChild<XmlList<LocalParameter>> {
-        OptionalChild::new(self.as_xml(), "listOfLocalParameters")
+        OptionalChild::new(self.as_xml(), "listOfLocalParameters", URL_SBML_CORE)
     }
 }
 
@@ -423,19 +441,19 @@ impl Event {
     }
 
     pub fn trigger(&self) -> OptionalChild<Trigger> {
-        OptionalChild::new(self.as_xml(), "trigger")
+        OptionalChild::new(self.as_xml(), "trigger", URL_SBML_CORE)
     }
 
     pub fn priority(&self) -> OptionalChild<Priority> {
-        OptionalChild::new(self.as_xml(), "priority")
+        OptionalChild::new(self.as_xml(), "priority", URL_SBML_CORE)
     }
 
     pub fn delay(&self) -> OptionalChild<Delay> {
-        OptionalChild::new(self.as_xml(), "delay")
+        OptionalChild::new(self.as_xml(), "delay", URL_SBML_CORE)
     }
 
     pub fn event_assignments(&self) -> OptionalChild<XmlList<EventAssignment>> {
-        OptionalChild::new(self.as_xml(), "listOfEventAssignments")
+        OptionalChild::new(self.as_xml(), "listOfEventAssignments", URL_SBML_CORE)
     }
 }
 
@@ -452,7 +470,7 @@ impl Trigger {
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
@@ -461,7 +479,7 @@ pub struct Priority(XmlElement);
 
 impl Priority {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
@@ -470,7 +488,7 @@ pub struct Delay(XmlElement);
 
 impl Delay {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }
 
@@ -483,6 +501,6 @@ impl EventAssignment {
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.as_xml(), "math")
+        OptionalChild::new(self.as_xml(), "math", URL_MATHML)
     }
 }

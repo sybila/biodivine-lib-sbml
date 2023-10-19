@@ -35,7 +35,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
         let name = self.name();
         // As opposed to `self.read_raw().is_some()`, this does not need to copy the attribute.
         let doc = element.read_doc();
-        element.element().attribute(doc.deref(), name).is_some()
+        element.raw_element().attribute(doc.deref(), name).is_some()
     }
 
     /// Read the value of this [XmlProperty], or a `String` error if the underlying value
@@ -48,7 +48,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
         let element = self.element();
         let name = self.name();
         let doc = element.read_doc();
-        let value = element.element().attribute(doc.deref(), name);
+        let value = element.raw_element().attribute(doc.deref(), name);
         XmlPropertyType::try_get(value)
     }
 
@@ -59,7 +59,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
         let name = self.name();
         let doc = element.read_doc();
         element
-            .element()
+            .raw_element()
             .attribute(doc.deref(), name)
             .map(|it| it.to_string())
     }
@@ -75,7 +75,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
         let name = self.name();
         let mut doc = element.write_doc();
         element
-            .element()
+            .raw_element()
             .mut_attributes(doc.deref_mut())
             .remove(name);
     }
@@ -90,7 +90,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
         let name = self.name();
         let mut doc = element.write_doc();
         element
-            .element()
+            .raw_element()
             .set_attribute(doc.deref_mut(), name, value);
     }
 }

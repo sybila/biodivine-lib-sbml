@@ -1,3 +1,4 @@
+use crate::constants::namespaces::URL_SBML_CORE;
 use crate::model::SbmlModel;
 use crate::xml::{XmlDocument, XmlElement};
 use std::str::FromStr;
@@ -56,7 +57,7 @@ impl Sbml {
         let xml_document = Arc::new(RwLock::new(doc));
         Sbml {
             xml: xml_document.clone(),
-            sbml_root: XmlElement::new(xml_document, root),
+            sbml_root: XmlElement::new_raw(xml_document, root),
         }
     }
 
@@ -73,7 +74,7 @@ impl Sbml {
         let xml_document = Arc::new(RwLock::new(doc));
         Ok(Sbml {
             xml: xml_document.clone(),
-            sbml_root: XmlElement::new(xml_document, root),
+            sbml_root: XmlElement::new_raw(xml_document, root),
         })
     }
 
@@ -126,7 +127,7 @@ impl Sbml {
         };
         */
 
-        OptionalChild::new(&self.sbml_root, "model")
+        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
 
         /*
         SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
@@ -156,14 +157,15 @@ impl Default for Sbml {
 
 #[cfg(test)]
 mod tests {
+    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY};
     use crate::model::{Compartment, SbmlModel};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
-        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlWrapper,
+        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
+        XmlWrapper,
     };
     use crate::{sbase::SBase, Sbml};
     use std::ops::{Deref, DerefMut};
-    use xml_doc::Element;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionally checks if `Model` retrieval returns correct child.
@@ -200,8 +202,8 @@ mod tests {
         assert!(property.is_set(), "Id is not set but it should be.");
         assert_eq!(property.name(), "id", "Wrong name of the <id> property.");
         assert_eq!(
-            property.element().element(),
-            model.element(),
+            property.element().raw_element(),
+            model.raw_element(),
             "Wrong underlying element of the <id> property."
         );
         // try reading the <id> property
@@ -270,8 +272,8 @@ mod tests {
             "Wrong name of the required property."
         );
         assert_eq!(
-            property.element().element(),
-            model.element(),
+            property.element().raw_element(),
+            model.raw_element(),
             "Wrong underlying element of the required property."
         );
         // try to write and read to/from property
@@ -315,28 +317,26 @@ mod tests {
         assert!(notes.is_set(), "Notes in Model is not set.");
         assert_eq!(notes.name(), "notes", "Wrong name of Notes child.");
         assert_eq!(
-            notes.parent().element(),
-            model.element(),
+            notes.parent().raw_element(),
+            model.raw_element(),
             "Wrong parent of Notes child."
         );
         // get child value
         let notes_elem = notes.get();
         assert!(notes_elem.is_some(), "Notes does not contain any element.");
         assert_eq!(
-            notes_elem.unwrap().element().name(model.read_doc().deref()),
+            notes_elem.unwrap().name(),
             "notes",
             "Wrong name of Notes child."
         );
         // clear child
-        let notes_elem = notes.set(None);
+        let notes_elem = notes.clear();
         assert!(notes_elem.is_some(), "Old notes child is missing");
         assert!(!notes.is_set(), "Notes are still present after clear.");
 
-        let element = Element::new(model.write_doc().deref_mut(), "notes");
-        element.set_text_content(model.write_doc().deref_mut(), "Some new text.");
-        let xml_element = XmlElement::new(doc.xml, element);
         // set child
-        let notes_elem = notes.set(Some(xml_element));
+        let xml_element = XmlElement::new_quantified(model.document(), "notes", NS_SBML_CORE);
+        let notes_elem = notes.set(xml_element);
         assert!(notes_elem.is_none(), "Old Notes should be empty.");
         assert!(notes.is_set(), "Notes should be set.");
     }
@@ -349,29 +349,30 @@ mod tests {
         let model = doc.model().get().unwrap();
 
         // get child
-        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
-        assert!(!req_child.is_set());
+        let req_child: RequiredDynamicChild<'_, XmlElement> =
+            model.required_child("required", URL_EMPTY);
+        assert!(req_child.get_raw().is_none());
         assert_eq!(req_child.name(), "required");
-        assert_eq!(req_child.parent().element(), model.element());
-        let element = Element::new(model.write_doc().deref_mut(), "required");
-        let xml_element = XmlElement::new(doc.xml.clone(), element);
+        assert_eq!(req_child.parent().raw_element(), model.raw_element());
+        let xml_element = XmlElement::new_quantified(model.document(), "required", NS_EMPTY);
+        let inner_element = xml_element.raw_element();
         // set child
         req_child.set_raw(xml_element);
-        assert!(req_child.is_set());
-        element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
-        let xml_element = XmlElement::new(doc.xml.clone(), element);
+        assert!(req_child.get_raw().is_some());
+        inner_element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
+        let xml_element = XmlElement::new_raw(doc.xml.clone(), inner_element);
         let old_child = req_child.set(xml_element);
-        assert_eq!(old_child.element(), element);
-        assert!(req_child.is_set());
+        assert_eq!(old_child.raw_element(), inner_element);
+        assert!(req_child.get_raw().is_some());
         assert_eq!(
             req_child
                 .get()
-                .element()
+                .raw_element()
                 .text_content(model.read_doc().deref()),
             "Some additional content"
         );
-        req_child.clear();
-        assert!(!req_child.is_set());
+        req_child.clear_raw();
+        assert!(req_child.get_raw().is_none());
     }
 
     /// Tests get/set operations on special case of children `OptionalChild<XmlList>` and
@@ -386,7 +387,7 @@ mod tests {
 
         assert!(list.is_set());
         assert_eq!(list.name(), "listOfCompartments");
-        assert_eq!(list.parent().element(), model.element());
+        assert_eq!(list.parent().raw_element(), model.raw_element());
         let content = list.get();
         assert!(content.is_some());
         let content = content.unwrap();
@@ -395,40 +396,35 @@ mod tests {
         let compartment1 = content.get(0);
         assert_eq!(compartment1.constant().get(), true);
         assert_eq!(compartment1.id().get(), "comp1");
-        let compartment2: Compartment = XmlElement::new(
-            doc.xml,
-            Element::new(model.write_doc().deref_mut(), "compartment"),
-        )
-        .into();
+        let compartment2: Compartment = Compartment::default(compartment1.document());
         compartment2.constant().set_raw("false".to_string());
         compartment2.id().set_raw("comp2".to_string());
         content.insert(1, compartment2.clone());
         assert_eq!(content.len(), 2);
-        assert_eq!(content.get(0).element(), compartment1.element());
-        assert_eq!(content.get(1).element(), compartment2.element());
+        assert_eq!(content.get(0).raw_element(), compartment1.raw_element());
+        assert_eq!(content.get(1).raw_element(), compartment2.raw_element());
         content.remove(0);
         assert_eq!(content.len(), 1);
-        assert_eq!(content.get(0).element(), compartment2.element());
+        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
         content.push(compartment1.clone());
         assert_eq!(content.len(), 2);
-        assert_eq!(content.get(0).element(), compartment2.element());
-        assert_eq!(content.get(1).element(), compartment1.element());
+        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
+        assert_eq!(content.get(1).raw_element(), compartment1.raw_element());
         content.pop();
         assert_eq!(content.len(), 1);
-        assert_eq!(content.get(0).element(), compartment2.element());
+        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
     }
 
     #[test]
     pub fn test_build_doc() {
         let sbml_doc = Sbml::new();
         let model = sbml_doc.model();
-        let element = Element::new(sbml_doc.xml.write().unwrap().deref_mut(), "model");
-        element.set_text_content(
-            sbml_doc.xml.write().unwrap().deref_mut(),
+        let new_model = SbmlModel::default(sbml_doc.xml.clone());
+        new_model.raw_element().set_text_content(
+            new_model.write_doc().deref_mut(),
             "This is a SBML model element",
         );
-        let xml_element = XmlElement::new(sbml_doc.xml.clone(), element);
-        model.set(Some(SbmlModel::new(xml_element)));
+        model.set(new_model);
         let model_raw = model.get().unwrap();
         model_raw.id().set(Some(&"model_id".to_string()));
 

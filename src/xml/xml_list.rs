@@ -30,15 +30,6 @@ pub struct XmlList<Type: XmlWrapper> {
     _marker: PhantomData<Type>,
 }
 
-impl<Type: XmlWrapper> From<XmlElement> for XmlList<Type> {
-    fn from(element: XmlElement) -> Self {
-        XmlList {
-            element,
-            _marker: PhantomData,
-        }
-    }
-}
-
 impl<Type: XmlWrapper> From<XmlList<Type>> for XmlElement {
     fn from(element: XmlList<Type>) -> Self {
         element.element
@@ -49,9 +40,16 @@ impl<Type: XmlWrapper> XmlWrapper for XmlList<Type> {
     fn as_xml(&self) -> &XmlElement {
         &self.element
     }
+
+    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
+        XmlList {
+            element: element.as_xml().clone(),
+            _marker: PhantomData,
+        }
+    }
 }
 
-impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
+impl<Type: XmlWrapper> XmlList<Type> {
     /// Get the element of this list at the position specified by `index`.
     ///
     /// # Panics
@@ -72,12 +70,18 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     /// XML tag (e.g. text).
     pub fn get_checked(&self, index: usize) -> Option<Type> {
         let doc = self.read_doc();
-        self.element().children(doc.deref()).get(index).map(|it| {
-            let element = it.as_element().unwrap_or_else(|| {
-                panic!("Item at position {index} is not an XML element.");
-            });
-            Type::from(XmlElement::new(self.document(), element))
-        })
+        self.raw_element()
+            .children(doc.deref())
+            .get(index)
+            .map(|it| {
+                let element = it.as_element().unwrap_or_else(|| {
+                    panic!("Item at position {index} is not an XML element.");
+                });
+                unsafe {
+                    // TODO: This really is not safe at the moment.
+                    Type::unchecked_cast(XmlElement::new_raw(self.document(), element))
+                }
+            })
     }
 
     /// Insert a new element into the list. The element must not belong to an existing parent
@@ -89,9 +93,9 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     /// (it already has a parent, or is itself the root container tag).
     pub fn insert(&self, index: usize, value: Type) {
         let mut doc = self.write_doc();
-        let to_insert = value.element().as_node();
+        let to_insert = value.raw_element().as_node();
         let result = self
-            .element()
+            .raw_element()
             .insert_child(doc.deref_mut(), index, to_insert);
         match result {
             Ok(_) => {}
@@ -113,14 +117,17 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     /// is not an element (for example text).
     pub fn remove(&self, index: usize) -> Type {
         let mut doc = self.write_doc();
-        let removed = self.element().remove_child(doc.deref_mut(), index);
+        let removed = self.raw_element().remove_child(doc.deref_mut(), index);
         // Here, we assume `removed` is a proper Xml element (i.e. not text or
         // other special element type). We also assume that it can be safely converted to `Type`
         // which may not be always true.
         let removed = removed.as_element().unwrap_or_else(|| {
             panic!("Item at position {index} is not an XML element.");
         });
-        Type::from(XmlElement::new(self.document(), removed))
+        unsafe {
+            // TODO: This really is not safe at the moment.
+            Type::unchecked_cast(XmlElement::new_raw(self.document(), removed))
+        }
     }
 
     pub fn push(&self, value: Type) {
@@ -134,7 +141,7 @@ impl<Type: From<XmlElement> + XmlWrapper> XmlList<Type> {
     /// Get number of elements contained in the list.
     pub fn len(&self) -> usize {
         let doc = self.read_doc();
-        self.element().child_elements(doc.deref()).len()
+        self.raw_element().child_elements(doc.deref()).len()
     }
 
     /// Check if the list is empty.
