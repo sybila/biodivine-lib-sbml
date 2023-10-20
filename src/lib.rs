@@ -1,10 +1,13 @@
+use std::str::FromStr;
+use std::sync::{Arc, RwLock};
+
+use xml_doc::Document;
+
+use xml::{OptionalChild, RequiredProperty};
+
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::model::Model;
 use crate::xml::{XmlDocument, XmlElement};
-use std::str::FromStr;
-use std::sync::{Arc, RwLock};
-use xml::{OptionalChild, RequiredProperty};
-use xml_doc::Document;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -120,6 +123,8 @@ impl Default for Sbml {
 
 #[cfg(test)]
 mod tests {
+    use std::ops::{Deref, DerefMut};
+
     use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::model::{BaseUnit, Compartment, Model};
     use crate::xml::{
@@ -128,7 +133,6 @@ mod tests {
         XmlWrapper,
     };
     use crate::{sbase::SBase, Sbml};
-    use std::ops::{Deref, DerefMut};
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionally checks if `Model` retrieval returns correct child.
@@ -517,5 +521,49 @@ mod tests {
         assert!(compartment.spatial_dimensions().is_set());
         assert_eq!(compartment.spatial_dimensions().get().unwrap(), 3.0);
         assert!(!compartment.units().is_set());
+    }
+
+    #[test]
+    pub fn test_species() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let species = model.species();
+        assert!(species.is_set());
+        let species = species.get().unwrap();
+        assert!(!species.is_empty());
+        assert_eq!(species.len(), 51);
+        let specie = species.get(0);
+        assert_eq!(specie.id().get(), "species_1");
+        assert_eq!(specie.compartment().get(), "Intake");
+        assert!(!specie.initial_amount().is_set());
+        assert_eq!(specie.initial_concentration().get().unwrap(), 1051.0);
+        assert!(!specie.substance_units().is_set());
+        assert!(specie
+            .has_only_substance_units()
+            .get_checked()
+            .unwrap()
+            .is_none());
+        assert!(specie.boundary_condition().get());
+        assert!(specie.constant().get());
+        assert!(!specie.conversion_factor().is_set());
+        assert!(specie.annotation().is_set());
+
+        let specie_empty = species.pop();
+        assert_eq!(specie_empty.id().get(), "HDL");
+        assert_eq!(specie_empty.compartment().get(), "Endothelium");
+        assert!(!specie_empty.initial_amount().is_set());
+        assert_eq!(specie_empty.initial_concentration().get().unwrap(), 0.0);
+        assert!(!specie_empty.substance_units().is_set());
+        assert!(specie_empty
+            .has_only_substance_units()
+            .get_checked()
+            .unwrap()
+            .is_none());
+        assert!(!specie_empty.boundary_condition().get());
+        assert!(!specie_empty.constant().get());
+        assert!(!specie_empty.conversion_factor().is_set());
+        assert!(!specie_empty.annotation().is_set());
     }
 }
