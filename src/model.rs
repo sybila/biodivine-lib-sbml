@@ -8,20 +8,20 @@ use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
-pub struct SbmlModel(XmlElement);
+pub struct Model(XmlElement);
 
-impl XmlDefault for SbmlModel {
+impl XmlDefault for Model {
     fn default(document: XmlDocument) -> Self {
         unsafe {
-            SbmlModel::unchecked_cast(XmlElement::new_quantified(document, "model", NS_SBML_CORE))
+            Model::unchecked_cast(XmlElement::new_quantified(document, "model", NS_SBML_CORE))
         }
     }
 }
 
-/// Public functions to manipulate with the contents of [SbmlModel]
-/// i.e., optional lists inside SBML model + constructor new()
-impl SbmlModel {
-    pub fn function_definitions(&self) -> OptionalChild<XmlList<SbmlFunctionDefinition>> {
+/// Public functions to manipulate with the contents of SBML [Model]
+/// i.e., optional lists inside SBML model
+impl Model {
+    pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
         OptionalChild::new(
             self.xml_element(),
             "listOfFunctionDefinitions",
@@ -29,7 +29,7 @@ impl SbmlModel {
         )
     }
 
-    pub fn unit_definitions(&self) -> OptionalChild<XmlList<SbmlUnitDefinition>> {
+    pub fn unit_definitions(&self) -> OptionalChild<XmlList<UnitDefinition>> {
         OptionalChild::new(self.xml_element(), "listOfUnitDefinitions", URL_SBML_CORE)
     }
 
@@ -72,9 +72,9 @@ impl SbmlModel {
 
 /// Individual function definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
-pub struct SbmlFunctionDefinition(XmlElement);
+pub struct FunctionDefinition(XmlElement);
 
-impl SbmlFunctionDefinition {
+impl FunctionDefinition {
     pub fn math(&self) -> OptionalChild<Math> {
         OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
@@ -87,9 +87,9 @@ pub struct Math(XmlElement);
 
 /// Individual unit definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
-pub struct SbmlUnitDefinition(XmlElement);
+pub struct UnitDefinition(XmlElement);
 
-impl SbmlUnitDefinition {
+impl UnitDefinition {
     pub fn units(&self) -> OptionalChild<XmlList<Unit>> {
         OptionalChild::new(self.xml_element(), "listOfUnits", URL_SBML_CORE)
     }
