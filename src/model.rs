@@ -118,7 +118,7 @@ impl Unit {
 }
 
 /// Set of pre-defined base units that are allowed for unit definition
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, Display, EnumString, PartialEq)]
 pub enum BaseUnit {
     #[strum(serialize = "ampere")]
     Ampere,
