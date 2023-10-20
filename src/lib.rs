@@ -408,59 +408,62 @@ mod tests {
 
         let id = model.id();
         assert!(id.is_set());
-        assert!(id.name() == "id");
-        assert!(id.element().raw_element() == model.raw_element());
-        assert!(id.get().unwrap() == "model_id");
+        assert_eq!(id.name(), "id");
+        assert_eq!(id.element().raw_element(), model.raw_element());
+        assert_eq!(id.get().unwrap(), "model_id");
         id.set(Some(&"new_model_id".to_string()));
-        assert!(id.get().unwrap() == "new_model_id");
+        assert_eq!(id.get().unwrap(), "new_model_id");
         id.clear();
         assert!(!id.is_set());
 
         let name = model.name();
         assert!(!name.is_set());
-        assert!(name.name() == "name");
-        assert!(name.element().raw_element() == model.raw_element());
+        assert_eq!(name.name(), "name");
+        assert_eq!(name.element().raw_element(), model.raw_element());
         name.set(Some(&"model_name".to_string()));
-        assert!(name.get().unwrap() == "model_name");
+        assert_eq!(name.get().unwrap(), "model_name");
         name.clear();
         assert!(!name.is_set());
 
         let meta_id = model.meta_id();
         assert!(meta_id.is_set());
-        assert!(meta_id.name() == "metaid");
-        assert!(meta_id.element().raw_element() == model.raw_element());
-        assert!(meta_id.get().unwrap() == "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d");
+        assert_eq!(meta_id.name(), "metaid");
+        assert_eq!(meta_id.element().raw_element(), model.raw_element());
+        assert_eq!(
+            meta_id.get().unwrap(),
+            "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d"
+        );
         meta_id.set(Some(&"new_meta_id_12345".to_string()));
-        assert!(meta_id.get().unwrap() == "new_meta_id_12345");
+        assert_eq!(meta_id.get().unwrap(), "new_meta_id_12345");
         meta_id.clear();
         assert!(!meta_id.is_set());
 
         let sbo_term = model.sbo_term();
         assert!(!sbo_term.is_set());
-        assert!(sbo_term.name() == "sboTerm");
-        assert!(name.element().raw_element() == model.raw_element());
+        assert_eq!(sbo_term.name(), "sboTerm");
+        assert_eq!(name.element().raw_element(), model.raw_element());
         sbo_term.set(Some(&"model_sbo_term".to_string()));
-        assert!(sbo_term.get().unwrap() == "model_sbo_term");
+        assert_eq!(sbo_term.get().unwrap(), "model_sbo_term");
         sbo_term.clear();
         assert!(!sbo_term.is_set());
 
         let notes = model.notes();
         assert!(notes.is_set());
-        assert!(notes.parent().raw_element() == model.raw_element());
-        assert!(notes.name() == "notes");
-        assert!(notes.namespace_url() == URL_SBML_CORE);
+        assert_eq!(notes.parent().raw_element(), model.raw_element());
+        assert_eq!(notes.name(), "notes");
+        assert_eq!(notes.namespace_url(), URL_SBML_CORE);
         assert!(notes.get().is_some());
 
         let annotation = model.annotation();
         assert!(annotation.is_set());
-        assert!(annotation.parent().raw_element() == model.raw_element());
-        assert!(annotation.name() == "annotation");
-        assert!(annotation.namespace_url() == URL_SBML_CORE);
+        assert_eq!(annotation.parent().raw_element(), model.raw_element());
+        assert_eq!(annotation.name(), "annotation");
+        assert_eq!(annotation.namespace_url(), URL_SBML_CORE);
         assert!(annotation.get().is_some());
     }
 
     #[test]
-    pub fn test_function_defs() {
+    pub fn test_function_definitions() {
         let doc =
             Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
         let model = doc.model().get().unwrap();
@@ -476,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_unit_defs() {
+    pub fn test_unit_definitions() {
         let doc =
             Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
         let model = doc.model().get().unwrap();
@@ -497,5 +500,27 @@ mod tests {
         assert_eq!(unit.kind().get().to_string(), BaseUnit::Metre.to_string());
         assert_eq!(unit.multiplier().get(), 1.0);
         assert_eq!(unit.scale().get(), 0);
+    }
+
+    #[test]
+    pub fn test_compartments() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let compartments = model.compartments();
+        assert!(compartments.is_set());
+        let compartments = compartments.get().unwrap();
+        assert!(!compartments.is_empty());
+        assert_eq!(compartments.len(), 7);
+        let compartment = compartments.get(0);
+        assert_eq!(compartment.id().get(), "Intake");
+        assert!(!compartment.units().is_set());
+        assert!(compartment.constant().get());
+        assert!(compartment.size().is_set());
+        assert_eq!(compartment.size().get().unwrap(), 1.0);
+        assert!(compartment.spatial_dimensions().is_set());
+        assert_eq!(compartment.spatial_dimensions().get().unwrap(), 3.0);
+        assert!(!compartment.units().is_set());
     }
 }
