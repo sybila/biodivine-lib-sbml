@@ -23,46 +23,50 @@ impl XmlDefault for SbmlModel {
 impl SbmlModel {
     pub fn function_definitions(&self) -> OptionalChild<XmlList<SbmlFunctionDefinition>> {
         OptionalChild::new(
-            self.xmlElement(),
+            self.xml_element(),
             "listOfFunctionDefinitions",
             URL_SBML_CORE,
         )
     }
 
     pub fn unit_definitions(&self) -> OptionalChild<XmlList<SbmlUnitDefinition>> {
-        OptionalChild::new(self.xmlElement(), "listOfUnitDefinitions", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfUnitDefinitions", URL_SBML_CORE)
     }
 
     pub fn compartments(&self) -> OptionalChild<XmlList<Compartment>> {
-        OptionalChild::new(self.xmlElement(), "listOfCompartments", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfCompartments", URL_SBML_CORE)
     }
 
     pub fn species(&self) -> OptionalChild<XmlList<Species>> {
-        OptionalChild::new(self.xmlElement(), "listOfSpecies", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfSpecies", URL_SBML_CORE)
     }
 
     pub fn parameters(&self) -> OptionalChild<XmlList<Parameter>> {
-        OptionalChild::new(self.xmlElement(), "listOfParameters", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfParameters", URL_SBML_CORE)
     }
 
     pub fn initial_assignments(&self) -> OptionalChild<XmlList<InitialAssignment>> {
-        OptionalChild::new(self.xmlElement(), "listOfInitialAssignments", URL_SBML_CORE)
+        OptionalChild::new(
+            self.xml_element(),
+            "listOfInitialAssignments",
+            URL_SBML_CORE,
+        )
     }
 
     pub fn rules<T: Rule>(&self) -> OptionalChild<XmlList<T>> {
-        OptionalChild::new(self.xmlElement(), "listOfRules", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfRules", URL_SBML_CORE)
     }
 
     pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
-        OptionalChild::new(self.xmlElement(), "listOfConstraints", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfConstraints", URL_SBML_CORE)
     }
 
     pub fn reactions(&self) -> OptionalChild<XmlList<Reaction>> {
-        OptionalChild::new(self.xmlElement(), "listOfReactions", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfReactions", URL_SBML_CORE)
     }
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
-        OptionalChild::new(self.xmlElement(), "listOfEvents", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfEvents", URL_SBML_CORE)
     }
 }
 
@@ -72,7 +76,7 @@ pub struct SbmlFunctionDefinition(XmlElement);
 
 impl SbmlFunctionDefinition {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
@@ -87,7 +91,7 @@ pub struct SbmlUnitDefinition(XmlElement);
 
 impl SbmlUnitDefinition {
     pub fn units(&self) -> OptionalChild<XmlList<Unit>> {
-        OptionalChild::new(self.xmlElement(), "listOfUnits", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfUnits", URL_SBML_CORE)
     }
 }
 
@@ -97,19 +101,19 @@ pub struct Unit(XmlElement);
 
 impl Unit {
     pub fn kind(&self) -> RequiredProperty<BaseUnit> {
-        RequiredProperty::new(self.xmlElement(), "kind")
+        RequiredProperty::new(self.xml_element(), "kind")
     }
 
     pub fn exponent(&self) -> RequiredProperty<f64> {
-        RequiredProperty::new(self.xmlElement(), "exponent")
+        RequiredProperty::new(self.xml_element(), "exponent")
     }
 
     pub fn scale(&self) -> RequiredProperty<i32> {
-        RequiredProperty::new(self.xmlElement(), "scale")
+        RequiredProperty::new(self.xml_element(), "scale")
     }
 
     pub fn multiplier(&self) -> RequiredProperty<f64> {
-        RequiredProperty::new(self.xmlElement(), "multiplier")
+        RequiredProperty::new(self.xml_element(), "multiplier")
     }
 }
 
@@ -202,24 +206,24 @@ impl XmlDefault for Compartment {
 
 impl Compartment {
     pub fn id(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "id")
+        RequiredProperty::new(self.xml_element(), "id")
     }
 
     pub fn spatial_dimensions(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "spatialDimensions")
+        OptionalProperty::new(self.xml_element(), "spatialDimensions")
     }
 
     pub fn size(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "size")
+        OptionalProperty::new(self.xml_element(), "size")
     }
 
     /// TODO: implement units lookup in model according to documentation
     pub fn units(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.xmlElement(), "units")
+        OptionalProperty::new(self.xml_element(), "units")
     }
 
     pub fn constant(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "constant")
+        RequiredProperty::new(self.xml_element(), "constant")
     }
 }
 
@@ -229,40 +233,40 @@ pub struct Species(XmlElement);
 
 impl Species {
     pub fn id(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "id")
+        RequiredProperty::new(self.xml_element(), "id")
     }
 
     pub fn compartment(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "compartment")
+        RequiredProperty::new(self.xml_element(), "compartment")
     }
 
     pub fn initial_amount(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "initialAmount")
+        OptionalProperty::new(self.xml_element(), "initialAmount")
     }
 
     pub fn initial_concentration(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "initialConcentration")
+        OptionalProperty::new(self.xml_element(), "initialConcentration")
     }
 
     // TODO: need to embrace recommended units (p. 148)
     pub fn substance_units(&self) -> OptionalProperty<BaseUnit> {
-        OptionalProperty::new(self.xmlElement(), "substanceUnits")
+        OptionalProperty::new(self.xml_element(), "substanceUnits")
     }
 
     pub fn has_only_substance_units(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "hasOnlySubstanceUnits")
+        RequiredProperty::new(self.xml_element(), "hasOnlySubstanceUnits")
     }
 
     pub fn boundary_condition(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "boundaryCondition")
+        RequiredProperty::new(self.xml_element(), "boundaryCondition")
     }
 
     pub fn constant(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "constant")
+        RequiredProperty::new(self.xml_element(), "constant")
     }
 
     pub fn conversion_factor(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.xmlElement(), "conversionFactor")
+        OptionalProperty::new(self.xml_element(), "conversionFactor")
     }
 }
 
@@ -272,19 +276,19 @@ pub struct Parameter(XmlElement);
 
 impl Parameter {
     pub fn id(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "id")
+        RequiredProperty::new(self.xml_element(), "id")
     }
 
     pub fn value(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "value")
+        OptionalProperty::new(self.xml_element(), "value")
     }
 
     pub fn units(&self) -> OptionalProperty<BaseUnit> {
-        OptionalProperty::new(self.xmlElement(), "units")
+        OptionalProperty::new(self.xml_element(), "units")
     }
 
     pub fn constant(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "constant")
+        RequiredProperty::new(self.xml_element(), "constant")
     }
 }
 
@@ -293,17 +297,17 @@ pub struct InitialAssignment(XmlElement);
 
 impl InitialAssignment {
     pub fn symbol(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "symbol")
+        RequiredProperty::new(self.xml_element(), "symbol")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
 pub trait Rule: XmlWrapper {
     fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
@@ -319,7 +323,7 @@ impl Rule for AssignmentRule {}
 
 impl AssignmentRule {
     pub fn variable(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "variable")
+        RequiredProperty::new(self.xml_element(), "variable")
     }
 }
 
@@ -330,7 +334,7 @@ impl Rule for RateRule {}
 
 impl RateRule {
     pub fn variable(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "variable")
+        RequiredProperty::new(self.xml_element(), "variable")
     }
 }
 
@@ -339,11 +343,11 @@ pub struct Constraint(XmlElement);
 
 impl Constraint {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 
     pub fn message(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.xmlElement(), "message", URL_HTML)
+        OptionalChild::new(self.xml_element(), "message", URL_HTML)
     }
 }
 
@@ -352,37 +356,37 @@ pub struct Reaction(XmlElement);
 
 impl Reaction {
     pub fn id(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "id")
+        RequiredProperty::new(self.xml_element(), "id")
     }
 
     pub fn reversible(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "reversible")
+        RequiredProperty::new(self.xml_element(), "reversible")
     }
 
     pub fn compartment(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.xmlElement(), "compartment")
+        OptionalProperty::new(self.xml_element(), "compartment")
     }
 
     pub fn reactants(&self) -> OptionalChild<XmlList<SpeciesReference>> {
-        OptionalChild::new(self.xmlElement(), "listOfReactants", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfReactants", URL_SBML_CORE)
     }
 
     pub fn products(&self) -> OptionalChild<XmlList<SpeciesReference>> {
-        OptionalChild::new(self.xmlElement(), "listOfProducts", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfProducts", URL_SBML_CORE)
     }
 
     pub fn modifiers(&self) -> OptionalChild<XmlList<ModifierSpeciesReference>> {
-        OptionalChild::new(self.xmlElement(), "listOfModifiers", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfModifiers", URL_SBML_CORE)
     }
 
     pub fn kinetic_law(&self) -> OptionalChild<KineticLaw> {
-        OptionalChild::new(self.xmlElement(), "kineticLaw", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "kineticLaw", URL_SBML_CORE)
     }
 }
 
 trait SimpleSpeciesReference: XmlWrapper {
     fn species(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "species")
+        RequiredProperty::new(self.xml_element(), "species")
     }
 }
 
@@ -393,11 +397,11 @@ impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
     pub fn stoichiometry(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "stoichiometry")
+        OptionalProperty::new(self.xml_element(), "stoichiometry")
     }
 
     pub fn constant(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "constant")
+        RequiredProperty::new(self.xml_element(), "constant")
     }
 }
 
@@ -411,11 +415,11 @@ pub struct KineticLaw(XmlElement);
 
 impl KineticLaw {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 
     pub fn local_parameters(&self) -> OptionalChild<XmlList<LocalParameter>> {
-        OptionalChild::new(self.xmlElement(), "listOfLocalParameters", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfLocalParameters", URL_SBML_CORE)
     }
 }
 
@@ -424,15 +428,15 @@ pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {
     pub fn id(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "id")
+        RequiredProperty::new(self.xml_element(), "id")
     }
 
     pub fn value(&self) -> OptionalProperty<f64> {
-        OptionalProperty::new(self.xmlElement(), "value")
+        OptionalProperty::new(self.xml_element(), "value")
     }
 
     pub fn units(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.xmlElement(), "units")
+        OptionalProperty::new(self.xml_element(), "units")
     }
 }
 
@@ -441,23 +445,23 @@ pub struct Event(XmlElement);
 
 impl Event {
     pub fn use_values_from_trigger_time(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "useValuesFromTriggerTime")
+        RequiredProperty::new(self.xml_element(), "useValuesFromTriggerTime")
     }
 
     pub fn trigger(&self) -> OptionalChild<Trigger> {
-        OptionalChild::new(self.xmlElement(), "trigger", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "trigger", URL_SBML_CORE)
     }
 
     pub fn priority(&self) -> OptionalChild<Priority> {
-        OptionalChild::new(self.xmlElement(), "priority", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "priority", URL_SBML_CORE)
     }
 
     pub fn delay(&self) -> OptionalChild<Delay> {
-        OptionalChild::new(self.xmlElement(), "delay", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "delay", URL_SBML_CORE)
     }
 
     pub fn event_assignments(&self) -> OptionalChild<XmlList<EventAssignment>> {
-        OptionalChild::new(self.xmlElement(), "listOfEventAssignments", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfEventAssignments", URL_SBML_CORE)
     }
 }
 
@@ -466,15 +470,15 @@ pub struct Trigger(XmlElement);
 
 impl Trigger {
     pub fn initial_value(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "initialValue")
+        RequiredProperty::new(self.xml_element(), "initialValue")
     }
 
     pub fn persistent(&self) -> RequiredProperty<bool> {
-        RequiredProperty::new(self.xmlElement(), "persistent")
+        RequiredProperty::new(self.xml_element(), "persistent")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
@@ -483,7 +487,7 @@ pub struct Priority(XmlElement);
 
 impl Priority {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
@@ -492,7 +496,7 @@ pub struct Delay(XmlElement);
 
 impl Delay {
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
 
@@ -501,10 +505,10 @@ pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
     pub fn variable(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xmlElement(), "value")
+        RequiredProperty::new(self.xml_element(), "value")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
-        OptionalChild::new(self.xmlElement(), "math", URL_MATHML)
+        OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
 }
