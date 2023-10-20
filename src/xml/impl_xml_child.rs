@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 /// individual children, but it is useful if the attribute name is dynamic or otherwise
 /// not known at compile time.
 pub struct DynamicChild<'a, T: XmlWrapper> {
-    element: &'a XmlElement,
+    parent: &'a XmlElement,
     name: String,
     namespace_url: String,
     _marker: PhantomData<T>,
@@ -16,7 +16,7 @@ pub struct DynamicChild<'a, T: XmlWrapper> {
 /// [Child] is an implementation of [XmlChild] that uses a tag name that is known
 /// at compile time. As such, it is faster than [DynamicChild], but less flexible.
 pub struct Child<'a, T: XmlWrapper> {
-    element: &'a XmlElement,
+    parent: &'a XmlElement,
     name: &'static str,
     namespace_url: &'static str,
     _marker: PhantomData<T>,
@@ -34,13 +34,9 @@ pub struct RequiredChild<'a, T: XmlWrapper>(Child<'a, T>);
 
 impl<T: XmlWrapper> DynamicChild<'_, T> {
     /// Create a new instance of a [DynamicChild] for the given `element` and `name`.
-    pub fn new<'a>(
-        element: &'a XmlElement,
-        name: &str,
-        namespace_url: &str,
-    ) -> DynamicChild<'a, T> {
+    pub fn new<'a>(parent: &'a XmlElement, name: &str, namespace_url: &str) -> DynamicChild<'a, T> {
         DynamicChild {
-            element,
+            parent,
             name: name.to_string(),
             namespace_url: namespace_url.to_string(),
             _marker: PhantomData,
@@ -50,12 +46,12 @@ impl<T: XmlWrapper> DynamicChild<'_, T> {
 
 impl<T: XmlWrapper> Child<'_, T> {
     pub fn new<'a>(
-        element: &'a XmlElement,
+        parent: &'a XmlElement,
         name: &'static str,
         namespace_url: &'static str,
     ) -> Child<'a, T> {
         Child {
-            element,
+            parent,
             name,
             namespace_url,
             _marker: PhantomData,
@@ -65,47 +61,47 @@ impl<T: XmlWrapper> Child<'_, T> {
 
 impl<T: XmlWrapper> OptionalDynamicChild<'_, T> {
     pub fn new<'a>(
-        element: &'a XmlElement,
+        parent: &'a XmlElement,
         name: &str,
         namespace_url: &str,
     ) -> OptionalDynamicChild<'a, T> {
-        OptionalDynamicChild(DynamicChild::new(element, name, namespace_url))
+        OptionalDynamicChild(DynamicChild::new(parent, name, namespace_url))
     }
 }
 
 impl<T: XmlWrapper> RequiredDynamicChild<'_, T> {
     pub fn new<'a>(
-        element: &'a XmlElement,
+        parent: &'a XmlElement,
         name: &str,
         namespace_url: &str,
     ) -> RequiredDynamicChild<'a, T> {
-        RequiredDynamicChild(DynamicChild::new(element, name, namespace_url))
+        RequiredDynamicChild(DynamicChild::new(parent, name, namespace_url))
     }
 }
 
 impl<T: XmlWrapper> OptionalChild<'_, T> {
     pub fn new<'a>(
-        element: &'a XmlElement,
+        parent: &'a XmlElement,
         name: &'static str,
         namespace_url: &'static str,
     ) -> OptionalChild<'a, T> {
-        OptionalChild(Child::new(element, name, namespace_url))
+        OptionalChild(Child::new(parent, name, namespace_url))
     }
 }
 
 impl<T: XmlWrapper> RequiredChild<'_, T> {
     pub fn new<'a>(
-        element: &'a XmlElement,
+        parent: &'a XmlElement,
         name: &'static str,
         namespace_url: &'static str,
     ) -> RequiredChild<'a, T> {
-        RequiredChild(Child::new(element, name, namespace_url))
+        RequiredChild(Child::new(parent, name, namespace_url))
     }
 }
 
 impl<'a, T: XmlWrapper> XmlChild<T> for DynamicChild<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.element
+        self.parent
     }
 
     fn name(&self) -> &str {
@@ -119,7 +115,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for DynamicChild<'a, T> {
 
 impl<'a, T: XmlWrapper> XmlChild<T> for Child<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.element
+        self.parent
     }
 
     fn name(&self) -> &str {
@@ -133,7 +129,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for Child<'a, T> {
 
 impl<'a, T: XmlWrapper> XmlChild<T> for OptionalDynamicChild<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.0.element
+        self.0.parent
     }
 
     fn name(&self) -> &str {
@@ -147,7 +143,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalDynamicChild<'a, T> {
 
 impl<'a, T: XmlWrapper> XmlChild<T> for RequiredDynamicChild<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.0.element
+        self.0.parent
     }
 
     fn name(&self) -> &str {
@@ -161,7 +157,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for RequiredDynamicChild<'a, T> {
 
 impl<'a, T: XmlWrapper> XmlChild<T> for OptionalChild<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.0.element
+        self.0.parent
     }
 
     fn name(&self) -> &str {
@@ -175,7 +171,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalChild<'a, T> {
 
 impl<'a, T: XmlWrapper> XmlChild<T> for RequiredChild<'a, T> {
     fn parent(&self) -> &XmlElement {
-        self.0.element
+        self.0.parent
     }
 
     fn name(&self) -> &str {

@@ -24,7 +24,7 @@ use xml_doc::{Document, Element};
 /// behaviour are given in [XmlWrapper::try_detach] and [XmlWrapper::try_attach_at].
 pub trait XmlWrapper: Into<XmlElement> {
     /// Obtain a reference to the underlying [XmlElement].
-    fn as_xml(&self) -> &XmlElement;
+    fn xml_element(&self) -> &XmlElement;
 
     /// Performs an unsafe conversion from an arbitrary [XmlWrapper] type `T` into `Self`.
     /// The conversion does not check the validity of the `element` in any way, hence it is
@@ -43,7 +43,7 @@ pub trait XmlWrapper: Into<XmlElement> {
 
     /// Obtain a (counted) reference to the underlying [XmlDocument].
     fn document(&self) -> XmlDocument {
-        self.as_xml().document.clone()
+        self.xml_element().document.clone()
     }
 
     /// Get the [Element] instance for the underlying [XmlElement].
@@ -52,7 +52,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// because it is easy to unintentionally perform operations that can break the contracts
     /// of the [XmlWrapper] methods.
     fn raw_element(&self) -> Element {
-        self.as_xml().element
+        self.xml_element().element
     }
 
     /// Obtain a read-only reference to the underlying [Document].
@@ -65,7 +65,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         // of the program performed an incorrect unsafe action (e.g. double release of the
         // same lock guard). As such, it is generally ok to panic here, because at that point
         // the whole document might be corrupted and we have no way to recover.
-        self.as_xml()
+        self.xml_element()
             .document
             .read()
             .expect("Underlying document lock is corrupted. Cannot recover.")
@@ -77,7 +77,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// alive (e.g. due to recursion), calling this method will cause a deadlock.
     fn write_doc(&self) -> RwLockWriteGuard<Document> {
         // See [Self::read_doc] for error handling notes.
-        self.as_xml()
+        self.xml_element()
             .document
             .write()
             .expect("Underlying document lock is corrupted. Cannot recover.")
@@ -89,7 +89,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// constant. However, this is not strictly required by [XmlWrapper], so there can be
     /// implementations where this value changes depending on context. For example, [XmlList]
     /// implements [XmlWrapper], but only determines its name at runtime.
-    fn name(&self) -> String {
+    fn tag_name(&self) -> String {
         let doc = self.read_doc();
         self.raw_element().name(doc.deref()).to_string()
     }
@@ -115,14 +115,14 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// equivalent to using [Self::unchecked_cast], because the validity of the requested
     /// property is not verified in any way.
     fn required_property<T: XmlPropertyType>(&self, name: &str) -> RequiredDynamicProperty<T> {
-        RequiredDynamicProperty::new(self.as_xml(), name)
+        RequiredDynamicProperty::new(self.xml_element(), name)
     }
 
     /// Get a reference to a specific **optional** [XmlProperty] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn optional_property<T: XmlPropertyType>(&self, name: &str) -> OptionalDynamicProperty<T> {
-        OptionalDynamicProperty::new(self.as_xml(), name)
+        OptionalDynamicProperty::new(self.xml_element(), name)
     }
 
     /// Get a reference to a specific **optional** [XmlChild] of this XML element.
@@ -133,7 +133,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         name: &str,
         namespace_url: &str,
     ) -> OptionalDynamicChild<T> {
-        OptionalDynamicChild::new(self.as_xml(), name, namespace_url)
+        OptionalDynamicChild::new(self.xml_element(), name, namespace_url)
     }
 
     /// Get a reference to a specific **required** [XmlChild] of this XML element.
@@ -144,7 +144,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         name: &str,
         namespace_url: &str,
     ) -> RequiredDynamicChild<T> {
-        RequiredDynamicChild::new(self.as_xml(), name, namespace_url)
+        RequiredDynamicChild::new(self.xml_element(), name, namespace_url)
     }
 
     /// Detach this [XmlWrapper] from its current parent while maintaining the necessary

@@ -46,11 +46,11 @@ impl XmlElement {
 
 /// Every [XmlElement] trivially implements [XmlWrapper] as well.
 impl XmlWrapper for XmlElement {
-    fn as_xml(&self) -> &XmlElement {
+    fn xml_element(&self) -> &XmlElement {
         self
     }
 
     unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
-        element.as_xml().clone()
+        element.xml_element().clone()
     }
 }
