@@ -126,7 +126,7 @@ impl Default for Sbml {
 #[cfg(test)]
 mod tests {
     use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{Compartment, Model};
+    use crate::model::{BaseUnit, Compartment, Model};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
@@ -473,5 +473,29 @@ mod tests {
         let f_definition = f_defs.get(0);
         assert!(f_definition.annotation().is_set());
         assert!(f_definition.math().is_set());
+    }
+
+    #[test]
+    pub fn test_unit_defs() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let unit_defs = model.unit_definitions();
+        assert!(unit_defs.is_set());
+        let unit_defs = unit_defs.get().unwrap();
+        assert!(!unit_defs.is_empty());
+        assert_eq!(unit_defs.len(), 5);
+        let unit_def = unit_defs.get(0);
+        let units = unit_def.units();
+        assert!(units.is_set());
+        let units = units.get().unwrap();
+        assert_eq!(units.len(), 1);
+        let unit = units.get(0);
+        assert_eq!(unit.exponent().get(), 1.0);
+        assert_eq!(unit.kind().get(), BaseUnit::Metre);
+        assert_eq!(unit.kind().get().to_string(), BaseUnit::Metre.to_string());
+        assert_eq!(unit.multiplier().get(), 1.0);
+        assert_eq!(unit.scale().get(), 0);
     }
 }
