@@ -1,5 +1,7 @@
 use const_format::formatcp;
 
+use super::namespaces::URL_SBML_CORE;
+
 const XML_VERSION: &str = "1.0";
 const XML_ENCODING: &str = "UTF-8";
 const XML_STANDALONE: &str = "no";
@@ -11,12 +13,13 @@ const XML_DEFAULT_HEADER: &str = formatcp!(
 );
 
 const SBML_DEFAULT_LEVEL: &str = "3";
-const SBML_DEFAULT_VERSION: &str = "2";
-const SBML_DEFAULT_NAMESPACE: &str = formatcp!(
-    "http://www.sbml.org/sbml/level{}/version{}/core",
-    SBML_DEFAULT_LEVEL,
-    SBML_DEFAULT_VERSION
-);
+const SBML_DEFAULT_VERSION: &str = "1";
+const SBML_DEFAULT_NAMESPACE: &str = URL_SBML_CORE;
+// const SBML_DEFAULT_NAMESPACE: &str = formatcp!(
+//     "http://www.sbml.org/sbml/level{}/version{}/core",
+//     SBML_DEFAULT_LEVEL,
+//     SBML_DEFAULT_VERSION
+// );
 const SBML_DEFAULT_ROOT: &str = formatcp!(
     "<sbml xmlns=\"{}\" level=\"{}\" version=\"{}\"></sbml>",
     SBML_DEFAULT_NAMESPACE,
