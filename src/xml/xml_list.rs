@@ -37,13 +37,13 @@ impl<Type: XmlWrapper> From<XmlList<Type>> for XmlElement {
 }
 
 impl<Type: XmlWrapper> XmlWrapper for XmlList<Type> {
-    fn as_xml(&self) -> &XmlElement {
+    fn xmlElement(&self) -> &XmlElement {
         &self.element
     }
 
     unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
         XmlList {
-            element: element.as_xml().clone(),
+            element: element.xmlElement().clone(),
             _marker: PhantomData,
         }
     }

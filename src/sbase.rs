@@ -10,26 +10,26 @@ use crate::xml::{OptionalChild, OptionalProperty, XmlElement, XmlWrapper};
 /// Thus there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
     fn id(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.as_xml(), "id")
+        OptionalProperty::new(self.xmlElement(), "id")
     }
 
     fn name(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.as_xml(), "name")
+        OptionalProperty::new(self.xmlElement(), "name")
     }
 
     fn meta_id(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.as_xml(), "metaid")
+        OptionalProperty::new(self.xmlElement(), "metaid")
     }
 
     fn sbo_term(&self) -> OptionalProperty<String> {
-        OptionalProperty::new(self.as_xml(), "sboTerm")
+        OptionalProperty::new(self.xmlElement(), "sboTerm")
     }
 
     fn notes(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "notes", URL_SBML_CORE)
+        OptionalChild::new(self.xmlElement(), "notes", URL_SBML_CORE)
     }
 
     fn annotation(&self) -> OptionalChild<XmlElement> {
-        OptionalChild::new(self.as_xml(), "annotation", URL_SBML_CORE)
+        OptionalChild::new(self.xmlElement(), "annotation", URL_SBML_CORE)
     }
 }

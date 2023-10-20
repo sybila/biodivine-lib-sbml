@@ -72,12 +72,12 @@ pub trait XmlChild<T: XmlWrapper> {
         let parent = element.raw_element();
 
         // First, check that the new value has the correct name and namespace.
-        if value.name() != self.name() || value.namespace_url() != self.namespace_url() {
+        if value.tag_name() != self.name() || value.namespace_url() != self.namespace_url() {
             panic!(
                 "Cannot set XML child `({},{})` to value `({},{})`.",
                 self.name(),
                 self.namespace_url(),
-                value.name(),
+                value.tag_name(),
                 value.namespace_url(),
             )
         }
