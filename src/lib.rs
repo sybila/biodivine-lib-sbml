@@ -1,5 +1,5 @@
 use crate::constants::namespaces::URL_SBML_CORE;
-use crate::model::SbmlModel;
+use crate::model::Model;
 use crate::xml::{XmlDocument, XmlElement};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
@@ -100,44 +100,12 @@ impl Sbml {
         }
     }
 
-    pub fn model(&self) -> OptionalChild<SbmlModel> {
+    pub fn model(&self) -> OptionalChild<Model> {
         // TODO:
         //  This is technically not entirely valid because we should check the namespace
         //  of the model element as well, but it's good enough for a demo. Also, some of this
         //  may need better error handling.
-
-        /*
-        let model_element = {
-            // Lock the XML document for reading. The fact that we are doing this in
-            // an extra scope is not necessary for correctness, but it makes it easier
-            // for the compiler to infer when the lock should be released, hence we
-            // won't accidentally hold it longer than necessary (although, this method is
-            // so simple it does not really matter).
-            let xml = self.xml.read().unwrap();
-            // The `xml` variable here is actually a "read guard" object created by the RwLock.
-            // However, we should be able to use it more-or-less like any other reference to a
-            // `xml_doc::Document` (e.g., we can call `xml.root_element()` like we would on a
-            // "raw" `Document` object). The main difference is if we actually need to send it
-            // to a function that accepts a "true" &Document reference. In such case, we need to
-            // fake it a bit by calling the `.deref` function.
-            xml.root_element()
-                .unwrap()
-                .find(xml.deref(), "model")
-                .unwrap()
-        };
-        */
-
         OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
-
-        /*
-        SbmlModel::new(XmlElement::new(self.xml.clone(), model_element))
-        SbmlModel {
-            // Due to the reference-counting implemented in `Arc`, this does not actually create
-            // a "deep" copy of the XML document. It just creates a new `Arc` reference to the
-            // same underlying document object.
-            xml: XmlElement::new(self.xml.clone(), model_element),
-        }
-        */
     }
 
     pub fn level(&self) -> RequiredProperty<String> {
@@ -158,7 +126,7 @@ impl Default for Sbml {
 #[cfg(test)]
 mod tests {
     use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{Compartment, SbmlModel};
+    use crate::model::{Compartment, Model};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
@@ -417,9 +385,9 @@ mod tests {
 
     #[test]
     pub fn test_build_doc() {
-        let sbml_doc = Sbml::new();
+        let sbml_doc = Sbml::default();
         let model = sbml_doc.model();
-        let new_model = SbmlModel::default(sbml_doc.xml.clone());
+        let new_model = Model::default(sbml_doc.xml.clone());
         new_model.raw_element().set_text_content(
             new_model.write_doc().deref_mut(),
             "This is a SBML model element",
@@ -436,7 +404,7 @@ mod tests {
     #[test]
     pub fn test_sbase() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
-        let model: SbmlModel = doc.model().get().unwrap();
+        let model: Model = doc.model().get().unwrap();
 
         let id = model.id();
         assert!(id.is_set());
@@ -489,5 +457,21 @@ mod tests {
         assert!(annotation.name() == "annotation");
         assert!(annotation.namespace_url() == URL_SBML_CORE);
         assert!(annotation.get().is_some());
+    }
+
+    #[test]
+    pub fn test_function_defs() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let f_defs = model.function_definitions();
+        assert!(f_defs.is_set());
+        let f_defs = f_defs.get().unwrap();
+        assert!(!f_defs.is_empty());
+        assert_eq!(f_defs.len(), 46);
+        let f_definition = f_defs.get(0);
+        assert!(f_definition.annotation().is_set());
+        assert!(f_definition.math().is_set());
     }
 }
