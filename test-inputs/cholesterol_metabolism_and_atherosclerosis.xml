@@ -2432,7 +2432,7 @@
         </math>
             </functionDefinition>
     </listOfFunctionDefinitions>
-    <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level2/version4">
+    <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level3/version1/core">
       <unitDefinition id="length" name="length">
         <listOfUnits>
           <unit exponent="1" kind="metre" multiplier="1" scale="0"/>
@@ -2459,7 +2459,7 @@
         </listOfUnits>
       </unitDefinition>
     </listOfUnitDefinitions>
-    <listOfCompartments xmlns="http://www.sbml.org/sbml/level2/version4">
+    <listOfCompartments xmlns="http://www.sbml.org/sbml/level3/version1/core">
       <compartment constant="true" id="Intake" metaid="COPASI1" name="Intake" size="1" spatialDimensions="3">
         <annotation>
           <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
