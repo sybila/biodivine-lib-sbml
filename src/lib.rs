@@ -48,19 +48,6 @@ pub struct Sbml {
 }
 
 impl Sbml {
-    /// Creates a new blank SBML document with initial skeleton consisting of valid
-    /// xml header and sbml root element.
-    pub fn new() -> Sbml {
-        print!("{}", constants::document::SBML_DEFAULT_DOCUMENT);
-        let doc = Document::from_str(constants::document::SBML_DEFAULT_DOCUMENT).unwrap();
-        let root = doc.root_element().unwrap();
-        let xml_document = Arc::new(RwLock::new(doc));
-        Sbml {
-            xml: xml_document.clone(),
-            sbml_root: XmlElement::new_raw(xml_document, root),
-        }
-    }
-
     pub fn read_path(path: &str) -> Result<Sbml, String> {
         let file_contents = match std::fs::read_to_string(path) {
             Ok(file_contents) => file_contents,
@@ -118,8 +105,16 @@ impl Sbml {
 }
 
 impl Default for Sbml {
+    /// Creates a new blank SBML document with initial skeleton consisting of valid
+    /// xml header and sbml root element.
     fn default() -> Self {
-        Sbml::new()
+        let doc = Document::from_str(constants::document::SBML_DEFAULT_DOCUMENT).unwrap();
+        let root = doc.root_element().unwrap();
+        let xml_document = Arc::new(RwLock::new(doc));
+        Sbml {
+            xml: xml_document.clone(),
+            sbml_root: XmlElement::new_raw(xml_document, root),
+        }
     }
 }
 
