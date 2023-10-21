@@ -695,4 +695,21 @@ mod tests {
         assert_eq!(param.value().get().unwrap(), 1.0);
         assert!(!param.units().is_set());
     }
+
+    #[test]
+    pub fn test_initial_assignments() {
+        let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let initial_asgnmnts = model.initial_assignments();
+        assert!(initial_asgnmnts.is_set());
+
+        let initial_asgnmnts = initial_asgnmnts.get().unwrap();
+        assert!(!initial_asgnmnts.is_empty());
+        assert_eq!(initial_asgnmnts.len(), 1);
+
+        let single_asgnmnt = initial_asgnmnts.pop();
+        assert_eq!(single_asgnmnt.symbol().get(), "Susceptible");
+        assert!(single_asgnmnt.math().is_set());
+    }
 }
