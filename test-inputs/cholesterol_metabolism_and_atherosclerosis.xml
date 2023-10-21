@@ -4142,7 +4142,7 @@
                 </math>
             </assignmentRule>
         </listOfRules>
-        <listOfReactions xmlns="http://www.sbml.org/sbml/level2/version4">
+        <listOfReactions xmlns="http://www.sbml.org/sbml/level3/version1/core">
             <reaction id="reaction_1" metaid="COPASI41" name="Ingestion" reversible="false">
                 <annotation>
                     <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
@@ -4190,9 +4190,9 @@
                             <ci>species_1</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
+                    <listOfLocalParameters>
                         <parameter id="k1" name="k1" value="1"/>
-                    </listOfParameters>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_2" metaid="COPASI42" name="Intestinal Cholesterol Synthesis" reversible="false">

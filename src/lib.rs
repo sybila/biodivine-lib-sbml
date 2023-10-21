@@ -126,7 +126,9 @@ mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{AssignmentRule, BaseUnit, Compartment, Model, Rule};
+    use crate::model::{
+        AssignmentRule, BaseUnit, Compartment, Model, Rule, SimpleSpeciesReference,
+    };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
@@ -623,5 +625,74 @@ mod tests {
         let rule = rules.get(0);
         assert_eq!(rule.variable().get(), "SUMRecTAINF");
         assert!(rule.math().is_set());
+    }
+
+    #[test]
+    pub fn test_reactions() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let reactions = model.reactions();
+        assert!(reactions.is_set());
+
+        let reactions = reactions.get().unwrap();
+        assert!(!reactions.is_empty());
+        assert_eq!(reactions.len(), 52);
+
+        let reaction = reactions.get(0);
+        assert_eq!(reaction.id().get(), "reaction_1");
+        assert_eq!(reaction.meta_id().get().unwrap(), "COPASI41");
+        assert_eq!(reaction.name().get().unwrap(), "Ingestion");
+        assert!(!reaction.reversible().get());
+        assert!(reaction.annotation().is_set());
+        assert!(!reaction.compartment().is_set());
+
+        let reactants = reaction.reactants();
+        let products = reaction.products();
+        let modifiers = reaction.modifiers();
+        assert!(reactants.is_set());
+        assert!(products.is_set());
+        assert!(modifiers.is_set());
+
+        let reactants = reactants.get().unwrap();
+        let products = products.get().unwrap();
+        let modifiers = modifiers.get().unwrap();
+        assert!(!reactants.is_empty());
+        assert_eq!(reactants.len(), 1);
+        assert!(!products.is_empty());
+        assert_eq!(products.len(), 1);
+        assert!(!modifiers.is_empty());
+        assert_eq!(modifiers.len(), 1);
+
+        let reactant = reactants.pop();
+        let product = products.pop();
+        let modifier = modifiers.pop();
+        assert_eq!(reactant.species().get(), "species_1");
+        assert!(reactant.constant().get_checked().unwrap().is_none()); // doesn't conform to level3/version1/core
+        assert_eq!(reactant.stoichiometry().get().unwrap(), 1.0);
+        assert_eq!(product.species().get(), "species_2");
+        assert!(product.constant().get_checked().unwrap().is_none()); // doesn't conform to level3/version1/core
+        assert_eq!(product.stoichiometry().get().unwrap(), 1.0);
+        assert_eq!(modifier.species().get(), "species_1");
+
+        let kinetic_law = reaction.kinetic_law();
+        assert!(kinetic_law.is_set());
+
+        let kinetic_law = kinetic_law.get().unwrap();
+        assert!(kinetic_law.math().is_set());
+
+        let local_params = kinetic_law.local_parameters();
+        assert!(local_params.is_set());
+
+        let local_params = local_params.get().unwrap();
+        assert!(!local_params.is_empty());
+        assert_eq!(local_params.len(), 1);
+
+        let param = local_params.pop();
+        assert_eq!(param.id().get(), "k1");
+        assert_eq!(param.name().get().unwrap(), "k1");
+        assert_eq!(param.value().get().unwrap(), 1.0);
+        assert!(!param.units().is_set());
     }
 }

@@ -384,7 +384,7 @@ impl Reaction {
     }
 }
 
-trait SimpleSpeciesReference: XmlWrapper {
+pub trait SimpleSpeciesReference: XmlWrapper {
     fn species(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.xml_element(), "species")
     }
