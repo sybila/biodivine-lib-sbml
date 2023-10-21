@@ -126,7 +126,7 @@ mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{BaseUnit, Compartment, Model};
+    use crate::model::{AssignmentRule, BaseUnit, Compartment, Model, Rule};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
@@ -605,5 +605,23 @@ mod tests {
         assert_eq!(parameter.value().get().unwrap(), 0.0155561);
         assert!(!parameter.units().is_set());
         assert!(!parameter.annotation().is_set());
+    }
+
+    #[test]
+    pub fn test_rules() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let rules = model.rules::<AssignmentRule>();
+        assert!(rules.is_set());
+
+        let rules = rules.get().unwrap();
+        assert!(!rules.is_empty());
+        assert_eq!(rules.len(), 10);
+
+        let rule = rules.get(0);
+        assert_eq!(rule.variable().get(), "SUMRecTAINF");
+        assert!(rule.math().is_set());
     }
 }
