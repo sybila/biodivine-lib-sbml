@@ -3844,7 +3844,7 @@
             <species boundaryCondition="false" compartment="Endothelium" constant="false" id="HDL"
                      initialConcentration="0" name="HDL"/>
         </listOfSpecies>
-        <listOfParameters xmlns="http://www.sbml.org/sbml/level2/version4">
+        <listOfParameters xmlns="http://www.sbml.org/sbml/level3/version1/core">
             <parameter constant="true" id="alfa7" name="alfa7" value="2.8067"/>
             <parameter constant="true" id="ActEndstim_a" name="ActEndstim_a" value="0"/>
             <parameter constant="true" id="ActEndstim_b" name="ActEndstim_b" value="3.51949"/>

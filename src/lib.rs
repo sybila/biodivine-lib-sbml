@@ -469,9 +469,11 @@ mod tests {
 
         let f_defs = model.function_definitions();
         assert!(f_defs.is_set());
+
         let f_defs = f_defs.get().unwrap();
         assert!(!f_defs.is_empty());
         assert_eq!(f_defs.len(), 46);
+
         let f_definition = f_defs.get(0);
         assert!(f_definition.annotation().is_set());
         assert!(f_definition.math().is_set());
@@ -485,14 +487,18 @@ mod tests {
 
         let unit_defs = model.unit_definitions();
         assert!(unit_defs.is_set());
+
         let unit_defs = unit_defs.get().unwrap();
         assert!(!unit_defs.is_empty());
         assert_eq!(unit_defs.len(), 5);
+
         let unit_def = unit_defs.get(0);
         let units = unit_def.units();
         assert!(units.is_set());
+
         let units = units.get().unwrap();
         assert_eq!(units.len(), 1);
+
         let unit = units.get(0);
         assert_eq!(unit.exponent().get(), 1.0);
         assert_eq!(unit.kind().get(), BaseUnit::Metre);
@@ -509,9 +515,11 @@ mod tests {
 
         let compartments = model.compartments();
         assert!(compartments.is_set());
+
         let compartments = compartments.get().unwrap();
         assert!(!compartments.is_empty());
         assert_eq!(compartments.len(), 7);
+
         let compartment = compartments.get(0);
         assert_eq!(compartment.id().get(), "Intake");
         assert!(!compartment.units().is_set());
@@ -531,9 +539,11 @@ mod tests {
 
         let species = model.species();
         assert!(species.is_set());
+
         let species = species.get().unwrap();
         assert!(!species.is_empty());
         assert_eq!(species.len(), 51);
+
         let specie = species.get(0);
         assert_eq!(specie.id().get(), "species_1");
         assert_eq!(specie.compartment().get(), "Intake");
@@ -565,5 +575,35 @@ mod tests {
         assert!(!specie_empty.constant().get());
         assert!(!specie_empty.conversion_factor().is_set());
         assert!(!specie_empty.annotation().is_set());
+    }
+
+    #[test]
+    pub fn test_parameters() {
+        let doc =
+            Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let parameters = model.parameters();
+        assert!(parameters.is_set());
+
+        let parameters = parameters.get().unwrap();
+        assert!(!parameters.is_empty());
+        assert_eq!(parameters.len(), 65);
+
+        let parameter = parameters.get(0);
+        assert!(parameter.constant().get());
+        assert_eq!(parameter.id().get(), "alfa7");
+        assert_eq!(parameter.name().get().unwrap(), "alfa7");
+        assert_eq!(parameter.value().get().unwrap(), 2.8067);
+        assert!(!parameter.units().is_set());
+        assert!(!parameter.annotation().is_set());
+
+        let parameter = parameters.pop();
+        assert!(parameter.constant().get());
+        assert_eq!(parameter.id().get(), "M");
+        assert_eq!(parameter.name().get().unwrap(), "M");
+        assert_eq!(parameter.value().get().unwrap(), 0.0155561);
+        assert!(!parameter.units().is_set());
+        assert!(!parameter.annotation().is_set());
     }
 }
