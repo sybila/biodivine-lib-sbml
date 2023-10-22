@@ -130,15 +130,36 @@ impl<Type: XmlWrapper> XmlList<Type> {
         }
     }
 
+    /// Insert a new element into the list at the last position similarly as in stack.
+    ///
+    /// # Panics
+    /// Panics if `value` cannot be attached to the list tag (it already has a parent,
+    /// or is itself the root container tag).
     pub fn push(&self, value: Type) {
         self.insert(self.len(), value)
     }
 
+    /// Remove an element from the last position similarly as in stack, and return it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the list is already empty or if the XML node at the given position
+    /// is not an element (for example text).
     pub fn pop(&self) -> Type {
         self.remove(self.len() - 1)
     }
 
-    /// Get number of elements contained in the list.
+    /// Get an element from the last position similarly as in stack, but without removing.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the list is already empty or if the XML node at the given position
+    /// is not an element (for example text).
+    pub fn top(&self) -> Type {
+        self.get(self.len() - 1)
+    }
+
+    /// Get the number of elements contained in the list.
     pub fn len(&self) -> usize {
         let doc = self.read_doc();
         self.raw_element().child_elements(doc.deref()).len()
