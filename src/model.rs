@@ -505,7 +505,7 @@ pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
     pub fn variable(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(self.xml_element(), "value")
+        RequiredProperty::new(self.xml_element(), "variable")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {
