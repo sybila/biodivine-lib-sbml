@@ -620,7 +620,7 @@ mod tests {
 
         let rules = rules.get().unwrap();
         assert!(!rules.is_empty());
-        assert_eq!(rules.len(), 10);
+        assert_eq!(rules.len(), 9);
 
         let rule = rules.get(0);
         assert_eq!(rule.variable().get(), "SUMRecTAINF");
@@ -711,5 +711,45 @@ mod tests {
         let single_asgnmnt = initial_asgnmnts.pop();
         assert_eq!(single_asgnmnt.symbol().get(), "Susceptible");
         assert!(single_asgnmnt.math().is_set());
+    }
+
+    #[test]
+    pub fn test_events() {
+        let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let events = model.events();
+        assert!(events.is_set());
+
+        let events = events.get().unwrap();
+        assert!(!events.is_empty());
+        assert_eq!(events.len(), 1);
+
+        let event = events.top();
+        assert_eq!(event.id().get().unwrap(), "Lockdown");
+        assert_eq!(event.meta_id().get().unwrap(), "COPASI13");
+        assert_eq!(event.name().get().unwrap(), "Lockdown");
+        assert!(!event.priority().is_set());
+        assert!(!event.delay().is_set());
+        assert!(!event.use_values_from_trigger_time().get());
+
+        let trigger = event.trigger();
+        assert!(trigger.is_set());
+
+        let trigger = trigger.get().unwrap();
+        assert!(trigger.initial_value().get());
+        assert!(!trigger.persistent().get());
+        assert!(trigger.math().is_set());
+
+        let assgnmnts = event.event_assignments();
+        assert!(assgnmnts.is_set());
+
+        let assgnmnts = assgnmnts.get().unwrap();
+        assert!(!assgnmnts.is_empty());
+        assert_eq!(assgnmnts.len(), 1);
+
+        let evt_assgnmnt = assgnmnts.top();
+        assert_eq!(evt_assgnmnt.variable().get(), "epsilon");
+        assert!(evt_assgnmnt.math().is_set());
     }
 }
