@@ -752,4 +752,15 @@ mod tests {
         assert_eq!(evt_assgnmnt.variable().get(), "epsilon");
         assert!(evt_assgnmnt.math().is_set());
     }
+
+    #[test]
+    pub fn test_constraints() {
+        let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
+        let model = doc.model().get().unwrap();
+
+        let constraints = model.constraints();
+        assert!(!constraints.is_set());
+        // constraints.ensure(); // possible deadlock
+        // assert!(constraints.is_set());
+    }
 }
