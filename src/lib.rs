@@ -131,8 +131,8 @@ mod tests {
     };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
-        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlDefault, XmlElement, XmlProperty,
-        XmlWrapper,
+        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
+        XmlProperty, XmlWrapper,
     };
     use crate::{sbase::SBase, Sbml};
 
@@ -760,7 +760,7 @@ mod tests {
 
         let constraints = model.constraints();
         assert!(!constraints.is_set());
-        // constraints.ensure(); // possible deadlock
-        // assert!(constraints.is_set());
+        constraints.ensure();
+        assert!(constraints.is_set());
     }
 }
