@@ -246,15 +246,19 @@ impl<Element: XmlWrapper, Child: OptionalXmlChild<XmlList<Element>>>
     fn ensure(&self) {
         if self.get_raw().is_none() {
             let url = self.namespace_url();
-            let list_element = {
+            let prefix: String = {
                 let doc = self.parent().read_doc();
-                let prefix = self.parent().element.closest_prefix(doc.deref(), url);
-                XmlElement::new_quantified(
-                    self.parent().document(),
-                    self.name(),
-                    (prefix.unwrap_or(""), url),
-                )
+                self.parent()
+                    .element
+                    .closest_prefix(doc.deref(), url)
+                    .unwrap_or("")
+                    .to_string()
             };
+            let list_element = XmlElement::new_quantified(
+                self.parent().document(),
+                self.name(),
+                (prefix.as_str(), url),
+            );
             self.set_raw(list_element);
         }
     }
