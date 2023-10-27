@@ -5,6 +5,7 @@ use crate::xml::{
 };
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
+use crate::sbase::SBase;
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -53,8 +54,8 @@ impl Model {
         )
     }
 
-    pub fn rules<T: Rule>(&self) -> OptionalChild<XmlList<T>> {
-        OptionalChild::new(self.xml_element(), "listOfRules", URL_SBML_CORE)
+    pub fn rules(&self) -> OptionalChild<XmlList<AbstractRule>> {
+        OptionalChild::new(self.as_xml(), "listOfRules", URL_SBML_CORE)
     }
 
     pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
@@ -310,10 +311,40 @@ impl InitialAssignment {
     }
 }
 
-pub trait Rule: XmlWrapper {
+pub enum RuleEnum {
+    // Other is used to represent rules that are only defined in (hypothetical) SBML extensions
+    // that are not covered by this library.
+    Other(AbstractRule),
+    Algebraic(AlgebraicRule),
+    Assignment(AssignmentRule),
+    Rate(RateRule)
+}
+
+pub trait Rule : SBase {
     fn math(&self) -> OptionalChild<Math> {
         OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
+}
+
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+pub struct AbstractRule(XmlElement);
+
+impl Rule for AbstractRule {}
+
+impl AbstractRule {
+
+    pub fn downcast(self) -> RuleEnum {
+        if let Some(rule) = AlgebraicRule::cast(self.clone()) {
+            RuleEnum::Algebraic(rule)
+        } else if let Some(rule) = AssignmentRule::cast(self.clone()) {
+            RuleEnum::Assignment(rule)
+        } else if let Some(rule) = RateRule::cast(self.clone()) {
+            RuleEnum::Rate(rule)
+        } else {
+            RuleEnum::Other(self)
+        }
+    }
+
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -321,12 +352,32 @@ pub struct AlgebraicRule(XmlElement);
 
 impl Rule for AlgebraicRule {}
 
+impl AlgebraicRule {
+
+    pub fn cast(rule: AbstractRule) -> Option<AlgebraicRule> {
+        if rule.name() == "algebraicRule" {
+            unsafe { Some(AlgebraicRule::unchecked_cast(rule)) }
+        } else {
+            None
+        }
+    }
+
+}
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AssignmentRule(XmlElement);
 
 impl Rule for AssignmentRule {}
 
 impl AssignmentRule {
+
+    pub fn cast(rule: AbstractRule) -> Option<AssignmentRule> {
+        if rule.name() == "assignmentRule" {
+            unsafe { Some(AssignmentRule::unchecked_cast(rule)) }
+        } else {
+            None
+        }
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.xml_element(), "variable")
     }
@@ -338,6 +389,15 @@ pub struct RateRule(XmlElement);
 impl Rule for RateRule {}
 
 impl RateRule {
+
+    pub fn cast(rule: AbstractRule) -> Option<RateRule> {
+        if rule.name() == "rateRule" {
+            unsafe { Some(RateRule::unchecked_cast(rule)) }
+        } else {
+            None
+        }
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.xml_element(), "variable")
     }
