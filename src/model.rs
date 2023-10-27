@@ -55,7 +55,7 @@ impl Model {
     }
 
     pub fn rules(&self) -> OptionalChild<XmlList<AbstractRule>> {
-        OptionalChild::new(self.as_xml(), "listOfRules", URL_SBML_CORE)
+        OptionalChild::new(self.xml_element(), "listOfRules", URL_SBML_CORE)
     }
 
     pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
@@ -355,7 +355,7 @@ impl Rule for AlgebraicRule {}
 impl AlgebraicRule {
 
     pub fn cast(rule: AbstractRule) -> Option<AlgebraicRule> {
-        if rule.name() == "algebraicRule" {
+        if rule.tag_name() == "algebraicRule" {
             unsafe { Some(AlgebraicRule::unchecked_cast(rule)) }
         } else {
             None
@@ -371,7 +371,7 @@ impl Rule for AssignmentRule {}
 impl AssignmentRule {
 
     pub fn cast(rule: AbstractRule) -> Option<AssignmentRule> {
-        if rule.name() == "assignmentRule" {
+        if rule.tag_name() == "assignmentRule" {
             unsafe { Some(AssignmentRule::unchecked_cast(rule)) }
         } else {
             None
@@ -391,7 +391,7 @@ impl Rule for RateRule {}
 impl RateRule {
 
     pub fn cast(rule: AbstractRule) -> Option<RateRule> {
-        if rule.name() == "rateRule" {
+        if rule.tag_name() == "rateRule" {
             unsafe { Some(RateRule::unchecked_cast(rule)) }
         } else {
             None
