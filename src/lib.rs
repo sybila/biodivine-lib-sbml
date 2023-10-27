@@ -125,9 +125,10 @@ impl Default for Sbml {
 mod tests {
     use std::ops::{Deref, DerefMut};
 
-    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
+    use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::model::{
-        AssignmentRule, BaseUnit, Compartment, Model, Rule, SimpleSpeciesReference,
+        AssignmentRule, BaseUnit, Compartment, Constraint, Math, Model, Rule,
+        SimpleSpeciesReference,
     };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -762,5 +763,44 @@ mod tests {
         assert!(!constraints.is_set());
         constraints.ensure();
         assert!(constraints.is_set());
+        let constraints = constraints.get().unwrap();
+
+        assert!(constraints.is_empty());
+        assert!(constraints.len() == 0);
+        assert!(!constraints.id().is_set());
+        assert!(!constraints.name().is_set());
+        assert!(!constraints.sbo_term().is_set());
+        assert!(!constraints.annotation().is_set());
+        assert!(!constraints.notes().is_set());
+        assert!(!constraints.meta_id().is_set());
+        assert_eq!(constraints.namespace_url(), URL_SBML_CORE);
+
+        let single = Constraint::default(model.document());
+        constraints.push(single.clone());
+        assert!(!constraints.is_empty());
+        assert!(constraints.len() == 1);
+        assert!(constraints.top().raw_element() == single.raw_element());
+
+        let single = constraints.top();
+        assert!(!single.math().is_set());
+        assert!(!single.message().is_set());
+
+        let math_el = Math::default(model.document());
+        let msg_el = XmlElement::new_quantified(model.document(), "message", NS_HTML);
+        msg_el.raw_element().set_text_content(
+            model.clone().write_doc().deref_mut(),
+            "Warning: Unsatisfied constraint.",
+        );
+        single.math().set(math_el);
+        single.message().set(msg_el);
+        assert!(single.math().is_set());
+        assert!(single.message().is_set());
+        assert!(single
+            .message()
+            .get()
+            .unwrap()
+            .raw_element()
+            .text_content(model.clone().read_doc().deref())
+            .starts_with("Warning:"));
     }
 }
