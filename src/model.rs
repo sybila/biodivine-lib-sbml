@@ -1,4 +1,4 @@
-use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{NS_MATHML, NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDefault, XmlDocument, XmlElement,
     XmlList, XmlWrapper,
@@ -85,6 +85,11 @@ impl FunctionDefinition {
 #[derive(Clone, Debug, XmlWrapper)]
 pub struct Math(XmlElement);
 
+impl XmlDefault for Math {
+    fn default(document: XmlDocument) -> Self {
+        unsafe { Math::unchecked_cast(XmlElement::new_quantified(document, "math", NS_MATHML)) }
+    }
+}
 /// Individual unit definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct UnitDefinition(XmlElement);
@@ -340,6 +345,18 @@ impl RateRule {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Constraint(XmlElement);
+
+impl XmlDefault for Constraint {
+    fn default(document: XmlDocument) -> Self {
+        unsafe {
+            Constraint::unchecked_cast(XmlElement::new_quantified(
+                document,
+                "constraint",
+                NS_SBML_CORE,
+            ))
+        }
+    }
+}
 
 impl Constraint {
     pub fn math(&self) -> OptionalChild<Math> {
