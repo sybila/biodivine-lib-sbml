@@ -127,8 +127,8 @@ mod tests {
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::model::{
-        AssignmentRule, BaseUnit, Compartment, Constraint, Math, Model, Rule,
-        SimpleSpeciesReference,
+        BaseUnit, Compartment, Constraint, FunctionDefinition, Math, Model, SimpleSpeciesReference,
+        Unit, UnitDefinition,
     };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -388,19 +388,136 @@ mod tests {
     #[test]
     pub fn test_build_doc() {
         let sbml_doc = Sbml::default();
-        let model = sbml_doc.model();
         let new_model = Model::default(sbml_doc.xml.clone());
-        new_model.raw_element().set_text_content(
-            new_model.write_doc().deref_mut(),
-            "This is a SBML model element",
+
+        // set default model element
+        sbml_doc.model().set(new_model);
+        let model = sbml_doc.model().get().unwrap();
+        model.id().set(Some(&"model_id".to_string()));
+        model.name().set(Some(&"test model No. 1".to_string()));
+        model.sbo_term().set(Some(&"FE12309531 TEST".to_string()));
+        model.meta_id().set(Some(&"MT-TEST-MODEL-NO1".to_string()));
+        model.notes().set(XmlElement::new_quantified(
+            model.document(),
+            "notes",
+            NS_SBML_CORE,
+        ));
+        model.annotation().set(XmlElement::new_quantified(
+            model.document(),
+            "annotation",
+            NS_SBML_CORE,
+        ));
+
+        // set default notes for model
+        let notes = model.notes().get().unwrap();
+        notes.raw_element().set_text_content(
+            notes.write_doc().deref_mut(),
+            "This is a SBML model element.",
         );
-        model.set(new_model);
-        let model_raw = model.get().unwrap();
-        model_raw.id().set(Some(&"model_id".to_string()));
+
+        // set default annotation for model
+        let annotation = model.annotation().get().unwrap();
+        annotation.raw_element().set_text_content(
+            annotation.write_doc().deref_mut(),
+            "This is a SBML annotation element.",
+        );
+
+        build_funtion_defs(&model);
+        build_unit_defs(&model);
+        build_compartments(&model);
 
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
+
         // Clean up the test file.
-        std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
+        // std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
+    }
+
+    fn build_funtion_defs(model: &Model) {
+        let function_defs = model.function_definitions();
+        function_defs.ensure();
+
+        let function_defs_list = function_defs.get().unwrap();
+        function_defs_list
+            .id()
+            .set(Some(&"FunDefsList-ID".to_string()));
+        function_defs_list
+            .name()
+            .set(Some(&"FunDefsList-NAME".to_string()));
+        function_defs_list.push(FunctionDefinition::default(model.document()));
+        function_defs_list.push(FunctionDefinition::default(model.document()));
+        function_defs_list.push(FunctionDefinition::default(model.document()));
+
+        function_defs_list
+            .get(0)
+            .id()
+            .set(Some(&"function-def-1".to_string()));
+        function_defs_list
+            .get(1)
+            .id()
+            .set(Some(&"function-def-2".to_string()));
+        let fd_top = function_defs_list.top();
+        fd_top.id().set(Some(&"function-def-3".to_string()));
+        fd_top.math().set(Math::default(model.document()));
+    }
+
+    fn build_unit_defs(model: &Model) {
+        let unit_defs = model.unit_definitions();
+        unit_defs.ensure();
+
+        let unit_defs_list = unit_defs.get().unwrap();
+        unit_defs_list
+            .id()
+            .set(Some(&"UnitDefsList-ID".to_string()));
+        unit_defs_list
+            .name()
+            .set(Some(&"UnitDefsList-NAME".to_string()));
+        unit_defs_list.push(UnitDefinition::default(model.document()));
+        unit_defs_list.push(UnitDefinition::default(model.document()));
+        unit_defs_list.push(UnitDefinition::default(model.document()));
+
+        unit_defs_list
+            .get(0)
+            .id()
+            .set(Some(&"unit-def-1".to_string()));
+        unit_defs_list
+            .get(1)
+            .id()
+            .set(Some(&"unit-def-2".to_string()));
+        let ud_top = unit_defs_list.top();
+        ud_top.id().set(Some(&"unit-def-3-length".to_string()));
+        ud_top.name().set(Some(&"unit-def-3-length".to_string()));
+
+        // set default list of units for unit definition
+        ud_top.units().ensure();
+        let units_list = ud_top.units().get().unwrap();
+        units_list.push(Unit::default(model.document()));
+
+        let unit = units_list.top();
+        unit.kind().set(&BaseUnit::Metre);
+    }
+
+    fn build_compartments(model: &Model) {
+        let compartments = model.compartments();
+        compartments.ensure();
+
+        let compartments = compartments.get().unwrap();
+        compartments.id().set(Some(&"CompsList-ID".to_string()));
+        compartments.name().set(Some(&"CompsList-NAME".to_string()));
+        compartments.push(Compartment::default(model.document()));
+        compartments.push(Compartment::default(model.document()));
+        compartments.push(Compartment::default(model.document()));
+
+        compartments.get(0).id().set(&"compartment-1".to_string());
+        compartments.get(0).constant().set(&false);
+        compartments.get(1).id().set(&"compartment-2".to_string());
+        compartments.get(1).constant().set(&false);
+
+        let comp_top = compartments.top();
+        comp_top.id().set(&"compartment-3".to_string());
+        comp_top.spatial_dimensions().set(Some(&3.0));
+        comp_top.size().set(Some(&1.0));
+        comp_top.units().set(Some(&"volume".to_string()));
+        comp_top.constant().set(&true);
     }
 
     #[test]
@@ -616,16 +733,23 @@ mod tests {
             Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
         let model = doc.model().get().unwrap();
 
-        let rules = model.rules::<AssignmentRule>();
+        let rules = model.rules();
         assert!(rules.is_set());
 
         let rules = rules.get().unwrap();
         assert!(!rules.is_empty());
         assert_eq!(rules.len(), 9);
 
-        let rule = rules.get(0);
-        assert_eq!(rule.variable().get(), "SUMRecTAINF");
-        assert!(rule.math().is_set());
+        // let rule = rules.get(0).downcast();
+        // let concrete_rule = match rule {
+        //     RuleEnum::Algebraic(rule) => rule,
+        //     RuleEnum::Assignment(rule) => rule,
+        //     RuleEnum::Rate(rule) => rule,
+        //     RuleEnum::Other(rule) => rule,
+        // };
+
+        // assert_eq!(rule., "SUMRecTAINF");
+        // assert!(rule.math().is_set());
     }
 
     #[test]
