@@ -1,11 +1,11 @@
 use crate::constants::namespaces::{NS_MATHML, NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
+use crate::sbase::SBase;
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, XmlDefault, XmlDocument, XmlElement,
-    XmlList, XmlWrapper,
+    OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault,
+    XmlDocument, XmlElement, XmlList, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
-use crate::sbase::SBase;
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -81,6 +81,18 @@ impl FunctionDefinition {
     }
 }
 
+impl XmlDefault for FunctionDefinition {
+    fn default(document: XmlDocument) -> Self {
+        unsafe {
+            FunctionDefinition::unchecked_cast(XmlElement::new_quantified(
+                document,
+                "functionDefinition",
+                NS_SBML_CORE,
+            ))
+        }
+    }
+}
+
 /// A [Math] element represents an [XmlElement] related to MathML which is
 /// separated from SBML specification.
 #[derive(Clone, Debug, XmlWrapper)]
@@ -98,6 +110,18 @@ pub struct UnitDefinition(XmlElement);
 impl UnitDefinition {
     pub fn units(&self) -> OptionalChild<XmlList<Unit>> {
         OptionalChild::new(self.xml_element(), "listOfUnits", URL_SBML_CORE)
+    }
+}
+
+impl XmlDefault for UnitDefinition {
+    fn default(document: XmlDocument) -> Self {
+        unsafe {
+            UnitDefinition::unchecked_cast(XmlElement::new_quantified(
+                document,
+                "unitDefinition",
+                NS_SBML_CORE,
+            ))
+        }
     }
 }
 
@@ -120,6 +144,20 @@ impl Unit {
 
     pub fn multiplier(&self) -> RequiredProperty<f64> {
         RequiredProperty::new(self.xml_element(), "multiplier")
+    }
+}
+
+impl XmlDefault for Unit {
+    fn default(document: XmlDocument) -> Self {
+        let unit = unsafe {
+            Unit::unchecked_cast(XmlElement::new_quantified(document, "unit", NS_SBML_CORE))
+        };
+
+        unit.kind().set(&BaseUnit::Dimensionless);
+        unit.multiplier().set(&1.0);
+        unit.scale().set(&0);
+        unit.exponent().set(&1.0);
+        unit
     }
 }
 
@@ -317,10 +355,10 @@ pub enum RuleEnum {
     Other(AbstractRule),
     Algebraic(AlgebraicRule),
     Assignment(AssignmentRule),
-    Rate(RateRule)
+    Rate(RateRule),
 }
 
-pub trait Rule : SBase {
+pub trait Rule: SBase {
     fn math(&self) -> OptionalChild<Math> {
         OptionalChild::new(self.xml_element(), "math", URL_MATHML)
     }
@@ -332,7 +370,6 @@ pub struct AbstractRule(XmlElement);
 impl Rule for AbstractRule {}
 
 impl AbstractRule {
-
     pub fn downcast(self) -> RuleEnum {
         if let Some(rule) = AlgebraicRule::cast(self.clone()) {
             RuleEnum::Algebraic(rule)
@@ -344,7 +381,6 @@ impl AbstractRule {
             RuleEnum::Other(self)
         }
     }
-
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -353,7 +389,6 @@ pub struct AlgebraicRule(XmlElement);
 impl Rule for AlgebraicRule {}
 
 impl AlgebraicRule {
-
     pub fn cast(rule: AbstractRule) -> Option<AlgebraicRule> {
         if rule.tag_name() == "algebraicRule" {
             unsafe { Some(AlgebraicRule::unchecked_cast(rule)) }
@@ -361,7 +396,6 @@ impl AlgebraicRule {
             None
         }
     }
-
 }
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AssignmentRule(XmlElement);
@@ -369,7 +403,6 @@ pub struct AssignmentRule(XmlElement);
 impl Rule for AssignmentRule {}
 
 impl AssignmentRule {
-
     pub fn cast(rule: AbstractRule) -> Option<AssignmentRule> {
         if rule.tag_name() == "assignmentRule" {
             unsafe { Some(AssignmentRule::unchecked_cast(rule)) }
@@ -389,7 +422,6 @@ pub struct RateRule(XmlElement);
 impl Rule for RateRule {}
 
 impl RateRule {
-
     pub fn cast(rule: AbstractRule) -> Option<RateRule> {
         if rule.tag_name() == "rateRule" {
             unsafe { Some(RateRule::unchecked_cast(rule)) }
