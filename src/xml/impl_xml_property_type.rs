@@ -74,6 +74,35 @@ impl XmlPropertyType for i32 {
     }
 }
 
+/// A "trivial" conversion between an XML attribute and a `u32` integer (non-negative `int` type
+/// in the SBML specification).
+///
+/// As far as I know, the default algorithm for parsing/printing integers should be equivalent
+/// to the representation expected by SBML.
+///
+/// ## Specification
+///  - Section 3.1.3; although non-negative variant is not mentioned explicitly, it later
+///    appears on some SBML structures.
+impl XmlPropertyType for u32 {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        if let Some(value) = value {
+            match value.parse::<u32>() {
+                Ok(x) => Ok(Some(x)),
+                Err(e) => Err(format!(
+                    "Value `{value}` does not represent a valid non-negative integer ({}).",
+                    e
+                )),
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
 /// A "trivial" conversion between an XML attribute and a `f64` floating-point number (`double`
 /// type in the SBML specification). Missing attribute value is interpreted as an error.
 ///

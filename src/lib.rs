@@ -9,6 +9,7 @@ use crate::constants::namespaces::URL_SBML_CORE;
 use crate::model::Model;
 use crate::xml::{XmlDocument, XmlElement};
 
+pub mod sbml;
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
 ///  - [XmlDocument] | A thread and memory safe reference to a [Document].

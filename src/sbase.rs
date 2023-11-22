@@ -1,7 +1,9 @@
-use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{
+    NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE, URL_SBML_QUAL,
+};
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
-    XmlWrapper,
+    OptionalChild, OptionalProperty, RequiredChild, RequiredProperty, XmlDocument, XmlElement,
+    XmlPropertyType, XmlWrapper,
 };
 
 // TODO:
@@ -57,10 +59,21 @@ pub(crate) trait SbmlUtils: SBase {
         OptionalChild::new(self.xml_element(), name, URL_SBML_CORE)
     }
 
+    #[inline(always)]
+    fn optional_qual_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
+        // TODO: Clean up this method once extensions are a thing.
+        OptionalChild::new(self.xml_element(), name, URL_SBML_QUAL)
+    }
+
     /// Create an instance of [OptionalChild] with the given `name` and using the MathML namespace.
     #[inline(always)]
     fn optional_math_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
         OptionalChild::new(self.xml_element(), name, URL_MATHML)
+    }
+
+    #[inline(always)]
+    fn required_math_child<T: XmlWrapper>(&self, name: &'static str) -> RequiredChild<T> {
+        RequiredChild::new(self.xml_element(), name, URL_MATHML)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the HTML namespace.
@@ -80,6 +93,16 @@ pub(crate) trait SbmlUtils: SBase {
         RequiredProperty::new(self.xml_element(), name)
     }
 
+    #[inline(always)]
+    fn required_qual_property<T: XmlPropertyType>(
+        &self,
+        name: &'static str,
+    ) -> RequiredProperty<T> {
+        // TODO: At the moment, properties ignore namespaces.
+        // TODO: Clean up once extensions are a thing.
+        RequiredProperty::new(self.xml_element(), name)
+    }
+
     /// Create an instance of a [OptionalProperty] with the given `name` which adheres to
     /// the SBML namespace.
     #[inline(always)]
@@ -88,6 +111,16 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
     ) -> OptionalProperty<T> {
         // TODO: At the moment, properties ignore namespaces.
+        OptionalProperty::new(self.xml_element(), name)
+    }
+
+    #[inline(always)]
+    fn optional_qual_property<T: XmlPropertyType>(
+        &self,
+        name: &'static str,
+    ) -> OptionalProperty<T> {
+        // TODO: At the moment, properties ignore namespaces.
+        // TODO: Clean up once extensions are a thing.
         OptionalProperty::new(self.xml_element(), name)
     }
 }
