@@ -890,7 +890,7 @@ mod tests {
         let constraints = constraints.get().unwrap();
 
         assert!(constraints.is_empty());
-        assert!(constraints.len() == 0);
+        assert_eq!(constraints.len(), 0);
         assert!(!constraints.id().is_set());
         assert!(!constraints.name().is_set());
         assert!(!constraints.sbo_term().is_set());
@@ -902,8 +902,8 @@ mod tests {
         let single = Constraint::default(model.document());
         constraints.push(single.clone());
         assert!(!constraints.is_empty());
-        assert!(constraints.len() == 1);
-        assert!(constraints.top().raw_element() == single.raw_element());
+        assert_eq!(constraints.len(), 1);
+        assert_eq!(constraints.top().raw_element(), single.raw_element());
 
         let single = constraints.top();
         assert!(!single.math().is_set());
