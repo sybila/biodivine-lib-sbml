@@ -329,11 +329,11 @@ impl XmlSupertype for AbstractRule {}
 
 impl AbstractRule {
     pub fn cast(self) -> RuleTypes {
-        if let Some(rule) = self.downcast_checked::<AlgebraicRule>() {
+        if let Some(rule) = self.try_downcast::<AlgebraicRule>() {
             RuleTypes::Algebraic(rule)
-        } else if let Some(rule) = self.downcast_checked::<AssignmentRule>() {
+        } else if let Some(rule) = self.try_downcast::<AssignmentRule>() {
             RuleTypes::Assignment(rule)
-        } else if let Some(rule) = self.downcast_checked::<RateRule>() {
+        } else if let Some(rule) = self.try_downcast::<RateRule>() {
             RuleTypes::Rate(rule)
         } else {
             RuleTypes::Other(self)

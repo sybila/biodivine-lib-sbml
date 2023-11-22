@@ -10,12 +10,12 @@ pub trait XmlSubtype<Super: XmlSupertype>: XmlWrapper {
     ///
     /// Typically, this checks the name of the XML tag, but in som cases could also
     /// involve other properties of the XML tag.
-    fn cast_from_super_checked(value: &Super) -> Option<Self>;
+    fn try_cast_from_super(value: &Super) -> Option<Self>;
 
     /// Create a value of `Self` from the provided `Super` type.
     /// Panics when the cast is not successful.
     fn cast_from_super(value: &Super) -> Self {
-        Self::cast_from_super_checked(value).unwrap_or_else(|| {
+        Self::try_cast_from_super(value).unwrap_or_else(|| {
             panic!(
                 "Cannot cast element of type `{}` as type `{}`.",
                 std::any::type_name::<Super>(),
@@ -41,9 +41,9 @@ pub trait XmlSupertype: XmlWrapper {
     /// Try to cast the value of `Self` as the value of `Sub` type. The `Sub` type must
     /// implement the appropriate [XmlSubtype] trait.
     ///
-    /// See also [XmlSubtype::cast_from_super_checked].
-    fn downcast_checked<Sub: XmlSubtype<Self>>(&self) -> Option<Sub> {
-        Sub::cast_from_super_checked(self)
+    /// See also [XmlSubtype::try_cast_from_super].
+    fn try_downcast<Sub: XmlSubtype<Self>>(&self) -> Option<Sub> {
+        Sub::try_cast_from_super(self)
     }
 
     /// Cast the value of `Self` as the value of `Sub` type.
@@ -61,7 +61,7 @@ pub trait XmlSupertype: XmlWrapper {
 
     /// Returns `true` if `self` is of type `Sub`, i.e. it can be safely casted to `Sub`.
     fn is_instance<Sub: XmlSubtype<Self>>(&self) -> bool {
-        self.downcast_checked::<Sub>().is_some()
+        self.try_downcast::<Sub>().is_some()
     }
 }
 
@@ -72,7 +72,7 @@ pub trait XmlNamedSubtype<Super: XmlSupertype>: XmlSubtype<Super> {
 }
 
 impl<Super: XmlSupertype, Sub: XmlNamedSubtype<Super>> XmlSubtype<Super> for Sub {
-    fn cast_from_super_checked(value: &Super) -> Option<Self> {
+    fn try_cast_from_super(value: &Super) -> Option<Self> {
         if value.tag_name() == Self::expected_tag_name() {
             unsafe { Some(Self::unchecked_cast(value.xml_element().clone())) }
         } else {
