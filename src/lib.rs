@@ -157,7 +157,7 @@ impl Default for Sbml {
 
 #[cfg(test)]
 mod tests {
-    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY};
+    use crate::constants::namespaces::{NS_EMPTY, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::model::{Compartment, SbmlModel};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -325,7 +325,7 @@ mod tests {
         let notes_elem = notes.get();
         assert!(notes_elem.is_some(), "Notes does not contain any element.");
         assert_eq!(
-            notes_elem.unwrap().name(),
+            notes_elem.unwrap().tag_name(),
             "notes",
             "Wrong name of Notes child."
         );
@@ -431,5 +431,63 @@ mod tests {
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
         // Clean up the test file.
         std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
+    }
+
+    #[test]
+    pub fn test_sbase() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model: SbmlModel = doc.model().get().unwrap();
+
+        let id = model.id();
+        assert!(id.is_set());
+        assert!(id.name() == "id");
+        assert!(id.element().raw_element() == model.raw_element());
+        assert!(id.get().unwrap() == "model_id");
+        id.set(Some(&"new_model_id".to_string()));
+        assert!(id.get().unwrap() == "new_model_id");
+        id.clear();
+        assert!(!id.is_set());
+
+        let name = model.name();
+        assert!(!name.is_set());
+        assert!(name.name() == "name");
+        assert!(name.element().raw_element() == model.raw_element());
+        name.set(Some(&"model_name".to_string()));
+        assert!(name.get().unwrap() == "model_name");
+        name.clear();
+        assert!(!name.is_set());
+
+        let meta_id = model.meta_id();
+        assert!(meta_id.is_set());
+        assert!(meta_id.name() == "metaid");
+        assert!(meta_id.element().raw_element() == model.raw_element());
+        assert!(meta_id.get().unwrap() == "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d");
+        meta_id.set(Some(&"new_meta_id_12345".to_string()));
+        assert!(meta_id.get().unwrap() == "new_meta_id_12345");
+        meta_id.clear();
+        assert!(!meta_id.is_set());
+
+        let sbo_term = model.sbo_term();
+        assert!(!sbo_term.is_set());
+        assert!(sbo_term.name() == "sboTerm");
+        assert!(name.element().raw_element() == model.raw_element());
+        sbo_term.set(Some(&"model_sbo_term".to_string()));
+        assert!(sbo_term.get().unwrap() == "model_sbo_term");
+        sbo_term.clear();
+        assert!(!sbo_term.is_set());
+
+        let notes = model.notes();
+        assert!(notes.is_set());
+        assert!(notes.parent().raw_element() == model.raw_element());
+        assert!(notes.name() == "notes");
+        assert!(notes.namespace_url() == URL_SBML_CORE);
+        assert!(notes.get().is_some());
+
+        let annotation = model.annotation();
+        assert!(annotation.is_set());
+        assert!(annotation.parent().raw_element() == model.raw_element());
+        assert!(annotation.name() == "annotation");
+        assert!(annotation.namespace_url() == URL_SBML_CORE);
+        assert!(annotation.get().is_some());
     }
 }

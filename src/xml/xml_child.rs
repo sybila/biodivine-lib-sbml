@@ -72,12 +72,12 @@ pub trait XmlChild<T: XmlWrapper> {
         let parent = element.raw_element();
 
         // First, check that the new value has the correct name and namespace.
-        if value.name() != self.name() || value.namespace_url() != self.namespace_url() {
+        if value.tag_name() != self.name() || value.namespace_url() != self.namespace_url() {
             panic!(
                 "Cannot set XML child `({},{})` to value `({},{})`.",
                 self.name(),
                 self.namespace_url(),
-                value.name(),
+                value.tag_name(),
                 value.namespace_url(),
             )
         }
@@ -246,15 +246,19 @@ impl<Element: XmlWrapper, Child: OptionalXmlChild<XmlList<Element>>>
     fn ensure(&self) {
         if self.get_raw().is_none() {
             let url = self.namespace_url();
-            let list_element = {
+            let prefix: String = {
                 let doc = self.parent().read_doc();
-                let prefix = self.parent().element.closest_prefix(doc.deref(), url);
-                XmlElement::new_quantified(
-                    self.parent().document(),
-                    self.name(),
-                    (prefix.unwrap_or(""), url),
-                )
+                self.parent()
+                    .element
+                    .closest_prefix(doc.deref(), url)
+                    .unwrap_or("")
+                    .to_string()
             };
+            let list_element = XmlElement::new_quantified(
+                self.parent().document(),
+                self.name(),
+                (prefix.as_str(), url),
+            );
             self.set_raw(list_element);
         }
     }
