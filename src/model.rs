@@ -2,7 +2,7 @@ use crate::constants::namespaces::{NS_MATHML, NS_SBML_CORE, URL_HTML, URL_MATHML
 use crate::sbase::SBase;
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList, XmlWrapper,
+    XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
@@ -349,7 +349,7 @@ impl InitialAssignment {
     }
 }
 
-pub enum RuleEnum {
+pub enum RuleTypes {
     // Other is used to represent rules that are only defined in (hypothetical) SBML extensions
     // that are not covered by this library.
     Other(AbstractRule),
@@ -368,17 +368,18 @@ pub trait Rule: SBase {
 pub struct AbstractRule(XmlElement);
 
 impl Rule for AbstractRule {}
+impl XmlSupertype for AbstractRule {}
 
 impl AbstractRule {
-    pub fn downcast(self) -> RuleEnum {
-        if let Some(rule) = AlgebraicRule::cast(self.clone()) {
-            RuleEnum::Algebraic(rule)
-        } else if let Some(rule) = AssignmentRule::cast(self.clone()) {
-            RuleEnum::Assignment(rule)
-        } else if let Some(rule) = RateRule::cast(self.clone()) {
-            RuleEnum::Rate(rule)
+    pub fn cast(self) -> RuleTypes {
+        if let Some(rule) = self.try_downcast::<AlgebraicRule>() {
+            RuleTypes::Algebraic(rule)
+        } else if let Some(rule) = self.try_downcast::<AssignmentRule>() {
+            RuleTypes::Assignment(rule)
+        } else if let Some(rule) = self.try_downcast::<RateRule>() {
+            RuleTypes::Rate(rule)
         } else {
-            RuleEnum::Other(self)
+            RuleTypes::Other(self)
         }
     }
 }
@@ -388,29 +389,24 @@ pub struct AlgebraicRule(XmlElement);
 
 impl Rule for AlgebraicRule {}
 
-impl AlgebraicRule {
-    pub fn cast(rule: AbstractRule) -> Option<AlgebraicRule> {
-        if rule.tag_name() == "algebraicRule" {
-            unsafe { Some(AlgebraicRule::unchecked_cast(rule)) }
-        } else {
-            None
-        }
+impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
+    fn expected_tag_name() -> &'static str {
+        "algebraicRule"
     }
 }
+
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AssignmentRule(XmlElement);
 
 impl Rule for AssignmentRule {}
 
-impl AssignmentRule {
-    pub fn cast(rule: AbstractRule) -> Option<AssignmentRule> {
-        if rule.tag_name() == "assignmentRule" {
-            unsafe { Some(AssignmentRule::unchecked_cast(rule)) }
-        } else {
-            None
-        }
+impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
+    fn expected_tag_name() -> &'static str {
+        "assignmentRule"
     }
+}
 
+impl AssignmentRule {
     pub fn variable(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.xml_element(), "variable")
     }
@@ -421,15 +417,13 @@ pub struct RateRule(XmlElement);
 
 impl Rule for RateRule {}
 
-impl RateRule {
-    pub fn cast(rule: AbstractRule) -> Option<RateRule> {
-        if rule.tag_name() == "rateRule" {
-            unsafe { Some(RateRule::unchecked_cast(rule)) }
-        } else {
-            None
-        }
+impl XmlNamedSubtype<AbstractRule> for RateRule {
+    fn expected_tag_name() -> &'static str {
+        "rateRule"
     }
+}
 
+impl RateRule {
     pub fn variable(&self) -> RequiredProperty<String> {
         RequiredProperty::new(self.xml_element(), "variable")
     }
