@@ -31,6 +31,10 @@ mod impl_xml_child;
 /// specification Section 3.1.
 mod impl_xml_property_type;
 
+/// Defines [XmlSubtype] and [XmlSupertype] which are helpful for declaring inheritance
+/// hierarchies of [XmlWrapper] types.
+mod xml_inheritance;
+
 pub use crate::xml::impl_xml_child::{
     Child, DynamicChild, OptionalChild, OptionalDynamicChild, RequiredChild, RequiredDynamicChild,
 };
@@ -40,6 +44,7 @@ pub use crate::xml::impl_xml_property::{
 };
 pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild, XmlChildDefault};
 pub use crate::xml::xml_element::XmlElement;
+pub use crate::xml::xml_inheritance::{XmlNamedSubtype, XmlSubtype, XmlSupertype};
 pub use crate::xml::xml_list::XmlList;
 pub use crate::xml::xml_property::{OptionalXmlProperty, RequiredXmlProperty, XmlProperty};
 pub use crate::xml::xml_property_type::XmlPropertyType;
