@@ -245,6 +245,11 @@ impl Compartment {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Species(XmlElement);
 
+impl XmlDefault for Species {
+    fn default(document: XmlDocument) -> Self {
+        Species::new_empty(document, "species")
+    }
+}
 impl Species {
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
@@ -288,6 +293,11 @@ impl Species {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Parameter(XmlElement);
 
+impl XmlDefault for Parameter {
+    fn default(document: XmlDocument) -> Self {
+        Parameter::new_empty(document, "parameter")
+    }
+}
 impl Parameter {
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
@@ -309,6 +319,11 @@ impl Parameter {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct InitialAssignment(XmlElement);
 
+impl XmlDefault for InitialAssignment {
+    fn default(document: XmlDocument) -> Self {
+        InitialAssignment::new_empty(document, "initialAssignment")
+    }
+}
 impl InitialAssignment {
     pub fn symbol(&self) -> RequiredProperty<String> {
         self.required_sbml_property("symbol")
@@ -338,6 +353,7 @@ pub trait Rule: SBase {
 pub struct AbstractRule(XmlElement);
 
 impl Rule for AbstractRule {}
+
 impl XmlSupertype for AbstractRule {}
 
 impl AbstractRule {
@@ -352,11 +368,20 @@ impl AbstractRule {
             RuleTypes::Other(self)
         }
     }
+
+    pub fn default(document: XmlDocument, tag_name: &String) -> Self {
+        AbstractRule::new_empty(document, tag_name)
+    }
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AlgebraicRule(XmlElement);
 
+impl XmlDefault for AlgebraicRule {
+    fn default(document: XmlDocument) -> Self {
+        AlgebraicRule::new_empty(document, "algebraicRule")
+    }
+}
 impl Rule for AlgebraicRule {}
 
 impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
@@ -368,6 +393,11 @@ impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AssignmentRule(XmlElement);
 
+impl XmlDefault for AssignmentRule {
+    fn default(document: XmlDocument) -> Self {
+        AssignmentRule::new_empty(document, "assignmentRule")
+    }
+}
 impl Rule for AssignmentRule {}
 
 impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
@@ -384,6 +414,12 @@ impl AssignmentRule {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct RateRule(XmlElement);
+
+impl XmlDefault for RateRule {
+    fn default(document: XmlDocument) -> Self {
+        RateRule::new_empty(document, "rateRule")
+    }
+}
 
 impl Rule for RateRule {}
 
@@ -420,6 +456,12 @@ impl Constraint {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Reaction(XmlElement);
+
+impl XmlDefault for Reaction {
+    fn default(document: XmlDocument) -> Self {
+        Reaction::new_empty(document, "reaction")
+    }
+}
 
 impl Reaction {
     pub fn id(&self) -> RequiredProperty<String> {
@@ -460,6 +502,11 @@ pub trait SimpleSpeciesReference: SBase {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct SpeciesReference(XmlElement);
 
+impl XmlDefault for SpeciesReference {
+    fn default(document: XmlDocument) -> Self {
+        SpeciesReference::new_empty(document, "speciesReference")
+    }
+}
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
@@ -475,10 +522,22 @@ impl SpeciesReference {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct ModifierSpeciesReference(XmlElement);
 
+impl XmlDefault for ModifierSpeciesReference {
+    fn default(document: XmlDocument) -> Self {
+        ModifierSpeciesReference::new_empty(document, "modifierSpeciesReference")
+    }
+}
+
 impl SimpleSpeciesReference for ModifierSpeciesReference {}
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct KineticLaw(XmlElement);
+
+impl XmlDefault for KineticLaw {
+    fn default(document: XmlDocument) -> Self {
+        KineticLaw::new_empty(document, "kineticLaw")
+    }
+}
 
 impl KineticLaw {
     pub fn math(&self) -> OptionalChild<Math> {
@@ -492,6 +551,12 @@ impl KineticLaw {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct LocalParameter(XmlElement);
+
+impl XmlDefault for LocalParameter {
+    fn default(document: XmlDocument) -> Self {
+        LocalParameter::new_empty(document, "localParameter")
+    }
+}
 
 impl LocalParameter {
     pub fn id(&self) -> RequiredProperty<String> {
@@ -510,6 +575,11 @@ impl LocalParameter {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Event(XmlElement);
 
+impl XmlDefault for Event {
+    fn default(document: XmlDocument) -> Self {
+        Event::new_empty(document, "event")
+    }
+}
 impl Event {
     pub fn use_values_from_trigger_time(&self) -> RequiredProperty<bool> {
         self.required_sbml_property("useValuesFromTriggerTime")
@@ -535,6 +605,12 @@ impl Event {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Trigger(XmlElement);
 
+impl XmlDefault for Trigger {
+    fn default(document: XmlDocument) -> Self {
+        Trigger::new_empty(document, "trigger")
+    }
+}
+
 impl Trigger {
     pub fn initial_value(&self) -> RequiredProperty<bool> {
         self.required_sbml_property("initialValue")
@@ -552,6 +628,12 @@ impl Trigger {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Priority(XmlElement);
 
+impl XmlDefault for Priority {
+    fn default(document: XmlDocument) -> Self {
+        Priority::new_empty(document, "priority")
+    }
+}
+
 impl Priority {
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
@@ -561,6 +643,12 @@ impl Priority {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Delay(XmlElement);
 
+impl XmlDefault for Delay {
+    fn default(document: XmlDocument) -> Self {
+        Delay::new_empty(document, "delay")
+    }
+}
+
 impl Delay {
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
@@ -569,6 +657,12 @@ impl Delay {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct EventAssignment(XmlElement);
+
+impl XmlDefault for EventAssignment {
+    fn default(document: XmlDocument) -> Self {
+        EventAssignment::new_empty(document, "eventAssignment")
+    }
+}
 
 impl EventAssignment {
     pub fn variable(&self) -> RequiredProperty<String> {
