@@ -369,7 +369,7 @@ impl AbstractRule {
         }
     }
 
-    pub fn default(document: XmlDocument, tag_name: &String) -> Self {
+    pub fn default(document: XmlDocument, tag_name: &str) -> Self {
         AbstractRule::new_empty(document, tag_name)
     }
 }
