@@ -1,10 +1,12 @@
 use crate::constants::namespaces::NS_MATHML;
 use crate::sbase::{SBase, SbmlUtils};
+use crate::validation::SbmlIssue;
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault,
     XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
+use std::ops::Deref;
 use strum_macros::{Display, EnumString};
 
 /// A type-safe representation of an SBML <model> element.
@@ -58,6 +60,13 @@ impl Model {
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
+    }
+
+    pub fn apply_rule_10102(&self, issues: &mut Vec<SbmlIssue>) {
+        let rule_number = "10102".to_string();
+        let doc = self.document().read().unwrap().deref();
+
+        todo!()
     }
 }
 
