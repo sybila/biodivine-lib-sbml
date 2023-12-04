@@ -92,21 +92,7 @@ impl<Type: XmlWrapper> XmlList<Type> {
     /// Panics if `index > len`, or when `value` cannot be attached to the list tag
     /// (it already has a parent, or is itself the root container tag).
     pub fn insert(&self, index: usize, value: Type) {
-        let mut doc = self.write_doc();
-        let to_insert = value.raw_element().as_node();
-        let result = self
-            .raw_element()
-            .insert_child(doc.deref_mut(), index, to_insert);
-        match result {
-            Ok(_) => {}
-            Err(xml_doc::Error::HasAParent) => {
-                panic!("Trying to insert a tag that already has a parent.")
-            }
-            Err(xml_doc::Error::ContainerCannotMove) => {
-                panic!("Trying to insert the root container tag as a child element.")
-            }
-            _ => unreachable!(),
-        }
+        value.try_attach_at(self, Some(index)).unwrap();
     }
 
     /// Remove an element at the given position and return the removed value.
