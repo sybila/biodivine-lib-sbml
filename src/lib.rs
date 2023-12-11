@@ -1,15 +1,13 @@
-use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
-use xml_doc::Document;
+use xml_doc::{Document, Element};
 
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
-use crate::model::Model;
-use crate::validation::{apply_rule_10102, SbmlIssue};
-use crate::xml::{XmlDocument, XmlElement};
+use crate::core::Model;
+use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -31,15 +29,9 @@ use crate::xml::{XmlDocument, XmlElement};
 ///  is not known at compile time.
 pub mod xml;
 
-pub mod sbase;
-
-pub mod model;
+pub mod core;
 
 pub mod constants;
-
-/// Declares the [SbmlValidate] trait and should also contain other relevant
-/// algorithms/implementations for validation.
-pub mod validation;
 
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
@@ -115,7 +107,11 @@ impl Sbml {
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
     /// UTF-16, ISO 8859-1, GBK or EUC-KR.
     pub fn validate(&self, issues: &mut Vec<SbmlIssue>) {
-        apply_rule_10102(self.xml.read().unwrap().deref(), &self, issues);
+        self.apply_rule_10102(issues);
+
+        if let Some(model) = self.model().get() {
+            model.validate(issues);
+        }
     }
 }
 
@@ -133,21 +129,39 @@ impl Default for Sbml {
     }
 }
 
+pub struct SbmlIssue {
+    /// Refers to the "raw" XML element where the issue occurred.
+    pub element: Element,
+    pub severity: SbmlIssueSeverity,
+    pub rule: String,
+    pub message: String,
+}
+
+pub enum SbmlIssueSeverity {
+    /// An issue that makes the document impossible to read correctly (e.g. a function is
+    /// used but not declared).
+    Error,
+    /// An issue that suggests a possible error but does not necessarily make the document
+    /// invalid (e.g. a variable is declared but never used).
+    Warning,
+    /// A suggestion that would improve the document but does not represent a significant
+    /// issue (e.g. an property is included when it does not have to be, or unknown tags
+    /// or attributes are present in the document, e.g. due to the use of unofficial extensions).
+    Info,
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{
-        BaseUnit, Compartment, Constraint, FunctionDefinition, Math, Model, SimpleSpeciesReference,
-        Unit, UnitDefinition,
-    };
+    use crate::core::*;
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
         XmlProperty, XmlWrapper,
     };
-    use crate::{sbase::SBase, Sbml};
+    use crate::Sbml;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
     /// Additionally checks if `Model` retrieval returns correct child.

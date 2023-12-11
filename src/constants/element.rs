@@ -1,6 +1,12 @@
 use phf::phf_map;
 
-pub const ALLOWED_SBASE_ATTRIBUTES: &[&str] = &["id", "name", "sboTerm", "metaid"];
+macro_rules! extended_sbase {
+    ($($y:expr),*) => {
+        &["id", "name", "sboTerm", "metaid", $($y),*]
+    };
+}
+
+pub const ALLOWED_SBASE_ATTRIBUTES: &[&str] = extended_sbase!();
 pub const ALLOWED_SBASE_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {};
 
 pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
@@ -10,38 +16,38 @@ pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
     "listOfUnitDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
     "unitDefinition" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfUnits" => ALLOWED_SBASE_ATTRIBUTES,
-    "unit" => &["id", "name", "sboTerm", "metaid", "kind", "exponent", "scale", "multiplier"],
+    "unit" => extended_sbase!("kind", "exponent", "scale", "multiplier"),
     "listOfCompartments" => ALLOWED_SBASE_ATTRIBUTES,
-    "compartment" => &["id", "name", "sboTerm", "metaid", "spatialDimensions", "size", "units", "constant"],
+    "compartment" => extended_sbase!("spatialDimensions", "size", "units", "constant"),
     "listOfSpecies" => ALLOWED_SBASE_ATTRIBUTES,
-    "species" => &["id", "name", "sboTerm", "metaid", "compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor"],
+    "species" => extended_sbase!("compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor"),
     "listOfParameters" => ALLOWED_SBASE_ATTRIBUTES,
-    "parameter" => &["id", "name", "sboTerm", "metaid", "value", "units", "constant"],
+    "parameter" => extended_sbase!("value", "units", "constant"),
     "listOfInitialAssignments" => ALLOWED_SBASE_ATTRIBUTES,
-    "initialAssignment" =>&["id", "name", "sboTerm", "metaid", "symbol"],
+    "initialAssignment" => extended_sbase!("symbol"),
     "listOfRules" => ALLOWED_SBASE_ATTRIBUTES,
     "algebraicRule" => ALLOWED_SBASE_ATTRIBUTES,
-    "assignmentRule" => &["id", "name", "sboTerm", "metaid", "variable"],
-    "rateRule" => &["id", "name", "sboTerm", "metaid", "variable"],
+    "assignmentRule" => extended_sbase!("variable"),
+    "rateRule" => extended_sbase!("variable"),
     "listOfConstraints" => ALLOWED_SBASE_ATTRIBUTES,
     "constraint" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfReactions" => ALLOWED_SBASE_ATTRIBUTES,
-    "reaction" => &["id", "name", "sboTerm", "metaid", "reversible", "compartment"],
+    "reaction" => extended_sbase!("reversible", "compartment"),
     "listOfReactants" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfProducts" => ALLOWED_SBASE_ATTRIBUTES,
-    "speciesReference" => &["id", "name", "sboTerm", "metaid", "species", "stoichiometry", "constant"],
+    "speciesReference" => extended_sbase!("species", "stoichiometry", "constant"),
     "listOfModifiers" => ALLOWED_SBASE_ATTRIBUTES,
-    "modifierSpeciesReference" => &["id", "name", "sboTerm", "metaid", "species"],
+    "modifierSpeciesReference" => extended_sbase!("species"),
     "kineticLaw" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfLocalParameters" => ALLOWED_SBASE_ATTRIBUTES,
-    "localParameter" => &["id", "name", "sboTerm", "metaid", "value", "units"],
+    "localParameter" => extended_sbase!("value", "units"),
     "listOfEvents" => ALLOWED_SBASE_ATTRIBUTES,
-    "event" => &["id", "name", "sboTerm", "metaid", "useValuesFromTrigger"],
-    "trigger" => &["id", "name", "sboTerm", "metaid", "initialValue", "persistent"],
+    "event" => extended_sbase!("useValuesFromTrigger"),
+    "trigger" => extended_sbase!("initialValue", "persistent"),
     "priority" => ALLOWED_SBASE_ATTRIBUTES,
     "delay" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfEventAssignments" => ALLOWED_SBASE_ATTRIBUTES,
-    "eventAssignment" => &["id", "name", "sboTerm", "metaid", "variable"]
+    "eventAssignment" => extended_sbase!("variable"),
 };
 
 pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {

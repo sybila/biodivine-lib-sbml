@@ -1,7 +1,6 @@
-use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::validation::SbmlIssue;
+use biodivine_lib_sbml::core::SBase;
 use biodivine_lib_sbml::xml::{OptionalXmlChild, OptionalXmlProperty};
-use biodivine_lib_sbml::Sbml;
+use biodivine_lib_sbml::{Sbml, SbmlIssue};
 
 // To run this example, execute `cargo run --example basic_example`.
 // If you want to add command line arguments, you can use

@@ -46,7 +46,7 @@ pub fn derive_xml_wrapper(item: TokenStream) -> TokenStream {
                 &self.0
             }}
 
-            unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {{
+            unsafe fn unchecked_cast<T: crate::xml::XmlWrapper>(element: T) -> Self {{
                 Self(element.xml_element().clone())
             }}
         }}
@@ -63,7 +63,7 @@ pub fn derive_sbase(item: TokenStream) -> TokenStream {
     let ttype = ast.ident.to_string();
     let result = format!(
         r#"
-        impl crate::sbase::SBase for {ttype} {{}}
+        impl crate::core::SBase for {ttype} {{}}
     "#
     );
     result.parse().unwrap()
