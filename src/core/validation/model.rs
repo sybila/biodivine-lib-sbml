@@ -1,17 +1,23 @@
 use crate::core::Model;
-use crate::xml::XmlWrapper;
+use crate::xml::{OptionalXmlChild, XmlWrapper};
 use crate::SbmlIssue;
-use std::ops::Deref;
 
 impl Model {
-    pub(crate) fn validate(&self, _issues: &mut Vec<SbmlIssue>) {
-        unimplemented!()
+    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+        self.apply_rule_10102(issues);
+
+        if self.function_definitions().is_set() {
+            self.validate_list_of_function_definitions(issues);
+        }
     }
 
-    pub(crate) fn apply_rule_10102(&self, _issues: &mut Vec<SbmlIssue>) {
-        let _rule_number = "10102".to_string();
-        let _doc = self.document().read().unwrap().deref();
+    fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.function_definitions().get().unwrap();
+        list.apply_rule_10102(issues);
 
-        todo!()
+        for i in 0..list.len() {
+            let function_def = list.get(i);
+            function_def.validate(issues);
+        }
     }
 }
