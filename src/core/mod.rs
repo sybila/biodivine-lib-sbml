@@ -12,7 +12,7 @@ mod sbase;
 mod species;
 mod unit;
 mod unit_definition;
-mod validation;
+pub(crate) mod validation;
 
 pub use compartment::Compartment;
 pub use constraint::Constraint;
