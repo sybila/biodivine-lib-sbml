@@ -12,10 +12,10 @@ macro_rules! extended_sbase_children {
     };
 }
 pub const ALLOWED_SBASE_ATTRIBUTES: &[&str] = extended_sbase_attributes!();
-pub const ALLOWED_SBASE_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {};
+pub const ALLOWED_SBASE_CHILDREN: &[&str] = extended_sbase_children!();
 
 pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
-    "sbase" => extended_sbase_attributes!("xmlns", "level", "version"),
+    "sbml" => extended_sbase_attributes!("xmlns", "level", "version"),
     "model"=> ALLOWED_SBASE_ATTRIBUTES,
     "listOfFunctionDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
     "functionDefinition" => ALLOWED_SBASE_ATTRIBUTES,
