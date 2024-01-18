@@ -1,7 +1,10 @@
-use crate::xml::OptionalXmlChild;
+use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN};
 use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
+use std::collections::HashMap;
 use std::ops::Deref;
+use xml_doc::Element;
 
+mod function_definition;
 mod model;
 
 impl Sbml {
@@ -24,17 +27,83 @@ impl Sbml {
 
         if let Some(root_element) = doc.root_element() {
             if root_element.name(doc.deref()) == "sbml" {
-                if let Some(model) = self.model().get() {
-                    model.apply_rule_10102(issues);
-                }
+                validate_allowed_attributes(
+                    rule_number.clone(),
+                    root_element,
+                    root_element.name(doc.deref()),
+                    root_element.attributes(doc.deref()),
+                    issues,
+                );
+
+                validate_allowed_children(
+                    rule_number.clone(),
+                    root_element,
+                    root_element.name(doc.deref()),
+                    root_element
+                        .children(doc.deref())
+                        .iter()
+                        .map(|node| node.as_element().unwrap().full_name(doc.deref()))
+                        .collect(),
+                    issues,
+                );
             } else {
                 issues.push(SbmlIssue {
                     element: root_element,
                     severity: SbmlIssueSeverity::Error,
-                    rule: rule_number,
-                    message: "Root element is invalid".to_string(),
+                    rule: rule_number.clone(),
+                    message: format!("Unknown root element <{}>", root_element.name(doc.deref())),
                 })
             }
+        }
+    }
+}
+
+pub fn validate_allowed_attributes(
+    rule: String,
+    element: Element,
+    element_name: &str,
+    attrs: &HashMap<String, String>,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name).unwrap();
+
+    for (full_name, _value) in attrs {
+        let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
+        if !allowed_attributes.contains(&attr_name) {
+            issues.push(SbmlIssue {
+                element,
+                severity: SbmlIssueSeverity::Error,
+                rule: rule.clone(),
+                message: format!(
+                    "Unknown attribute [{}] at element <{}>",
+                    attr_name, element_name
+                ),
+            })
+        }
+    }
+}
+
+pub fn validate_allowed_children(
+    rule: String,
+    element: Element,
+    element_name: &str,
+    children_names: Vec<&str>,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let allowed_children = ALLOWED_CHILDREN.get(element_name).unwrap();
+
+    for child_full_name in children_names {
+        let (_prefix, child_name) = Element::separate_prefix_name(child_full_name);
+        if !allowed_children.contains(&child_name) {
+            issues.push(SbmlIssue {
+                element,
+                severity: SbmlIssueSeverity::Error,
+                rule: rule.clone(),
+                message: format!(
+                    "Unknown child <{}> of element <{}>",
+                    child_name, element_name
+                ),
+            })
         }
     }
 }
