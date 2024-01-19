@@ -42,6 +42,9 @@ impl Model {
         if self.reactions().is_set() {
             self.validate_list_of_reactions(issues);
         }
+        if self.events().is_set() {
+            self.validate_list_of_events(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -131,6 +134,16 @@ impl Model {
         for i in 0..list.len() {
             let reaction = list.get(i);
             reaction.validate(issues);
+        }
+    }
+
+    fn validate_list_of_events(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.events().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let event = list.get(i);
+            event.validate(issues);
         }
     }
 }

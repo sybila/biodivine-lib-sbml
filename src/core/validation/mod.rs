@@ -7,6 +7,7 @@ use xml_doc::Element;
 
 mod compartment;
 mod constraint;
+mod event;
 mod function_definition;
 mod initial_assignment;
 mod model;
