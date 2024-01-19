@@ -106,6 +106,11 @@ impl Sbml {
     /// is already satisfied implicitly by the use of the package *xml-doc* as writing
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
     /// UTF-16, ISO 8859-1, GBK or EUC-KR.
+    ///
+    /// ### Rule 10104
+    /// is already satisfied implicitly by the use of the package *xml-doc* as loading
+    /// a document without an error ensures that the document conforms to the basic
+    /// structural and syntactic constraints.
     pub fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         self.apply_rule_10102(issues);
 
