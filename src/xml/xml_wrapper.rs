@@ -2,10 +2,10 @@ use crate::xml::{
     OptionalDynamicChild, OptionalDynamicProperty, RequiredDynamicChild, RequiredDynamicProperty,
     XmlDocument, XmlElement, XmlPropertyType,
 };
-use crate::SbmlIssue;
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
-use xml_doc::{Document, Element};
+use xml_doc::{Document, Element, Node};
 
 /// [XmlWrapper] is a trait implemented by all types that can behave as an [XmlElement]
 /// (including [XmlElement] itself). In other words, instances of [XmlWrapper] provide
@@ -307,34 +307,6 @@ pub trait XmlWrapper: Into<XmlElement> {
         }
 
         Ok(())
-    }
-
-    fn apply_rule_10102(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.document();
-        let doc = doc.read().unwrap();
-        let rule_number = "10102".to_string();
-        let element = self.xml_element().raw_element();
-        let attributes = element.attributes(doc.deref());
-        let children = element
-            .children(doc.deref())
-            .iter()
-            .map(|node| node.as_element().unwrap().full_name(doc.deref()))
-            .collect();
-
-        crate::core::validation::validate_allowed_attributes(
-            rule_number.clone(),
-            element,
-            element.name(doc.deref()),
-            attributes,
-            issues,
-        );
-        crate::core::validation::validate_allowed_children(
-            rule_number.clone(),
-            element,
-            element.name(doc.deref()),
-            children,
-            issues,
-        );
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN};
+use crate::xml::{XmlElement, XmlWrapper};
 use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -106,4 +107,31 @@ pub fn validate_allowed_children(
             })
         }
     }
+}
+
+pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let rule_number = "10102".to_string();
+    let doc = xml_element.read_doc();
+    let element = xml_element.raw_element();
+    let attributes = element.attributes(doc.deref());
+    let children_names = element
+        .children(doc.deref())
+        .iter()
+        .map(|node| node.as_element().unwrap().full_name(doc.deref()))
+        .collect();
+
+    validate_allowed_attributes(
+        rule_number.clone(),
+        element,
+        xml_element.tag_name().as_str(),
+        attributes,
+        issues,
+    );
+    validate_allowed_children(
+        rule_number.clone(),
+        element,
+        xml_element.tag_name().as_str(),
+        children_names,
+        issues,
+    );
 }
