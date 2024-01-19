@@ -25,6 +25,9 @@ impl Model {
         if self.initial_assignments().is_set() {
             self.validate_list_of_initial_assignments(issues);
         }
+        if self.rules().is_set() {
+            self.validate_list_of_rules(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -96,6 +99,24 @@ impl Model {
             // TODO: might panic if some child of the list is not allowed by SBML rules.
             // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             initial_assignment.validate(issues);
+        }
+    }
+
+    fn validate_list_of_rules(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.rules().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            // TODO: might panic if some child of the list is not allowed by SBML rules.
+            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
+            // TODO: panics if empty element looks like this: (only <tag/> passes)
+            //       <tag></tag>
+            //          OR
+            //       <tag>
+            //          "any number of /n and whitespace chars"
+            //       </tag>
+            let rule = list.get(i);
+            rule.validate(issues);
         }
     }
 }
