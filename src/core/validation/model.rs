@@ -7,6 +7,14 @@ impl Model {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
 
+        // TODO: might panic if some child of a list is not allowed by SBML rules.
+        // SOLUTION: check if child tag name is in keys of ALLOWED_CHILDREN of parent element
+        // TODO: panics if empty element looks like this: (only <tag/> passes)
+        //       <tag></tag>
+        //          OR
+        //       <tag>
+        //          "any number of /n and whitespace chars"
+        //       </tag>
         if self.function_definitions().is_set() {
             self.validate_list_of_function_definitions(issues);
         }
@@ -28,6 +36,9 @@ impl Model {
         if self.rules().is_set() {
             self.validate_list_of_rules(issues);
         }
+        if self.constraints().is_set() {
+            self.validate_list_of_constraints(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -36,8 +47,6 @@ impl Model {
 
         for i in 0..list.len() {
             let function_def = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             function_def.validate(issues);
         }
     }
@@ -48,8 +57,6 @@ impl Model {
 
         for i in 0..list.len() {
             let unit_def = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             unit_def.validate(issues);
         }
     }
@@ -60,8 +67,6 @@ impl Model {
 
         for i in 0..list.len() {
             let compartment = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             compartment.validate(issues);
         }
     }
@@ -72,8 +77,6 @@ impl Model {
 
         for i in 0..list.len() {
             let species = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             species.validate(issues);
         }
     }
@@ -84,8 +87,6 @@ impl Model {
 
         for i in 0..list.len() {
             let parameter = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             parameter.validate(issues);
         }
     }
@@ -96,8 +97,6 @@ impl Model {
 
         for i in 0..list.len() {
             let initial_assignment = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             initial_assignment.validate(issues);
         }
     }
@@ -107,16 +106,18 @@ impl Model {
         apply_rule_10102(list.xml_element(), issues);
 
         for i in 0..list.len() {
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
-            // TODO: panics if empty element looks like this: (only <tag/> passes)
-            //       <tag></tag>
-            //          OR
-            //       <tag>
-            //          "any number of /n and whitespace chars"
-            //       </tag>
             let rule = list.get(i);
             rule.validate(issues);
+        }
+    }
+
+    fn validate_list_of_constraints(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.constraints().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let constraint = list.get(i);
+            constraint.validate(issues);
         }
     }
 }
