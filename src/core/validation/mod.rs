@@ -8,6 +8,7 @@ use xml_doc::Element;
 mod compartment;
 mod function_definition;
 mod model;
+mod species;
 mod unit;
 mod unit_definition;
 
