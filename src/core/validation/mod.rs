@@ -7,6 +7,7 @@ use xml_doc::Element;
 
 mod compartment;
 mod function_definition;
+mod initial_assignment;
 mod model;
 mod parameter;
 mod species;
@@ -22,6 +23,7 @@ impl Sbml {
         let doc = self.xml.read().unwrap();
         let rule_number = "10102".to_string();
 
+        // TODO: root_nodes() interprets comments as valid nodes
         if doc.root_nodes().len() != 1 {
             issues.push(SbmlIssue {
                 element: doc.container(),

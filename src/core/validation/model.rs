@@ -22,6 +22,9 @@ impl Model {
         if self.parameters().is_set() {
             self.validate_list_of_parameters(issues);
         }
+        if self.initial_assignments().is_set() {
+            self.validate_list_of_initial_assignments(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -81,6 +84,18 @@ impl Model {
             // TODO: might panic if some child of the list is not allowed by SBML rules.
             // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             parameter.validate(issues);
+        }
+    }
+
+    fn validate_list_of_initial_assignments(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.initial_assignments().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let initial_assignment = list.get(i);
+            // TODO: might panic if some child of the list is not allowed by SBML rules.
+            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
+            initial_assignment.validate(issues);
         }
     }
 }
