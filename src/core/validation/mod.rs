@@ -11,6 +11,7 @@ mod function_definition;
 mod initial_assignment;
 mod model;
 mod parameter;
+mod reaction;
 mod rule;
 mod species;
 mod unit;

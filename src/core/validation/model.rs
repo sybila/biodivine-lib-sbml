@@ -39,6 +39,9 @@ impl Model {
         if self.constraints().is_set() {
             self.validate_list_of_constraints(issues);
         }
+        if self.reactions().is_set() {
+            self.validate_list_of_reactions(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -118,6 +121,16 @@ impl Model {
         for i in 0..list.len() {
             let constraint = list.get(i);
             constraint.validate(issues);
+        }
+    }
+
+    fn validate_list_of_reactions(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.reactions().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let reaction = list.get(i);
+            reaction.validate(issues);
         }
     }
 }
