@@ -106,6 +106,35 @@ pub trait XmlWrapper: Into<XmlElement> {
             .to_string()
     }
 
+    /// Returns the map of attributes as a collection of key-value pairs **<full_name:value>**
+    /// referenced within this [XmlWrapper].
+    ///
+    /// Note that full_name generally consists of namespace prefix and actual name in following format: **prefix:name**.
+    fn attributes(&self) -> &HashMap<String, String> {
+        unimplemented!();
+        // let doc = self.read_doc();
+        // self.raw_element().attributes(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    }
+
+    /// Returns the vector of children as a collection of [Node]s referenced within
+    /// this [XmlWrapper].
+    fn children(&self) -> &Vec<Node> {
+        unimplemented!();
+        // let doc = self.read_doc();
+        // self.raw_element().children(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    }
+
+    /// Returns the vector of names of children referenced within this [XmlWrapper].
+    fn children_names(&self) -> Vec<&str> {
+        unimplemented!();
+        // let doc = self.read_doc();
+        // self.raw_element()
+        //     .children(doc.deref())
+        //     .iter()
+        //     .map(|node| node.as_element().unwrap().full_name(doc.deref())) // TODO: may outlive borrowed value `doc`. How to fix?
+        //     .collect()
+    }
+
     /// Get a reference to a specific **required** [XmlProperty] of this XML element.
     ///
     /// # Safety
