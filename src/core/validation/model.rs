@@ -19,6 +19,9 @@ impl Model {
         if self.species().is_set() {
             self.validate_list_of_species(issues);
         }
+        if self.parameters().is_set() {
+            self.validate_list_of_parameters(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -66,6 +69,18 @@ impl Model {
             // TODO: might panic if some child of the list is not allowed by SBML rules.
             // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             species.validate(issues);
+        }
+    }
+
+    fn validate_list_of_parameters(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.parameters().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let parameter = list.get(i);
+            // TODO: might panic if some child of the list is not allowed by SBML rules.
+            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
+            parameter.validate(issues);
         }
     }
 }
