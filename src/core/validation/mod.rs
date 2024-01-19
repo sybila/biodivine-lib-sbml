@@ -7,6 +7,8 @@ use xml_doc::Element;
 
 mod function_definition;
 mod model;
+mod unit;
+mod unit_definition;
 
 impl Sbml {
     /// An SBML XML document must not contain undefined elements or attributes in the SBML Level 3

@@ -10,6 +10,9 @@ impl Model {
         if self.function_definitions().is_set() {
             self.validate_list_of_function_definitions(issues);
         }
+        if self.unit_definitions().is_set() {
+            self.validate_list_of_unit_definitions(issues);
+        }
     }
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
@@ -18,7 +21,21 @@ impl Model {
 
         for i in 0..list.len() {
             let function_def = list.get(i);
+            // TODO: might panic if some child of the list is not allowed by SBML rules.
+            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
             function_def.validate(issues);
+        }
+    }
+
+    fn validate_list_of_unit_definitions(&self, issues: &mut Vec<SbmlIssue>) {
+        let list = self.unit_definitions().get().unwrap();
+        apply_rule_10102(list.xml_element(), issues);
+
+        for i in 0..list.len() {
+            let unit_def = list.get(i);
+            // TODO: might panic if some child of the list is not allowed by SBML rules.
+            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
+            unit_def.validate(issues);
         }
     }
 }
