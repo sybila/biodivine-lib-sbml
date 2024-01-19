@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::ops::Deref;
 use xml_doc::Element;
 
+mod compartment;
 mod function_definition;
 mod model;
 mod unit;
