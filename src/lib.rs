@@ -129,6 +129,7 @@ impl Default for Sbml {
     }
 }
 
+#[derive(Debug)]
 pub struct SbmlIssue {
     /// Refers to the "raw" XML element where the issue occurred.
     pub element: Element,
@@ -137,6 +138,7 @@ pub struct SbmlIssue {
     pub message: String,
 }
 
+#[derive(Debug)]
 pub enum SbmlIssueSeverity {
     /// An issue that makes the document impossible to read correctly (e.g. a function is
     /// used but not declared).

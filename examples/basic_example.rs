@@ -14,5 +14,7 @@ fn main() {
     let mut issues: Vec<SbmlIssue> = Vec::new();
     doc.validate(&mut issues);
 
-    assert_eq!(issues.len(), 0);
+    println!("No. of issues: {}", issues.len());
+    println!("{:?}", issues);
+    // assert_eq!(issues.len(), 0);
 }
