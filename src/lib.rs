@@ -162,11 +162,17 @@ mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::core::*;
+    use crate::core::RuleTypes::Assignment;
+    use crate::core::{
+        AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
+        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
+        Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes,
+        SBase, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit, UnitDefinition,
+    };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
-        XmlProperty, XmlWrapper,
+        XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
     use crate::Sbml;
 
@@ -455,9 +461,16 @@ mod tests {
             "This is a SBML annotation element.",
         );
 
-        build_funtion_defs(&model);
+        build_function_defs(&model);
         build_unit_defs(&model);
         build_compartments(&model);
+        build_species(&model);
+        build_parameters(&model);
+        build_initial_assignments(&model);
+        build_rules(&model);
+        build_constraints(&model);
+        build_reactions(&model);
+        build_events(&model);
 
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
 
@@ -465,7 +478,7 @@ mod tests {
         std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
     }
 
-    fn build_funtion_defs(model: &Model) {
+    fn build_function_defs(model: &Model) {
         let function_defs = model.function_definitions();
         function_defs.ensure();
 
@@ -553,6 +566,245 @@ mod tests {
         comp_top.constant().set(&true);
     }
 
+    fn build_species(model: &Model) {
+        let species = model.species();
+        species.ensure();
+
+        let species = species.get().unwrap();
+        species.id().set(Some(&"SpeciesList-ID".to_string()));
+        species.name().set(Some(&"SpeciesList-NAME".to_string()));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-1"),
+            &String::from("compartment-1"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-2"),
+            &String::from("compartment-2"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-3"),
+            &String::from("compartment-3"),
+        ));
+
+        let species_top = species.top();
+        species_top.initial_amount().set(Some(&10.0));
+        species_top.initial_concentration().set(Some(&0.5));
+        species_top.substance_units().set(Some(&BaseUnit::Sievert));
+        species_top.has_only_substance_units().set(&false);
+        species_top.boundary_condition().set(&true);
+        species_top.constant().set(&false);
+        species_top
+            .conversion_factor()
+            .set(Some(&"linear".to_string()));
+    }
+
+    fn build_parameters(model: &Model) {
+        let parameters = model.parameters();
+        parameters.ensure();
+
+        let parameters = parameters.get().unwrap();
+        parameters.id().set(Some(&"ParamsList-ID".to_string()));
+        parameters.name().set(Some(&"ParamsList-NAME".to_string()));
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-1"),
+            true,
+        ));
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-2"),
+            true,
+        ));
+
+        let param_top = parameters.top();
+        param_top.value().set(Some(&15.0));
+        param_top.units().set(Some(&BaseUnit::Ampere));
+    }
+
+    fn build_initial_assignments(model: &Model) {
+        let assignments = model.initial_assignments();
+        assignments.ensure();
+
+        let assignments = assignments.get().unwrap();
+        assignments
+            .id()
+            .set(Some(&"InitialAssignmentsList-ID".to_string()));
+        assignments
+            .name()
+            .set(Some(&"InitialAssignmentsList-NAME".to_string()));
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
+
+        assignments.get(0).math().ensure();
+        assignments.get(1).math().ensure();
+    }
+
+    fn build_rules(model: &Model) {
+        let rules = model.rules();
+        rules.ensure();
+
+        let rules = rules.get().unwrap();
+        rules.id().set(Some(&"RulesList-ID".to_string()));
+        rules.name().set(Some(&"RulesList-NAME".to_string()));
+        rules.push(AlgebraicRule::default(model.document()).upcast());
+        rules.push(AssignmentRule::new(model.document(), &String::from("z")).upcast());
+        rules.push(RateRule::new(model.document(), &String::from("r")).upcast());
+
+        let algebraic: AlgebraicRule = rules.get(0).downcast();
+        algebraic.id().set(Some(&"rule-1".to_string()));
+        algebraic.name().set(Some(&"algebraic".to_string()));
+
+        let assignment: AssignmentRule = rules.get(1).downcast();
+        assignment.id().set(Some(&"rule-2".to_string()));
+        assignment.name().set(Some(&"assignment".to_string()));
+
+        let rate: RateRule = rules.get(2).downcast();
+        rate.id().set(Some(&"rule-3".to_string()));
+        rate.name().set(Some(&"rate".to_string()));
+    }
+
+    fn build_constraints(model: &Model) {
+        let constraints = model.constraints();
+        constraints.ensure();
+
+        let constraints = constraints.get().unwrap();
+        constraints
+            .id()
+            .set(Some(&"ConstraintsList-ID".to_string()));
+        constraints
+            .name()
+            .set(Some(&"ConstraintsList-NAME".to_string()));
+        constraints.push(Constraint::default(model.document()));
+        constraints.push(Constraint::default(model.document()));
+
+        constraints
+            .get(0)
+            .id()
+            .set(Some(&"constraint-1".to_string()));
+        constraints
+            .get(1)
+            .id()
+            .set(Some(&"constraint-2".to_string()));
+
+        let constraint_top = constraints.top();
+        constraint_top.message().set(XmlElement::new_quantified(
+            model.document(),
+            "message",
+            NS_HTML,
+        ));
+        constraint_top.math().ensure();
+    }
+
+    fn build_reactions(model: &Model) {
+        let reactions = model.reactions();
+        reactions.ensure();
+
+        let reactions = reactions.get().unwrap();
+        reactions.id().set(Some(&"ReactionsList-ID".to_string()));
+        reactions
+            .name()
+            .set(Some(&"ReactionsList-NAME".to_string()));
+        reactions.push(Reaction::new(
+            model.document(),
+            &String::from("reaction-1"),
+            true,
+        ));
+
+        let reaction = reactions.top();
+        reaction
+            .compartment()
+            .set(Some(&"compartment-1".to_string()));
+
+        let reactants = reaction.reactants();
+        reactants.ensure();
+        let reactants = reactants.get().unwrap();
+        reactants.id().set(Some(&"ReactantsList-ID".to_string()));
+        reactants.push(SpeciesReference::new(
+            model.document(),
+            &String::from("species-1"),
+            true,
+        ));
+        let reactant = reactants.top();
+        reactant.stoichiometry().set(Some(&2.0));
+
+        let products = reaction.products();
+        products.ensure();
+        let products = products.get().unwrap();
+        products.id().set(Some(&"ProductsList-ID".to_string()));
+        products.push(SpeciesReference::new(
+            model.document(),
+            &String::from("species-1"),
+            true,
+        ));
+        let product = products.top();
+        product.stoichiometry().set(Some(&1.0));
+
+        let modifiers = reaction.modifiers();
+        modifiers.ensure();
+        let modifiers = modifiers.get().unwrap();
+        modifiers.id().set(Some(&"ModifiersList-ID".to_string()));
+        modifiers.push(ModifierSpeciesReference::new(
+            model.document(),
+            &String::from("species-2"),
+        ));
+
+        let kinetic_law = reaction.kinetic_law();
+        kinetic_law.set(KineticLaw::default(model.document()));
+        kinetic_law.get().unwrap().math().ensure();
+        let kinetic_law = kinetic_law.get().unwrap();
+        let local_params = kinetic_law.local_parameters();
+        local_params.ensure();
+        let local_params = local_params.get().unwrap();
+        local_params.push(LocalParameter::new(
+            model.document(),
+            &String::from("localParam-ID"),
+        ));
+        let param = local_params.top();
+        param.value().set(Some(&42.0));
+        param.units().set(Some(&"meter".to_string()));
+    }
+
+    fn build_events(model: &Model) {
+        let events = model.events();
+        events.ensure();
+
+        let events = events.get().unwrap();
+        events.id().set(Some(&"EventsList-ID".to_string()));
+        events.push(Event::default(model.document()));
+        events.push(Event::default(model.document()));
+
+        events.get(0).use_values_from_trigger_time().set(&true);
+        events.get(1).use_values_from_trigger_time().set(&false);
+
+        let event = events.top();
+
+        event.trigger().set(Trigger::default(model.document()));
+        let trigger = event.trigger().get().unwrap();
+        trigger.initial_value().set(&true);
+        trigger.persistent().set(&true);
+        trigger.math().ensure();
+
+        event.priority().set(Priority::default(model.document()));
+        let priority = event.priority().get().unwrap();
+        priority.math().ensure();
+
+        event.delay().set(Delay::default(model.document()));
+        let delay = event.delay().get().unwrap();
+        delay.math().ensure();
+
+        let event_assignments = event.event_assignments();
+        event_assignments.ensure();
+        let event_assignments = event_assignments.get().unwrap();
+        event_assignments
+            .id()
+            .set(Some(&"EventAssignmentsList-ID".to_string()));
+        event_assignments.push(EventAssignment::new(model.document(), &String::from("evt")));
+        let assignment = event_assignments.top();
+        assignment.math().ensure();
+    }
     #[test]
     pub fn test_sbase() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
@@ -773,16 +1025,25 @@ mod tests {
         assert!(!rules.is_empty());
         assert_eq!(rules.len(), 9);
 
-        // let rule = rules.get(0).downcast();
-        // let concrete_rule = match rule {
-        //     RuleEnum::Algebraic(rule) => rule,
-        //     RuleEnum::Assignment(rule) => rule,
-        //     RuleEnum::Rate(rule) => rule,
-        //     RuleEnum::Other(rule) => rule,
-        // };
+        match rules.get(0).cast() {
+            RuleTypes::Algebraic(_) => assert!(false),
+            Assignment(rule) => {
+                assert_eq!(rule.variable().get(), "SUMRecTAINF");
+                assert!(rule.math().is_set());
+            }
+            RuleTypes::Rate(_) => assert!(false),
+            RuleTypes::Other(_) => assert!(false),
+        };
 
-        // assert_eq!(rule., "SUMRecTAINF");
-        // assert!(rule.math().is_set());
+        match rules.top().cast() {
+            RuleTypes::Other(_) => assert!(false),
+            RuleTypes::Algebraic(_) => assert!(false),
+            Assignment(rule) => {
+                assert_eq!(rule.variable().get(), "SUMForFoam");
+                assert!(rule.math().is_set());
+            }
+            RuleTypes::Rate(_) => assert!(false),
+        }
     }
 
     #[test]

@@ -1,6 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::BaseUnit;
-use crate::xml::{OptionalProperty, RequiredProperty, XmlElement};
+use crate::xml::{
+    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+};
 use macros::{SBase, XmlWrapper};
 
 /// Individual parameter definition
@@ -8,6 +10,13 @@ use macros::{SBase, XmlWrapper};
 pub struct Parameter(XmlElement);
 
 impl Parameter {
+    pub fn new(document: XmlDocument, id: &String, constant: bool) -> Self {
+        let obj = Parameter::new_empty(document, "parameter");
+        obj.id().set(id);
+        obj.constant().set(&constant);
+        obj
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }

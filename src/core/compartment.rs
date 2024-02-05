@@ -1,5 +1,7 @@
 use crate::core::sbase::SbmlUtils;
-use crate::xml::{OptionalProperty, RequiredProperty, XmlDefault, XmlDocument, XmlElement};
+use crate::xml::{
+    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
+};
 use macros::{SBase, XmlWrapper};
 
 /// Individual compartment definition
@@ -8,11 +10,17 @@ pub struct Compartment(XmlElement);
 
 impl XmlDefault for Compartment {
     fn default(document: XmlDocument) -> Self {
-        Compartment::new_empty(document, "compartment")
+        Compartment::new(document, true)
     }
 }
 
 impl Compartment {
+    pub fn new(document: XmlDocument, is_constant: bool) -> Self {
+        let cmp = Compartment::new_empty(document, "compartment");
+        cmp.constant().set(&is_constant);
+        cmp
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }

@@ -79,7 +79,7 @@ pub fn validate_allowed_attributes(
 ) {
     let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name).unwrap();
 
-    for (full_name, _value) in attrs {
+    for full_name in attrs.keys() {
         let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
         if !allowed_attributes.contains(&attr_name) {
             issues.push(SbmlIssue {

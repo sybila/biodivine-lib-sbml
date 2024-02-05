@@ -1,6 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::BaseUnit;
-use crate::xml::{OptionalProperty, RequiredProperty, XmlElement};
+use crate::xml::{
+    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+};
 use macros::{SBase, XmlWrapper};
 
 /// Individual specie definition
@@ -8,6 +10,16 @@ use macros::{SBase, XmlWrapper};
 pub struct Species(XmlElement);
 
 impl Species {
+    pub fn new(document: XmlDocument, id: &String, compartment: &String) -> Self {
+        let obj = Species::new_empty(document, "species");
+        obj.id().set(id);
+        obj.compartment().set(compartment);
+        obj.has_only_substance_units().set(&false);
+        obj.boundary_condition().set(&true);
+        obj.constant().set(&true);
+        obj
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }

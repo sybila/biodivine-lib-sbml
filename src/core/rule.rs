@@ -1,6 +1,9 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase};
-use crate::xml::{OptionalChild, RequiredProperty, XmlElement, XmlNamedSubtype, XmlSupertype};
+use crate::xml::{
+    OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
+    XmlNamedSubtype, XmlSupertype,
+};
 use macros::{SBase, XmlWrapper};
 
 pub enum RuleTypes {
@@ -36,12 +39,22 @@ impl AbstractRule {
             RuleTypes::Other(self)
         }
     }
+
+    pub fn default(document: XmlDocument, tag_name: &str) -> Self {
+        AbstractRule::new_empty(document, tag_name)
+    }
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AlgebraicRule(XmlElement);
 
 impl Rule for AlgebraicRule {}
+
+impl XmlDefault for AlgebraicRule {
+    fn default(document: XmlDocument) -> Self {
+        AlgebraicRule::new_empty(document, "algebraicRule")
+    }
+}
 
 impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
     fn expected_tag_name() -> &'static str {
@@ -61,6 +74,12 @@ impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
 }
 
 impl AssignmentRule {
+    pub fn new(document: XmlDocument, variable: &String) -> Self {
+        let obj = AssignmentRule::new_empty(document, "assignmentRule");
+        obj.variable().set(variable);
+        obj
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         self.required_sbml_property("variable")
     }
@@ -78,6 +97,12 @@ impl XmlNamedSubtype<AbstractRule> for RateRule {
 }
 
 impl RateRule {
+    pub fn new(document: XmlDocument, variable: &String) -> Self {
+        let obj = RateRule::new_empty(document, "rateRule");
+        obj.variable().set(variable);
+        obj
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         self.required_sbml_property("variable")
     }
