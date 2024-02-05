@@ -1,13 +1,13 @@
+// TODO:
+//      At some point, we should probably have an `SId` type instead of using a string here,
+//      because IDs have a special format that should be enforced. This is also related to other
+//      types that are "string like", e.g. meta id and sboTerm.
+
 use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
     XmlWrapper,
 };
-
-// TODO:
-//      At some point, we should probably have an `SId` type instead of using a string here,
-//      because IDs have a special format that should be enforced. This is also related to other
-//      types that are "string like", e.g. meta id and sboTerm.
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus there is no need to implement concrete structure.
@@ -92,5 +92,5 @@ pub(crate) trait SbmlUtils: SBase {
     }
 }
 
-/// [SbmlUtils] is implemented for all types that implement [SBase].
+/// [crate::sbase::SbmlUtils] is implemented for all types that implement [crate::sbase::SBase].
 impl<T: SBase> SbmlUtils for T {}

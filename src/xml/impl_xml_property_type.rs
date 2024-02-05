@@ -2,10 +2,7 @@
 //      Check that escaping rules are obeyed for a "generic" string type (see specification
 //      section 3.1.1). I believe these should be handled by `xml-doc` already, but we should
 //      have a test case for this.
-
-use std::str::FromStr;
-
-use crate::{model::BaseUnit, xml::XmlPropertyType};
+use crate::xml::XmlPropertyType;
 
 /// A "trivial" conversion between an XML attribute and a `String`.
 ///
@@ -86,30 +83,6 @@ impl XmlPropertyType for f64 {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
                     "Value `{value}` does not represent a valid floating point number ({}).",
-                    e
-                )),
-            },
-            None => Err("Value missing".to_string()),
-        }
-    }
-
-    fn set(&self) -> Option<String> {
-        Some(format!("{}", self))
-    }
-}
-
-/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
-/// interpreted as an error.
-///
-/// ## Specification
-///  - Section 4.4.2
-impl XmlPropertyType for BaseUnit {
-    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
-        match value {
-            Some(value) => match BaseUnit::from_str(value) {
-                Ok(unit) => Ok(Some(unit)),
-                Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid base unit ({})",
                     e
                 )),
             },

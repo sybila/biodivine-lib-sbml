@@ -1,7 +1,4 @@
-use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::validation::SbmlIssue;
-use biodivine_lib_sbml::xml::{OptionalXmlChild, OptionalXmlProperty};
-use biodivine_lib_sbml::Sbml;
+use biodivine_lib_sbml::{Sbml, SbmlIssue};
 
 // To run this example, execute `cargo run --example basic_example`.
 // If you want to add command line arguments, you can use
@@ -9,11 +6,14 @@ use biodivine_lib_sbml::Sbml;
 // Note the use of `--` to indicate that ARG_x values are meant as arguments
 // for the example binary, not for `cargo` itself.
 fn main() {
-    let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
-    let model = doc.model().get().unwrap();
-    assert_eq!("model_id", model.id().get().unwrap().as_str());
+    let doc = Sbml::read_path("test-inputs/COVID19_immunotherapy_Mathematical_Model.xml").unwrap();
+    // let model = doc.model().get().unwrap();
     // Print the whole document:
     // println!("{}", model.read_doc().write_str().unwrap());
     let mut issues: Vec<SbmlIssue> = Vec::new();
     doc.validate(&mut issues);
+
+    println!("No. of issues: {}", issues.len());
+    println!("{:?}", issues);
+    // assert_eq!(issues.len(), 0);
 }

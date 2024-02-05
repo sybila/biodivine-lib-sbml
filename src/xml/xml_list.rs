@@ -1,4 +1,4 @@
-use crate::sbase::SBase;
+use crate::core::SBase;
 use crate::xml::{XmlElement, XmlWrapper};
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
