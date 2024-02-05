@@ -261,7 +261,6 @@ impl Compartment {
 pub struct Species(XmlElement);
 
 impl Species {
-
     pub fn new(document: XmlDocument, id: &String, compartment: &String) -> Self {
         let obj = Species::new_empty(document, "species");
         obj.id().set(id);
@@ -614,7 +613,8 @@ impl XmlDefault for Event {
 impl Event {
     pub fn new(document: XmlDocument, use_values_from_trigger_time: bool) -> Self {
         let obj = Event::new_empty(document, "event");
-        obj.use_values_from_trigger_time().set(&use_values_from_trigger_time);
+        obj.use_values_from_trigger_time()
+            .set(&use_values_from_trigger_time);
         obj
     }
 

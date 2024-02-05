@@ -587,12 +587,12 @@ mod tests {
         parameters.push(Parameter::new(
             model.document(),
             &String::from("param-1"),
-            true
+            true,
         ));
         parameters.push(Parameter::new(
             model.document(),
             &String::from("param-2"),
-            true
+            true,
         ));
 
         let param_top = parameters.top();
@@ -611,14 +611,8 @@ mod tests {
         assignments
             .name()
             .set(Some(&"InitialAssignmentsList-NAME".to_string()));
-        assignments.push(InitialAssignment::new(
-            model.document(),
-            &String::from("x")
-        ));
-        assignments.push(InitialAssignment::new(
-            model.document(),
-            &String::from("x")
-        ));
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
 
         assignments.get(0).math().ensure();
         assignments.get(1).math().ensure();
@@ -692,7 +686,7 @@ mod tests {
         reactions.push(Reaction::new(
             model.document(),
             &String::from("reaction-1"),
-            true
+            true,
         ));
 
         let reaction = reactions.top();
@@ -735,7 +729,10 @@ mod tests {
         let local_params = kinetic_law.local_parameters();
         local_params.ensure();
         let local_params = local_params.get().unwrap();
-        local_params.push(LocalParameter::new(model.document(), &String::from("localParam-ID")));
+        local_params.push(LocalParameter::new(
+            model.document(),
+            &String::from("localParam-ID"),
+        ));
         let param = local_params.top();
         param.value().set(Some(&42.0));
         param.units().set(Some(&"meter".to_string()));
