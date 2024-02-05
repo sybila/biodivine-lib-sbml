@@ -27,8 +27,7 @@ impl Sbml {
         let doc = self.xml.read().unwrap();
         let rule_number = "10102".to_string();
 
-        // TODO: root_nodes() interprets comments as valid nodes
-        if doc.root_nodes().len() != 1 {
+        if doc.container().child_elements(doc.deref()).len() != 1 {
             issues.push(SbmlIssue {
                 element: doc.container(),
                 severity: SbmlIssueSeverity::Error,
@@ -145,4 +144,11 @@ pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
         children_names,
         issues,
     );
+}
+
+pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
+    let Some(allowed) = ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
+        return &[];
+    };
+    allowed
 }

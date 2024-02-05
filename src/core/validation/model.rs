@@ -1,4 +1,4 @@
-use crate::core::validation::apply_rule_10102;
+use crate::core::validation::{apply_rule_10102, get_allowed_children};
 use crate::core::Model;
 use crate::xml::{OptionalXmlChild, XmlWrapper};
 use crate::SbmlIssue;
@@ -7,14 +7,6 @@ impl Model {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
 
-        // TODO: might panic if some child of a list is not allowed by SBML rules.
-        // SOLUTION: check if child tag name is in keys of ALLOWED_CHILDREN of parent element
-        // TODO: panics if empty element looks like this: (only <tag/> passes)
-        //       <tag></tag>
-        //          OR
-        //       <tag>
-        //          "any number of /n and whitespace chars"
-        //       </tag>
         if self.function_definitions().is_set() {
             self.validate_list_of_function_definitions(issues);
         }
@@ -51,9 +43,12 @@ impl Model {
         let list = self.function_definitions().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let function_def = list.get(i);
-            function_def.validate(issues);
+            if allowed.contains(&function_def.tag_name().as_str()) {
+                function_def.validate(issues);
+            }
         }
     }
 
@@ -61,9 +56,12 @@ impl Model {
         let list = self.unit_definitions().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let unit_def = list.get(i);
-            unit_def.validate(issues);
+            if allowed.contains(&unit_def.tag_name().as_str()) {
+                unit_def.validate(issues);
+            }
         }
     }
 
@@ -71,9 +69,12 @@ impl Model {
         let list = self.compartments().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let compartment = list.get(i);
-            compartment.validate(issues);
+            if allowed.contains(&compartment.tag_name().as_str()) {
+                compartment.validate(issues);
+            }
         }
     }
 
@@ -81,9 +82,12 @@ impl Model {
         let list = self.species().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let species = list.get(i);
-            species.validate(issues);
+            if allowed.contains(&species.tag_name().as_str()) {
+                species.validate(issues);
+            }
         }
     }
 
@@ -91,9 +95,12 @@ impl Model {
         let list = self.parameters().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let parameter = list.get(i);
-            parameter.validate(issues);
+            if allowed.contains(&parameter.tag_name().as_str()) {
+                parameter.validate(issues);
+            }
         }
     }
 
@@ -101,9 +108,12 @@ impl Model {
         let list = self.initial_assignments().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let initial_assignment = list.get(i);
-            initial_assignment.validate(issues);
+            if allowed.contains(&initial_assignment.tag_name().as_str()) {
+                initial_assignment.validate(issues);
+            }
         }
     }
 
@@ -111,9 +121,12 @@ impl Model {
         let list = self.rules().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let rule = list.get(i);
-            rule.validate(issues);
+            if allowed.contains(&rule.tag_name().as_str()) {
+                rule.validate(issues);
+            }
         }
     }
 
@@ -121,9 +134,12 @@ impl Model {
         let list = self.constraints().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let constraint = list.get(i);
-            constraint.validate(issues);
+            if allowed.contains(&constraint.tag_name().as_str()) {
+                constraint.validate(issues);
+            }
         }
     }
 
@@ -131,9 +147,12 @@ impl Model {
         let list = self.reactions().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let reaction = list.get(i);
-            reaction.validate(issues);
+            if allowed.contains(&reaction.tag_name().as_str()) {
+                reaction.validate(issues);
+            }
         }
     }
 
@@ -141,9 +160,12 @@ impl Model {
         let list = self.events().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let event = list.get(i);
-            event.validate(issues);
+            if allowed.contains(&event.tag_name().as_str()) {
+                event.validate(issues);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::core::validation::apply_rule_10102;
+use crate::core::validation::{apply_rule_10102, get_allowed_children};
 use crate::core::UnitDefinition;
 use crate::xml::{OptionalXmlChild, XmlWrapper};
 use crate::SbmlIssue;
@@ -16,11 +16,12 @@ impl UnitDefinition {
         let list = self.units().get().unwrap();
         apply_rule_10102(list.xml_element(), issues);
 
+        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let unit = list.get(i);
-            // TODO: might panic if some child of the list is not allowed by SBML rules.
-            // SOLUTION: check if tag name is in keys of ALLOWED_CHILDREN
-            unit.validate(issues);
+            if allowed.contains(&unit.tag_name().as_str()) {
+                unit.validate(issues);
+            }
         }
     }
 }
