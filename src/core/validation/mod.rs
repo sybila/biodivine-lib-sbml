@@ -25,13 +25,13 @@ impl Sbml {
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     pub(crate) fn apply_rule_10102(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.xml.read().unwrap();
-        let rule_number = "10102".to_string();
+        let rule_number = "10102";
 
         if doc.container().child_elements(doc.deref()).len() != 1 {
             issues.push(SbmlIssue {
                 element: doc.container(),
                 severity: SbmlIssueSeverity::Error,
-                rule: rule_number.clone(),
+                rule: rule_number.to_string(),
                 message: "The document contains multiple root nodes.".to_string(),
             })
         }
@@ -39,7 +39,7 @@ impl Sbml {
         if let Some(root_element) = doc.root_element() {
             if root_element.name(doc.deref()) == "sbml" {
                 validate_allowed_attributes(
-                    rule_number.clone(),
+                    rule_number,
                     root_element,
                     root_element.name(doc.deref()),
                     root_element.attributes(doc.deref()),
@@ -47,7 +47,7 @@ impl Sbml {
                 );
 
                 validate_allowed_children(
-                    rule_number.clone(),
+                    rule_number,
                     root_element,
                     root_element.name(doc.deref()),
                     root_element
@@ -61,7 +61,7 @@ impl Sbml {
                 issues.push(SbmlIssue {
                     element: root_element,
                     severity: SbmlIssueSeverity::Error,
-                    rule: rule_number.clone(),
+                    rule: rule_number.to_string(),
                     message: format!("Unknown root element <{}>", root_element.name(doc.deref())),
                 })
             }
@@ -70,7 +70,7 @@ impl Sbml {
 }
 
 pub fn validate_allowed_attributes(
-    rule: String,
+    rule: &str,
     element: Element,
     element_name: &str,
     attrs: &HashMap<String, String>,
@@ -84,7 +84,7 @@ pub fn validate_allowed_attributes(
             issues.push(SbmlIssue {
                 element,
                 severity: SbmlIssueSeverity::Error,
-                rule: rule.clone(),
+                rule: rule.to_string(),
                 message: format!(
                     "Unknown attribute [{}] at element <{}>",
                     attr_name, element_name
@@ -95,7 +95,7 @@ pub fn validate_allowed_attributes(
 }
 
 pub fn validate_allowed_children(
-    rule: String,
+    rule: &str,
     element: Element,
     element_name: &str,
     children_names: Vec<&str>,
@@ -109,7 +109,7 @@ pub fn validate_allowed_children(
             issues.push(SbmlIssue {
                 element,
                 severity: SbmlIssueSeverity::Error,
-                rule: rule.clone(),
+                rule: rule.to_string(),
                 message: format!(
                     "Unknown child <{}> of element <{}>",
                     child_name, element_name
@@ -120,7 +120,7 @@ pub fn validate_allowed_children(
 }
 
 pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let rule_number = "10102".to_string();
+    let rule_number = "10102";
     let doc = xml_element.read_doc();
     let element = xml_element.raw_element();
     let attributes = element.attributes(doc.deref());
@@ -131,14 +131,14 @@ pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
         .collect();
 
     validate_allowed_attributes(
-        rule_number.clone(),
+        rule_number,
         element,
         xml_element.tag_name().as_str(),
         attributes,
         issues,
     );
     validate_allowed_children(
-        rule_number.clone(),
+        rule_number,
         element,
         xml_element.tag_name().as_str(),
         children_names,
