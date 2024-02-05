@@ -537,25 +537,21 @@ mod tests {
         let species = species.get().unwrap();
         species.id().set(Some(&"SpeciesList-ID".to_string()));
         species.name().set(Some(&"SpeciesList-NAME".to_string()));
-        species.push(Species::default(model.document()));
-        species.push(Species::default(model.document()));
-        species.push(Species::default(model.document()));
-
-        species.get(0).id().set(&"species-1".to_string());
-        species
-            .get(0)
-            .compartment()
-            .set(&"compartment-1".to_string());
-        species.get(1).id().set(&"species-2".to_string());
-        species
-            .get(1)
-            .compartment()
-            .set(&"compartment-2".to_string());
-        species.get(2).id().set(&"species-3".to_string());
-        species
-            .get(2)
-            .compartment()
-            .set(&"compartment-3".to_string());
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-1"),
+            &String::from("compartment-1"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-2"),
+            &String::from("compartment-2"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-3"),
+            &String::from("compartment-3"),
+        ));
 
         let species_top = species.top();
         species_top.initial_amount().set(Some(&10.0));
@@ -576,16 +572,20 @@ mod tests {
         let parameters = parameters.get().unwrap();
         parameters.id().set(Some(&"ParamsList-ID".to_string()));
         parameters.name().set(Some(&"ParamsList-NAME".to_string()));
-        parameters.push(Parameter::default(model.document()));
-        parameters.push(Parameter::default(model.document()));
-
-        parameters.get(0).id().set(&"param-1".to_string());
-        parameters.get(1).id().set(&"param-2".to_string());
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-1"),
+            true
+        ));
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-2"),
+            true
+        ));
 
         let param_top = parameters.top();
         param_top.value().set(Some(&15.0));
         param_top.units().set(Some(&BaseUnit::Ampere));
-        param_top.constant().set(&true);
     }
 
     fn build_initial_assignments(model: &Model) {
@@ -599,12 +599,16 @@ mod tests {
         assignments
             .name()
             .set(Some(&"InitialAssignmentsList-NAME".to_string()));
-        assignments.push(InitialAssignment::default(model.document()));
-        assignments.push(InitialAssignment::default(model.document()));
+        assignments.push(InitialAssignment::new(
+            model.document(),
+            &String::from("x")
+        ));
+        assignments.push(InitialAssignment::new(
+            model.document(),
+            &String::from("x")
+        ));
 
-        assignments.get(0).symbol().set(&"x".to_string());
         assignments.get(0).math().ensure();
-        assignments.get(1).symbol().set(&"y".to_string());
         assignments.get(1).math().ensure();
     }
 
@@ -616,8 +620,8 @@ mod tests {
         rules.id().set(Some(&"RulesList-ID".to_string()));
         rules.name().set(Some(&"RulesList-NAME".to_string()));
         rules.push(AlgebraicRule::default(model.document()).upcast());
-        rules.push(AssignmentRule::default(model.document()).upcast());
-        rules.push(RateRule::default(model.document()).upcast());
+        rules.push(AssignmentRule::new(model.document(), &String::from("z")).upcast());
+        rules.push(RateRule::new(model.document(), &String::from("r")).upcast());
 
         let algebraic: AlgebraicRule = rules.get(0).downcast();
         algebraic.id().set(Some(&"rule-1".to_string()));
@@ -626,12 +630,10 @@ mod tests {
         let assignment: AssignmentRule = rules.get(1).downcast();
         assignment.id().set(Some(&"rule-2".to_string()));
         assignment.name().set(Some(&"assignment".to_string()));
-        assignment.variable().set(&"z".to_string());
 
         let rate: RateRule = rules.get(2).downcast();
         rate.id().set(Some(&"rule-3".to_string()));
         rate.name().set(Some(&"rate".to_string()));
-        rate.variable().set(&"r".to_string());
     }
 
     fn build_constraints(model: &Model) {
@@ -675,11 +677,13 @@ mod tests {
         reactions
             .name()
             .set(Some(&"ReactionsList-NAME".to_string()));
-        reactions.push(Reaction::default(model.document()));
+        reactions.push(Reaction::new(
+            model.document(),
+            &String::from("reaction-1"),
+            true
+        ));
 
         let reaction = reactions.top();
-        reaction.id().set(&"reaction-1".to_string());
-        reaction.reversible().set(&true);
         reaction
             .compartment()
             .set(Some(&"compartment-1".to_string()));
@@ -719,9 +723,8 @@ mod tests {
         let local_params = kinetic_law.local_parameters();
         local_params.ensure();
         let local_params = local_params.get().unwrap();
-        local_params.push(LocalParameter::default(model.document()));
+        local_params.push(LocalParameter::new(model.document(), &String::from("localParam-ID")));
         let param = local_params.top();
-        param.id().set(&"localParam-ID".to_string());
         param.value().set(Some(&42.0));
         param.units().set(Some(&"meter".to_string()));
     }
@@ -760,9 +763,8 @@ mod tests {
         event_assignments
             .id()
             .set(Some(&"EventAssignmentsList-ID".to_string()));
-        event_assignments.push(EventAssignment::default(model.document()));
+        event_assignments.push(EventAssignment::new(model.document(), &String::from("evt")));
         let assignment = event_assignments.top();
-        assignment.variable().set(&"evt".to_string());
         assignment.math().ensure();
     }
     #[test]

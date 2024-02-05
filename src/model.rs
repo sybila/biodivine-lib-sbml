@@ -1,9 +1,6 @@
 use crate::constants::namespaces::NS_MATHML;
 use crate::sbase::{SBase, SbmlUtils};
-use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype, XmlWrapper,
-};
+use crate::xml::{OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype, XmlWrapper};
 use macros::{SBase, XmlWrapper};
 use strum_macros::{Display, EnumString};
 
@@ -214,11 +211,17 @@ pub struct Compartment(XmlElement);
 
 impl XmlDefault for Compartment {
     fn default(document: XmlDocument) -> Self {
-        Compartment::new_empty(document, "compartment")
+        Compartment::new(document, true)
     }
 }
 
 impl Compartment {
+    pub fn new(document: XmlDocument, is_constant: bool) -> Self {
+        let cmp = Compartment::new_empty(document, "compartment");
+        cmp.constant().set(&is_constant);
+        cmp
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }
@@ -245,12 +248,18 @@ impl Compartment {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Species(XmlElement);
 
-impl XmlDefault for Species {
-    fn default(document: XmlDocument) -> Self {
-        Species::new_empty(document, "species")
-    }
-}
 impl Species {
+
+    pub fn new(document: XmlDocument, id: &String, compartment: &String) -> Self {
+        let obj = Species::new_empty(document, "species");
+        obj.id().set(id);
+        obj.compartment().set(compartment);
+        obj.has_only_substance_units().set(&false);
+        obj.boundary_condition().set(&true);
+        obj.constant().set(&true);
+        obj
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }
@@ -293,12 +302,14 @@ impl Species {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Parameter(XmlElement);
 
-impl XmlDefault for Parameter {
-    fn default(document: XmlDocument) -> Self {
-        Parameter::new_empty(document, "parameter")
-    }
-}
 impl Parameter {
+    pub fn new(document: XmlDocument, id: &String, constant: bool) -> Self {
+        let obj = Parameter::new_empty(document, "parameter");
+        obj.id().set(id);
+        obj.constant().set(&constant);
+        obj
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }
@@ -319,12 +330,13 @@ impl Parameter {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct InitialAssignment(XmlElement);
 
-impl XmlDefault for InitialAssignment {
-    fn default(document: XmlDocument) -> Self {
-        InitialAssignment::new_empty(document, "initialAssignment")
-    }
-}
 impl InitialAssignment {
+    pub fn new(document: XmlDocument, symbol: &String) -> Self {
+        let obj = InitialAssignment::new_empty(document, "initialAssignment");
+        obj.symbol().set(symbol);
+        obj
+    }
+
     pub fn symbol(&self) -> RequiredProperty<String> {
         self.required_sbml_property("symbol")
     }
@@ -393,11 +405,6 @@ impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct AssignmentRule(XmlElement);
 
-impl XmlDefault for AssignmentRule {
-    fn default(document: XmlDocument) -> Self {
-        AssignmentRule::new_empty(document, "assignmentRule")
-    }
-}
 impl Rule for AssignmentRule {}
 
 impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
@@ -407,6 +414,12 @@ impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
 }
 
 impl AssignmentRule {
+    pub fn new(document: XmlDocument, variable: &String) -> Self {
+        let obj = AssignmentRule::new_empty(document, "assignmentRule");
+        obj.variable().set(variable);
+        obj
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         self.required_sbml_property("variable")
     }
@@ -414,12 +427,6 @@ impl AssignmentRule {
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct RateRule(XmlElement);
-
-impl XmlDefault for RateRule {
-    fn default(document: XmlDocument) -> Self {
-        RateRule::new_empty(document, "rateRule")
-    }
-}
 
 impl Rule for RateRule {}
 
@@ -430,6 +437,12 @@ impl XmlNamedSubtype<AbstractRule> for RateRule {
 }
 
 impl RateRule {
+    pub fn new(document: XmlDocument, variable: &String) -> Self {
+        let obj = RateRule::new_empty(document, "rateRule");
+        obj.variable().set(variable);
+        obj
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         self.required_sbml_property("variable")
     }
@@ -457,13 +470,13 @@ impl Constraint {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Reaction(XmlElement);
 
-impl XmlDefault for Reaction {
-    fn default(document: XmlDocument) -> Self {
-        Reaction::new_empty(document, "reaction")
-    }
-}
-
 impl Reaction {
+    pub fn new(document: XmlDocument, id: &String, reversible: bool) -> Self {
+        let obj = Reaction::new_empty(document, "reaction");
+        obj.id().set(id);
+        obj.reversible().set(&reversible);
+        obj
+    }
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }
@@ -504,12 +517,18 @@ pub struct SpeciesReference(XmlElement);
 
 impl XmlDefault for SpeciesReference {
     fn default(document: XmlDocument) -> Self {
-        SpeciesReference::new_empty(document, "speciesReference")
+        SpeciesReference::new(document, true)
     }
 }
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
+    pub fn new(document: XmlDocument, constant: bool) -> Self {
+        let obj = SpeciesReference::new_empty(document, "speciesReference");
+        obj.constant().set(&constant);
+        obj
+    }
+
     pub fn stoichiometry(&self) -> OptionalProperty<f64> {
         self.optional_sbml_property("stoichiometry")
     }
@@ -552,13 +571,13 @@ impl KineticLaw {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct LocalParameter(XmlElement);
 
-impl XmlDefault for LocalParameter {
-    fn default(document: XmlDocument) -> Self {
-        LocalParameter::new_empty(document, "localParameter")
-    }
-}
-
 impl LocalParameter {
+    pub fn new(document: XmlDocument, id: &String) -> Self {
+        let obj = LocalParameter::new_empty(document, "localParameter");
+        obj.id().set(id);
+        obj
+    }
+
     pub fn id(&self) -> RequiredProperty<String> {
         self.required_sbml_property("id")
     }
@@ -577,10 +596,16 @@ pub struct Event(XmlElement);
 
 impl XmlDefault for Event {
     fn default(document: XmlDocument) -> Self {
-        Event::new_empty(document, "event")
+        Event::new(document, false)
     }
 }
 impl Event {
+    pub fn new(document: XmlDocument, use_values_from_trigger_time: bool) -> Self {
+        let obj = Event::new_empty(document, "event");
+        obj.use_values_from_trigger_time().set(&use_values_from_trigger_time);
+        obj
+    }
+
     pub fn use_values_from_trigger_time(&self) -> RequiredProperty<bool> {
         self.required_sbml_property("useValuesFromTriggerTime")
     }
@@ -607,11 +632,18 @@ pub struct Trigger(XmlElement);
 
 impl XmlDefault for Trigger {
     fn default(document: XmlDocument) -> Self {
-        Trigger::new_empty(document, "trigger")
+        Trigger::new(document, false, false)
     }
 }
 
 impl Trigger {
+    pub fn new(document: XmlDocument, persistent: bool, initial_value: bool) -> Self {
+        let obj = Trigger::new_empty(document, "trigger");
+        obj.persistent().set(&persistent);
+        obj.initial_value().set(&initial_value);
+        obj
+    }
+
     pub fn initial_value(&self) -> RequiredProperty<bool> {
         self.required_sbml_property("initialValue")
     }
@@ -658,13 +690,13 @@ impl Delay {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct EventAssignment(XmlElement);
 
-impl XmlDefault for EventAssignment {
-    fn default(document: XmlDocument) -> Self {
-        EventAssignment::new_empty(document, "eventAssignment")
-    }
-}
-
 impl EventAssignment {
+    pub fn new(document: XmlDocument, variable: &String) -> Self {
+        let obj = EventAssignment::new_empty(document, "eventAssignment");
+        obj.variable().set(variable);
+        obj
+    }
+
     pub fn variable(&self) -> RequiredProperty<String> {
         self.required_sbml_property("variable")
     }
