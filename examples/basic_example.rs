@@ -1,5 +1,6 @@
 use biodivine_lib_sbml::sbase::SBase;
-use biodivine_lib_sbml::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
+use biodivine_lib_sbml::validation::SbmlIssue;
+use biodivine_lib_sbml::xml::{OptionalXmlChild, OptionalXmlProperty};
 use biodivine_lib_sbml::Sbml;
 
 // To run this example, execute `cargo run --example basic_example`.
@@ -12,5 +13,7 @@ fn main() {
     let model = doc.model().get().unwrap();
     assert_eq!("model_id", model.id().get().unwrap().as_str());
     // Print the whole document:
-    println!("{}", model.read_doc().write_str().unwrap());
+    // println!("{}", model.read_doc().write_str().unwrap());
+    let mut issues: Vec<SbmlIssue> = Vec::new();
+    doc.validate(&mut issues);
 }

@@ -1,5 +1,6 @@
+use crate::xml::OptionalXmlChild;
 use crate::Sbml;
-use xml_doc::Element;
+use xml_doc::{Document, Element};
 
 /// A trait implemented by SBML components that perform some form of validation.
 pub trait SbmlValidate {
@@ -20,6 +21,8 @@ pub struct SbmlIssue {
     /// Refers to the "raw" XML element where the issue occurred.
     pub element: Element,
     pub severity: SbmlIssueSeverity,
+    pub rule: String,
+    pub message: String,
 }
 
 pub enum SbmlIssueSeverity {
@@ -33,4 +36,36 @@ pub enum SbmlIssueSeverity {
     /// issue (e.g. an property is included when it does not have to be, or unknown tags
     /// or attributes are present in the document, e.g. due to the use of unofficial extensions).
     Info,
+}
+
+/// An SBML XML document must not contain undefined elements or attributes in the SBML Level 3
+/// Core namespace or in a SBML Level 3 package namespace. Documents containing unknown
+/// elements or attributes placed in an SBML namespace do not conform to the SBML
+/// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
+pub fn apply_rule_10102(doc: &Document, sbml: &Sbml, issues: &mut Vec<SbmlIssue>) {
+    let rule_number = "10102".to_string();
+
+    if doc.root_nodes().len() != 1 {
+        issues.push(SbmlIssue {
+            element: doc.container(),
+            severity: SbmlIssueSeverity::Error,
+            rule: rule_number.clone(),
+            message: "The document contains multiple root nodes.".to_string(),
+        })
+    }
+
+    if let Some(root_element) = doc.root_element() {
+        if root_element.name(doc) == "sbml" {
+            if let Some(model) = sbml.model().get() {
+                model.apply_rule_10102(issues);
+            }
+        } else {
+            issues.push(SbmlIssue {
+                element: root_element,
+                severity: SbmlIssueSeverity::Error,
+                rule: rule_number,
+                message: "Root element is invalid".to_string(),
+            })
+        }
+    }
 }

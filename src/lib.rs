@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
@@ -7,6 +8,7 @@ use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::model::Model;
+use crate::validation::{apply_rule_10102, SbmlIssue};
 use crate::xml::{XmlDocument, XmlElement};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
@@ -104,6 +106,16 @@ impl Sbml {
 
     pub fn version(&self) -> RequiredProperty<String> {
         RequiredProperty::new(&self.sbml_root, "version")
+    }
+
+    /// Validates the document against validation rules specified in the [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf)
+    ///
+    /// ### Rule 10101
+    /// is already satisfied implicitly by the use of the package *xml-doc* as writing
+    /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
+    /// UTF-16, ISO 8859-1, GBK or EUC-KR.
+    pub fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+        apply_rule_10102(self.xml.read().unwrap().deref(), self, issues);
     }
 }
 
