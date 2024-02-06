@@ -10,6 +10,7 @@ mod constraint;
 mod event;
 mod function_definition;
 mod initial_assignment;
+mod math;
 mod model;
 mod parameter;
 mod reaction;

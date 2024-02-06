@@ -107,6 +107,12 @@ impl Sbml {
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
     /// UTF-16, ISO 8859-1, GBK or EUC-KR.
     ///
+    /// ### Rule 10102
+    /// states that an SBML XML document must not contain undefined elements or attributes in the SBML Level 3
+    /// Core namespace or in a SBML Level 3 package namespace. Documents containing unknown
+    /// elements or attributes placed in an SBML namespace do not conform to the SBML specification.
+    /// (References: SBML L3V1 Section 4.1; SBML L3V2 Section 4.1.)
+    ///
     /// ### Rule 10104
     /// is already satisfied implicitly by the use of the package *xml-doc* as loading
     /// a document without an error ensures that the document conforms to the basic

@@ -56,7 +56,6 @@ pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_attributes!("variable"),
 };
 
-// TODO: check if all elements are allowed to have SBASE children <notes> and <annotation>
 pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
     "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),

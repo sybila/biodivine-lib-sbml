@@ -73,6 +73,10 @@ impl KineticLaw {
         if self.local_parameters().is_set() {
             self.validate_list_of_local_parameters(issues);
         }
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 
     fn validate_list_of_local_parameters(&self, issues: &mut Vec<SbmlIssue>) {

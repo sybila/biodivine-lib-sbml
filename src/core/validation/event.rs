@@ -35,23 +35,39 @@ impl Event {
 impl Trigger {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 }
 
 impl Priority {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 }
 
 impl Delay {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 }
 
 impl EventAssignment {
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         apply_rule_10102(self.xml_element(), issues);
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 }
