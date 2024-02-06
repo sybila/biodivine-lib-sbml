@@ -12,7 +12,13 @@ impl Math {
     /// element present for its allowed children (except [Math] element that is
     /// the subject of this validation procedure) and thus **MathML** content
     /// can be present only within a [Math] element. However, additional check for
-    /// explicit or implicit valid namespace of a [Math] element must be performed.  
+    /// explicit or implicit valid namespace of a [Math] element must be performed.
+    ///
+    /// ### Rule 10202
+    /// Validates that only allowed subset of **MathML** child elements are present
+    /// within [Math] element. An SBML package may allow new MathML elements to be
+    /// added to this list, and if so, the package must define required="true" on
+    /// the SBML container element <sbml>.
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         self.apply_rule_10201(issues);
         self.apply_rule_10202(issues);
