@@ -54,7 +54,7 @@ impl Sbml {
                     root_element
                         .children(doc.deref())
                         .iter()
-                        .map(|node| node.as_element().unwrap().full_name(doc.deref()))
+                        .filter_map(|node| node.as_element().map(|it| it.full_name(doc.deref())))
                         .collect(),
                     issues,
                 );
@@ -128,7 +128,7 @@ pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let children_names = element
         .children(doc.deref())
         .iter()
-        .map(|node| node.as_element().unwrap().full_name(doc.deref()))
+        .filter_map(|node| node.as_element().map(|it| it.full_name(doc.deref())))
         .collect();
 
     validate_allowed_attributes(
