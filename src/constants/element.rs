@@ -112,6 +112,7 @@ pub const MATHML_ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
 pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: phf::Map<&str, &[&str]> = phf_map! {
     "encoding" => &["csymbol", "annotation", "annotation-xml"],
     "definitionURL" => &["ci", "csymbol", "semantics"],
+    "type" => &["cn"]
 };
 
 pub const MATHML_ALLOWED_DEFINITION_URLS: &[&str] = &[
