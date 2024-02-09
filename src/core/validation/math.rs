@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use xml_doc::Element;
 
+use crate::constants::element::MATHML_ALLOWED_CHILDREN_BY_ATTR;
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
 use crate::core::Math;
@@ -16,6 +17,7 @@ impl Math {
         self.apply_rule_10201(issues);
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
+        self.apply_rule_10204(issues);
     }
 
     /// ### Rule 10201
@@ -78,7 +80,7 @@ impl Math {
     /// elements, and if so, the package must define required=“true” on the SBML container element <sbml>.
     fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let allowed = ["csymbol", "annotation", "annotation-xml"];
+        let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
         let children: Vec<Element> = self
             .raw_element()
             .child_elements_recursive(doc.deref())
@@ -99,6 +101,41 @@ impl Math {
                         name
                     ),
                     rule: "10203".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                });
+            }
+        }
+    }
+
+    // TODO: Complete implementation when adding extensions/packages is solved
+    /// ### Rule 10204
+    /// In the SBML subset of MathML 2.0, the MathML attribute definitionURL is only permitted on
+    /// **ci**, **csymbol** and **semantics**. No other MathML elements may have a definitionURL attribute. An
+    /// SBML package may allow the definitionURL attribute on other elements, and if so, the package
+    /// must define required=“true” on the SBML container element <sbml>.
+    fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.attribute(doc.deref(), "definitionURL").is_some())
+            .copied()
+            .collect();
+
+        for child in children {
+            let name = child.name(doc.deref());
+
+            if !allowed.contains(&name) {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!(
+                        "Attribute [definitionURL] found on element <{0}>, which is forbidden. \
+                        Attribute [definitionURL] is only permitted on <ci>, <csymbol> and <semantics>.",
+                        name
+                    ),
+                    rule: "10204".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 });
             }
