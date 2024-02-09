@@ -113,3 +113,10 @@ pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: phf::Map<&str, &[&str]> = phf_map! {
     "encoding" => &["csymbol", "annotation", "annotation-xml"],
     "definitionURL" => &["ci", "csymbol", "semantics"],
 };
+
+pub const MATHML_ALLOWED_DEFINITION_URLS: &[&str] = &[
+    "http://www.sbml.org/sbml/symbols/time",
+    "http://www.sbml.org/sbml/symbols/delay",
+    "http://www.sbml.org/sbml/symbols/avogadro",
+    "http://www.sbml.org/sbml/symbols/rateOf",
+];

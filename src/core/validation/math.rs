@@ -2,12 +2,12 @@ use std::ops::Deref;
 
 use xml_doc::Element;
 
-use crate::constants::element::MATHML_ALLOWED_CHILDREN_BY_ATTR;
-use crate::constants::namespaces::URL_MATHML;
-use crate::core::validation::get_allowed_children;
-use crate::core::Math;
-use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::constants::element::{MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS};
+use crate::constants::namespaces::URL_MATHML;
+use crate::core::Math;
+use crate::core::validation::get_allowed_children;
+use crate::xml::XmlWrapper;
 
 impl Math {
     /// Applies rules:
@@ -18,6 +18,7 @@ impl Math {
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
         self.apply_rule_10204(issues);
+        self.apply_rule_10205(issues);
     }
 
     /// ### Rule 10201
@@ -136,6 +137,39 @@ impl Math {
                         name
                     ),
                     rule: "10204".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                });
+            }
+        }
+    }
+
+    // TODO: Complete implementation when adding extensions/packages is solved
+    /// ### Rule 10205
+    /// In SBML Level 3, the only values permitted for the attribute definitionURL on a csymbol are
+    /// “http://www.sbml.org/sbml/symbols/time”, “http://www.sbml.org/sbml/symbols/delay”,
+    /// “http://www.sbml.org/sbml/symbols/avogadro”, and “http://www.sbml.org/sbml/symbols/rateOf”.
+    /// An SBML package may allow new values for the definitionURL attribute of a csymbol, and if so,
+    /// the package must define required=“true” on the SBML container element <sbml>.
+    fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| {
+                child.attribute(doc.deref(), "definitionURL").is_some()
+                    && child.name(doc.deref()) == "csymbol"
+            })
+            .copied()
+            .collect();
+
+        for child in children {
+            let value = child.attribute(doc.deref(), "definitionURL").unwrap();
+            if !MATHML_ALLOWED_DEFINITION_URLS.contains(&value) {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!("Invalid definitionURL value found '{}'.", value),
+                    rule: "10205".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 });
             }
