@@ -1,9 +1,11 @@
-use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN};
-use crate::xml::{XmlElement, XmlWrapper};
-use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
 use std::collections::HashMap;
 use std::ops::Deref;
+
 use xml_doc::Element;
+
+use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
+use crate::xml::{XmlElement, XmlWrapper};
+use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
 
 mod compartment;
 mod constraint;
@@ -149,7 +151,10 @@ pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
 
 pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
     let Some(allowed) = ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
-        return &[];
+        let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
+            return &[];
+        };
+        return allowed;
     };
     allowed
 }

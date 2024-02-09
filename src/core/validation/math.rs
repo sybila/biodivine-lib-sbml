@@ -1,11 +1,23 @@
+use std::ops::Deref;
+
+use xml_doc::Element;
+
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
 use crate::core::Math;
 use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
-use std::ops::Deref;
 
 impl Math {
+    /// Applies rules:
+    ///  - **[10201](self.apply_rule_10201)** - MathML content is permitted only within [Math] element.
+    ///  - **[10202](self.apply_rule_10202)** - Validates list of permitted elements within [Math] element.
+    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+        self.apply_rule_10201(issues);
+        self.apply_rule_10202(issues);
+        self.apply_rule_10203(issues);
+    }
+
     /// ### Rule 10201
     /// is *partially* satisfied by the implementation of the rule
     /// [10102](crate::core::validation::apply_rule_10102) as we check each
@@ -13,17 +25,6 @@ impl Math {
     /// the subject of this validation procedure) and thus **MathML** content
     /// can be present only within a [Math] element. However, additional check for
     /// explicit or implicit valid namespace of a [Math] element must be performed.
-    ///
-    /// ### Rule 10202
-    /// Validates that only allowed subset of **MathML** child elements are present
-    /// within [Math] element. An SBML package may allow new MathML elements to be
-    /// added to this list, and if so, the package must define required="true" on
-    /// the SBML container element <sbml>.
-    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
-        self.apply_rule_10201(issues);
-        self.apply_rule_10202(issues);
-    }
-
     fn apply_rule_10201(&self, issues: &mut Vec<SbmlIssue>) {
         if self.namespace_url() != URL_MATHML {
             issues.push(SbmlIssue {
@@ -39,6 +40,12 @@ impl Math {
         }
     }
 
+    // TODO: Complete implementation when adding extensions/packages is solved
+    /// ### Rule 10202
+    /// Validates that only allowed subset of **MathML** child elements are present
+    /// within [Math] element. An SBML package may allow new MathML elements to be
+    /// added to this list, and if so, the package must define required="true" on
+    /// the SBML container element <sbml>.
     fn apply_rule_10202(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children = self.raw_element().children_recursive(doc.deref());
@@ -59,6 +66,41 @@ impl Math {
                         severity: SbmlIssueSeverity::Error,
                     });
                 }
+            }
+        }
+    }
+
+    // TODO: Complete implementation when adding extensions/packages is solved
+    /// ### Rule 10203
+    /// In the SBML subset of MathML 2.0, the MathML attribute encoding is only permitted on
+    /// **csymbol**, **annotation** and **annotation-xml**. No other MathML elements may have
+    /// an encoding attribute. An SBML package may allow the encoding attribute on other
+    /// elements, and if so, the package must define required=“true” on the SBML container element <sbml>.
+    fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let allowed = ["csymbol", "annotation", "annotation-xml"];
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.attribute(doc.deref(), "encoding").is_some())
+            .copied()
+            .collect();
+
+        for child in children {
+            let name = child.name(doc.deref());
+
+            if !allowed.contains(&name) {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!(
+                        "Attribute [encoding] found on element <{0}>, which is forbidden. \
+                        Attribute [encoding] is only permitted on <csymbol>, <annotation> and <annotation-xml>.",
+                        name
+                    ),
+                    rule: "10203".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                });
             }
         }
     }

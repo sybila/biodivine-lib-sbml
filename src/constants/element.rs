@@ -95,9 +95,11 @@ pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "priority" => extended_sbase_children!("math"),
     "delay" => extended_sbase_children!("math"),
     "listOfEventAssignments" => extended_sbase_children!("eventAssignment"),
-    "eventAssignment" => extended_sbase_children!("math"),
-    // partially covers rule 10202
-    "math" => &["abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",
+    "eventAssignment" => extended_sbase_children!("math")
+};
+
+pub const MATHML_ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
+  "math" => &["abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",
                 "arccot", "arccsch", "arccsc", "arcsech", "arcsec", "arcsinh", "arcsin", "arctanh",
                 "arctan", "bvar", "ceiling", "ci", "cn", "cosh", "cos", "coth", "cot", "csch", "csc",
                 "csymbol", "degree", "divide", "eq", "exponentiale", "exp", "factorial", "false",
