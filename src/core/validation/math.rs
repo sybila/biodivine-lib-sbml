@@ -2,12 +2,14 @@ use std::ops::Deref;
 
 use xml_doc::Element;
 
-use crate::constants::element::{MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS};
-use crate::constants::namespaces::URL_MATHML;
-use crate::core::validation::get_allowed_children;
-use crate::core::Math;
-use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::constants::element::{
+    MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
+};
+use crate::constants::namespaces::URL_MATHML;
+use crate::core::Math;
+use crate::core::validation::get_allowed_children;
+use crate::xml::XmlWrapper;
 
 impl Math {
     /// Applies rules:
@@ -20,6 +22,7 @@ impl Math {
         self.apply_rule_10204(issues);
         self.apply_rule_10205(issues);
         self.apply_rule_10206(issues);
+        self.apply_rule_10207(issues);
     }
 
     /// ### Rule 10201
@@ -79,7 +82,7 @@ impl Math {
     /// In the SBML subset of MathML 2.0, the MathML attribute encoding is only permitted on
     /// **csymbol**, **annotation** and **annotation-xml**. No other MathML elements may have
     /// an encoding attribute. An SBML package may allow the encoding attribute on other
-    /// elements, and if so, the package must define required=“true” on the SBML container element <sbml>.
+    /// elements, and if so, the package must define required="true" on the SBML container element <sbml>.
     fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
@@ -114,7 +117,7 @@ impl Math {
     /// In the SBML subset of MathML 2.0, the MathML attribute definitionURL is only permitted on
     /// **ci**, **csymbol** and **semantics**. No other MathML elements may have a definitionURL attribute. An
     /// SBML package may allow the definitionURL attribute on other elements, and if so, the package
-    /// must define required=“true” on the SBML container element <sbml>.
+    /// must define required="true" on the SBML container element <sbml>.
     fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
@@ -147,10 +150,10 @@ impl Math {
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10205
     /// In SBML Level 3, the only values permitted for the attribute definitionURL on a csymbol are
-    /// “http://www.sbml.org/sbml/symbols/time”, “http://www.sbml.org/sbml/symbols/delay”,
-    /// “http://www.sbml.org/sbml/symbols/avogadro”, and “http://www.sbml.org/sbml/symbols/rateOf”.
+    /// "http://www.sbml.org/sbml/symbols/time", "http://www.sbml.org/sbml/symbols/delay",
+    /// "http://www.sbml.org/sbml/symbols/avogadro", and "http://www.sbml.org/sbml/symbols/rateOf".
     /// An SBML package may allow new values for the definitionURL attribute of a csymbol, and if so,
-    /// the package must define required=“true” on the SBML container element <sbml>.
+    /// the package must define required="true" on the SBML container element <sbml>.
     fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children: Vec<Element> = self
@@ -181,7 +184,7 @@ impl Math {
     /// ### Rule 10206
     /// In the SBML subset of MathML 2.0, the MathML attribute type is only permitted on the cn
     /// construct. No other MathML elements may have a type attribute. An SBML package may allow the
-    /// type attribute on other elements, and if so, the package must define required=“true” on the SBML
+    /// type attribute on other elements, and if so, the package must define required="true" on the SBML
     /// container element <sbml>.
     fn apply_rule_10206(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
@@ -207,6 +210,34 @@ impl Math {
                     rule: "10204".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 })
+            }
+        }
+    }
+
+    /// ### Rule 10207
+    /// The only permitted values for the attribute type on MathML cn elements are "**e-notation**", "**real**",
+    /// "**integer**", and "**rational**". An SBML package may allow new values for the type attribute, and if
+    /// so, the package must define required="true" on the SBML container element <sbml>.
+    fn apply_rule_10207(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.attribute(doc.deref(), "type").is_some())
+            .copied()
+            .collect();
+
+        for child in children {
+            let value = child.attribute(doc.deref(), "type").unwrap();
+
+            if !MATHML_ALLOWED_TYPES.contains(&value) {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!("Invalid type value found '{0}'.", value),
+                    rule: "10206".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                });
             }
         }
     }

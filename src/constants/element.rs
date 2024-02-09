@@ -121,3 +121,5 @@ pub const MATHML_ALLOWED_DEFINITION_URLS: &[&str] = &[
     "http://www.sbml.org/sbml/symbols/avogadro",
     "http://www.sbml.org/sbml/symbols/rateOf",
 ];
+
+pub const MATHML_ALLOWED_TYPES: &[&str] = &["e-notation", "real", "integer", "rational"];
