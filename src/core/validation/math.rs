@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use xml_doc::Element;
+use xml_doc::{Document, Element};
 
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
@@ -23,6 +23,7 @@ impl Math {
         self.apply_rule_10205(issues);
         self.apply_rule_10206(issues);
         self.apply_rule_10207(issues);
+        self.apply_rule_10208(issues);
     }
 
     /// ### Rule 10201
@@ -49,10 +50,10 @@ impl Math {
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10202
-    /// Validates that only allowed subset of **MathML** child elements are present
-    /// within [Math] element. An SBML package may allow new MathML elements to be
-    /// added to this list, and if so, the package must define required="true" on
-    /// the SBML container element <sbml>.
+    /// Validates that only allowed subset of **MathML** child elements are present within [Math]
+    /// element. An SBML package may allow new MathML elements to be added to this list, and if so,
+    /// the package must define **required="true"** on the SBML container element
+    /// [**sbml**](crate::Sbml).
     fn apply_rule_10202(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children = self.raw_element().children_recursive(doc.deref());
@@ -82,7 +83,8 @@ impl Math {
     /// In the SBML subset of MathML 2.0, the MathML attribute **encoding** is only permitted on
     /// **csymbol**, **annotation** and **annotation-xml**. No other MathML elements may have
     /// an **encoding** attribute. An SBML package may allow the encoding attribute on other
-    /// elements, and if so, the package must define required="true" on the SBML container element <sbml>.
+    /// elements, and if so, the package must define **required="true"** on the SBML container
+    /// element [**sbml**](crate::Sbml).
     fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
@@ -114,10 +116,11 @@ impl Math {
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10204
-    /// In the SBML subset of MathML 2.0, the MathML attribute **definitionURL** is only permitted on
-    /// **ci**, **csymbol** and **semantics**. No other MathML elements may have a **definitionURL** attribute. An
-    /// SBML package may allow the definitionURL attribute on other elements, and if so, the package
-    /// must define required="true" on the SBML container element <sbml>.
+    /// In the SBML subset of MathML 2.0, the MathML attribute **definitionURL** is only permitted
+    /// on **ci**, **csymbol** and **semantics**. No other MathML elements may have a
+    /// **definitionURL** attribute. An SBML package may allow the definitionURL attribute on other
+    /// elements, and if so, the package must define **required="true"** on the SBML container
+    /// element [**sbml**](crate::Sbml).
     fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
@@ -149,11 +152,13 @@ impl Math {
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10205
-    /// In SBML Level 3, the only values permitted for the attribute **definitionURL** on a **csymbol** are
-    /// "**http://www.sbml.org/sbml/symbols/time**", "**http://www.sbml.org/sbml/symbols/delay**",
-    /// "**http://www.sbml.org/sbml/symbols/avogadro**", and "**http://www.sbml.org/sbml/symbols/rateOf**".
-    /// An SBML package may allow new values for the definitionURL attribute of a csymbol, and if so,
-    /// the package must define required="true" on the SBML container element <sbml>.
+    /// In SBML Level 3, the only values permitted for the attribute **definitionURL** on a
+    /// **csymbol** are "**http://www.sbml.org/sbml/symbols/time**",
+    /// "**http://www.sbml.org/sbml/symbols/delay**",
+    /// "**http://www.sbml.org/sbml/symbols/avogadro**", and
+    /// "**http://www.sbml.org/sbml/symbols/rateOf**". An SBML package may allow new values for the
+    /// definitionURL attribute of a csymbol, and if so, the package must define **required="true"**
+    /// on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children: Vec<Element> = self
@@ -172,10 +177,15 @@ impl Math {
             if !MATHML_ALLOWED_DEFINITION_URLS.contains(&value) {
                 issues.push(SbmlIssue {
                     element: child,
-                    message: format!("Invalid definitionURL value found '{0}'. \
-                    Permitted values are: 'http://www.sbml.org/sbml/symbols/time', \
-                    'http://www.sbml.org/sbml/symbols/delay', 'http://www.sbml.org/sbml/symbols/avogadro' \
-                    and 'http://www.sbml.org/sbml/symbols/rateOf'", value),
+                    message: format!(
+                        "Invalid definitionURL value found '{0}'. Permitted values are: {1}",
+                        value,
+                        MATHML_ALLOWED_DEFINITION_URLS
+                            .iter()
+                            .map(|url| url.to_string())
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    ),
                     rule: "10205".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 });
@@ -185,10 +195,11 @@ impl Math {
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10206
-    /// In the SBML subset of MathML 2.0, the MathML attribute **type** is only permitted on the **cn**
-    /// construct. **No** other MathML elements may have a type attribute. An SBML package may allow the
-    /// type attribute on other elements, and if so, the package must define required="true" on the SBML
-    /// container element <sbml>.
+    /// In the SBML subset of MathML 2.0, the MathML attribute **type** is only permitted on the
+    /// **cn**
+    /// construct. **No** other MathML elements may have a type attribute. An SBML package may allow
+    /// the type attribute on other elements, and if so, the package must define **required="true"**
+    /// on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10206(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children: Vec<Element> = self
@@ -221,8 +232,8 @@ impl Math {
     /// ### Rule 10207
     /// The only permitted values for the attribute **type** on MathML cn elements are
     /// "**e-notation**", "**real**", "**integer**", and "**rational**". An SBML package may
-    /// allow new values for the type attribute, and if so, the package must define required="true"
-    /// on the SBML container element <sbml>.
+    /// allow new values for the type attribute, and if so, the package must define
+    /// **required="true"** on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10207(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let children: Vec<Element> = self
@@ -248,6 +259,79 @@ impl Math {
                     severity: SbmlIssueSeverity::Error,
                 });
             }
+        }
+    }
+
+    /// ### Rule 10208
+    /// MathML **lambda** elements are only permitted as either the first element inside the
+    /// [**Math**] element of a [**FunctionDefinition**](crate::core::FunctionDefinition) object,
+    /// or as the first element of a **semantics** element immediately inside the [**Math**] element
+    /// of a [**FunctionDefinition**](crate::core::FunctionDefinition) object. MathML **lambda**
+    /// elements may not be used elsewhere in an SBML model. An SBML package may allow **lambda**
+    /// elements on other elements, and if so, the package must define **required="true"** on the
+    /// SBML container element [**sbml**](crate::Sbml).
+    fn apply_rule_10208(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.name(doc.deref()) == "lambda")
+            .copied()
+            .collect();
+
+        for child in children {
+            let parent = child.parent(doc.deref()).unwrap();
+            let parent_name = parent.name(doc.deref());
+
+            if parent_name == "math" {
+                let grandparent = parent.parent(doc.deref()).unwrap();
+                Self::validate_lambda_placement(doc.deref(), child, parent, grandparent, issues);
+            } else if parent_name == "semantics" {
+                let grandparent = parent.parent(doc.deref()).unwrap();
+                let top_parent = grandparent.parent(doc.deref()).unwrap();
+                Self::validate_lambda_placement(doc.deref(), child, parent, top_parent, issues);
+            } else {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!(
+                        "Invalid immediate parent of <lambda>. Only <math> and <semantics> are \
+                        valid immediate parents. Actual parent: <{0}>",
+                        parent_name
+                    ),
+                    rule: "10208".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
+            }
+        }
+    }
+
+    /// Checks if:
+    ///  1. top-level parent of **lambda** is a [**FunctionDefinition**](crate::core::FunctionDefinition).
+    ///  2. **lambda** is the first child of its immediate parent
+    fn validate_lambda_placement(
+        doc: &Document,
+        child: Element,
+        parent: Element,
+        toplevel_parent: Element,
+        issues: &mut Vec<SbmlIssue>,
+    ) {
+        if toplevel_parent.name(doc) != "functionDefinition" {
+            // the (great)grandparent of <lambda> must be <functionDefinition>
+            issues.push(SbmlIssue {
+                element: child,
+                message: format!("The <lambda> can be present only within <functionDefinition> (in <math>). Actual: <{0}>", toplevel_parent.name(doc)),
+                rule: "10208".to_string(),
+                severity: SbmlIssueSeverity::Error
+            });
+        } else if *parent.child_elements(doc).first().unwrap() != child {
+            // the <lambda> must be the first child inside <math> (or <semantics>)
+            issues.push(SbmlIssue {
+                element: child,
+                message: "The <lambda> must be the first element within <math>.".to_string(),
+                rule: "10208".to_string(),
+                severity: SbmlIssueSeverity::Error,
+            })
         }
     }
 }
