@@ -24,6 +24,7 @@ impl Math {
         self.apply_rule_10207(issues);
         self.apply_rule_10208(issues);
         self.apply_rule_10220(issues);
+        self.apply_rule_10223(issues);
     }
 
     /// ### Rule 10201
@@ -384,6 +385,7 @@ impl Math {
     // }
 
     // TODO: Complete implementation when adding extensions/packages is solved
+    /// ### Rule 10220
     /// The SBML attribute **units** may only be added to MathML **cn** elements; no other MathML elements
     /// are permitted to have the **units** attribute. An SBML package may allow the **units** attribute
     /// on other elements, and if so, the package must define **required="true"** on the SBML container
@@ -411,6 +413,52 @@ impl Math {
                     ),
                     rule: "10220".to_string(),
                     severity: SbmlIssueSeverity::Error,
+                })
+            }
+        }
+    }
+
+    /// ### Rule 10223
+    /// The single argument for the *rateOf* **csymbol** function must be a **ci** element.
+    fn apply_rule_10223(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let children = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| {
+                child.name(doc.deref()) == "csymbol"
+                    && child
+                        .attribute(doc.deref(), "definitionURL")
+                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
+            })
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for child in children {
+            let child_count = child.child_elements(doc.deref()).len();
+
+            if child_count != 1 {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!("Invalid number ({0}) of children in <csymbol>. The <csymbol> must have precisely one child (argument).", child_count),
+                    rule: "10223".to_string(),
+                    severity: SbmlIssueSeverity::Error
+                });
+                continue;
+            }
+
+            let single_child_name = child
+                .child_elements(doc.deref())
+                .first()
+                .unwrap()
+                .name(doc.deref());
+            if single_child_name != "ci" {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!("Invalid child <{0}> of <csymbol>. The <csymbol> must have <ci> as its only child (argument).", single_child_name),
+                    rule: "10223".to_string(),
+                    severity: SbmlIssueSeverity::Error
                 })
             }
         }
