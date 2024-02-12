@@ -6,7 +6,7 @@ use crate::constants::element::{
 };
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
-use crate::core::Math;
+use crate::core::{Math, Model};
 use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
 
@@ -23,6 +23,7 @@ impl Math {
         self.apply_rule_10206(issues);
         self.apply_rule_10207(issues);
         self.apply_rule_10208(issues);
+        self.apply_rule_10214(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10223(issues);
     }
@@ -89,15 +90,15 @@ impl Math {
     fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| child.attribute(doc.deref(), "encoding").is_some())
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let name = child.name(doc.deref());
 
             if !allowed.contains(&name) {
@@ -125,15 +126,15 @@ impl Math {
     fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| child.attribute(doc.deref(), "definitionURL").is_some())
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let name = child.name(doc.deref());
 
             if !allowed.contains(&name) {
@@ -162,7 +163,7 @@ impl Math {
     /// on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
@@ -171,9 +172,9 @@ impl Math {
                     && child.name(doc.deref()) == "csymbol"
             })
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let value = child.attribute(doc.deref(), "definitionURL").unwrap();
             if !MATHML_ALLOWED_DEFINITION_URLS.contains(&value) {
                 issues.push(SbmlIssue {
@@ -203,15 +204,15 @@ impl Math {
     /// on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10206(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| child.attribute(doc.deref(), "type").is_some())
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let name = child.name(doc.deref());
 
             if !MATHML_ALLOWED_CHILDREN_BY_ATTR["type"].contains(&name) {
@@ -237,15 +238,15 @@ impl Math {
     /// **required="true"** on the SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10207(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| child.attribute(doc.deref(), "type").is_some())
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let value = child.attribute(doc.deref(), "type").unwrap();
 
             if !MATHML_ALLOWED_TYPES.contains(&value) {
@@ -274,15 +275,15 @@ impl Math {
     /// SBML container element [**sbml**](crate::Sbml).
     fn apply_rule_10208(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children: Vec<Element> = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| child.name(doc.deref()) == "lambda")
             .copied()
-            .collect();
+            .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let parent = child.parent(doc.deref()).unwrap();
             let parent_name = parent.name(doc.deref());
 
@@ -337,52 +338,63 @@ impl Math {
         }
     }
 
-    // // TODO: load function definition identifiers
-    // /// ### Rule 10214
-    // /// Outside of a [**FunctionDefinition**](crate::core::FunctionDefinition) object, if a MathML
-    // /// **ci** element is the first element within a MathML apply element, then the **ci** element's
-    // /// value can only be chosen from the set of identifiers of
-    // /// [**FunctionDefinition**](crate::core::FunctionDefinition) objects defined in the enclosing
-    // /// SBML [Model](crate::core::model) object.
-    // fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
-    //     let doc = self.read_doc();
-    //     let parent_name = self
-    //         .raw_element()
-    //         .parent(doc.deref())
-    //         .unwrap()
-    //         .name(doc.deref());
-    //
-    //     if parent_name != "functionDefinition" {
-    //         let children = self
-    //             .raw_element()
-    //             .child_elements(doc.deref())
-    //             .iter()
-    //             .filter(|child| {
-    //                 child.name(doc.deref()) == "apply"
-    //                     && child
-    //                         .child_elements(doc.deref())
-    //                         .first()
-    //                         .unwrap()
-    //                         .name(doc.deref())
-    //                         == "ci"
-    //             })
-    //             .copied()
-    //             .collect::<Vec<Element>>();
-    //
-    //         // let identifiers =
-    //         // for child in children {
-    //         //     let value = child.text_content(doc.deref());
-    //         //     if !identifiers.contains(value) {
-    //         //         issues.push(SbmlIssue {
-    //         //             element: child,
-    //         //             message: format!("Function '{0}' not defined. Function referred by <ci> must be defined in <functionDefinition> object.", value),
-    //         //             rule: "10214".to_string(),
-    //         //             severity: SbmlIssueSeverity::Error
-    //         //         })
-    //         //     }
-    //         // }
-    //     }
-    // }
+    /// ### Rule 10214
+    /// Outside of a [**FunctionDefinition**](crate::core::FunctionDefinition) object, if a MathML
+    /// **ci** element is the first element within a MathML apply element, then the **ci** element's
+    /// value can only be chosen from the set of identifiers of
+    /// [**FunctionDefinition**](crate::core::FunctionDefinition) objects defined in the enclosing
+    /// SBML [Model](crate::core::model) object.
+    fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let parent_name = self
+            .raw_element()
+            .parent(doc.deref())
+            .unwrap()
+            .name(doc.deref());
+
+        if parent_name != "functionDefinition" {
+            let children_of_interest = self
+                .raw_element()
+                .child_elements(doc.deref())
+                .iter()
+                .filter(|child| {
+                    child.name(doc.deref()) == "apply"
+                        && child
+                            .child_elements(doc.deref())
+                            .first()
+                            .unwrap()
+                            .name(doc.deref())
+                            == "ci"
+                })
+                .copied()
+                .collect::<Vec<Element>>();
+
+            let identifiers = Model::for_child_element(self.document(), self.xml_element())
+                .unwrap()
+                .function_definition_identifiers();
+
+            for child in children_of_interest {
+                let value = match child.child_elements(doc.deref()).first() {
+                    Some(element) => element.text_content(doc.deref()),
+                    None => "".to_string(),
+                };
+
+                if !identifiers.contains(&value) {
+                    issues.push(SbmlIssue {
+                        element: child,
+                        message: format!(
+                            "Function '{0}' not defined. \
+                            Function referred by <ci> must be defined in <functionDefinition> object \
+                            with relevant identifier (id).",
+                            value
+                        ),
+                        rule: "10214".to_string(),
+                        severity: SbmlIssueSeverity::Error,
+                    })
+                }
+            }
+        }
+    }
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10220
@@ -392,7 +404,7 @@ impl Math {
     /// element [**sbml**](crate::Sbml).
     fn apply_rule_10220(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children: Vec<Element> = self
+        let children_of_interest: Vec<Element> = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
@@ -400,7 +412,7 @@ impl Math {
             .copied()
             .collect();
 
-        for child in children {
+        for child in children_of_interest {
             let name = child.name(doc.deref());
 
             if !MATHML_ALLOWED_CHILDREN_BY_ATTR["units"].contains(&name) {
@@ -422,7 +434,7 @@ impl Math {
     /// The single argument for the *rateOf* **csymbol** function must be a **ci** element.
     fn apply_rule_10223(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
-        let children = self
+        let children_of_interest = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
@@ -435,7 +447,7 @@ impl Math {
             .copied()
             .collect::<Vec<Element>>();
 
-        for child in children {
+        for child in children_of_interest {
             let child_count = child.child_elements(doc.deref()).len();
 
             if child_count != 1 {

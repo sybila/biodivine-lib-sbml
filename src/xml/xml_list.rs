@@ -155,6 +155,16 @@ impl<Type: XmlWrapper> XmlList<Type> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn as_vec(&self) -> Vec<Type> {
+        let mut vec: Vec<Type> = vec![];
+
+        for i in 0..self.len() {
+            vec.push(self.get(i));
+        }
+
+        vec
+    }
 }
 
 // TODO:
