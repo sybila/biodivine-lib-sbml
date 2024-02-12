@@ -1,5 +1,4 @@
 use std::ops::Deref;
-
 use xml_doc::{Document, Element};
 
 use crate::constants::element::{
@@ -24,6 +23,7 @@ impl Math {
         self.apply_rule_10206(issues);
         self.apply_rule_10207(issues);
         self.apply_rule_10208(issues);
+        self.apply_rule_10220(issues);
     }
 
     /// ### Rule 10201
@@ -262,6 +262,7 @@ impl Math {
         }
     }
 
+    // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10208
     /// MathML **lambda** elements are only permitted as either the first element inside the
     /// [**Math**] element of a [**FunctionDefinition**](crate::core::FunctionDefinition) object,
@@ -332,6 +333,86 @@ impl Math {
                 rule: "10208".to_string(),
                 severity: SbmlIssueSeverity::Error,
             })
+        }
+    }
+
+    // // TODO: load function definition identifiers
+    // /// ### Rule 10214
+    // /// Outside of a [**FunctionDefinition**](crate::core::FunctionDefinition) object, if a MathML
+    // /// **ci** element is the first element within a MathML apply element, then the **ci** element's
+    // /// value can only be chosen from the set of identifiers of
+    // /// [**FunctionDefinition**](crate::core::FunctionDefinition) objects defined in the enclosing
+    // /// SBML [Model](crate::core::model) object.
+    // fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
+    //     let doc = self.read_doc();
+    //     let parent_name = self
+    //         .raw_element()
+    //         .parent(doc.deref())
+    //         .unwrap()
+    //         .name(doc.deref());
+    //
+    //     if parent_name != "functionDefinition" {
+    //         let children = self
+    //             .raw_element()
+    //             .child_elements(doc.deref())
+    //             .iter()
+    //             .filter(|child| {
+    //                 child.name(doc.deref()) == "apply"
+    //                     && child
+    //                         .child_elements(doc.deref())
+    //                         .first()
+    //                         .unwrap()
+    //                         .name(doc.deref())
+    //                         == "ci"
+    //             })
+    //             .copied()
+    //             .collect::<Vec<Element>>();
+    //
+    //         // let identifiers =
+    //         // for child in children {
+    //         //     let value = child.text_content(doc.deref());
+    //         //     if !identifiers.contains(value) {
+    //         //         issues.push(SbmlIssue {
+    //         //             element: child,
+    //         //             message: format!("Function '{0}' not defined. Function referred by <ci> must be defined in <functionDefinition> object.", value),
+    //         //             rule: "10214".to_string(),
+    //         //             severity: SbmlIssueSeverity::Error
+    //         //         })
+    //         //     }
+    //         // }
+    //     }
+    // }
+
+    // TODO: Complete implementation when adding extensions/packages is solved
+    /// The SBML attribute **units** may only be added to MathML **cn** elements; no other MathML elements
+    /// are permitted to have the **units** attribute. An SBML package may allow the **units** attribute
+    /// on other elements, and if so, the package must define **required="true"** on the SBML container
+    /// element [**sbml**](crate::Sbml).
+    fn apply_rule_10220(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let children: Vec<Element> = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.attribute(doc.deref(), "units").is_some())
+            .copied()
+            .collect();
+
+        for child in children {
+            let name = child.name(doc.deref());
+
+            if !MATHML_ALLOWED_CHILDREN_BY_ATTR["units"].contains(&name) {
+                issues.push(SbmlIssue {
+                    element: child,
+                    message: format!(
+                        "Attribute [units] found on element <{0}>, which is forbidden. \
+                        Attribute [units] is only permitted on <cn>.",
+                        name
+                    ),
+                    rule: "10220".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
+            }
         }
     }
 }
