@@ -1,10 +1,13 @@
+use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{
     AbstractRule, Compartment, Constraint, Event, FunctionDefinition, InitialAssignment, Parameter,
     Reaction, Species, UnitDefinition,
 };
-use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement, XmlList};
+use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement, XmlList, XmlWrapper};
 use macros::{SBase, XmlWrapper};
+use std::ops::Deref;
+use xml_doc::{Document, Element};
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -19,6 +22,38 @@ impl XmlDefault for Model {
 /// Public functions to manipulate with the contents of SBML [Model]
 /// i.e., optional lists inside SBML model
 impl Model {
+    /// Try to find an instance of a `Model` element for the given child element.
+    ///
+    /// The child can be any SBML tag, as long as it appears in an SBML model (i.e. one of
+    /// its transitive parents is a `Model` element). If this is not satisfied, the method
+    /// returns `None`.
+    pub fn for_child_element(doc: XmlDocument, child: XmlElement) -> Option<Self> {
+        let parent = {
+            let read_doc = doc.read().unwrap();
+            fn is_model(doc: &Document, e: Element) -> bool {
+                let name = e.name(doc);
+                let Some(namespace) = e.namespace(doc) else {
+                    return false;
+                };
+
+                name == "model" && namespace == URL_SBML_CORE
+            }
+
+            let mut parent = child.raw_element();
+            while !is_model(read_doc.deref(), parent) {
+                let Some(e) = parent.parent(read_doc.deref()) else {
+                    return None;
+                };
+                parent = e;
+            }
+
+            parent
+        };
+        let model = XmlElement::new_raw(doc, parent);
+        // Safe because we checked that the element has the correct tag name and namespace.
+        Some(unsafe { Model::unchecked_cast(model) })
+    }
+
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
     }
