@@ -5,8 +5,8 @@ use crate::core::{
     Reaction, SBase, Species, UnitDefinition,
 };
 use crate::xml::{
-    OptionalChild, OptionalXmlChild, OptionalXmlProperty, XmlDefault, XmlDocument, XmlElement,
-    XmlList, XmlWrapper,
+    OptionalChild, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlDefault,
+    XmlDocument, XmlElement, XmlList, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 use std::ops::Deref;
@@ -25,10 +25,10 @@ impl XmlDefault for Model {
 /// Public functions to manipulate with the contents of SBML [Model]
 /// i.e., optional lists inside SBML model
 impl Model {
-    /// Try to find an instance of a `Model` element for the given child element.
+    /// Try to find an instance of a [Model] element for the given child element.
     ///
     /// The child can be any SBML tag, as long as it appears in an SBML model (i.e. one of
-    /// its transitive parents is a `Model` element). If this is not satisfied, the method
+    /// its transitive parents is a [Model] element). If this is not satisfied, the method
     /// returns `None`.
     pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
         let parent = {
@@ -59,24 +59,6 @@ impl Model {
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
-    }
-
-    /// Returns a vector of [FunctionDefinition]s' identifiers (attribute **id**). If the identifier is not set,
-    /// it is not included in the output.
-    pub(crate) fn function_definition_identifiers(&self) -> Vec<String> {
-        let function_definitions = self.function_definitions();
-
-        if function_definitions.is_set() {
-            function_definitions
-                .get()
-                .unwrap()
-                .as_vec()
-                .iter()
-                .filter_map(|def| def.id().get())
-                .collect()
-        } else {
-            vec![]
-        }
     }
 
     pub fn unit_definitions(&self) -> OptionalChild<XmlList<UnitDefinition>> {
@@ -113,5 +95,47 @@ impl Model {
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
+    }
+
+    /// Returns a vector of [FunctionDefinition]s' identifiers (attribute **id**). If the identifier is not set,
+    /// it is not included in the output.
+    pub(crate) fn function_definition_identifiers(&self) -> Vec<String> {
+        let function_definitions = self.function_definitions();
+
+        if function_definitions.is_set() {
+            function_definitions
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .filter_map(|def| def.id().get())
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
+    /// Returns a vector of all [LocalParameter]s' identifiers (attribute **id**).
+    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
+        let reactions = self.reactions();
+        let mut vec: Vec<String> = vec![];
+
+        if reactions.is_set() {
+            for reaction in reactions.get().unwrap().as_vec() {
+                let kinetic_law = reaction.kinetic_law();
+
+                if kinetic_law.is_set() {
+                    let kinetic_law = kinetic_law.get().unwrap();
+                    let local_params = kinetic_law.local_parameters();
+
+                    if local_params.is_set() {
+                        for param in local_params.get().unwrap().as_vec() {
+                            vec.push(param.id().get());
+                        }
+                    }
+                }
+            }
+        }
+        vec
     }
 }

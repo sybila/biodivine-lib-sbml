@@ -6,7 +6,7 @@ use crate::constants::element::{
 };
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
-use crate::core::{Math, Model};
+use crate::core::{FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
 
@@ -24,6 +24,8 @@ impl Math {
         self.apply_rule_10207(issues);
         self.apply_rule_10208(issues);
         self.apply_rule_10214(issues);
+        // self.apply_rule_10215(issues);
+        self.apply_rule_10216(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10223(issues);
     }
@@ -392,6 +394,46 @@ impl Math {
                         severity: SbmlIssueSeverity::Error,
                     })
                 }
+            }
+        }
+    }
+
+    // TODO: needs review
+    /// ### Rule 10216
+    /// The id attribute value of a [LocalParameter] object defined within a [KineticLaw] object may only be
+    /// used, in core, in MathML ci elements within the math element of that same [KineticLaw]; in other
+    /// words, the identifier of the [LocalParameter] object is not visible to other parts of the model outside
+    /// of that [Reaction] instance. In package constructs, the **id** attribute value of a [LocalParameter] object
+    /// may only be used in MathML ci elements or as the target of an SIdRef attribute if that package
+    /// construct is a child of the parent [Reaction].
+    fn apply_rule_10216(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let all_local_param_ids = model.local_parameter_identifiers();
+        let scoped_local_param_ids =
+            match KineticLaw::for_child_element(self.document(), self.xml_element()) {
+                Some(k) => k.local_parameter_identifiers(),
+                None => vec![],
+            };
+
+        let children_of_interest = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.name(doc.deref()) == "ci")
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for child in children_of_interest {
+            let value = child.text_content(doc.deref());
+            if all_local_param_ids.contains(&value) && !scoped_local_param_ids.contains(&value) {
+                issues.push(SbmlIssue {
+                        element: child,
+                        message: format!("A <localParameter> identifier '{0}' found out of scope of its <KineticLaw>", value),
+                        rule: "10216".to_string(),
+                        severity: SbmlIssueSeverity::Error
+                    });
+            } else {
             }
         }
     }
