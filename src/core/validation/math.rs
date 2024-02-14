@@ -24,7 +24,7 @@ impl Math {
         self.apply_rule_10207(issues);
         self.apply_rule_10208(issues);
         self.apply_rule_10214(issues);
-        // self.apply_rule_10215(issues);
+        self.apply_rule_10215(issues);
         self.apply_rule_10216(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10223(issues);
@@ -325,9 +325,13 @@ impl Math {
             // the (great)grandparent of <lambda> must be <functionDefinition>
             issues.push(SbmlIssue {
                 element: child,
-                message: format!("The <lambda> can be present only within <functionDefinition> (in <math>). Actual: <{0}>", toplevel_parent.name(doc)),
+                message: format!(
+                    "A <lambda> found in invalid scope of <{0}>. \
+                The <lambda> can be located only within <functionDefinition> (in <math>).",
+                    toplevel_parent.name(doc)
+                ),
                 rule: "10208".to_string(),
-                severity: SbmlIssueSeverity::Error
+                severity: SbmlIssueSeverity::Error,
             });
         } else if *parent.child_elements(doc).first().unwrap() != child {
             // the <lambda> must be the first child inside <math> (or <semantics>)
@@ -357,7 +361,7 @@ impl Math {
         if parent_name != "functionDefinition" {
             let children_of_interest = self
                 .raw_element()
-                .child_elements(doc.deref())
+                .child_elements_recursive(doc.deref())
                 .iter()
                 .filter(|child| {
                     child.name(doc.deref()) == "apply"
@@ -399,6 +403,68 @@ impl Math {
     }
 
     // TODO: needs review
+    /// ### Rule 10215
+    /// Outside of a [FunctionDefinition] object, if a MathML **ci** element is not the first element within
+    /// a MathML **apply**, then the **ci** element's value may only be chosen from the following set of
+    /// identifiers: the identifiers of [Species](crate::core::species::Species),
+    /// [Compartment](crate::core::compartment::Compartment), [Parameter](crate::core::parameter::Parameter),
+    /// [SpeciesReference](crate::core::reaction::SpeciesReference) and [Reaction]
+    /// objects defined in the enclosing [Model] object; the identifiers of
+    /// [LocalParameter](crate::core::reaction::LocalParameter) objects that are children of the
+    /// [Reaction](crate::core::reaction::Reaction) in which the [FunctionDefinition] appears (if it appears inside
+    /// the [Math] object of a [KineticLaw]); and any identifiers (in the SId namespace of the model) belonging to an
+    /// object class defined by an SBML Level 3 package as having mathematical meaning.
+    fn apply_rule_10215(&self, issues: &mut Vec<SbmlIssue>) {
+        let is_out_of_function_definition =
+            FunctionDefinition::for_child_element(self.document(), self.xml_element()).is_none();
+
+        if is_out_of_function_definition {
+            let doc = self.read_doc();
+            let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+            let identifiers = [
+                model.species_reference_identifiers(),
+                model.compartment_identifiers(),
+                model.parameter_identifiers(),
+                model.species_identifiers(),
+                model.species_reference_identifiers(),
+                model.reaction_identifiers(),
+                model.local_parameter_identifiers(),
+            ]
+            .concat();
+            let apply_elements = self
+                .raw_element()
+                .child_elements_recursive(doc.deref())
+                .iter()
+                .filter(|child| child.name(doc.deref()) == "apply")
+                .copied()
+                .collect::<Vec<Element>>();
+
+            for apply in apply_elements {
+                let ci_elements = apply
+                    .child_elements(doc.deref())
+                    .iter()
+                    .filter(|child| child.name(doc.deref()) == "ci")
+                    .skip(1)
+                    .copied()
+                    .collect::<Vec<Element>>();
+
+                for ci in ci_elements {
+                    let value = ci.text_content(doc.deref());
+
+                    if !identifiers.contains(&value) {
+                        issues.push(SbmlIssue {
+                            element: ci,
+                            message: format!("Invalid identifier value '{0}' in <ci>.", value),
+                            rule: "10215".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO: needs review
     /// ### Rule 10216
     /// The id attribute value of a [LocalParameter] object defined within a [KineticLaw] object may only be
     /// used, in core, in MathML ci elements within the math element of that same [KineticLaw]; in other
@@ -415,8 +481,19 @@ impl Math {
                 Some(k) => k.local_parameter_identifiers(),
                 None => vec![],
             };
-
-        let children_of_interest = self
+        let b_variables = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.name(doc.deref()) == "bvar")
+            .map(|bvar| {
+                bvar.child_elements(doc.deref())
+                    .first()
+                    .unwrap()
+                    .text_content(doc.deref())
+            })
+            .collect::<Vec<String>>();
+        let ci_elements = self
             .raw_element()
             .child_elements_recursive(doc.deref())
             .iter()
@@ -424,16 +501,19 @@ impl Math {
             .copied()
             .collect::<Vec<Element>>();
 
-        for child in children_of_interest {
-            let value = child.text_content(doc.deref());
-            if all_local_param_ids.contains(&value) && !scoped_local_param_ids.contains(&value) {
+        for ci in ci_elements {
+            let value = ci.text_content(doc.deref());
+            if !b_variables.contains(&value)
+                && all_local_param_ids.contains(&value)
+                && !scoped_local_param_ids.contains(&value)
+            {
                 issues.push(SbmlIssue {
-                        element: child,
-                        message: format!("A <localParameter> identifier '{0}' found out of scope of its <KineticLaw>", value),
+                        element: ci,
+                        message: format!("A <localParameter> identifier '{0}' found out of scope of its <KineticLaw>", 
+                                         value),
                         rule: "10216".to_string(),
                         severity: SbmlIssueSeverity::Error
                     });
-            } else {
             }
         }
     }

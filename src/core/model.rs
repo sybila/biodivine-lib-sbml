@@ -129,13 +129,121 @@ impl Model {
                     let local_params = kinetic_law.local_parameters();
 
                     if local_params.is_set() {
-                        for param in local_params.get().unwrap().as_vec() {
-                            vec.push(param.id().get());
-                        }
+                        let mut param_ids = local_params
+                            .get()
+                            .unwrap()
+                            .as_vec()
+                            .iter()
+                            .map(|param| param.id().get())
+                            .collect::<Vec<String>>();
+                        vec.append(&mut param_ids);
                     }
                 }
             }
         }
         vec
+    }
+
+    /// Returns a vector of all [Species]' identifiers (attribute **id**).
+    pub(crate) fn species_identifiers(&self) -> Vec<String> {
+        let species = self.species();
+
+        if species.is_set() {
+            species
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .map(|species| species.id().get())
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
+    /// Returns a vector of all [Compartment]s' identifiers (attribute **id**).
+    pub(crate) fn compartment_identifiers(&self) -> Vec<String> {
+        let compartment = self.compartments();
+
+        if compartment.is_set() {
+            compartment
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .map(|compartment| compartment.id().get())
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
+    /// Returns a vector of all [Parameter]s' identifiers (attribute **id**).
+    pub(crate) fn parameter_identifiers(&self) -> Vec<String> {
+        let parameters = self.parameters();
+
+        if parameters.is_set() {
+            parameters
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .map(|param| param.id().get())
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
+    /// Returns a vector of all [SpeciesReference](crate::core::SpeciesReference)' identifiers (attribute **id**).
+    /// If the identifier is not set, it is not included in the output.
+    pub(crate) fn species_reference_identifiers(&self) -> Vec<String> {
+        let reactions = self.reactions();
+        let mut identifiers: Vec<String> = vec![];
+
+        if reactions.is_set() {
+            for reaction in reactions.get().unwrap().as_vec() {
+                let mut reactants = match reaction.reactants().get() {
+                    Some(reactants) => reactants
+                        .as_vec()
+                        .iter()
+                        .filter_map(|reactant| reactant.id().get())
+                        .collect::<Vec<String>>(),
+                    None => vec![],
+                };
+
+                let mut products = match reaction.products().get() {
+                    Some(products) => products
+                        .as_vec()
+                        .iter()
+                        .filter_map(|product| product.id().get())
+                        .collect::<Vec<String>>(),
+                    None => vec![],
+                };
+
+                identifiers.append(&mut reactants);
+                identifiers.append(&mut products);
+            }
+            identifiers
+        } else {
+            vec![]
+        }
+    }
+
+    /// Returns a vector of all [Reaction]s' identifiers (attribute **id**).
+    pub(crate) fn reaction_identifiers(&self) -> Vec<String> {
+        let reactions = self.reactions();
+
+        if reactions.is_set() {
+            reactions
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .map(|reaction| reaction.id().get())
+                .collect::<Vec<String>>()
+        } else {
+            vec![]
+        }
     }
 }
