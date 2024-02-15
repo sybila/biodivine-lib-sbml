@@ -1,4 +1,5 @@
 use std::ops::Deref;
+use std::str::FromStr;
 use xml_doc::{Document, Element};
 
 use crate::constants::element::{
@@ -7,7 +8,7 @@ use crate::constants::element::{
 };
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
-use crate::core::{FunctionDefinition, KineticLaw, Math, Model};
+use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::XmlWrapper;
 use crate::{SbmlIssue, SbmlIssueSeverity};
 
@@ -30,6 +31,7 @@ impl Math {
         self.apply_rule_10218(issues);
         self.apply_rule_10219(issues);
         self.apply_rule_10220(issues);
+        self.apply_rule_10221(issues);
         self.apply_rule_10223(issues);
     }
 
@@ -272,9 +274,9 @@ impl Math {
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10208
     /// MathML **lambda** elements are only permitted as either the first element inside the
-    /// [**Math**] element of a [**FunctionDefinition**](crate::core::FunctionDefinition) object,
+    /// [**Math**] element of a [**FunctionDefinition**](FunctionDefinition) object,
     /// or as the first element of a **semantics** element immediately inside the [**Math**] element
-    /// of a [**FunctionDefinition**](crate::core::FunctionDefinition) object. MathML **lambda**
+    /// of a [**FunctionDefinition**](FunctionDefinition) object. MathML **lambda**
     /// elements may not be used elsewhere in an SBML model. An SBML package may allow **lambda**
     /// elements on other elements, and if so, the package must define **required="true"** on the
     /// SBML container element [**sbml**](crate::Sbml).
@@ -315,7 +317,7 @@ impl Math {
     }
 
     /// Checks if:
-    ///  1. top-level parent of **lambda** is a [**FunctionDefinition**](crate::core::FunctionDefinition).
+    ///  1. top-level parent of **lambda** is a [**FunctionDefinition**](FunctionDefinition).
     ///  2. **lambda** is the first child of its immediate parent
     fn validate_lambda_placement(
         doc: &Document,
@@ -348,10 +350,10 @@ impl Math {
     }
 
     /// ### Rule 10214
-    /// Outside of a [**FunctionDefinition**](crate::core::FunctionDefinition) object, if a MathML
+    /// Outside of a [**FunctionDefinition**](FunctionDefinition) object, if a MathML
     /// **ci** element is the first element within a MathML apply element, then the **ci** element's
     /// value can only be chosen from the set of identifiers of
-    /// [**FunctionDefinition**](crate::core::FunctionDefinition) objects defined in the enclosing
+    /// [**FunctionDefinition**](FunctionDefinition) objects defined in the enclosing
     /// SBML [Model](crate::core::model) object.
     fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.read_doc();
@@ -678,6 +680,43 @@ impl Math {
                     ),
                     rule: "10220".to_string(),
                     severity: SbmlIssueSeverity::Error,
+                })
+            }
+        }
+    }
+
+    /// ### Rule 10221
+    /// The value of the SBML attribute units on a MathML cn element must be chosen from either the
+    /// set of identifiers of UnitDefinition objects in the model, or the set of base units defined by SBML.
+    fn apply_rule_10221(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let unit_identifiers = Model::for_child_element(self.document(), self.xml_element())
+            .unwrap()
+            .unit_definition_identifiers();
+        let cn_elements = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| {
+                child.name(doc.deref()) == "cn" && child.attribute(doc.deref(), "units").is_some()
+            })
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for cn in cn_elements {
+            let value = cn.attribute(doc.deref(), "units").unwrap();
+
+            if !unit_identifiers.contains(&value.to_string()) && BaseUnit::from_str(value).is_err()
+            {
+                issues.push(SbmlIssue {
+                    element: cn,
+                    message: format!(
+                        "Invalid unit identifier '{0}' found. \
+                        Only identifiers of <unitDefinition> objects and base units can be used in <cn>.",
+                        value
+                    ),
+                    rule: "10221".to_string(),
+                    severity: SbmlIssueSeverity::Error
                 })
             }
         }

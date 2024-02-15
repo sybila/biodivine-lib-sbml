@@ -146,6 +146,24 @@ impl Model {
         0
     }
 
+    /// Returns a vector of [UnitDefinition]s' identifiers (attribute **id**). If the identifier is not set,
+    /// it is not included in the output.
+    pub(crate) fn unit_definition_identifiers(&self) -> Vec<String> {
+        let unit_definitions = self.unit_definitions();
+
+        if unit_definitions.is_set() {
+            unit_definitions
+                .get()
+                .unwrap()
+                .as_vec()
+                .iter()
+                .filter_map(|unit| unit.id().get())
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
     /// Returns a vector of all [LocalParameter]s' identifiers (attribute **id**).
     pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
         let reactions = self.reactions();
