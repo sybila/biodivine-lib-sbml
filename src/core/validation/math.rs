@@ -731,39 +731,48 @@ impl Math {
             .child_elements_recursive(doc.deref())
             .iter()
             .filter(|child| {
-                child.name(doc.deref()) == "csymbol"
-                    && child
-                        .attribute(doc.deref(), "definitionURL")
-                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
+                child.name(doc.deref()) == "apply" && !child.child_elements(doc.deref()).is_empty()
+            })
+            .filter(|apply| {
+                apply
+                    .child_elements(doc.deref())
+                    .first()
+                    .unwrap()
+                    .attribute(doc.deref(), "definitionURL")
+                    .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
             })
             .copied()
             .collect::<Vec<Element>>();
 
         for child in children_of_interest {
-            let child_count = child.child_elements(doc.deref()).len();
+            let apply_children = child.child_elements(doc.deref());
 
-            if child_count != 1 {
+            if apply_children.len() != 2 {
                 issues.push(SbmlIssue {
                     element: child,
-                    message: format!("Invalid number ({0}) of children in <csymbol>. The <csymbol> must have precisely one child (argument).", child_count),
+                    message: format!(
+                        "Invalid number ({0}) of arguments provided for rateOf <csymbol>. \
+                         The call of rateOf <csymbol> must have precisely one argument.",
+                        apply_children.len() - 1
+                    ),
                     rule: "10223".to_string(),
-                    severity: SbmlIssueSeverity::Error
+                    severity: SbmlIssueSeverity::Error,
                 });
-                continue;
-            }
+            } else {
+                let argument_name = apply_children.last().unwrap().name(doc.deref());
 
-            let single_child_name = child
-                .child_elements(doc.deref())
-                .first()
-                .unwrap()
-                .name(doc.deref());
-            if single_child_name != "ci" {
-                issues.push(SbmlIssue {
-                    element: child,
-                    message: format!("Invalid child <{0}> of <csymbol>. The <csymbol> must have <ci> as its only child (argument).", single_child_name),
-                    rule: "10223".to_string(),
-                    severity: SbmlIssueSeverity::Error
-                })
+                if argument_name != "ci" {
+                    issues.push(SbmlIssue {
+                        element: child,
+                        message: format!(
+                            "Invalid argument <{0}> provided for <csymbol>.\
+                             The rateOf <csymbol> must have <ci> as its only argument.",
+                            argument_name
+                        ),
+                        rule: "10223".to_string(),
+                        severity: SbmlIssueSeverity::Error,
+                    })
+                }
             }
         }
     }

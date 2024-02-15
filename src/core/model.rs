@@ -130,11 +130,9 @@ impl Model {
             if function.is_some() && function.unwrap().math().is_set() {
                 let doc = self.read_doc();
                 let math = function.unwrap().math().get().unwrap();
-                let lambda = math.raw_element().find(doc.deref(), "lambda");
 
-                if lambda.is_some() {
+                if let Some(lambda) = math.raw_element().find(doc.deref(), "lambda") {
                     return lambda
-                        .unwrap()
                         .child_elements(doc.deref())
                         .iter()
                         .filter(|child| child.name(doc.deref()) == "bvar")
