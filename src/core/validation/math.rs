@@ -28,6 +28,7 @@ impl Math {
         self.apply_rule_10215(issues);
         self.apply_rule_10216(issues);
         self.apply_rule_10218(issues);
+        self.apply_rule_10219(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10223(issues);
     }
@@ -456,7 +457,10 @@ impl Math {
                     if !identifiers.contains(&value) {
                         issues.push(SbmlIssue {
                             element: ci,
-                            message: format!("Invalid identifier value '{0}' in <ci>.", value),
+                            message: format!(
+                                "Invalid identifier value '{0}' in <ci>. Identifier not found.",
+                                value
+                            ),
                             rule: "10215".to_string(),
                             severity: SbmlIssueSeverity::Error,
                         })
@@ -597,6 +601,49 @@ impl Math {
                             rule: "10218".to_string(), 
                             severity: SbmlIssueSeverity::Warning
                         });
+                }
+            }
+        }
+    }
+
+    /// ### Rule 10219
+    fn apply_rule_10219(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+
+        let apply_elements = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.name(doc.deref()) == "apply")
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for apply in apply_elements {
+            let children = apply.child_elements(doc.deref());
+            let child_count = children.len() as i32;
+            let function_call = children.first();
+
+            if function_call.is_some() && function_call.unwrap().name(doc.deref()) == "ci" {
+                let function_call = function_call.unwrap();
+                let func_identifiers = model.function_definition_identifiers();
+                let id = function_call.text_content(doc.deref());
+
+                if func_identifiers.contains(&id) {
+                    let expected_args = model.function_definition_arguments(id.as_str());
+
+                    if child_count - 1 != expected_args {
+                        issues.push(SbmlIssue {
+                            element: *function_call,
+                            message: format!(
+                                "Invalid number of arguments ({0}) provided for function '{1}'",
+                                child_count - 1,
+                                id
+                            ),
+                            rule: "10219".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        });
+                    }
                 }
             }
         }

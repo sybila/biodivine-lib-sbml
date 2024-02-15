@@ -115,6 +115,37 @@ impl Model {
         }
     }
 
+    /// Find a [FunctionDefinition] by its *id* and return a number of arguments this function expects.
+    /// More precisely, find a number of **bvar** elements inside **lambda** inside **math** element of
+    /// [FunctionDefinition]. If [FunctionDefinition] cannot be found, returns 0.
+    pub(crate) fn function_definition_arguments(&self, id: &str) -> i32 {
+        let function_definitions = self.function_definitions();
+
+        if function_definitions.is_set() {
+            let function_definitions = function_definitions.get().unwrap().as_vec();
+            let function = function_definitions
+                .iter()
+                .find(|function| function.id().get() == Some(id.to_string()));
+
+            if function.is_some() && function.unwrap().math().is_set() {
+                let doc = self.read_doc();
+                let math = function.unwrap().math().get().unwrap();
+                let lambda = math.raw_element().find(doc.deref(), "lambda");
+
+                if lambda.is_some() {
+                    return lambda
+                        .unwrap()
+                        .child_elements(doc.deref())
+                        .iter()
+                        .filter(|child| child.name(doc.deref()) == "bvar")
+                        .collect::<Vec<&Element>>()
+                        .len() as i32;
+                }
+            }
+        }
+        0
+    }
+
     /// Returns a vector of all [LocalParameter]s' identifiers (attribute **id**).
     pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
         let reactions = self.reactions();
