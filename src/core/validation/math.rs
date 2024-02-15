@@ -3,6 +3,7 @@ use xml_doc::{Document, Element};
 
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
+    MATHML_BINARY_OPERATORS, MATHML_NARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
@@ -26,6 +27,7 @@ impl Math {
         self.apply_rule_10214(issues);
         self.apply_rule_10215(issues);
         self.apply_rule_10216(issues);
+        self.apply_rule_10218(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10223(issues);
     }
@@ -514,6 +516,88 @@ impl Math {
                         rule: "10216".to_string(),
                         severity: SbmlIssueSeverity::Error
                     });
+            }
+        }
+    }
+
+    /// ### Rule 10218
+    /// A MathML operator must be supplied the number of arguments appropriate for that operator.
+    fn apply_rule_10218(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let apply_elements = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| child.name(doc.deref()) == "apply")
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for apply in apply_elements {
+            let children = apply.child_elements(doc.deref());
+            let child_count = children.len();
+
+            // iterate through children of an <apply> element
+            for child in children {
+                let name = child.name(doc.deref());
+
+                if MATHML_UNARY_OPERATORS.contains(&name) {
+                    // <minus> is allowed to have 1 OR 2 arguments
+                    if name == "minus" && child_count - 1 != 1 && child_count - 1 != 2 {
+                        issues.push(SbmlIssue {
+                            element: child,
+                            message: format!(
+                                "Invalid number ({0}) of arguments for operator <minus>. \
+                                The operator <minus> can take either 1 or 2 arguments.",
+                                child_count - 1
+                            ),
+                            rule: "10218".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        })
+                    } else if child_count - 1 != 1 && name != "minus" {
+                        issues.push(SbmlIssue {
+                            element: child,
+                            message: format!(
+                                "Invalid number ({0}) of arguments for unary operator <{1}>",
+                                child_count - 1,
+                                name
+                            ),
+                            rule: "10218".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        });
+                    }
+                } else if MATHML_BINARY_OPERATORS.contains(&name) {
+                    // root is allowed to have 1 OR 2 arguments
+                    if name == "root" && child_count - 1 != 1 && child_count - 1 != 2 {
+                        issues.push(SbmlIssue {
+                            element: child,
+                            message: format!(
+                                "Invalid number ({0}) of arguments for operator <root>. \
+                                The operator <root> can take either 1 or 2 arguments.",
+                                child_count - 1
+                            ),
+                            rule: "10218".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        })
+                    } else if child_count - 1 != 2 && name != "root" {
+                        issues.push(SbmlIssue {
+                            element: child,
+                            message: format!(
+                                "Invalid number ({0}) of arguments for binary operator <{1}>.",
+                                child_count - 1,
+                                name
+                            ),
+                            rule: "10218".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        });
+                    }
+                } else if MATHML_NARY_OPERATORS.contains(&name) && child_count - 1 == 0 {
+                    issues.push(SbmlIssue {
+                            element: child,
+                            message: format!("An N-ary operator <{0}> with 0 arguments found. Use of N-ary operators without any arguments is discouraged.", name), 
+                            rule: "10218".to_string(), 
+                            severity: SbmlIssueSeverity::Warning
+                        });
+                }
             }
         }
     }
