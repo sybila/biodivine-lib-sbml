@@ -9,7 +9,7 @@ use crate::constants::element::{
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
-use crate::xml::XmlWrapper;
+use crate::xml::{RequiredXmlProperty, XmlWrapper};
 use crate::{SbmlIssue, SbmlIssueSeverity};
 
 impl Math {
@@ -34,6 +34,7 @@ impl Math {
         self.apply_rule_10221(issues);
         self.apply_rule_10223(issues);
         self.apply_rule_10224(issues);
+        self.apply_rule_10225(issues);
     }
 
     /// ### Rule 10201
@@ -639,9 +640,12 @@ impl Math {
                         issues.push(SbmlIssue {
                             element: *function_call,
                             message: format!(
-                                "Invalid number of arguments ({0}) provided for function '{1}'",
+                                "Invalid number of arguments ({0}) provided for function '{1}'. \
+                                The function '{2}' takes {3} arguments.",
                                 child_count - 1,
-                                id
+                                id,
+                                id,
+                                expected_args
                             ),
                             rule: "10219".to_string(),
                             severity: SbmlIssueSeverity::Error,
@@ -822,6 +826,7 @@ impl Math {
                     rule: "10224".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 })
+                // TODO: what does "determined by algebraicRule" mean and how to check it?
             } else if algebraic_rule_determinants.contains(&value) {
                 issues.push(SbmlIssue {
                     element: ci,
@@ -831,6 +836,77 @@ impl Math {
                     rule: "10224".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 })
+            }
+        }
+    }
+
+    /// ### Rule 10225
+    /// If the target of a *rateOf* **csymbol** function is a [Species](crate::core::species::Species) with a
+    /// *hasOnlySubstanceUnits* value of *"false"*, the **compartment** of that [Species](crate::core::species::Species)
+    /// must not appear as the *variable* of an [AssignmentRule](crate::core::rule::AssignmentRule),
+    /// nor may its *size* be determined by an [AlgebraicRule](crate::core::rule::AlgebraicRule).
+    fn apply_rule_10225(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let assignment_rule_variables = model.assignment_rule_variables();
+        let algebraic_ci_values = model.algebraic_rule_ci_values();
+        let ci_elements = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| {
+                child.name(doc.deref()) == "apply"
+                    && child.child_elements(doc.deref()).len() > 1
+                    && child
+                        .child_elements(doc.deref())
+                        .first()
+                        .unwrap()
+                        .attribute(doc.deref(), "definitionURL")
+                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
+                    && child
+                        .child_elements(doc.deref())
+                        .get(1)
+                        .unwrap()
+                        .name(doc.deref())
+                        == "ci"
+            })
+            .copied()
+            .collect::<Vec<Element>>();
+
+        for ci in ci_elements {
+            let value = ci.text_content(doc.deref());
+
+            if let Some(species) = model.find_species(value.as_str()) {
+                if !species.has_only_substance_units().get() {
+                    let compartment = model
+                        .find_compartment(species.compartment().get().as_str())
+                        .unwrap();
+                    let compartment_id = compartment.id().get();
+
+                    if assignment_rule_variables.contains(&compartment_id) {
+                        issues.push(SbmlIssue {
+                            element: ci,
+                            message: format!(
+                                "The <compartment> with id '{0}' found as the [variable] of an <assignmentRule>.",
+                                compartment_id
+                            ),
+                            rule: "10225".to_string(),
+                            severity: SbmlIssueSeverity::Error
+                        })
+                    } else if !compartment.constant().get()
+                        && algebraic_ci_values.contains(&compartment_id)
+                    {
+                        issues.push(SbmlIssue {
+                            element: ci,
+                            message: format!(
+                                "The <compartment>'s size with id '{0}' is possible to determine by an <algebraicRule>.",
+                                compartment_id
+                            ),
+                            rule: "10225".to_string(),
+                            severity: SbmlIssueSeverity::Error,
+                        })
+                    }
+                }
             }
         }
     }
