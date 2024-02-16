@@ -33,6 +33,7 @@ impl Math {
         self.apply_rule_10220(issues);
         self.apply_rule_10221(issues);
         self.apply_rule_10223(issues);
+        self.apply_rule_10224(issues);
     }
 
     /// ### Rule 10201
@@ -773,6 +774,63 @@ impl Math {
                         severity: SbmlIssueSeverity::Error,
                     })
                 }
+            }
+        }
+    }
+
+    /// ### Rule 10224
+    /// The target of a *rateOf* **csymbol** function must not appear as the *variable* of an
+    /// [AssignmentRule](crate::core::rule::AssignmentRule), nor may its value be determined by an
+    /// [AlgebraicRule](crate::core::rule::AlgebraicRule).
+    fn apply_rule_10224(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.read_doc();
+        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let ci_elements = self
+            .raw_element()
+            .child_elements_recursive(doc.deref())
+            .iter()
+            .filter(|child| {
+                child.name(doc.deref()) == "apply"
+                    && child.child_elements(doc.deref()).len() > 1
+                    && child
+                        .child_elements(doc.deref())
+                        .first()
+                        .unwrap()
+                        .attribute(doc.deref(), "definitionURL")
+                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
+                    && child
+                        .child_elements(doc.deref())
+                        .get(1)
+                        .unwrap()
+                        .name(doc.deref())
+                        == "ci"
+            })
+            .copied()
+            .collect::<Vec<Element>>();
+        let assignment_rule_variables = model.assignment_rule_variables();
+        let algebraic_rule_determinants = model.algebraic_rule_ci_values();
+
+        for ci in ci_elements {
+            let value = ci.text_content(doc.deref());
+
+            if assignment_rule_variables.contains(&value) {
+                issues.push(SbmlIssue {
+                    element: ci,
+                    message:
+                        format!("The value of target ('{0}') of rateOf <csymbol> found as a variable of <assignmentRule>.",
+                                value),
+                    rule: "10224".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
+            } else if algebraic_rule_determinants.contains(&value) {
+                issues.push(SbmlIssue {
+                    element: ci,
+                    message:
+                        format!("The value of target ('{0}') of rateOf <csymbol> determined by an <algebraicRule>.",
+                                value),
+                    rule: "10224".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
             }
         }
     }
