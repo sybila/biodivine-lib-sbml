@@ -1,4 +1,4 @@
-use biodivine_lib_sbml::{Sbml, SbmlIssue};
+use biodivine_lib_sbml::Sbml;
 
 // To run this example, execute `cargo run --example basic_example`.
 // If you want to add command line arguments, you can use
@@ -7,15 +7,13 @@ use biodivine_lib_sbml::{Sbml, SbmlIssue};
 // for the example binary, not for `cargo` itself.
 fn main() {
     // let doc = Sbml::read_path("test-inputs/COVID19_immunotherapy_Mathematical_Model.xml").unwrap();
-    // let doc =
-    //     Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
+    // let doc = Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
     let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
 
     // let model = doc.model().get().unwrap();
     // Print the whole document:
     // println!("{}", model.read_doc().write_str().unwrap());
-    let mut issues: Vec<SbmlIssue> = Vec::new();
-    doc.validate(&mut issues);
+    let issues = doc.validate();
 
     println!("No. of issues: {}", issues.len());
     for issue in issues {
