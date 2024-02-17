@@ -878,33 +878,34 @@ impl Math {
 
             if let Some(species) = model.find_species(value.as_str()) {
                 if !species.has_only_substance_units().get() {
-                    let compartment = model
-                        .find_compartment(species.compartment().get().as_str())
-                        .unwrap();
-                    let compartment_id = compartment.id().get();
-
-                    if assignment_rule_variables.contains(&compartment_id) {
-                        issues.push(SbmlIssue {
-                            element: ci,
-                            message: format!(
-                                "The <compartment> with id '{0}' found as the [variable] of an <assignmentRule>.",
-                                compartment_id
-                            ),
-                            rule: "10225".to_string(),
-                            severity: SbmlIssueSeverity::Error
-                        })
-                    } else if !compartment.constant().get()
-                        && algebraic_ci_values.contains(&compartment_id)
+                    if let Some(compartment) =
+                        model.find_compartment(species.compartment().get().as_str())
                     {
-                        issues.push(SbmlIssue {
-                            element: ci,
-                            message: format!(
-                                "The <compartment>'s size with id '{0}' is possible to determine by an <algebraicRule>.",
-                                compartment_id
-                            ),
-                            rule: "10225".to_string(),
-                            severity: SbmlIssueSeverity::Error,
-                        })
+                        let compartment_id = compartment.id().get();
+
+                        if assignment_rule_variables.contains(&compartment_id) {
+                            issues.push(SbmlIssue {
+                                element: ci,
+                                message: format!(
+                                    "The <compartment> with id '{0}' found as the [variable] of an <assignmentRule>.",
+                                    compartment_id
+                                ),
+                                rule: "10225".to_string(),
+                                severity: SbmlIssueSeverity::Error
+                            })
+                        } else if !compartment.constant().get()
+                            && algebraic_ci_values.contains(&compartment_id)
+                        {
+                            issues.push(SbmlIssue {
+                                element: ci,
+                                message: format!(
+                                    "The <compartment>'s size with id '{0}' is possible to determine by an <algebraicRule>.",
+                                    compartment_id
+                                ),
+                                rule: "10225".to_string(),
+                                severity: SbmlIssueSeverity::Error,
+                            })
+                        }
                     }
                 }
             }
