@@ -302,14 +302,11 @@ impl Model {
     /// Finds a species with given *id*. If not found, returns None.
     pub(crate) fn find_species(&self, id: &str) -> Option<Species> {
         if let Some(species) = self.species().get() {
-            match species
+            species
                 .as_vec()
                 .iter()
                 .find(|species| species.id().get() == id)
-            {
-                Some(species) => Some(species.clone()),
-                None => None,
-            }
+                .cloned()
         } else {
             None
         }
@@ -318,14 +315,11 @@ impl Model {
     /// Finds a compartment with given *id*. If not found, returns None.
     pub(crate) fn find_compartment(&self, id: &str) -> Option<Compartment> {
         if let Some(compartments) = self.compartments().get() {
-            match compartments
+            compartments
                 .as_vec()
                 .iter()
                 .find(|compartment| compartment.id().get() == id)
-            {
-                Some(compartment) => Some(compartment.clone()),
-                None => None,
-            }
+                .cloned()
         } else {
             None
         }

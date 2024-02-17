@@ -41,9 +41,9 @@ impl Model {
 
     fn validate_list_of_function_definitions(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.function_definitions().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let function_def = list.get(i);
             if allowed.contains(&function_def.tag_name().as_str()) {
@@ -54,9 +54,9 @@ impl Model {
 
     fn validate_list_of_unit_definitions(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.unit_definitions().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let unit_def = list.get(i);
             if allowed.contains(&unit_def.tag_name().as_str()) {
@@ -67,9 +67,9 @@ impl Model {
 
     fn validate_list_of_compartments(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.compartments().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let compartment = list.get(i);
             if allowed.contains(&compartment.tag_name().as_str()) {
@@ -80,9 +80,9 @@ impl Model {
 
     fn validate_list_of_species(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.species().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let species = list.get(i);
             if allowed.contains(&species.tag_name().as_str()) {
@@ -93,9 +93,9 @@ impl Model {
 
     fn validate_list_of_parameters(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.parameters().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let parameter = list.get(i);
             if allowed.contains(&parameter.tag_name().as_str()) {
@@ -106,9 +106,9 @@ impl Model {
 
     fn validate_list_of_initial_assignments(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.initial_assignments().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let initial_assignment = list.get(i);
             if allowed.contains(&initial_assignment.tag_name().as_str()) {
@@ -119,9 +119,9 @@ impl Model {
 
     fn validate_list_of_rules(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.rules().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let rule = list.get(i);
             if allowed.contains(&rule.tag_name().as_str()) {
@@ -132,9 +132,9 @@ impl Model {
 
     fn validate_list_of_constraints(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.constraints().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let constraint = list.get(i);
             if allowed.contains(&constraint.tag_name().as_str()) {
@@ -145,9 +145,9 @@ impl Model {
 
     fn validate_list_of_reactions(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.reactions().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let reaction = list.get(i);
             if allowed.contains(&reaction.tag_name().as_str()) {
@@ -158,9 +158,9 @@ impl Model {
 
     fn validate_list_of_events(&self, issues: &mut Vec<SbmlIssue>) {
         let list = self.events().get().unwrap();
+        let allowed = get_allowed_children(list.xml_element());
         apply_rule_10102(list.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
         for i in 0..list.len() {
             let event = list.get(i);
             if allowed.contains(&event.tag_name().as_str()) {
@@ -168,4 +168,6 @@ impl Model {
             }
         }
     }
+
+    // fn apply_rule_10301(&self, issues: &mut Vec<SbmlIssue>) {}
 }
