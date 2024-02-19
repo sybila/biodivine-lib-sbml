@@ -150,11 +150,12 @@ pub fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
 }
 
 pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
-    let Some(allowed) = ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
-        let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
-            return &[];
-        };
-        return allowed;
-    };
-    allowed
+    let tag_name = xml_element.tag_name();
+    if let Some(allowed) = ALLOWED_CHILDREN.get(&tag_name) {
+        allowed
+    } else if let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(&tag_name) {
+        allowed
+    } else {
+        &[]
+    }
 }
