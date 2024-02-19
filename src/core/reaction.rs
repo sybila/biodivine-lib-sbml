@@ -1,13 +1,10 @@
-use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase};
 use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, RequiredProperty, RequiredXmlProperty,
-    XmlDefault, XmlDocument, XmlElement, XmlList, XmlWrapper,
+    XmlDefault, XmlDocument, XmlElement, XmlList,
 };
 use macros::{SBase, XmlWrapper};
-use std::ops::Deref;
-use xml_doc::{Document, Element};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Reaction(XmlElement);
@@ -100,36 +97,13 @@ impl XmlDefault for KineticLaw {
 }
 
 impl KineticLaw {
-    /// Try to find an instance of a [KineticLaw] element for the given child element.
+    /// Try to find an instance of a [KineticLaw] element that is a parent of the given
+    /// child element.
     ///
-    /// The child can be any SBML tag, as long as it appears in an SBML model (i.e. one of
-    /// its transitive parents is a [KineticLaw] element). If this is not satisfied, the method
-    /// returns `None`.
+    /// The child can be any SBML tag, as long as one of its transitive parents is a
+    /// [KineticLaw] element. If this is not satisfied, the method returns `None`.
     pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
-        let parent = {
-            let read_doc = doc.read().unwrap();
-            fn is_kinetic_law(doc: &Document, e: Element) -> bool {
-                let name = e.name(doc);
-                let Some(namespace) = e.namespace(doc) else {
-                    return false;
-                };
-
-                name == "kineticLaw" && namespace == URL_SBML_CORE
-            }
-
-            let mut parent = child.raw_element();
-            while !is_kinetic_law(read_doc.deref(), parent) {
-                let Some(node) = parent.parent(read_doc.deref()) else {
-                    return None;
-                };
-                parent = node;
-            }
-
-            parent
-        };
-        let xml_element = XmlElement::new_raw(doc, parent);
-        // Safe because we checked that the element has the correct tag name and namespace.
-        Some(unsafe { KineticLaw::unchecked_cast(xml_element) })
+        Self::search_in_parents(doc, child, "kineticLaw")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {

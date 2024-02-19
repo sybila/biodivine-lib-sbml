@@ -1,4 +1,3 @@
-use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
@@ -12,7 +11,7 @@ use crate::xml::{
 use macros::{SBase, XmlWrapper};
 
 use std::ops::Deref;
-use xml_doc::{Document, Element};
+use xml_doc::Element;
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -33,30 +32,7 @@ impl Model {
     /// its transitive parents is a [Model] element). If this is not satisfied, the method
     /// returns `None`.
     pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
-        let parent = {
-            let read_doc = doc.read().unwrap();
-            fn is_model(doc: &Document, e: Element) -> bool {
-                let name = e.name(doc);
-                let Some(namespace) = e.namespace(doc) else {
-                    return false;
-                };
-
-                name == "model" && namespace == URL_SBML_CORE
-            }
-
-            let mut parent = child.raw_element();
-            while !is_model(read_doc.deref(), parent) {
-                let Some(node) = parent.parent(read_doc.deref()) else {
-                    return None;
-                };
-                parent = node;
-            }
-
-            parent
-        };
-        let model = XmlElement::new_raw(doc, parent);
-        // Safe because we checked that the element has the correct tag name and namespace.
-        Some(unsafe { Model::unchecked_cast(model) })
+        Self::search_in_parents(doc, child, "model")
     }
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
