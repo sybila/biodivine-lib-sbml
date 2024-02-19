@@ -172,6 +172,7 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
     validate_allowed_children(element, element_name.as_str(), children_names, issues);
 }
 
+// TODO: Complete implementation when adding extension/packages is solved
 /// ### Rule 10301
 /// The value of the attribute id on every instance of the following classes of objects must be unique
 /// across the set of all id attribute values of all such objects in a model:

@@ -1,5 +1,5 @@
 use crate::core::validation::{apply_rule_10102, apply_rule_10301, validate_list_of_objects};
-use crate::core::{Model, SBase};
+use crate::core::{Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -14,6 +14,7 @@ impl Model {
         }
         if let Some(list_of_unit_definitions) = self.unit_definitions().get() {
             validate_list_of_objects(&list_of_unit_definitions, issues, identifiers);
+            UnitDefinition::apply_rule_10302(&list_of_unit_definitions, issues);
         }
         if let Some(list_of_compartments) = self.compartments().get() {
             validate_list_of_objects(&list_of_compartments, issues, identifiers);
