@@ -1,7 +1,6 @@
 use biodivine_lib_sbml::{Sbml, SbmlIssue, SbmlIssueSeverity};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::process::exit;
 
 /// This is an integration test that uses the examples from the SBML test suite
 /// to validate the functionality of the library.
