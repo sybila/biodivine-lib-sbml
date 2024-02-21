@@ -89,7 +89,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
-      - run: cargo run --release --example test-suite-syntactic
+      - run: cargo run --release --example test-suite-syntactic -- `cat validated-rules.txt`
       - run: zip test-results.zip ./test_suite_errors.txt ./test_suite_info.txt ./test_suite_warning.txt
       - uses: actions/upload-artifact@v4
         with:
