@@ -74,6 +74,28 @@ jobs:
           components: clippy
       - run: cargo clippy --all-features
 
+  # Run SBML test suite
+  sbml-test-suite:
+    needs: check
+    name: SBML Test Suite
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v3
+      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/semantic_tests.v3.4.0.zip
+      - run: unzip semantic_tests.v3.4.0.zip
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+      - run: cargo run --release --example test-suite-syntactic
+      - run: zip test-results.zip ./test_suite_errors.txt ./test_suite_info.txt ./test_suite_warning.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: ./test-results.zip
+
   # Compute code coverage
   codecov:
     needs: test

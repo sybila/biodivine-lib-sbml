@@ -149,7 +149,7 @@ pub struct SbmlIssue {
     pub message: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum SbmlIssueSeverity {
     /// An issue that makes the document impossible to read correctly (e.g. a function is
     /// used but not declared).
