@@ -83,8 +83,8 @@ jobs:
       RUSTFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v4
-      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/semantic_tests.v3.4.0.zip
-      - run: unzip semantic_tests.v3.4.0.zip
+      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/syntactic_tests.v3.4.0.zip
+      - run: unzip syntactic_tests.v3.4.0.zip
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
