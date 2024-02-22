@@ -1,5 +1,5 @@
 use crate::core::validation::{apply_rule_10102, apply_rule_10301, validate_list_of_objects};
-use crate::core::{Model, SBase, UnitDefinition};
+use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -30,6 +30,7 @@ impl Model {
         }
         if let Some(list_of_rules) = self.rules().get() {
             validate_list_of_objects(&list_of_rules, issues, identifiers);
+            AbstractRule::apply_rule_10304(&list_of_rules, issues);
         }
         if let Some(list_of_constraint) = self.constraints().get() {
             validate_list_of_objects(&list_of_constraint, issues, identifiers);
