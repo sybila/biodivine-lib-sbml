@@ -4,8 +4,8 @@ use crate::core::validation::{
 use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
 };
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
-use crate::SbmlIssue;
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
+use crate::{SbmlIssue, SbmlIssueSeverity};
 use std::collections::HashSet;
 
 impl SbmlValidable for Reaction {
@@ -54,10 +54,39 @@ impl SbmlValidable for KineticLaw {
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
             validate_list_of_objects(&list_of_local_parameters, issues, identifiers);
+            KineticLaw::apply_rule_10303(&list_of_local_parameters, issues);
         }
 
         if let Some(math) = self.math().get() {
             math.validate(issues);
+        }
+    }
+}
+
+impl KineticLaw {
+    /// ### Rule 10303
+    /// The value of the attribute id of every [LocalParameter] object defined within a [KineticLaw]
+    /// object must be unique across the set of all such parameter definitions within that
+    /// particular [KineticLaw] instance.
+    pub(crate) fn apply_rule_10303(
+        list_of_local_parameters: &XmlList<LocalParameter>,
+        issues: &mut Vec<SbmlIssue>,
+    ) {
+        let mut identifiers: HashSet<String> = HashSet::new();
+
+        for local_parameter in list_of_local_parameters.as_vec() {
+            let id = local_parameter.id().get();
+            if identifiers.contains(&id) {
+                issues.push(SbmlIssue {
+                    element: local_parameter.raw_element(),
+                    message: format!("The identifier ('{0}') of <localParameter> is already present in the <listOfLocalParameters>.",
+                                     id),
+                    rule: "10303".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
+            } else {
+                identifiers.insert(id);
+            }
         }
     }
 }
