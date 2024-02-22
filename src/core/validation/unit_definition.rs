@@ -22,14 +22,17 @@ impl UnitDefinition {
         let mut identifiers: HashSet<String> = HashSet::new();
 
         for unit_definition in list_of_unit_definitions.as_vec() {
-            let id = unit_definition.id().get().unwrap_or_default();
+            let Some(id) = unit_definition.id().get() else {
+                continue;
+            };
+
             if identifiers.contains(&id) {
                 issues.push(SbmlIssue {
                     element: unit_definition.raw_element(),
                     message: format!("The identifier ('{0}') of <unitDefinition> is already present in the <listOfUnitDefinitions>.",
                                      id),
                     rule: "10302".to_string(),
-                    severity: SbmlIssueSeverity::Error
+                    severity: SbmlIssueSeverity::Error,
                 })
             } else {
                 identifiers.insert(id);
