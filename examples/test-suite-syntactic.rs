@@ -16,18 +16,66 @@ use std::path::Path;
 /// If you only want to test a specific subset of rules, you can provide these as command line
 /// arguments.
 fn main() {
-    let dir_path = "./syntactic";
-
-    if !Path::new(dir_path).is_dir() {
-        panic!("Test data is missing.")
-    }
-
     let args = std::env::args().collect::<Vec<_>>();
     let filter: Option<HashSet<String>> = if args.len() > 1 {
         Some(HashSet::from_iter(args.into_iter().skip(1)))
     } else {
         None
     };
+
+    let result = test_inner(filter);
+
+    let error_problems = result.error.clone();
+    let warning_problems = result.warning.clone();
+    let info_problems = result.info.clone();
+
+    println!("Found:");
+    println!(" > {} error issues.", error_problems.len());
+    println!(" > {} warning issues.", warning_problems.len());
+    println!(" > {} info issues.", info_problems.len());
+
+    let errors = error_problems.join("\n");
+    std::fs::write("test_suite_error.txt", errors).unwrap();
+
+    let warning = warning_problems.join("\n");
+    std::fs::write("test_suite_warning.txt", warning).unwrap();
+
+    let infos = info_problems.join("\n");
+    std::fs::write("test_suite_info.txt", infos).unwrap();
+
+    println!("Report written.");
+
+    assert!(error_problems.is_empty());
+    assert!(warning_problems.is_empty());
+    assert!(info_problems.is_empty());
+}
+
+/// Allows us to run a "simplified" version of the test when using `cargo test --examples`.
+/// This is useful when computing code coverage.
+#[test]
+fn sbml_test_suite_syntactic() {
+    let result = test_inner(None);
+    println!(
+        "Finished test: {} {} {}",
+        result.error.len(),
+        result.warning.len(),
+        result.info.len()
+    );
+}
+
+struct TestResults {
+    error: Vec<String>,
+    warning: Vec<String>,
+    info: Vec<String>,
+}
+
+/// A helper functions that actually runs the test.
+fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
+    let dir_path = "./syntactic";
+
+    if !Path::new(dir_path).is_dir() {
+        panic!("Test data is missing.")
+    }
 
     if let Some(filter) = filter.as_ref() {
         println!(
@@ -140,25 +188,11 @@ fn main() {
         );
     }
 
-    println!("Found:");
-    println!(" > {} error issues.", error_problems.len());
-    println!(" > {} warning issues.", warning_problems.len());
-    println!(" > {} info issues.", info_problems.len());
-
-    let errors = error_problems.join("\n");
-    std::fs::write("test_suite_error.txt", errors).unwrap();
-
-    let warning = warning_problems.join("\n");
-    std::fs::write("test_suite_warning.txt", warning).unwrap();
-
-    let infos = info_problems.join("\n");
-    std::fs::write("test_suite_info.txt", infos).unwrap();
-
-    println!("Report written.");
-
-    assert!(error_problems.is_empty());
-    assert!(warning_problems.is_empty());
-    assert!(info_problems.is_empty());
+    TestResults {
+        error: error_problems,
+        warning: warning_problems,
+        info: info_problems,
+    }
 }
 
 fn read_expected_issues(result_file: &str) -> HashMap<String, SbmlIssueSeverity> {
