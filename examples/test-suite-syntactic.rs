@@ -133,8 +133,9 @@ fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
                         expected.remove(&issue.rule);
                     } else {
                         println!(
-                            " >> Found issue {} that is not in the expected list.",
-                            issue.rule
+                            " >> Found issue {} that is not in the expected list: {}",
+                            issue.rule,
+                            issue.message,
                         );
                         let report = format!(
                             "Test {}/{}: Found unexpected issue {} (severity {:?}).",
