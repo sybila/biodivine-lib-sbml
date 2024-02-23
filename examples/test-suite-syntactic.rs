@@ -203,7 +203,7 @@ fn read_expected_issues(result_file: &str) -> HashMap<String, SbmlIssueSeverity>
             let s = match split[1].trim() {
                 "Error" => SbmlIssueSeverity::Error,
                 "Warning" => SbmlIssueSeverity::Warning,
-                "Info" => SbmlIssueSeverity::Info,
+                "Informational" => SbmlIssueSeverity::Info,
                 _ => {
                     panic!("Unknown severity {}", split[1].trim());
                 }
