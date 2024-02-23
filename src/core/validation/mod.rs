@@ -18,6 +18,8 @@ mod parameter;
 mod reaction;
 mod rule;
 mod species;
+#[cfg(test)]
+mod test_suite;
 mod unit;
 mod unit_definition;
 

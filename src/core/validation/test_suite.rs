@@ -1,63 +1,18 @@
-use biodivine_lib_sbml::{Sbml, SbmlIssue, SbmlIssueSeverity};
+use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-/// This is an integration test that uses the examples from the SBML test suite
-/// to validate the functionality of the library.
-///
-/// The test data can be downloaded here: https://github.com/sbmlteam/sbml-test-suite/releases
-///
-/// Specifically, the syntactic tests should be extracted into a `syntactic` directory
-/// in the main folder of the repository.
-///
-/// Since it is not super easy to break down each case into separate test, we instead compile
-/// a report of all violations that is printed at the end of the test.
-///
-/// If you only want to test a specific subset of rules, you can provide these as command line
-/// arguments.
-fn main() {
-    let args = std::env::args().collect::<Vec<_>>();
-    let filter: Option<HashSet<String>> = if args.len() > 1 {
-        Some(HashSet::from_iter(args.into_iter().skip(1)))
-    } else {
-        None
-    };
-
-    let result = test_inner(filter);
-
-    let error_problems = result.error.clone();
-    let warning_problems = result.warning.clone();
-    let info_problems = result.info.clone();
-
-    println!("Found:");
-    println!(" > {} error issues.", error_problems.len());
-    println!(" > {} warning issues.", warning_problems.len());
-    println!(" > {} info issues.", info_problems.len());
-
-    let errors = error_problems.join("\n");
-    std::fs::write("test_suite_error.txt", errors).unwrap();
-
-    let warning = warning_problems.join("\n");
-    std::fs::write("test_suite_warning.txt", warning).unwrap();
-
-    let infos = info_problems.join("\n");
-    std::fs::write("test_suite_info.txt", infos).unwrap();
-
-    println!("Report written.");
-
-    assert!(error_problems.is_empty());
-    assert!(warning_problems.is_empty());
-    assert!(info_problems.is_empty());
-}
-
-struct TestResults {
-    error: Vec<String>,
-    warning: Vec<String>,
-    info: Vec<String>,
+/// Allows us to run a "simplified" version of the test when using `cargo test --examples`.
+/// This is useful when computing code coverage, but otherwise will always pass. The test
+/// that can actually fail is implemented as one of the examples.
+#[test]
+#[cfg_attr(not(feature = "sbml_test_suite"), ignore)]
+fn sbml_test_suite_syntactic() {
+    test_inner(None);
 }
 
 /// A helper functions that actually runs the test.
-fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
+fn test_inner(filter: Option<HashSet<String>>) {
     let dir_path = "./syntactic";
 
     if !Path::new(dir_path).is_dir() {
@@ -174,18 +129,9 @@ fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
             missing
         );
     }
-
-    TestResults {
-        error: error_problems,
-        warning: warning_problems,
-        info: info_problems,
-    }
 }
 
 fn read_expected_issues(result_file: &str) -> HashMap<String, SbmlIssueSeverity> {
-    // TODO:
-    //  This doesn't really work if the issue appears in the file multiple times.
-    //  But it seems that this is not a problem for the cases that we are testing at the moment?
     let content = std::fs::read_to_string(result_file).unwrap();
     let mut last_rule = None;
     let mut result = HashMap::new();
