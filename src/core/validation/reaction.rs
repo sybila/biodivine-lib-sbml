@@ -1,5 +1,6 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, validate_list_of_objects, SbmlValidable,
+    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
+    validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
@@ -33,6 +34,25 @@ impl SbmlValidable for Reaction {
     }
 }
 
+impl SanityCheckable for Reaction {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+
+        if let Some(list_of_reactants) = self.reactants().get() {
+            sanity_check_of_list(&list_of_reactants, issues);
+        }
+        if let Some(list_of_products) = self.products().get() {
+            sanity_check_of_list(&list_of_products, issues);
+        }
+        if let Some(list_of_modifiers) = self.modifiers().get() {
+            sanity_check_of_list(&list_of_modifiers, issues);
+        }
+        if let Some(kinetic_law) = self.kinetic_law().get() {
+            kinetic_law.sanity_check(issues);
+        }
+    }
+}
+
 impl SbmlValidable for SpeciesReference {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
@@ -40,12 +60,16 @@ impl SbmlValidable for SpeciesReference {
     }
 }
 
+impl SanityCheckable for SpeciesReference {}
+
 impl SbmlValidable for ModifierSpeciesReference {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
         apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
     }
 }
+
+impl SanityCheckable for ModifierSpeciesReference {}
 
 impl SbmlValidable for KineticLaw {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
@@ -59,6 +83,16 @@ impl SbmlValidable for KineticLaw {
 
         if let Some(math) = self.math().get() {
             math.validate(issues);
+        }
+    }
+}
+
+impl SanityCheckable for KineticLaw {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+
+        if let Some(list_of_local_parameters) = self.local_parameters().get() {
+            sanity_check_of_list(&list_of_local_parameters, issues);
         }
     }
 }
@@ -96,3 +130,5 @@ impl SbmlValidable for LocalParameter {
         apply_rule_10102(self.xml_element(), issues)
     }
 }
+
+impl SanityCheckable for LocalParameter {}

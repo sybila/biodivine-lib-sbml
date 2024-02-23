@@ -1,4 +1,4 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, SbmlValidable};
+use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
 use crate::core::{InitialAssignment, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
@@ -14,3 +14,5 @@ impl SbmlValidable for InitialAssignment {
         }
     }
 }
+
+impl SanityCheckable for InitialAssignment {}

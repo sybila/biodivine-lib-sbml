@@ -1,11 +1,14 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, validate_list_of_objects};
+use crate::core::validation::{
+    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
+    validate_list_of_objects, SanityCheckable, SbmlValidable,
+};
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
-impl Model {
-    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
+impl SbmlValidable for Model {
+    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
         apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
 
@@ -40,6 +43,43 @@ impl Model {
         }
         if let Some(list_of_events) = self.events().get() {
             validate_list_of_objects(&list_of_events, issues, identifiers);
+        }
+    }
+}
+
+impl SanityCheckable for Model {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+
+        if let Some(list_of_function_definition) = self.function_definitions().get() {
+            sanity_check_of_list(&list_of_function_definition, issues);
+        }
+        if let Some(list_of_unit_definitions) = self.unit_definitions().get() {
+            sanity_check_of_list(&list_of_unit_definitions, issues);
+        }
+        if let Some(list_of_compartments) = self.compartments().get() {
+            sanity_check_of_list(&list_of_compartments, issues);
+        }
+        if let Some(list_of_species) = self.species().get() {
+            sanity_check_of_list(&list_of_species, issues);
+        }
+        if let Some(list_of_parameters) = self.parameters().get() {
+            sanity_check_of_list(&list_of_parameters, issues);
+        }
+        if let Some(list_of_initial_assignment) = self.initial_assignments().get() {
+            sanity_check_of_list(&list_of_initial_assignment, issues);
+        }
+        if let Some(list_of_rules) = self.rules().get() {
+            sanity_check_of_list(&list_of_rules, issues);
+        }
+        if let Some(list_of_constraint) = self.constraints().get() {
+            sanity_check_of_list(&list_of_constraint, issues);
+        }
+        if let Some(list_of_reactions) = self.reactions().get() {
+            sanity_check_of_list(&list_of_reactions, issues);
+        }
+        if let Some(list_of_events) = self.events().get() {
+            sanity_check_of_list(&list_of_events, issues);
         }
     }
 }

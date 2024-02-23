@@ -1,4 +1,4 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, SbmlValidable};
+use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
 use crate::core::Parameter;
 use crate::xml::{RequiredXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
@@ -15,3 +15,5 @@ impl SbmlValidable for Parameter {
         );
     }
 }
+
+impl SanityCheckable for Parameter {}

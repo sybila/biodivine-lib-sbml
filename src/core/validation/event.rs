@@ -1,5 +1,6 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, validate_list_of_objects, SbmlValidable,
+    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
+    validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Priority, SBase, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -26,6 +27,25 @@ impl SbmlValidable for Event {
     }
 }
 
+impl SanityCheckable for Event {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+
+        if let Some(trigger) = self.trigger().get() {
+            trigger.sanity_check(issues);
+        }
+        if let Some(priority) = self.priority().get() {
+            priority.sanity_check(issues);
+        }
+        if let Some(delay) = self.delay().get() {
+            delay.sanity_check(issues);
+        }
+        if let Some(list_of_event_assignments) = self.event_assignments().get() {
+            sanity_check_of_list(&list_of_event_assignments, issues);
+        }
+    }
+}
+
 impl SbmlValidable for Trigger {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
@@ -36,6 +56,8 @@ impl SbmlValidable for Trigger {
         }
     }
 }
+
+impl SanityCheckable for Trigger {}
 
 impl SbmlValidable for Priority {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
@@ -48,6 +70,8 @@ impl SbmlValidable for Priority {
     }
 }
 
+impl SanityCheckable for Priority {}
+
 impl SbmlValidable for Delay {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
@@ -59,6 +83,8 @@ impl SbmlValidable for Delay {
     }
 }
 
+impl SanityCheckable for Delay {}
+
 impl SbmlValidable for EventAssignment {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
@@ -69,3 +95,5 @@ impl SbmlValidable for EventAssignment {
         }
     }
 }
+
+impl SanityCheckable for EventAssignment {}

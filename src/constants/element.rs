@@ -56,6 +56,48 @@ pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_attributes!("variable"),
 };
 
+pub const REQUIRED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
+    "sbml" => &["level", "version"],
+    "model" => &[],
+    "listOfFunctionDefinitions" => &[],
+    "functionDefinition" => &["id"],
+    "listOfUnitDefinitions" => &[],
+    "unitDefinition" => &["id"],
+    "listOfUnits" => &[],
+    "unit" => &["kind", "exponent", "scale", "multiplier"],
+    "listOfCompartments" => &[],
+    "compartment" => &["id", "constant"],
+    "listOfSpecies" => &[],
+    "species" => &["id", "compartment", "hasOnlySubstanceUnits", "boundaryCondition", "constant"],
+    "listOfParameters" => &[],
+    "parameter" => &["id", "constant"],
+    "listOfInitialAssignments" => &[],
+    "initialAssignment" => &["symbol"],
+    "listOfRules" => &[],
+    "algebraicRule" => &[],
+    "assignmentRule" => &["variable"],
+    "rateRule" => &["variable"],
+    "listOfConstraints" => &[],
+    "constraint" => &[],
+    "listOfReactions" => &[],
+    "reaction" => &["id", "reversible"],
+    "listOfReactants" => &[],
+    "listOfProducts" => &[],
+    "speciesReference" => &["constant"],
+    "listOfModifiers" => &[],
+    "modifierSpeciesReference" => &[],
+    "kineticLaw" => &[],
+    "listOfLocalParameters" => &[],
+    "localParameter" => &["id"],
+    "listOfEvents" => &[],
+    "event" => &["useValuesFromTriggerTime"],
+    "trigger" => &["initialValue", "persistent"],
+    "priority" => &[],
+    "delay" => &[],
+    "listOfEventAssignments" => &[],
+    "eventAssignment" => &["variable"]
+};
+
 pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
     "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),
@@ -97,6 +139,8 @@ pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "listOfEventAssignments" => extended_sbase_children!("eventAssignment"),
     "eventAssignment" => extended_sbase_children!("math")
 };
+
+// There are no required children in SBML core level 3 version 1
 
 pub const MATHML_ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "math" => &["abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",

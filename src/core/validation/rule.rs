@@ -1,4 +1,4 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, SbmlValidable};
+use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
 use crate::core::{AbstractRule, Rule, RuleTypes, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
 use crate::{SbmlIssue, SbmlIssueSeverity};
@@ -14,6 +14,8 @@ impl SbmlValidable for AbstractRule {
         }
     }
 }
+
+impl SanityCheckable for AbstractRule {}
 
 impl AbstractRule {
     /// ### Rule 10304

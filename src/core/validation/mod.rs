@@ -1,9 +1,11 @@
-use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
+use crate::constants::element::{
+    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN, REQUIRED_ATTRIBUTES,
+};
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::SBase;
 use crate::xml::{OptionalXmlProperty, XmlElement, XmlList, XmlWrapper};
 use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::ops::Deref;
 use xml_doc::Element;
 
@@ -27,6 +29,16 @@ pub(crate) trait SbmlValidable: XmlWrapper {
     fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>);
 }
 
+/// Denotes an element that possess a way to self-test against
+/// the most critical checks (sanity test). This should be executed **before** actual document
+/// validation. Failing sanity tests skips the validation. That is, because reading such a (insane)
+/// document would cause panic.
+pub(crate) trait SanityCheckable: XmlWrapper {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+    }
+}
+
 impl Sbml {
     /// ### Rule 10102
     /// An SBML XML document must not contain undefined elements or attributes in the SBML Level 3
@@ -39,7 +51,9 @@ impl Sbml {
         if doc.container().child_elements(doc.deref()).len() != 1 {
             issues.push(SbmlIssue {
                 element: doc.container(),
-                message: "The document contains multiple root nodes. Only one root <sbml> object is allowed.".to_string(),
+                message: "The document contains multiple root nodes. \
+                Only one root <sbml> object is allowed."
+                    .to_string(),
                 rule: "10102".to_string(),
                 severity: SbmlIssueSeverity::Error,
             })
@@ -50,14 +64,18 @@ impl Sbml {
                 validate_allowed_attributes(
                     root_element,
                     root_element.name(doc.deref()),
-                    root_element.attributes(doc.deref()),
+                    &root_element
+                        .attributes(doc.deref())
+                        .keys()
+                        .map(|key| key.as_str())
+                        .collect::<Vec<&str>>(),
                     issues,
                 );
 
                 validate_allowed_children(
                     root_element,
                     root_element.name(doc.deref()),
-                    root_element
+                    &root_element
                         .children(doc.deref())
                         .iter()
                         .filter_map(|node| node.as_element().map(|it| it.full_name(doc.deref())))
@@ -79,15 +97,45 @@ impl Sbml {
     }
 }
 
+pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let attributes = xml_element.attributes();
+    let element_name = xml_element.tag_name();
+
+    for req_attr in REQUIRED_ATTRIBUTES[element_name.as_str()] {
+        if !attributes.contains_key(&req_attr.to_string()) {
+            issues.push(SbmlIssue {
+                element: xml_element.raw_element(),
+                message: format!(
+                    "Sanity check failed: missing required attribute [{0}] on <{1}>.",
+                    req_attr, element_name
+                ),
+                rule: "SANITY_CHECK".to_string(),
+                severity: SbmlIssueSeverity::Error,
+            });
+        }
+    }
+}
+
+pub(crate) fn sanity_check_of_list<T: SanityCheckable>(
+    xml_list: &XmlList<T>,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    sanity_check(xml_list.xml_element(), issues);
+
+    for object in xml_list.as_vec() {
+        object.sanity_check(issues);
+    }
+}
+
 pub(crate) fn validate_allowed_attributes(
     element: Element,
     element_name: &str,
-    attrs: &HashMap<String, String>,
+    attributes: &Vec<&str>,
     issues: &mut Vec<SbmlIssue>,
 ) {
     let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name).unwrap();
 
-    for full_name in attrs.keys() {
+    for full_name in attributes {
         let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
         if !allowed_attributes.contains(&attr_name) {
             issues.push(SbmlIssue {
@@ -106,7 +154,7 @@ pub(crate) fn validate_allowed_attributes(
 pub(crate) fn validate_allowed_children(
     element: Element,
     element_name: &str,
-    children_names: Vec<&str>,
+    children_names: &Vec<&str>,
     issues: &mut Vec<SbmlIssue>,
 ) {
     let allowed_children = ALLOWED_CHILDREN.get(element_name).unwrap();
@@ -162,7 +210,11 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
     let doc = xml_element.read_doc();
     let element = xml_element.raw_element();
     let element_name = xml_element.tag_name();
-    let attributes = element.attributes(doc.deref());
+    let attributes = element
+        .attributes(doc.deref())
+        .keys()
+        .map(|key| key.as_str())
+        .collect::<Vec<&str>>();
     let children_names = element
         .child_elements(doc.deref())
         .iter()
@@ -170,8 +222,8 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
         .map(|element| element.full_name(doc.deref()))
         .collect();
 
-    validate_allowed_attributes(element, element_name.as_str(), attributes, issues);
-    validate_allowed_children(element, element_name.as_str(), children_names, issues);
+    validate_allowed_attributes(element, element_name.as_str(), &attributes, issues);
+    validate_allowed_children(element, element_name.as_str(), &children_names, issues);
 }
 
 // TODO: Complete implementation when adding extension/packages is solved

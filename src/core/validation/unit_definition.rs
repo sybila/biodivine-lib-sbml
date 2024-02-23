@@ -1,4 +1,7 @@
-use crate::core::validation::{apply_rule_10102, validate_list_of_objects, SbmlValidable};
+use crate::core::validation::{
+    apply_rule_10102, sanity_check, sanity_check_of_list, validate_list_of_objects,
+    SanityCheckable, SbmlValidable,
+};
 use crate::core::{SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlWrapper};
 use crate::{SbmlIssue, SbmlIssueSeverity};
@@ -10,6 +13,16 @@ impl SbmlValidable for UnitDefinition {
 
         if let Some(list_of_units) = self.units().get() {
             validate_list_of_objects(&list_of_units, issues, identifiers);
+        }
+    }
+}
+
+impl SanityCheckable for UnitDefinition {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
+
+        if let Some(list_of_units) = self.units().get() {
+            sanity_check_of_list(&list_of_units, issues);
         }
     }
 }

@@ -1,14 +1,13 @@
+use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::{sanity_check, SanityCheckable, SbmlValidable};
+use crate::core::Model;
+use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 use std::collections::HashSet;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-
-use xml_doc::{Document, Element};
-
 use xml::{OptionalChild, RequiredProperty};
-
-use crate::constants::namespaces::URL_SBML_CORE;
-use crate::core::Model;
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement};
+use xml_doc::{Document, Element};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -101,6 +100,26 @@ impl Sbml {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(&self.sbml_root, issues);
+        let doc = self.xml.read().unwrap();
+        let element = self.sbml_root.raw_element();
+
+        if !element.namespace_decls(doc.deref()).contains_key("") {
+            issues.push(SbmlIssue {
+                element,
+                message:
+                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>."
+                        .to_string(),
+                rule: "SANITY_CHECK".to_string(),
+                severity: SbmlIssueSeverity::Error,
+            })
+        }
+
+        if let Some(model) = self.model().get() {
+            model.sanity_check(issues);
+        }
+    }
     /// Validates the document against validation rules specified in the
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     /// Eventual issues are returned in the vector. Empty vector represents a valid document.
@@ -115,10 +134,19 @@ impl Sbml {
     /// structural and syntactic constraints.
     pub fn validate(&self) -> Vec<SbmlIssue> {
         let mut issues: Vec<SbmlIssue> = vec![];
-        let mut identifiers: HashSet<String> = HashSet::new();
+        self.sanity_check(&mut issues);
+
+        if !issues.is_empty() {
+            println!("Sanity check failed, skipping validation...");
+            return issues;
+        } else {
+            println!("Sanity check passed, proceeding with validation...");
+        }
+
         self.apply_rule_10102(&mut issues);
 
         if let Some(model) = self.model().get() {
+            let mut identifiers: HashSet<String> = HashSet::new();
             model.validate(&mut issues, &mut identifiers);
         }
 
@@ -811,6 +839,7 @@ mod tests {
         let assignment = event_assignments.top();
         assignment.math().ensure();
     }
+
     #[test]
     pub fn test_sbase() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();

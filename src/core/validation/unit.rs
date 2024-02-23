@@ -1,4 +1,4 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, SbmlValidable};
+use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
 use crate::core::{SBase, Unit};
 use crate::xml::{OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
@@ -10,3 +10,5 @@ impl SbmlValidable for Unit {
         apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
     }
 }
+
+impl SanityCheckable for Unit {}
