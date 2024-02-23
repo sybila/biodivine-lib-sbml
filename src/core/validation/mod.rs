@@ -1,4 +1,5 @@
 use crate::constants::element::{ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
+use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::SBase;
 use crate::xml::{OptionalXmlProperty, XmlElement, XmlList, XmlWrapper};
 use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
@@ -163,9 +164,10 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
     let element_name = xml_element.tag_name();
     let attributes = element.attributes(doc.deref());
     let children_names = element
-        .children(doc.deref())
+        .child_elements(doc.deref())
         .iter()
-        .filter_map(|node| node.as_element().map(|it| it.full_name(doc.deref())))
+        .filter(|element| element.namespace(doc.deref()) == Some(URL_SBML_CORE))
+        .map(|element| element.full_name(doc.deref()))
         .collect();
 
     validate_allowed_attributes(element, element_name.as_str(), attributes, issues);
