@@ -89,8 +89,7 @@ fn test_inner(filter: Option<HashSet<String>>) {
                     } else {
                         println!(
                             " >> Found issue {} that is not in the expected list: {}",
-                            issue.rule
-                            issue.message,
+                            issue.rule, issue.message,
                         );
                         let report = format!(
                             "Test {}/{}: Found unexpected issue {} (severity {:?}).",
