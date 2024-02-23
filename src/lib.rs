@@ -140,7 +140,7 @@ impl Default for Sbml {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SbmlIssue {
     /// Refers to the "raw" XML element where the issue occurred.
     pub element: Element,
