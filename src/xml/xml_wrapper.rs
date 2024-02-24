@@ -5,7 +5,7 @@ use crate::xml::{
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
-use xml_doc::{Document, Element, Node};
+use xml_doc::{Document, Element};
 
 /// [XmlWrapper] is a trait implemented by all types that can behave as an [XmlElement]
 /// (including [XmlElement] itself). In other words, instances of [XmlWrapper] provide
@@ -116,12 +116,44 @@ pub trait XmlWrapper: Into<XmlElement> {
         self.raw_element().attributes(doc.deref()).clone() // TODO: cannot return value referencing local variable `doc`. How to fix?
     }
 
-    /// Returns the vector of children as a collection of [Node]s referenced within
-    /// this [XmlWrapper].
-    fn children(&self) -> &Vec<Node> {
-        unimplemented!();
-        // let doc = self.read_doc();
-        // self.raw_element().children(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    /// Returns the vector of children referenced within this [XmlWrapper] as a collection
+    /// of [Element] objects. This method skips any child nodes that are not elements (such as
+    /// text or comments).
+    fn child_elements(&self) -> Vec<Element> {
+        let doc = self.read_doc();
+        self.raw_element().child_elements(doc.deref())
+    }
+
+    /// Version of [Self::child_elements] with additional filtering function applied to the
+    /// output vector.
+    fn child_elements_filtered<P: FnMut(&Element) -> bool>(&self, predicate: P) -> Vec<Element> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements(doc.deref())
+            .into_iter()
+            .filter(predicate)
+            .collect()
+    }
+
+    /// Version of [Self::child_elements] that recursively traverses all child nodes, not just
+    /// the immediate descendants.
+    fn recursive_child_elements(&self) -> Vec<Element> {
+        let doc = self.read_doc();
+        self.raw_element().child_elements_recursive(doc.deref())
+    }
+
+    /// Version of [Self::recursive_child_elements] with additional filtering function applied
+    /// to the output vector.
+    fn recursive_child_elements_filtered<P: FnMut(&Element) -> bool>(
+        &self,
+        predicate: P,
+    ) -> Vec<Element> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements_recursive(doc.deref())
+            .into_iter()
+            .filter(predicate)
+            .collect()
     }
 
     fn children_elements(&self) -> Vec<Element> {

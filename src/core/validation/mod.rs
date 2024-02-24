@@ -24,6 +24,8 @@ mod parameter;
 mod reaction;
 mod rule;
 mod species;
+#[cfg(test)]
+mod test_suite;
 mod unit;
 mod unit_definition;
 
@@ -243,13 +245,14 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
 }
 
 pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
-    let Some(allowed) = ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
-        let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(xml_element.tag_name().as_str()) else {
-            return &[];
-        };
-        return allowed;
-    };
-    allowed
+    let tag_name = xml_element.tag_name();
+    if let Some(allowed) = ALLOWED_CHILDREN.get(&tag_name) {
+        allowed
+    } else if let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(&tag_name) {
+        allowed
+    } else {
+        &[]
+    }
 }
 
 /// ### Rule 10102
