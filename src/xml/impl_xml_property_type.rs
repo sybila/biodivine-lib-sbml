@@ -32,7 +32,7 @@ impl XmlPropertyType for bool {
             Some("1") | Some("true") => Ok(Some(true)),
             Some("0") | Some("false") => Ok(Some(false)),
             Some(value) => Err(format!(
-                "Value `{value}` does not represent a valid `bool`."
+                "Value '{value}' does not represent a valid 'bool'."
             )),
             None => Ok(None),
         }
@@ -57,7 +57,27 @@ impl XmlPropertyType for i32 {
             match value.parse::<i32>() {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid signed integer ({}).",
+                    "Value '{value}' does not represent a valid signed integer ({}).",
+                    e
+                )),
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl XmlPropertyType for u32 {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        if let Some(value) = value {
+            match value.parse::<u32>() {
+                Ok(x) => Ok(Some(x)),
+                Err(e) => Err(format!(
+                    "Value '{value}' does not represent a valid unsigned integer ({}).",
                     e
                 )),
             }
@@ -82,7 +102,7 @@ impl XmlPropertyType for f64 {
             Some(value) => match value.parse::<f64>() {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid floating point number ({}).",
+                    "Value '{value}' does not represent a valid floating point number ({}).",
                     e
                 )),
             },

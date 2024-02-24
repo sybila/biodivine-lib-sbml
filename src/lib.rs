@@ -13,16 +13,16 @@ use xml_doc::{Document, Element};
 /// us work with XML documents in a sane and safe way. In particular:
 ///  - [XmlDocument] | A thread and memory safe reference to a [Document].
 ///  - [XmlElement] | A thread and memory safe reference to an [Element].
-///  - [xml::XmlWrapper] | A trait with utility functions for working with types
+///  - [XmlWrapper] | A trait with utility functions for working with types
 ///  derived from [XmlElement].
-///  - [xml::XmlDefault] | An extension of [xml::XmlWrapper] which allows creation of "default"
+///  - [xml::XmlDefault] | An extension of [XmlWrapper] which allows creation of "default"
 ///  value for the derived type.
 ///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
 ///  accessing properties stored in XML attributes. Implementation can be generated using a derive
 ///  macro.
 ///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
 ///  child tags. Implementation can be generated using a derive macro.
-///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
+///  - [xml::XmlList] | A generic implementation of [XmlWrapper] which represents
 ///  a typed list of elements.
 ///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
 ///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
@@ -92,11 +92,11 @@ impl Sbml {
         OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
     }
 
-    pub fn level(&self) -> RequiredProperty<String> {
+    pub fn level(&self) -> RequiredProperty<u32> {
         RequiredProperty::new(&self.sbml_root, "level")
     }
 
-    pub fn version(&self) -> RequiredProperty<String> {
+    pub fn version(&self) -> RequiredProperty<u32> {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 
@@ -186,7 +186,7 @@ pub enum SbmlIssueSeverity {
     /// invalid (e.g. a variable is declared but never used).
     Warning,
     /// A suggestion that would improve the document but does not represent a significant
-    /// issue (e.g. an property is included when it does not have to be, or unknown tags
+    /// issue (e.g. a property is included when it does not have to be, or unknown tags
     /// or attributes are present in the document, e.g. due to the use of unofficial extensions).
     Info,
 }
@@ -211,7 +211,7 @@ mod tests {
     use crate::Sbml;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
-    /// Additionally checks if `Model` retrieval returns correct child.
+    /// Additionally, checks if `Model` retrieval returns correct child.
     #[test]
     pub fn test_document() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
@@ -220,12 +220,12 @@ mod tests {
         let version = doc.version().get();
 
         assert_eq!(
-            level, "3",
+            level, 3,
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
             level, "3"
         );
         assert_eq!(
-            version, "1",
+            version, 1,
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
             version, "1"
         );

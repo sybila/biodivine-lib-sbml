@@ -1,9 +1,13 @@
 use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN, REQUIRED_ATTRIBUTES,
+    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, MATHML_ALLOWED_CHILDREN,
+    REQUIRED_ATTRIBUTES,
 };
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::SBase;
-use crate::xml::{OptionalXmlProperty, XmlElement, XmlList, XmlWrapper};
+use crate::xml::{
+    DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    XmlWrapper,
+};
 use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
 use std::collections::HashSet;
 use std::ops::Deref;
@@ -97,6 +101,10 @@ impl Sbml {
     }
 }
 
+/// Performs very basic and the most critical sanity checks. more precisely:
+/// - the document contains all required children and attributes.
+/// - each attribute value has correct type.
+/// Any failing check is logged in *issues*.
 pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let attributes = xml_element.attributes();
     let element_name = xml_element.tag_name();
@@ -113,6 +121,49 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
                 severity: SbmlIssueSeverity::Error,
             });
         }
+    }
+
+    // check that each attribute contains a value of the correct type
+    for attr in attributes {
+        let attr_name = attr.0.as_str();
+        let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
+            break;
+        };
+
+        // t => (attribute name, attribute value)
+        for t in types {
+            if &attr_name == t.0 {
+                match t.1 {
+                    &"positive_int" => sanity_type_check::<u32>(attr_name, &xml_element, issues),
+                    &"int" => sanity_type_check::<i32>(attr_name, &xml_element, issues),
+                    &"double" => sanity_type_check::<f64>(attr_name, &xml_element, issues),
+                    &"boolean" => sanity_type_check::<bool>(attr_name, &xml_element, issues),
+                    _ => (),
+                }
+            };
+        }
+    }
+}
+
+/// Performs a type check of a value of a specific attribute.
+/// If check fails, error is logged in *issues*.
+fn sanity_type_check<T: XmlPropertyType>(
+    attribute_name: &str,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
+    if property.is_err() {
+        issues.push(SbmlIssue {
+            element: xml_element.raw_element(),
+            message: format!(
+                "Sanity check failed: {0} On the attribute [{1}].",
+                property.err().unwrap(),
+                attribute_name
+            ),
+            rule: "SANITY_CHECK".to_string(),
+            severity: SbmlIssueSeverity::Error,
+        })
     }
 }
 
