@@ -55,14 +55,10 @@ impl Sbml {
         let doc = self.xml.read().unwrap();
 
         if doc.container().child_elements(doc.deref()).len() != 1 {
-            issues.push(SbmlIssue {
-                element: doc.container(),
-                message: "The document contains multiple root nodes. \
-                Only one root <sbml> object is allowed."
-                    .to_string(),
-                rule: "10102".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
+            let message = "The document contains multiple root nodes. \
+                Only one root <sbml> object is allowed.";
+            issues.push(SbmlIssue::new_error("10102", &container, message));
         }
 
         if let Some(root_element) = doc.root_element() {
@@ -111,17 +107,17 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
     let attributes = xml_element.attributes();
     let element_name = xml_element.tag_name();
 
-    for req_attr in REQUIRED_ATTRIBUTES[element_name.as_str()] {
-        if !attributes.contains_key(&req_attr.to_string()) {
-            issues.push(SbmlIssue {
-                element: xml_element.raw_element(),
-                message: format!(
-                    "Sanity check failed: missing required attribute [{0}] on <{1}>.",
-                    req_attr, element_name
-                ),
-                rule: "SANITY_CHECK".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            });
+    if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
+        for req_attr in required.iter() {
+            if !attributes.contains_key(&req_attr.to_string()) {
+                // TODO:
+                //      These have their own SBML issue IDs assigned to them, and we should
+                //      probably try to use them here as well.
+                let message = format!(
+                    "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
+                );
+                issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
+            }
         }
     }
 

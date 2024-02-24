@@ -50,6 +50,23 @@ impl<Type: XmlWrapper> XmlWrapper for XmlList<Type> {
 }
 
 impl<Type: XmlWrapper> XmlList<Type> {
+    /// Map an "outside index" referencing a child element to an inside index, referencing
+    /// a proper XML node (i.e. accounting for text and comments).
+    ///
+    /// Returns `None` if the index does not exist.
+    fn remap_index(&self, mut outside_index: usize) -> Option<usize> {
+        let doc = self.read_doc();
+        for (inside_index, child) in self.raw_element().children(doc.deref()).iter().enumerate() {
+            if child.as_element().is_some() {
+                if outside_index == 0 {
+                    return Some(inside_index);
+                }
+                outside_index -= 1;
+            }
+        }
+        None
+    }
+
     /// Get the element of this list at the position specified by `index`.
     ///
     /// # Panics
@@ -70,18 +87,16 @@ impl<Type: XmlWrapper> XmlList<Type> {
     /// XML tag (e.g. text).
     pub fn get_checked(&self, index: usize) -> Option<Type> {
         let doc = self.read_doc();
-        self.raw_element()
-            .children(doc.deref())
-            .get(index)
-            .map(|it| {
-                let element = it.as_element().unwrap_or_else(|| {
-                    panic!("Item at position {index} is not an XML element.");
-                });
-                unsafe {
-                    // TODO: This really is not safe at the moment.
-                    Type::unchecked_cast(XmlElement::new_raw(self.document(), element))
-                }
-            })
+        self.remap_index(index).and_then(|index| {
+            self.raw_element()
+                .children(doc.deref())
+                .get(index)
+                .map(|it| {
+                    let it = it.as_element().unwrap(); // This is ok due to the remapped index.
+                                                       // TODO: This really is not safe at the moment.
+                    unsafe { Type::unchecked_cast(XmlElement::new_raw(self.document(), it)) }
+                })
+        })
     }
 
     /// Insert a new element into the list. The element must not belong to an existing parent
@@ -92,6 +107,7 @@ impl<Type: XmlWrapper> XmlList<Type> {
     /// Panics if `index > len`, or when `value` cannot be attached to the list tag
     /// (it already has a parent, or is itself the root container tag).
     pub fn insert(&self, index: usize, value: Type) {
+        let index = self.remap_index(index).unwrap_or(self.len());
         value.try_attach_at(self, Some(index)).unwrap();
     }
 
@@ -102,14 +118,18 @@ impl<Type: XmlWrapper> XmlList<Type> {
     /// Panics if `index >= len`, or if the XML node at the given position
     /// is not an element (for example text).
     pub fn remove(&self, index: usize) -> Type {
+        let Some(index) = self.remap_index(index) else {
+            panic!("Item at position {index} does not exist.");
+        };
+
         let mut doc = self.write_doc();
-        let removed = self.raw_element().remove_child(doc.deref_mut(), index);
-        // Here, we assume `removed` is a proper Xml element (i.e. not text or
-        // other special element type). We also assume that it can be safely converted to `Type`
-        // which may not be always true.
-        let removed = removed.as_element().unwrap_or_else(|| {
-            panic!("Item at position {index} is not an XML element.");
-        });
+
+        let removed = self
+            .raw_element()
+            .remove_child(doc.deref_mut(), index)
+            .as_element()
+            .unwrap();
+
         unsafe {
             // TODO: This really is not safe at the moment.
             Type::unchecked_cast(XmlElement::new_raw(self.document(), removed))
@@ -119,7 +139,7 @@ impl<Type: XmlWrapper> XmlList<Type> {
     /// Insert a new element into the list at the last position similarly as in stack.
     ///
     /// # Panics
-    /// Panics if `value` cannot be attached to the list tag (it already has a parent,
+    /// Fails if `value` cannot be attached to the list tag (it already has a parent,
     /// or is itself the root container tag).
     pub fn push(&self, value: Type) {
         self.insert(self.len(), value)
