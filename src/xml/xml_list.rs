@@ -165,6 +165,13 @@ impl<Type: XmlWrapper> XmlList<Type> {
 
         vec
     }
+
+    pub fn iter(&self) -> XmlListIterator<Type> {
+        XmlListIterator {
+            list: self,
+            index: 0,
+        }
+    }
 }
 
 // TODO:
@@ -175,3 +182,23 @@ impl<Type: XmlWrapper> XmlList<Type> {
 //   struct that implements it together with `SBase`, and possibly other implementations that
 //   do not use `SBase`.
 impl<T: XmlWrapper> SBase for XmlList<T> {}
+
+/// A helper structure which allows us to iterate over the elements of a [XmlList].
+pub struct XmlListIterator<'a, T: XmlWrapper> {
+    list: &'a XmlList<T>,
+    index: usize,
+}
+
+impl<'a, T: XmlWrapper> Iterator for XmlListIterator<'a, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.list.len() {
+            None
+        } else {
+            let item = self.list.get(self.index);
+            self.index += 1;
+            Some(item)
+        }
+    }
+}

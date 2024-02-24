@@ -11,7 +11,6 @@ use crate::xml::{
 use macros::{SBase, XmlWrapper};
 
 use std::ops::Deref;
-use xml_doc::Element;
 
 /// A type-safe representation of an SBML <model> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -75,79 +74,122 @@ impl Model {
         self.optional_sbml_child("listOfEvents")
     }
 
-    /// Returns a vector of [FunctionDefinition]s' identifiers (attribute **id**). If the identifier is not set,
-    /// it is not included in the output.
+    /// Returns a vector of [FunctionDefinition] identifiers (attribute **id**). Function definitions
+    /// without IDs are not included in the output.
     pub(crate) fn function_definition_identifiers(&self) -> Vec<String> {
         if let Some(function_definitions) = self.function_definitions().get() {
             function_definitions
-                .as_vec()
                 .iter()
                 .filter_map(|def| def.id().get())
                 .collect()
         } else {
-            vec![]
+            Vec::new()
         }
     }
 
     /// Find a [FunctionDefinition] by its *id* and return a number of arguments this function expects.
     /// More precisely, find a number of **bvar** elements inside **lambda** inside **math** element of
-    /// [FunctionDefinition]. If [FunctionDefinition] cannot be found, returns 0.
-    pub(crate) fn function_definition_arguments(&self, id: &str) -> i32 {
-        // if list of function definitions is present
-        if let Some(function_definitions) = self.function_definitions().get() {
-            let function_definitions = function_definitions.as_vec();
-            // and we have found a function with given id
-            if let Some(function) = function_definitions
-                .iter()
-                .find(|function| function.id().get() == Some(id.to_string()))
-            {
-                // and this function has its math element specified
-                if let Some(math) = function.math().get() {
-                    let doc = self.read_doc();
-                    // and a lambda element within math is present
-                    if let Some(lambda) = math.raw_element().find(doc.deref(), "lambda") {
-                        // we return a number of bvar elements
-                        return lambda
-                            .child_elements(doc.deref())
-                            .iter()
-                            .filter(|child| child.name(doc.deref()) == "bvar")
-                            .collect::<Vec<&Element>>()
-                            .len() as i32;
-                    }
-                }
-            }
-        }
-        0
+    /// [FunctionDefinition]. If [FunctionDefinition] cannot be found or the is missing the appropriate
+    /// math element, returns `None`.
+    pub(crate) fn function_definition_arguments(&self, id: &str) -> Option<usize> {
+        // Check that the list of a function definitions is present.
+        let definitions = self.function_definitions().get()?;
+
+        // And that we have found a function with the given id.
+        let expected = Some(id.to_string());
+        let function = definitions
+            .iter()
+            .find(|function| function.id().get() == expected)?;
+
+        // And this function has its `math` element with a `lambda` child element specified.
+        let doc = self.read_doc();
+        let math = function.math().get()?;
+        let lambda = math.raw_element().find(doc.deref(), "lambda")?;
+        let lambda = XmlElement::new_raw(self.document(), lambda);
+
+        // We then return the number of `bvar` child nodes in the lambda element.
+        let count = lambda
+            .child_elements_filtered(|it| it.name(doc.deref()) == "bvar")
+            .len();
+
+        Some(count)
     }
 
-    /// Returns a vector of [UnitDefinition]s' identifiers (attribute **id**). If the identifier is not set,
-    /// it is not included in the output.
+    /// Returns a vector of [UnitDefinition] identifiers (attribute **id**). Unit definitions
+    /// without IDs are not included in the output.
     pub(crate) fn unit_definition_identifiers(&self) -> Vec<String> {
         if let Some(unit_definitions) = self.unit_definitions().get() {
             unit_definitions
-                .as_vec()
                 .iter()
                 .filter_map(|unit| unit.id().get())
                 .collect()
         } else {
+            Vec::new()
+        }
+    }
+
+    /// Returns a vector of [LocalParameter] identifiers (attribute **id**).
+    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
+        let mut identifiers: Vec<String> = Vec::new();
+
+        let Some(reactions) = self.reactions().get() else {
+            return identifiers;
+        };
+
+        for reaction in reactions.iter() {
+            let local_parameters = reaction
+                .kinetic_law()
+                .get()
+                .and_then(|law| law.local_parameters().get());
+            if let Some(local_parameters) = local_parameters {
+                identifiers.extend(local_parameters.iter().map(|param| param.id().get()));
+            }
+        }
+
+        identifiers
+    }
+
+    /// Returns a vector of [Species] identifiers (attribute **id**).
+    pub(crate) fn species_identifiers(&self) -> Vec<String> {
+        if let Some(species) = self.species().get() {
+            species.iter().map(|species| species.id().get()).collect()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Returns a vector of [Compartment] identifiers (attribute **id**).
+    pub(crate) fn compartment_identifiers(&self) -> Vec<String> {
+        if let Some(compartment) = self.compartments().get() {
+            compartment
+                .iter()
+                .map(|compartment| compartment.id().get())
+                .collect()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Returns a vector of [Parameter] identifiers (attribute **id**).
+    pub(crate) fn parameter_identifiers(&self) -> Vec<String> {
+        if let Some(parameters) = self.parameters().get() {
+            parameters.iter().map(|param| param.id().get()).collect()
+        } else {
             vec![]
         }
     }
 
-    /// Returns a vector of all [LocalParameter]s' identifiers (attribute **id**).
-    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
+    /// Returns a vector of [SpeciesReference] identifiers (attribute **id**). Unit definitions
+    /// without IDs are not included in the output.
+    pub(crate) fn species_reference_identifiers(&self) -> Vec<String> {
         let mut identifiers: Vec<String> = vec![];
-
+        // If the list of reactions is present...
         if let Some(reactions) = self.reactions().get() {
             for reaction in reactions.as_vec() {
-                if let Some(kinetic_law) = reaction.kinetic_law().get() {
-                    if let Some(local_params) = kinetic_law.local_parameters().get() {
-                        let mut param_ids = local_params
-                            .as_vec()
-                            .iter()
-                            .map(|param| param.id().get())
-                            .collect::<Vec<String>>();
-                        identifiers.append(&mut param_ids);
+                // ...we extract identifiers of reactants and products.
+                for list in &[reaction.reactants(), reaction.products()] {
+                    if let Some(list) = list.get() {
+                        identifiers.extend(list.iter().filter_map(|it| it.id().get()));
                     }
                 }
             }
@@ -155,147 +197,68 @@ impl Model {
         identifiers
     }
 
-    /// Returns a vector of all [Species]' identifiers (attribute **id**).
-    pub(crate) fn species_identifiers(&self) -> Vec<String> {
-        if let Some(species) = self.species().get() {
-            species
-                .as_vec()
-                .iter()
-                .map(|species| species.id().get())
-                .collect()
-        } else {
-            vec![]
-        }
-    }
-
-    /// Returns a vector of all [Compartment]s' identifiers (attribute **id**).
-    pub(crate) fn compartment_identifiers(&self) -> Vec<String> {
-        if let Some(compartment) = self.compartments().get() {
-            compartment
-                .as_vec()
-                .iter()
-                .map(|compartment| compartment.id().get())
-                .collect()
-        } else {
-            vec![]
-        }
-    }
-
-    /// Returns a vector of all [Parameter]s' identifiers (attribute **id**).
-    pub(crate) fn parameter_identifiers(&self) -> Vec<String> {
-        if let Some(parameters) = self.parameters().get() {
-            parameters
-                .as_vec()
-                .iter()
-                .map(|param| param.id().get())
-                .collect()
-        } else {
-            vec![]
-        }
-    }
-
-    /// Returns a vector of all [SpeciesReference](crate::core::SpeciesReference)' identifiers (attribute **id**).
-    /// If the identifier is not set, it is not included in the output.
-    pub(crate) fn species_reference_identifiers(&self) -> Vec<String> {
-        let mut identifiers: Vec<String> = vec![];
-        // if list of reactions is present
-        if let Some(reactions) = self.reactions().get() {
-            for reaction in reactions.as_vec() {
-                // we extract identifiers of reactants
-                let mut reactants = match reaction.reactants().get() {
-                    Some(reactants) => reactants
-                        .as_vec()
-                        .iter()
-                        .filter_map(|reactant| reactant.id().get())
-                        .collect::<Vec<String>>(),
-                    None => vec![],
-                };
-                // and product identifiers as well
-                let mut products = match reaction.products().get() {
-                    Some(products) => products
-                        .as_vec()
-                        .iter()
-                        .filter_map(|product| product.id().get())
-                        .collect::<Vec<String>>(),
-                    None => vec![],
-                };
-                // and then we include results in the output
-                identifiers.append(&mut reactants);
-                identifiers.append(&mut products);
-            }
-        }
-        identifiers
-    }
-
-    /// Returns a vector of all [Reaction]s' identifiers (attribute **id**).
+    /// Returns a vector of [FunctionDefinition] identifiers (attribute **id**).
     pub(crate) fn reaction_identifiers(&self) -> Vec<String> {
         if let Some(reactions) = self.reactions().get() {
             reactions
-                .as_vec()
                 .iter()
                 .map(|reaction| reaction.id().get())
                 .collect::<Vec<String>>()
         } else {
-            vec![]
+            Vec::new()
         }
     }
 
-    /// Returns a vector of *variables* of all [AssignmentRule]s.
+    /// Returns a vector of all *variables* appearing in all [AssignmentRule] objects.
     pub(crate) fn assignment_rule_variables(&self) -> Vec<String> {
         if let Some(rules) = self.rules().get() {
-            return rules
-                .as_vec()
+            rules
                 .iter()
                 .filter_map(|rule| rule.try_downcast::<AssignmentRule>())
                 .map(|assignment_rule| assignment_rule.variable().get())
-                .collect::<Vec<String>>();
+                .collect::<Vec<String>>()
+        } else {
+            Vec::new()
         }
-        vec![]
     }
 
-    /// Returns a vector of values from within **ci** element.
+    /// Returns a vector of values from within the **ci** elements appearing in all [AlgebraicRule]
+    /// objects in this model.
     pub(crate) fn algebraic_rule_ci_values(&self) -> Vec<String> {
         if let Some(rules) = self.rules().get() {
             let doc = self.read_doc();
-            return rules
-                .as_vec()
+            rules
                 .iter()
                 .filter_map(|rule| rule.try_downcast::<AlgebraicRule>())
                 .filter_map(|algebraic_rule| algebraic_rule.math().get())
                 .flat_map(|math| {
-                    math.raw_element()
-                        .child_elements_recursive(doc.deref())
-                        .iter()
+                    math.recursive_child_elements()
+                        .into_iter()
                         .filter(|child| child.name(doc.deref()) == "ci")
                         .map(|ci| ci.text_content(doc.deref()))
                         .collect::<Vec<String>>()
                 })
-                .collect::<Vec<String>>();
+                .collect::<Vec<String>>()
+        } else {
+            Vec::new()
         }
-        vec![]
     }
 
-    /// Finds a species with given *id*. If not found, returns None.
+    /// Finds a species with the given *id*. If not found, returns `None`.
     pub(crate) fn find_species(&self, id: &str) -> Option<Species> {
         if let Some(species) = self.species().get() {
-            species
-                .as_vec()
-                .iter()
-                .find(|species| species.id().get() == id)
-                .cloned()
+            species.iter().find(|species| species.id().get() == id)
         } else {
             None
         }
     }
 
-    /// Finds a compartment with given *id*. If not found, returns None.
+    /// Finds a compartment with the given *id*. If not found, returns `None`.
     pub(crate) fn find_compartment(&self, id: &str) -> Option<Compartment> {
         if let Some(compartments) = self.compartments().get() {
             compartments
-                .as_vec()
                 .iter()
                 .find(|compartment| compartment.id().get() == id)
-                .cloned()
         } else {
             None
         }
