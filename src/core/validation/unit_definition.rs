@@ -1,26 +1,54 @@
-use crate::core::validation::{apply_rule_10102, get_allowed_children};
-use crate::core::UnitDefinition;
-use crate::xml::{OptionalXmlChild, XmlWrapper};
-use crate::SbmlIssue;
+use crate::core::validation::{
+    apply_rule_10102, sanity_check, sanity_check_of_list, validate_list_of_objects,
+    SanityCheckable, SbmlValidable,
+};
+use crate::core::{SBase, UnitDefinition};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlWrapper};
+use crate::{SbmlIssue, SbmlIssueSeverity};
+use std::collections::HashSet;
 
-impl UnitDefinition {
-    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+impl SbmlValidable for UnitDefinition {
+    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
 
-        if self.units().is_set() {
-            self.validate_list_of_units(issues);
+        if let Some(list_of_units) = self.units().get() {
+            validate_list_of_objects(&list_of_units, issues, identifiers);
         }
     }
+}
 
-    fn validate_list_of_units(&self, issues: &mut Vec<SbmlIssue>) {
-        let list = self.units().get().unwrap();
-        apply_rule_10102(list.xml_element(), issues);
+impl SanityCheckable for UnitDefinition {
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(self.xml_element(), issues);
 
-        let allowed = get_allowed_children(list.xml_element());
-        for i in 0..list.len() {
-            let unit = list.get(i);
-            if allowed.contains(&unit.tag_name().as_str()) {
-                unit.validate(issues);
+        if let Some(list_of_units) = self.units().get() {
+            sanity_check_of_list(&list_of_units, issues);
+        }
+    }
+}
+
+impl UnitDefinition {
+    pub(crate) fn apply_rule_10302(
+        list_of_unit_definitions: &XmlList<UnitDefinition>,
+        issues: &mut Vec<SbmlIssue>,
+    ) {
+        let mut identifiers: HashSet<String> = HashSet::new();
+
+        for unit_definition in list_of_unit_definitions.as_vec() {
+            let Some(id) = unit_definition.id().get() else {
+                continue;
+            };
+
+            if identifiers.contains(&id) {
+                issues.push(SbmlIssue {
+                    element: unit_definition.raw_element(),
+                    message: format!("The identifier ('{0}') of <unitDefinition> is already present in the <listOfUnitDefinitions>.",
+                                     id),
+                    rule: "10302".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                })
+            } else {
+                identifiers.insert(id);
             }
         }
     }

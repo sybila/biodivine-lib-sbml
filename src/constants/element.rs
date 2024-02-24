@@ -1,4 +1,4 @@
-use phf::phf_map;
+use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
     ($($y:expr),*) => {
@@ -14,7 +14,7 @@ macro_rules! extended_sbase_children {
 pub const ALLOWED_SBASE_ATTRIBUTES: &[&str] = extended_sbase_attributes!();
 pub const ALLOWED_SBASE_CHILDREN: &[&str] = extended_sbase_children!();
 
-pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
+pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_attributes!("xmlns", "level", "version"),
     "model"=> ALLOWED_SBASE_ATTRIBUTES,
     "listOfFunctionDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
@@ -56,7 +56,63 @@ pub const ALLOWED_ATTRIBUTES: phf::Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_attributes!("variable"),
 };
 
-pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
+// <String> attributes are omitted as their value is always considered valid nevertheless the actual value
+pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
+    "sbml" => phf_map! { "level" => "positive_int", "version" => "positive_int"},
+    "unit" => phf_map! { "exponent" => "double", "scale" => "int", "multiplier" => "double"},
+    "compartment" => phf_map! { "spatialDimensions" => "double", "size" => "double", "constant" => "boolean"},
+    "species" => phf_map! { "initialAmount" => "double", "initialConcentration" => "double", "hasOnlySubstanceUnits" => "boolean", "boundaryCondition" => "boolean", "constant" => "boolean"},
+    "parameter" => phf_map! { "value" => "double", "constant" => "boolean"},
+    "reaction" => phf_map! { "reversible" => "boolean"},
+    "speciesReference" => phf_map! { "stoichiometry" => "double", "constant" => "boolean"},
+    "localParameter" => phf_map! { "value" => "double"},
+    "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
+    "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
+};
+
+pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
+    "sbml" => &["level", "version"],
+    "model" => &[],
+    "listOfFunctionDefinitions" => &[],
+    "functionDefinition" => &["id"],
+    "listOfUnitDefinitions" => &[],
+    "unitDefinition" => &["id"],
+    "listOfUnits" => &[],
+    "unit" => &["kind", "exponent", "scale", "multiplier"],
+    "listOfCompartments" => &[],
+    "compartment" => &["id", "constant"],
+    "listOfSpecies" => &[],
+    "species" => &["id", "compartment", "hasOnlySubstanceUnits", "boundaryCondition", "constant"],
+    "listOfParameters" => &[],
+    "parameter" => &["id", "constant"],
+    "listOfInitialAssignments" => &[],
+    "initialAssignment" => &["symbol"],
+    "listOfRules" => &[],
+    "algebraicRule" => &[],
+    "assignmentRule" => &["variable"],
+    "rateRule" => &["variable"],
+    "listOfConstraints" => &[],
+    "constraint" => &[],
+    "listOfReactions" => &[],
+    "reaction" => &["id", "reversible"],
+    "listOfReactants" => &[],
+    "listOfProducts" => &[],
+    "speciesReference" => &["constant"],
+    "listOfModifiers" => &[],
+    "modifierSpeciesReference" => &[],
+    "kineticLaw" => &[],
+    "listOfLocalParameters" => &[],
+    "localParameter" => &["id"],
+    "listOfEvents" => &[],
+    "event" => &["useValuesFromTriggerTime"],
+    "trigger" => &["initialValue", "persistent"],
+    "priority" => &[],
+    "delay" => &[],
+    "listOfEventAssignments" => &[],
+    "eventAssignment" => &["variable"]
+};
+
+pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
     "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),
     "listOfFunctionDefinitions" => extended_sbase_children!("functionDefinition"),
@@ -98,7 +154,9 @@ pub const ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_children!("math")
 };
 
-pub const MATHML_ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
+// There are no required children in SBML core level 3 version 1
+
+pub const MATHML_ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "math" => &["abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",
                 "arccot", "arccsch", "arccsc", "arcsech", "arcsec", "arcsinh", "arcsin", "arctanh",
                 "arctan", "bvar", "ceiling", "ci", "cn", "cosh", "cos", "coth", "cot", "csch", "csc",
@@ -109,7 +167,7 @@ pub const MATHML_ALLOWED_CHILDREN: phf::Map<&str, &[&str]> = phf_map! {
                 "sep", "sinh", "sin", "tanh", "tan", "times", "true", "xor"]
 };
 
-pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: phf::Map<&str, &[&str]> = phf_map! {
+pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: Map<&str, &[&str]> = phf_map! {
     "encoding" => &["csymbol", "annotation", "annotation-xml"],
     "definitionURL" => &["ci", "csymbol", "semantics"],
     "type" => &["cn"],

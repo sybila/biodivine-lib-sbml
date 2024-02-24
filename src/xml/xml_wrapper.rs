@@ -110,10 +110,9 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// referenced within this [XmlWrapper].
     ///
     /// Note that full_name generally consists of namespace prefix and actual name in following format: **prefix:name**.
-    fn attributes(&self) -> &HashMap<String, String> {
-        unimplemented!();
-        // let doc = self.read_doc();
-        // self.raw_element().attributes(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    fn attributes(&self) -> HashMap<String, String> {
+        let doc = self.read_doc();
+        self.raw_element().attributes(doc.deref()).clone()
     }
 
     /// Returns the vector of children referenced within this [XmlWrapper] as a collection
