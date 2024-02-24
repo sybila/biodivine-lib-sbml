@@ -550,12 +550,12 @@ impl Math {
                 && !scoped_local_param_ids.contains(&value)
             {
                 issues.push(SbmlIssue {
-                        element: ci,
-                        message: format!("A <localParameter> identifier '{0}' found out of scope of its <KineticLaw>", 
-                                         value),
-                        rule: "10216".to_string(),
-                        severity: SbmlIssueSeverity::Error
-                    });
+                    element: ci,
+                    message: format!("A <localParameter> identifier '{0}' found out of scope of its <KineticLaw>",
+                                     value),
+                    rule: "10216".to_string(),
+                    severity: SbmlIssueSeverity::Error,
+                });
             }
         }
     }
@@ -632,11 +632,11 @@ impl Math {
                     }
                 } else if MATHML_NARY_OPERATORS.contains(&name) && child_count - 1 == 0 {
                     issues.push(SbmlIssue {
-                            element: child,
-                            message: format!("An N-ary operator <{0}> with 0 arguments found. Use of N-ary operators without any arguments is discouraged.", name), 
-                            rule: "10218".to_string(), 
-                            severity: SbmlIssueSeverity::Warning
-                        });
+                        element: child,
+                        message: format!("An N-ary operator <{0}> with 0 arguments found. Use of N-ary operators without any arguments is discouraged.", name),
+                        rule: "10218".to_string(),
+                        severity: SbmlIssueSeverity::Warning,
+                    });
                 }
             }
         }
@@ -670,9 +670,12 @@ impl Math {
                 let id = function_call.text_content(doc.deref());
 
                 if func_identifiers.contains(&id) {
-                    let expected_args = model.function_definition_arguments(id.as_str());
+                    let Some(expected_args) = model.function_definition_arguments(id.as_str())
+                    else {
+                        continue;
+                    };
 
-                    if child_count - 1 != expected_args {
+                    if child_count - 1 != expected_args as i32 {
                         issues.push(SbmlIssue {
                             element: *function_call,
                             message: format!(
@@ -757,7 +760,7 @@ impl Math {
                         value
                     ),
                     rule: "10221".to_string(),
-                    severity: SbmlIssueSeverity::Error
+                    severity: SbmlIssueSeverity::Error,
                 })
             }
         }
@@ -857,8 +860,8 @@ impl Math {
                 issues.push(SbmlIssue {
                     element: ci,
                     message:
-                        format!("The value of target ('{0}') of rateOf <csymbol> found as a variable of <assignmentRule>.",
-                                value),
+                    format!("The value of target ('{0}') of rateOf <csymbol> found as a variable of <assignmentRule>.",
+                            value),
                     rule: "10224".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 })
@@ -868,8 +871,8 @@ impl Math {
                 issues.push(SbmlIssue {
                     element: ci,
                     message:
-                        format!("The value of target ('{0}') of rateOf <csymbol> determined by an <algebraicRule>.",
-                                value),
+                    format!("The value of target ('{0}') of rateOf <csymbol> determined by an <algebraicRule>.",
+                            value),
                     rule: "10224".to_string(),
                     severity: SbmlIssueSeverity::Error,
                 })
@@ -927,7 +930,7 @@ impl Math {
                                     compartment_id
                                 ),
                                 rule: "10225".to_string(),
-                                severity: SbmlIssueSeverity::Error
+                                severity: SbmlIssueSeverity::Error,
                             })
                         } else if !compartment.constant().get()
                             && algebraic_ci_values.contains(&compartment_id)

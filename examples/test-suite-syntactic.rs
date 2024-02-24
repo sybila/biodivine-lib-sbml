@@ -124,8 +124,7 @@ fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
             let mut expected = read_expected_issues(result_file.to_str().unwrap());
 
             let doc = Sbml::read_path(test_file.to_str().unwrap()).unwrap();
-            let mut issues: Vec<SbmlIssue> = Vec::new();
-            doc.validate(&mut issues);
+            let issues: Vec<SbmlIssue> = doc.validate();
 
             for issue in issues {
                 if test_issue(issue.rule.as_str()) {

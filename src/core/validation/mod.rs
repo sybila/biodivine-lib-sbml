@@ -135,11 +135,11 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
         // t => (attribute name, attribute value)
         for t in types {
             if &attr_name == t.0 {
-                match t.1 {
-                    &"positive_int" => sanity_type_check::<u32>(attr_name, &xml_element, issues),
-                    &"int" => sanity_type_check::<i32>(attr_name, &xml_element, issues),
-                    &"double" => sanity_type_check::<f64>(attr_name, &xml_element, issues),
-                    &"boolean" => sanity_type_check::<bool>(attr_name, &xml_element, issues),
+                match *t.1 {
+                    "positive_int" => sanity_type_check::<u32>(attr_name, xml_element, issues),
+                    "int" => sanity_type_check::<i32>(attr_name, xml_element, issues),
+                    "double" => sanity_type_check::<f64>(attr_name, xml_element, issues),
+                    "boolean" => sanity_type_check::<bool>(attr_name, xml_element, issues),
                     _ => (),
                 }
             };
