@@ -12,8 +12,8 @@ impl FunctionDefinition {
     ///
     /// The child can be any SBML tag, as long as one of its transitive parents is a
     /// [FunctionDefinition] element. If this is not satisfied, the method returns `None`.
-    pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
-        Self::search_in_parents(doc, child, "functionDefinition")
+    pub fn for_child_element(child: &XmlElement) -> Option<Self> {
+        Self::search_in_parents(child, "functionDefinition")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {

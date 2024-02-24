@@ -30,8 +30,8 @@ impl Model {
     /// The child can be any SBML tag, as long as it appears in an SBML model (i.e. one of
     /// its transitive parents is a [Model] element). If this is not satisfied, the method
     /// returns `None`.
-    pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
-        Self::search_in_parents(doc, child, "model")
+    pub fn for_child_element(child: &XmlElement) -> Option<Self> {
+        Self::search_in_parents(child, "model")
     }
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
@@ -109,7 +109,7 @@ impl Model {
 
         // We then return the number of `bvar` child nodes in the lambda element.
         let count = lambda
-            .child_elements_filtered(|it| it.name(doc.deref()) == "bvar")
+            .child_elements_filtered(|it| it.tag_name() == "bvar")
             .len();
 
         Some(count)
@@ -226,7 +226,6 @@ impl Model {
     /// objects in this model.
     pub(crate) fn algebraic_rule_ci_values(&self) -> Vec<String> {
         if let Some(rules) = self.rules().get() {
-            let doc = self.read_doc();
             rules
                 .iter()
                 .filter_map(|rule| rule.try_downcast::<AlgebraicRule>())
@@ -234,8 +233,8 @@ impl Model {
                 .flat_map(|math| {
                     math.recursive_child_elements()
                         .into_iter()
-                        .filter(|child| child.name(doc.deref()) == "ci")
-                        .map(|ci| ci.text_content(doc.deref()))
+                        .filter(|child| child.tag_name() == "ci")
+                        .map(|ci| ci.text_content())
                         .collect::<Vec<String>>()
                 })
                 .collect::<Vec<String>>()

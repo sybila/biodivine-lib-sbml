@@ -1,6 +1,4 @@
-use std::ops::Deref;
 use std::str::FromStr;
-use xml_doc::{Document, Element};
 
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
@@ -22,8 +20,8 @@ impl Math {
     ///  - **[10206](Math::apply_rule_10206)** - Ensures *type* attribute correct placement.
     ///  - **[10207](Math::apply_rule_10207)** - Ensures *type* attribute correct value.
     ///  - **[10208](Math::apply_rule_10208)** - Validates *lambda* element usage.
-    ///  - **[10214](Math::apply_rule_10214)** - Validates first *ci* element usage outside of [FunctionDefinition].
-    ///  - **[10215](Math::apply_rule_10215)** - Validates non-first *ci* element usage outside of [FunctionDefinition].
+    ///  - **[10214](Math::apply_rule_10214)** - Validates first *ci* element usage outside [FunctionDefinition].
+    ///  - **[10215](Math::apply_rule_10215)** - Validates non-first *ci* element usage outside [FunctionDefinition].
     ///  - **[10216](Math::apply_rule_10216)** - Validates [LocalParameter](crate::core::LocalParameter) *id* occurrence.
     ///  - **[10218](Math::apply_rule_10218)** - Validates number of arguments for operators.
     ///  - **[10219](Math::apply_rule_10219)** - Validates number of arguments for [FunctionDefinition].
@@ -36,9 +34,10 @@ impl Math {
     /// ### Ignored rules as of SBML Level 3 Version 1 Core:
     /// - **10209** - "The arguments of the MathML logical operators and, not, or, and xor must evaluate to Boolean values."
     /// - **10210** - "The arguments to the following MathML constructs must evaluate to numeric values (more specifically, they
-    /// must evaluate to MathML real, integer, rational, or "e-notation" numbers, or the time, delay, avogadro, csymbol elements): abs,
-    /// arccosh, arccos, arccoth, arccot, arccsch, arccsc, arcsech, arcsec, arcsinh, arcsin, arctanh, arctan, ceiling, cosh, cos, coth,
-    /// cot, csch, csc, divide, exp, factorial, floor, ln, log, minus, plus, power, root, sech, sec, sinh, sin, tanh, tan, and times."
+    /// must evaluate to MathML real, integer, rational, or "e-notation" numbers, or the time, delay, avogadro, csymbol elements): `abs`,
+    /// `arccosh`, `arccos`, `arccoth`, `arccot`, `arccsch`, `arccsc`, `arcsech`, `arcsec`, `arcsinh`, `arcsin`, `arctanh`, `arctan`, `ceiling`,
+    /// `cosh`, `cos`, `coth`, `cot`, `csch`, `csc`, `divide`, `exp`, `factorial`, `floor`, `ln`, `log`, `minus`, `plus`, `power`, `root`,
+    /// `sech`, `sec`, `sinh`, `sin`, `tanh`, `tan`, and `times`."
     /// - **10211** - "The values of all arguments to MathML eq and neq operators must evaluate to the same type, either all
     /// Boolean or all numeric."
     /// - **10212** - "The types of the values within MathML piecewise operators should all be consistent; i.e., the set of expressions
@@ -70,42 +69,34 @@ impl Math {
     }
 
     /// ### Rule 10201
-    /// is *partially* satisfied by the implementation of the rule
+    /// This rule is *partially* satisfied by the implementation of the rule
     /// [10102](crate::core::validation::apply_rule_10102) as we check each
     /// element present for its allowed children (except [Math] element that is
     /// the subject of this validation procedure) and thus **MathML** content
     /// can be present only within a [Math] element. However, additional check for
     /// explicit or implicit valid namespace of a [Math] element must be performed.
     fn apply_rule_10201(&self, issues: &mut Vec<SbmlIssue>) {
-        if self.namespace_url() != URL_MATHML {
-            let message = format!(
-                "Wrong namespace usage in a `math` element. Found `{}`, but `{}` should be used.",
-                self.namespace_url(),
-                URL_MATHML
-            );
+        let namespace = self.namespace_url();
+        if namespace != URL_MATHML {
+            let message = format!("Wrong namespace usage in a `math` element. Found `{namespace}`, but `{URL_MATHML}` should be used.");
             issues.push(SbmlIssue::new_error("10201", self, message));
         }
     }
 
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10202
-    /// Validates that only allowed subset of **MathML** child elements are present within [Math]
-    /// element. An SBML package may allow new MathML elements to be added to this list, and if so,
-    /// the package must define **required="true"** on the SBML container element
+    /// Validates that only the allowed subset of **MathML** child elements are present within
+    /// a [Math] element. An SBML package may allow new MathML elements to be added to this list,
+    /// and if so, the package must define **required="true"** on the SBML container element
     /// [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10202(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let allowed_children = get_allowed_children(self.xml_element());
 
         for child in self.recursive_child_elements() {
-            let child_tag_name = child.name(doc.deref());
-
-            if !allowed_children.contains(&child_tag_name) {
-                let message = format!(
-                    "Unknown child <{0}> of element <{1}>.",
-                    child_tag_name, "math"
-                );
-                issues.push(SbmlIssue::new_error("10202", self, message));
+            let child_tag_name = child.tag_name();
+            if !allowed_children.contains(&child_tag_name.as_str()) {
+                let message = format!("Unknown child <{child_tag_name}> of element <math>.");
+                issues.push(SbmlIssue::new_error("10202", &child, message));
             }
         }
     }
@@ -118,22 +109,18 @@ impl Math {
     /// elements, and if so, the package must define **required="true"** on the SBML container
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
-        let relevant_children = self.recursive_child_elements_filtered(|it| {
-            it.attribute(doc.deref(), "encoding").is_some()
-        });
+        let relevant_children =
+            self.recursive_child_elements_filtered(|it| it.has_attribute("encoding"));
 
         for child in relevant_children {
-            let name = child.name(doc.deref());
-
-            if !allowed.contains(&name) {
+            let name = child.tag_name();
+            if !allowed.contains(&name.as_str()) {
                 let message = format!(
-                    "Attribute [encoding] found on element <{0}>, which is forbidden. \
-                        Attribute [encoding] is only permitted on <csymbol>, <annotation> and <annotation-xml>.",
-                    name
+                    "Attribute [encoding] found on element <{name}>, which is forbidden. \
+                        Attribute [encoding] is only permitted on <csymbol>, <annotation> and <annotation-xml>."
                 );
-                issues.push(SbmlIssue::new_error("10203", self, message));
+                issues.push(SbmlIssue::new_error("10203", &child, message));
             }
         }
     }
@@ -146,23 +133,18 @@ impl Math {
     /// elements, and if so, the package must define **required="true"** on the SBML container
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
-        let relevant_children = self.recursive_child_elements_filtered(|it| {
-            it.attribute(doc.deref(), "definitionURL").is_some()
-        });
+        let relevant_children =
+            self.recursive_child_elements_filtered(|it| it.has_attribute("definitionURL"));
 
         for child in relevant_children {
-            let name = child.name(doc.deref());
-
-            if !allowed.contains(&name) {
+            let name = child.tag_name();
+            if !allowed.contains(&name.as_str()) {
                 let message = format!(
-                    "Attribute [definitionURL] found on element <{0}>, which is forbidden. \
-                        Attribute [definitionURL] is only permitted on <ci>, <csymbol> and <semantics>.",
-                    name
+                    "Attribute [definitionURL] found on element <{name}>, which is forbidden. \
+                        Attribute [definitionURL] is only permitted on <ci>, <csymbol> and <semantics>."
                 );
-
-                issues.push(SbmlIssue::new_error("10204", self, message));
+                issues.push(SbmlIssue::new_error("10204", &child, message));
             }
         }
     }
@@ -177,20 +159,19 @@ impl Math {
     /// definitionURL attribute of a csymbol, and if so, the package must define **required="true"**
     /// on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.attribute(doc.deref(), "definitionURL").is_some()
-                && child.name(doc.deref()) == "csymbol"
+            child.tag_name() == "csymbol" && child.has_attribute("definitionURL")
         });
 
         for child in children_of_interest {
-            let value = child.attribute(doc.deref(), "definitionURL").unwrap();
-            if !MATHML_ALLOWED_DEFINITION_URLS.contains(&value) {
+            // Unwrap is safe, because we only consider children where the attribute is set.
+            let value = child.get_attribute("definitionURL").unwrap();
+            if !MATHML_ALLOWED_DEFINITION_URLS.contains(&value.as_str()) {
                 let message = format!(
                     "Invalid definitionURL value found '{}'. Permitted values are: {:?}",
                     value, MATHML_ALLOWED_DEFINITION_URLS
                 );
-                issues.push(SbmlIssue::new_error("10205", self, message));
+                issues.push(SbmlIssue::new_error("10205", &child, message));
             }
         }
     }
@@ -203,21 +184,17 @@ impl Math {
     /// the type attribute on other elements, and if so, the package must define **required="true"**
     /// on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10206(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.attribute(doc.deref(), "type").is_some()
-        });
+        let children_of_interest =
+            self.recursive_child_elements_filtered(|child| child.has_attribute("type"));
 
         for child in children_of_interest {
-            let name = child.name(doc.deref());
-
-            if !MATHML_ALLOWED_CHILDREN_BY_ATTR["type"].contains(&name) {
+            let name = child.tag_name();
+            if !MATHML_ALLOWED_CHILDREN_BY_ATTR["type"].contains(&name.as_str()) {
                 let message = format!(
-                    "Attribute [type] found on element <{0}>, which is forbidden. \
-                        Attribute [type] is only permitted on <cn>.",
-                    name
+                    "Attribute [type] found on element <{name}>, which is forbidden. \
+                        Attribute [type] is only permitted on <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10204", self, message));
+                issues.push(SbmlIssue::new_error("10204", &child, message));
             }
         }
     }
@@ -229,21 +206,18 @@ impl Math {
     /// allow new values for the type attribute, and if so, the package must define
     /// **required="true"** on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10207(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.attribute(doc.deref(), "type").is_some()
-        });
+        let children_of_interest =
+            self.recursive_child_elements_filtered(|child| child.has_attribute("type"));
 
         for child in children_of_interest {
-            let value = child.attribute(doc.deref(), "type").unwrap();
+            let value = child.get_attribute("type").unwrap();
 
-            if !MATHML_ALLOWED_TYPES.contains(&value) {
+            if !MATHML_ALLOWED_TYPES.contains(&value.as_str()) {
                 let message = format!(
-                    "Invalid type value found '{0}'. Permitted values are: \
-                    'e-notation', 'real', 'integer' and 'rational'",
-                    value
+                    "Invalid type value found '{value}'. Permitted values are: \
+                    'e-notation', 'real', 'integer' and 'rational'"
                 );
-                issues.push(SbmlIssue::new_error("10206", self, message));
+                issues.push(SbmlIssue::new_error("10206", &child, message));
             }
         }
     }
@@ -258,28 +232,31 @@ impl Math {
     /// elements on other elements, and if so, the package must define **required="true"** on the
     /// SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10208(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let children_of_interest =
-            self.recursive_child_elements_filtered(|child| child.name(doc.deref()) == "lambda");
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "lambda");
 
         for child in children_of_interest {
-            let parent = child.parent(doc.deref()).unwrap();
-            let parent_name = parent.name(doc.deref());
+            // The parent must exist, because these are children of this math element.
+            // Furthermore, we also assume that if the parent is `math`, then it must have
+            // a parent, and if it is `semantics`, then its parent must have a parent as well.
+            // This should be a reasonable assumption for any SBML document that is valid-enough
+            // to get to this point.
+            let parent = child.parent().unwrap();
+            let parent_name = parent.tag_name();
 
             if parent_name == "math" {
-                let grandparent = parent.parent(doc.deref()).unwrap();
-                Self::validate_lambda_placement(doc.deref(), child, parent, grandparent, issues);
+                let grandparent = parent.parent().unwrap();
+                Self::validate_lambda_placement(child, parent, grandparent, issues);
             } else if parent_name == "semantics" {
-                let grandparent = parent.parent(doc.deref()).unwrap();
-                let top_parent = grandparent.parent(doc.deref()).unwrap();
-                Self::validate_lambda_placement(doc.deref(), child, parent, top_parent, issues);
+                let grandparent = parent.parent().unwrap();
+                let top_parent = grandparent.parent().unwrap();
+                Self::validate_lambda_placement(child, parent, top_parent, issues);
             } else {
                 let message = format!(
                     "Invalid immediate parent of <lambda>. Only <math> and <semantics> are \
-                        valid immediate parents. Actual parent: <{0}>",
-                    parent_name
+                        valid immediate parents. Actual parent: <{parent_name}>"
                 );
-                issues.push(SbmlIssue::new_error("10208", self, message));
+                issues.push(SbmlIssue::new_error("10208", &child, message));
             }
         }
     }
@@ -288,80 +265,67 @@ impl Math {
     ///  1. top-level parent of **lambda** is a [**FunctionDefinition**](FunctionDefinition).
     ///  2. **lambda** is the first child of its immediate parent
     fn validate_lambda_placement(
-        doc: &Document,
-        child: Element,
-        parent: Element,
-        toplevel_parent: Element,
+        child: XmlElement,
+        parent: XmlElement,
+        toplevel_parent: XmlElement,
         issues: &mut Vec<SbmlIssue>,
     ) {
-        if toplevel_parent.name(doc) != "functionDefinition" {
+        let toplevel_parent = toplevel_parent.tag_name();
+        if toplevel_parent != "functionDefinition" {
             // the (great)grandparent of <lambda> must be <functionDefinition>
-            issues.push(SbmlIssue {
-                element: child,
-                message: format!(
-                    "A <lambda> found in invalid scope of <{0}>. \
-                The <lambda> can be located only within <functionDefinition> (in <math>).",
-                    toplevel_parent.name(doc)
-                ),
-                rule: "10208".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            });
-        } else if *parent.child_elements(doc).first().unwrap() != child {
+            let message = format!(
+                "A <lambda> found in invalid scope of <{toplevel_parent}>. \
+                The <lambda> can be located only within <functionDefinition> (in <math>)."
+            );
+            issues.push(SbmlIssue::new_error("10208", &child, message));
+            return;
+        }
+
+        let is_first_child = parent
+            .get_child_at(0)
+            .map(|it| it.raw_element() == child.raw_element())
+            .unwrap_or(false);
+
+        if !is_first_child {
             // the <lambda> must be the first child inside <math> (or <semantics>)
-            issues.push(SbmlIssue {
-                element: child,
-                message: "The <lambda> must be the first element within <math>.".to_string(),
-                rule: "10208".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+            let message = "The <lambda> must be the first element within <math>.".to_string();
+            issues.push(SbmlIssue::new_error("10208", &child, message));
         }
     }
 
     /// ### Rule 10214
-    /// Outside a [FunctionDefinition] object, if a MathML
-    /// **ci** element is the first element within a MathML apply element, then the **ci** element's
-    /// value can only be chosen from the set of identifiers of
-    /// [FunctionDefinition] objects defined in the enclosing
+    /// Outside a [FunctionDefinition] object, if a MathML **ci** element is the first element
+    /// within a MathML apply element, then the **ci** element's value can only be chosen from
+    /// the set of identifiers of [FunctionDefinition] objects defined in the enclosing
     /// SBML [Model] object.
     pub(crate) fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let parent_name = self
-            .raw_element()
-            .parent(doc.deref())
-            .unwrap()
-            .name(doc.deref());
+        let parent_name = self.parent().unwrap().tag_name();
 
         if parent_name != "functionDefinition" {
             let children_of_interest = self.recursive_child_elements_filtered(|child| {
-                let is_apply = child.name(doc.deref()) == "apply";
-                let ci_first = child
-                    .child_elements(doc.deref())
-                    .first()
-                    .map(|it| it.name(doc.deref()) == "ci")
-                    .unwrap_or(false);
-                is_apply && ci_first
+                child.tag_name() == "apply" && {
+                    child
+                        .get_child_at(0)
+                        .map(|it| it.tag_name() == "ci")
+                        .unwrap_or(false)
+                }
             });
 
-            let identifiers = Model::for_child_element(self.document(), self.xml_element())
+            let identifiers = Model::for_child_element(self.xml_element())
                 .unwrap()
                 .function_definition_identifiers();
 
             for child in children_of_interest {
                 // This unwrap must succeed because we enforced that ci is the first child.
-                let value = child
-                    .child_elements(doc.deref())
-                    .first()
-                    .unwrap()
-                    .text_content(doc.deref());
+                let value = child.get_child_at(0).unwrap().text_content();
 
                 if !identifiers.contains(&value) {
                     let message = format!(
-                        "Function '{0}' not defined. \
+                        "Function '{value}' not defined. \
                             Function referred by <ci> must be defined in <functionDefinition> object \
-                            with relevant identifier (id).",
-                        value
+                            with relevant identifier (id)."
                     );
-                    issues.push(SbmlIssue::new_error("10214", self, message));
+                    issues.push(SbmlIssue::new_error("10214", &child, message));
                 }
             }
         }
@@ -380,14 +344,13 @@ impl Math {
     /// object class defined by an SBML Level 3 package as having mathematical meaning.
     pub(crate) fn apply_rule_10215(&self, issues: &mut Vec<SbmlIssue>) {
         let is_out_of_function_definition =
-            FunctionDefinition::for_child_element(self.document(), self.xml_element()).is_none();
+            FunctionDefinition::for_child_element(self.xml_element()).is_none();
 
         if !is_out_of_function_definition {
             return;
         }
 
-        let doc = self.read_doc();
-        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let model = Model::for_child_element(self.xml_element()).unwrap();
         let identifiers = [
             model.species_identifiers(),
             model.compartment_identifiers(),
@@ -399,24 +362,22 @@ impl Math {
         .concat();
 
         let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.name(doc.deref()) == "apply");
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
             let ci_elements = apply
-                .child_elements(doc.deref())
+                .child_elements()
                 .into_iter()
                 .skip(1)
-                .filter(|child| child.name(doc.deref()) == "ci")
+                .filter(|child| child.tag_name() == "ci")
                 .collect::<Vec<_>>();
 
             for ci in ci_elements {
-                let value = ci.text_content(doc.deref());
+                let value = ci.text_content();
 
                 if !identifiers.contains(&value) {
-                    let ci = XmlElement::new_raw(self.document(), ci);
                     let message = format!(
-                        "Invalid identifier value '{0}' in <ci>. Identifier not found.",
-                        value
+                        "Invalid identifier value '{value}' in <ci>. Identifier not found."
                     );
                     issues.push(SbmlIssue::new_error("10215", &ci, message));
                 }
@@ -432,35 +393,29 @@ impl Math {
     /// may only be used in MathML ci elements or as the target of an SIdRef attribute if that package
     /// construct is a child of the parent [Reaction].
     pub(crate) fn apply_rule_10216(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let model = Model::for_child_element(self.xml_element()).unwrap();
         let all_local_param_ids = model.local_parameter_identifiers();
-        let scoped_local_param_ids =
-            match KineticLaw::for_child_element(self.document(), self.xml_element()) {
-                Some(k) => k.local_parameter_identifiers(),
-                None => Vec::new(),
-            };
+
+        let scoped_local_param_ids = match KineticLaw::for_child_element(self.xml_element()) {
+            Some(k) => k.local_parameter_identifiers(),
+            None => Vec::new(),
+        };
+
         let b_variables = self
             .recursive_child_elements()
             .into_iter()
-            .filter(|child| child.name(doc.deref()) == "bvar")
-            .filter_map(|bvar| {
-                bvar.child_elements(doc.deref())
-                    .first()
-                    .map(|it| it.text_content(doc.deref()))
-            })
+            .filter(|child| child.tag_name() == "bvar")
+            .filter_map(|bvar| bvar.get_child_at(0).map(|it| it.text_content()))
             .collect::<Vec<String>>();
 
-        let ci_elements =
-            self.recursive_child_elements_filtered(|child| child.name(doc.deref()) == "ci");
+        let ci_elements = self.recursive_child_elements_filtered(|child| child.tag_name() == "ci");
 
         for ci in ci_elements {
-            let value = ci.text_content(doc.deref());
+            let value = ci.text_content();
             if !b_variables.contains(&value)
                 && all_local_param_ids.contains(&value)
                 && !scoped_local_param_ids.contains(&value)
             {
-                let ci = XmlElement::new_raw(self.document(), ci);
                 let message = format!("A <localParameter> identifier '{value}' found out of scope of its <KineticLaw>");
                 issues.push(SbmlIssue::new_error("10216", &ci, message));
             }
@@ -470,23 +425,20 @@ impl Math {
     /// ### Rule 10218
     /// A MathML operator must be supplied the number of arguments appropriate for that operator.
     pub(crate) fn apply_rule_10218(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.name(doc.deref()) == "apply");
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
-            let apply = XmlElement::new_raw(self.document(), apply);
             let children = apply.child_elements();
-            let child_count = children.len();
-            if child_count == 0 {
+            if children.is_empty() {
                 let message = "No operator specified in <apply>.".to_string();
                 issues.push(SbmlIssue::new_error("10218", &apply, message));
                 continue;
             }
-            let arg_count = child_count - 1;
-            let operator = children[0].name(doc.deref());
+            let arg_count = children.len() - 1;
+            let operator = children[0].tag_name();
 
-            if MATHML_UNARY_OPERATORS.contains(&operator) {
+            if MATHML_UNARY_OPERATORS.contains(&operator.as_str()) {
                 // <minus> is allowed to have 1 OR 2 arguments
                 if operator == "minus" && arg_count != 1 && arg_count != 2 {
                     let message = format!(
@@ -500,7 +452,7 @@ impl Math {
                     );
                     issues.push(SbmlIssue::new_error("10218", &apply, message));
                 }
-            } else if MATHML_BINARY_OPERATORS.contains(&operator) {
+            } else if MATHML_BINARY_OPERATORS.contains(&operator.as_str()) {
                 // root is allowed to have 1 OR 2 arguments
                 if operator == "root" && arg_count != 1 && arg_count != 2 {
                     let message = format!(
@@ -512,7 +464,7 @@ impl Math {
                     let message = format!("Invalid number ({arg_count}) of arguments for binary operator <{operator}>.");
                     issues.push(SbmlIssue::new_error("10218", &apply, message));
                 }
-            } else if MATHML_NARY_OPERATORS.contains(&operator) && arg_count == 0 {
+            } else if MATHML_NARY_OPERATORS.contains(&operator.as_str()) && arg_count == 0 {
                 // TODO:
                 //  This is not correct? N-ary operators with zero arguments are only
                 //  discouraged if the meaning of the operator is not well defined.
@@ -533,25 +485,24 @@ impl Math {
     /// the number of MathML **bvar** elements inside the **lambda** element of the function definition, if
     /// present.
     pub(crate) fn apply_rule_10219(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let model = Model::for_child_element(self.xml_element()).unwrap();
 
         let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.name(doc.deref()) == "apply");
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
-            let children = apply.child_elements(doc.deref());
+            let children = apply.child_elements();
             let Some(function_call) = children.first() else {
                 continue;
             };
 
-            if function_call.name(doc.deref()) != "ci" {
+            if function_call.tag_name() != "ci" {
                 continue;
             }
 
             let arg_count = children.len() - 1;
             let func_identifiers = model.function_definition_identifiers();
-            let id = function_call.text_content(doc.deref());
+            let id = function_call.text_content();
 
             if func_identifiers.contains(&id) {
                 let expected_args = model
@@ -563,8 +514,7 @@ impl Math {
                         "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
                                 The function '{id}' takes {expected_args} arguments."
                     );
-                    let function_call = XmlElement::new_raw(self.document(), *function_call);
-                    issues.push(SbmlIssue::new_error("10219", &function_call, message));
+                    issues.push(SbmlIssue::new_error("10219", function_call, message));
                 }
             }
         }
@@ -577,20 +527,17 @@ impl Math {
     /// on other elements, and if so, the package must define **required="true"** on the SBML container
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10220(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let children_of_interest: Vec<Element> = self.recursive_child_elements_filtered(|child| {
-            child.attribute(doc.deref(), "units").is_some()
-        });
+        let children_of_interest =
+            self.recursive_child_elements_filtered(|child| child.has_attribute("units"));
 
         for child in children_of_interest {
-            let name = child.name(doc.deref());
+            let name = child.tag_name();
 
-            if !MATHML_ALLOWED_CHILDREN_BY_ATTR["units"].contains(&name) {
+            if !MATHML_ALLOWED_CHILDREN_BY_ATTR["units"].contains(&name.as_str()) {
                 let message = format!(
                     "Attribute [units] found on element <{name}>, which is forbidden. \
                         Attribute [units] is only permitted on <cn>."
                 );
-                let child = XmlElement::new_raw(self.document(), child);
                 issues.push(SbmlIssue::new_error("10220", &child, message));
             }
         }
@@ -600,24 +547,22 @@ impl Math {
     /// The value of the SBML attribute units on a MathML cn element must be chosen from either the
     /// set of identifiers of UnitDefinition objects in the model, or the set of base units defined by SBML.
     pub(crate) fn apply_rule_10221(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let unit_identifiers = Model::for_child_element(self.document(), self.xml_element())
+        let unit_identifiers = Model::for_child_element(self.xml_element())
             .unwrap()
             .unit_definition_identifiers();
         let cn_elements = self.recursive_child_elements_filtered(|child| {
-            child.name(doc.deref()) == "cn" && child.attribute(doc.deref(), "units").is_some()
+            child.tag_name() == "cn" && child.has_attribute("units")
         });
 
         for cn in cn_elements {
-            let value = cn.attribute(doc.deref(), "units").unwrap();
+            // We can unwrap because we selected only elements where `units` attribute is set.
+            let value = cn.get_attribute("units").unwrap();
 
-            if !unit_identifiers.contains(&value.to_string()) && BaseUnit::from_str(value).is_err()
-            {
+            if !unit_identifiers.contains(&value) && BaseUnit::from_str(&value).is_err() {
                 let message = format!(
                     "Invalid unit identifier '{value}' found. \
                         Only identifiers of <unitDefinition> objects and base units can be used in <cn>."
                 );
-                let cn = XmlElement::new_raw(self.document(), cn);
                 issues.push(SbmlIssue::new_error("10221", &cn, message));
             }
         }
@@ -626,12 +571,11 @@ impl Math {
     /// ### Rule 10223
     /// The single argument for the *rateOf* **csymbol** function must be a **ci** element.
     pub(crate) fn apply_rule_10223(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
         let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.name(doc.deref()) == "apply" && {
-                if let Some(first_child) = child.child_elements(doc.deref()).first() {
+            child.tag_name() == "apply" && {
+                if let Some(first_child) = child.get_child_at(0) {
                     first_child
-                        .attribute(doc.deref(), "definitionURL")
+                        .get_attribute("definitionURL")
                         .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
                 } else {
                     false
@@ -640,27 +584,24 @@ impl Math {
         });
 
         for child in children_of_interest {
-            let apply_children = child.child_elements(doc.deref());
+            let apply_children = child.child_elements();
 
             if apply_children.len() != 2 {
                 let message = format!(
-                    "Invalid number ({0}) of arguments provided for rateOf <csymbol>. \
+                    "Invalid number ({}) of arguments provided for rateOf <csymbol>. \
                          The call of rateOf <csymbol> must have precisely one argument.",
                     apply_children.len() - 1
                 );
-                let child = XmlElement::new_raw(self.document(), child);
                 issues.push(SbmlIssue::new_error("10223", &child, message));
             } else {
                 // This unwrap is ok because we only selected elements with at least one child.
-                let argument_name = apply_children.last().unwrap().name(doc.deref());
+                let argument_name = apply_children.last().unwrap().tag_name();
 
                 if argument_name != "ci" {
                     let message = format!(
-                        "Invalid argument <{0}> provided for <csymbol>.\
-                             The rateOf <csymbol> must have <ci> as its only argument.",
-                        argument_name
+                        "Invalid argument <{argument_name}> provided for <csymbol>.\
+                             The rateOf <csymbol> must have <ci> as its only argument."
                     );
-                    let child = XmlElement::new_raw(self.document(), child);
                     issues.push(SbmlIssue::new_error("10223", &child, message));
                 }
             }
@@ -672,20 +613,19 @@ impl Math {
     /// [AssignmentRule](crate::core::rule::AssignmentRule), nor may its value be determined by an
     /// [AlgebraicRule](crate::core::rule::AlgebraicRule).
     pub(crate) fn apply_rule_10224(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let model = Model::for_child_element(self.xml_element()).unwrap();
         let ci_elements = self.recursive_child_elements_filtered(|child| {
-            child.name(doc.deref()) == "apply" && {
-                let children = child.child_elements(doc.deref());
+            child.tag_name() == "apply" && {
+                let children = child.child_elements();
                 if children.len() < 2 {
                     false
                 } else {
-                    let fst = children[0];
-                    let snd = children[1];
+                    let fst = &children[0];
+                    let snd = &children[1];
                     let is_rate_of = fst
-                        .attribute(doc.deref(), "definitionURL")
+                        .get_attribute("definitionURL")
                         .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
-                    let is_ci = snd.name(doc.deref()) == "ci";
+                    let is_ci = snd.tag_name() == "ci";
                     is_ci && is_rate_of
                 }
             }
@@ -694,17 +634,15 @@ impl Math {
         let algebraic_rule_determinants = model.algebraic_rule_ci_values();
 
         for ci in ci_elements {
-            let value = ci.text_content(doc.deref());
+            let value = ci.text_content();
 
             if assignment_rule_variables.contains(&value) {
                 let message = format!("The value of target ('{value}') of rateOf <csymbol> found as a variable of <assignmentRule>.");
-                let ci = XmlElement::new_raw(self.document(), ci);
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
                 // TODO: what does "determined by algebraicRule" mean and how to check it?
                 // TODO: same as 10225
             } else if algebraic_rule_determinants.contains(&value) {
                 let message = format!("The value of target ('{value}') of rateOf <csymbol> determined by an <algebraicRule>.");
-                let ci = XmlElement::new_raw(self.document(), ci);
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
             }
         }
@@ -716,29 +654,28 @@ impl Math {
     /// must not appear as the *variable* of an [AssignmentRule](crate::core::rule::AssignmentRule),
     /// nor may its *size* be determined by an [AlgebraicRule](crate::core::rule::AlgebraicRule).
     pub(crate) fn apply_rule_10225(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.read_doc();
-        let model = Model::for_child_element(self.document(), self.xml_element()).unwrap();
+        let model = Model::for_child_element(self.xml_element()).unwrap();
         let assignment_rule_variables = model.assignment_rule_variables();
         let algebraic_ci_values = model.algebraic_rule_ci_values();
         let ci_elements = self.recursive_child_elements_filtered(|child| {
-            child.name(doc.deref()) == "apply" && {
-                let children = child.child_elements(doc.deref());
+            child.tag_name() == "apply" && {
+                let children = child.child_elements();
                 if children.len() < 2 {
                     false
                 } else {
-                    let fst = children[0];
-                    let snd = children[1];
+                    let fst = &children[0];
+                    let snd = &children[1];
                     let is_rate_of = fst
-                        .attribute(doc.deref(), "definitionURL")
+                        .get_attribute("definitionURL")
                         .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
-                    let is_ci = snd.name(doc.deref()) == "ci";
+                    let is_ci = snd.tag_name() == "ci";
                     is_ci && is_rate_of
                 }
             }
         });
 
         for ci in ci_elements {
-            let value = ci.text_content(doc.deref());
+            let value = ci.text_content();
 
             let Some(species) = model.find_species(value.as_str()) else {
                 continue;
@@ -757,12 +694,10 @@ impl Math {
 
             if assignment_rule_variables.contains(&compartment_id) {
                 let message = format!("The <compartment> with id '{compartment_id}' found as the [variable] of an <assignmentRule>.");
-                let ci = XmlElement::new_raw(self.document(), ci);
                 issues.push(SbmlIssue::new_error("10225", &ci, message));
             } else if !compartment.constant().get() && algebraic_ci_values.contains(&compartment_id)
             {
                 let message = format!("The <compartment>'s size with id '{compartment_id}' is possible to determine by an <algebraicRule>.");
-                let ci = XmlElement::new_raw(self.document(), ci);
                 issues.push(SbmlIssue::new_error("10225", &ci, message));
             }
         }

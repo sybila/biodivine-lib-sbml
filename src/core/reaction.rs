@@ -102,8 +102,8 @@ impl KineticLaw {
     ///
     /// The child can be any SBML tag, as long as one of its transitive parents is a
     /// [KineticLaw] element. If this is not satisfied, the method returns `None`.
-    pub fn for_child_element(doc: XmlDocument, child: &XmlElement) -> Option<Self> {
-        Self::search_in_parents(doc, child, "kineticLaw")
+    pub fn for_child_element(child: &XmlElement) -> Option<Self> {
+        Self::search_in_parents(child, "kineticLaw")
     }
 
     pub fn math(&self) -> OptionalChild<Math> {

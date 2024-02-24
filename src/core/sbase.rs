@@ -48,9 +48,9 @@ pub(crate) trait SbmlUtils: SBase {
     /// returns `None`.
     ///
     /// TODO: Currently, this requires SBML core namespace.
-    fn search_in_parents(doc: XmlDocument, child: &XmlElement, tag_name: &str) -> Option<Self> {
+    fn search_in_parents(child: &XmlElement, tag_name: &str) -> Option<Self> {
         let parent = {
-            let read_doc = doc.read().unwrap();
+            let read_doc = child.read_doc();
             fn check_name(doc: &Document, e: Element, tag_name: &str) -> bool {
                 let name = e.name(doc);
                 let Some(namespace) = e.namespace(doc) else {
@@ -69,7 +69,7 @@ pub(crate) trait SbmlUtils: SBase {
             }
             parent
         };
-        let model = XmlElement::new_raw(doc, parent);
+        let model = XmlElement::new_raw(child.document(), parent);
         // Safe because we checked that the element has the correct tag name and namespace.
         Some(unsafe { Self::unchecked_cast(model) })
     }
