@@ -7,7 +7,7 @@ use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::Model;
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement};
+use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -147,6 +147,19 @@ pub struct SbmlIssue {
     pub severity: SbmlIssueSeverity,
     pub rule: String,
     pub message: String,
+}
+
+impl SbmlIssue {
+    /// A helper method to more easily create an [SbmlIssue] with [SbmlIssueSeverity::Error]
+    /// severity.
+    pub fn new_error<S: ToString, E: XmlWrapper>(rule: &str, element: &E, message: S) -> SbmlIssue {
+        SbmlIssue {
+            element: element.raw_element(),
+            severity: SbmlIssueSeverity::Error,
+            rule: rule.to_string(),
+            message: message.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]

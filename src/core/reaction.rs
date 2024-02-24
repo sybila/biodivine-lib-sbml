@@ -115,18 +115,13 @@ impl KineticLaw {
     }
 
     pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
-        let local_parameters = self.local_parameters();
-
-        if local_parameters.is_set() {
+        if let Some(local_parameters) = self.local_parameters().get() {
             local_parameters
-                .get()
-                .unwrap()
-                .as_vec()
                 .iter()
                 .map(|param| param.id().get())
                 .collect()
         } else {
-            vec![]
+            Vec::new()
         }
     }
 }
