@@ -171,7 +171,7 @@ pub(crate) fn sanity_check_of_list<T: SanityCheckable>(
 ) {
     sanity_check(xml_list.xml_element(), issues);
 
-    for object in xml_list.as_vec() {
+    for object in xml_list.iter() {
         object.sanity_check(issues);
     }
 }
@@ -307,16 +307,11 @@ pub(crate) fn apply_rule_10301(
 ) {
     if let Some(id) = id {
         if identifiers.contains(&id) {
-            issues.push(SbmlIssue {
-                element: xml_element.raw_element(),
-                message: format!(
-                    "The identifier ('{0}') of <{1}> is already present in the <model>.",
-                    id,
-                    xml_element.tag_name()
-                ),
-                rule: "10301".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+            let tag_name = xml_element.tag_name();
+            let message = format!(
+                "The identifier ('{id}') of <{tag_name}> is already present in the <model>."
+            );
+            issues.push(SbmlIssue::new_error("10301", xml_element, message));
         } else {
             identifiers.insert(id);
         }

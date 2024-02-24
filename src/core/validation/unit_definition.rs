@@ -4,7 +4,7 @@ use crate::core::validation::{
 };
 use crate::core::{SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlWrapper};
-use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for UnitDefinition {
@@ -34,19 +34,14 @@ impl UnitDefinition {
     ) {
         let mut identifiers: HashSet<String> = HashSet::new();
 
-        for unit_definition in list_of_unit_definitions.as_vec() {
+        for unit_definition in list_of_unit_definitions.iter() {
             let Some(id) = unit_definition.id().get() else {
                 continue;
             };
 
             if identifiers.contains(&id) {
-                issues.push(SbmlIssue {
-                    element: unit_definition.raw_element(),
-                    message: format!("The identifier ('{0}') of <unitDefinition> is already present in the <listOfUnitDefinitions>.",
-                                     id),
-                    rule: "10302".to_string(),
-                    severity: SbmlIssueSeverity::Error,
-                })
+                let message = format!("The identifier ('{id}') of <unitDefinition> is already present in the <listOfUnitDefinitions>.");
+                issues.push(SbmlIssue::new_error("10302", &unit_definition, message));
             } else {
                 identifiers.insert(id);
             }

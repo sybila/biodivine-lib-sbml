@@ -6,7 +6,7 @@ use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
 };
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
-use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for Reaction {
@@ -111,13 +111,8 @@ impl KineticLaw {
         for local_parameter in list_of_local_parameters.as_vec() {
             let id = local_parameter.id().get();
             if identifiers.contains(&id) {
-                issues.push(SbmlIssue {
-                    element: local_parameter.raw_element(),
-                    message: format!("The identifier ('{0}') of <localParameter> is already present in the <listOfLocalParameters>.",
-                                     id),
-                    rule: "10303".to_string(),
-                    severity: SbmlIssueSeverity::Error,
-                })
+                let message = format!("The identifier ('{id}') of <localParameter> is already present in the <listOfLocalParameters>.");
+                issues.push(SbmlIssue::new_error("10303", &local_parameter, message));
             } else {
                 identifiers.insert(id);
             }

@@ -1,7 +1,7 @@
 use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
 use crate::core::{AbstractRule, Rule, RuleTypes, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
-use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for AbstractRule {
@@ -38,17 +38,12 @@ impl AbstractRule {
             };
 
             if variables.contains(&variable) {
-                issues.push(SbmlIssue {
-                    element: rule.raw_element(),
-                    message: format!(
-                        "The variable ('{0}') of <{1}> is already present in the set of \
-                        <assignmentRule> and <rateRule> objects.",
-                        variable,
-                        rule.tag_name()
-                    ),
-                    rule: "10304".to_string(),
-                    severity: SbmlIssueSeverity::Error,
-                })
+                let tag_name = rule.tag_name();
+                let message = format!(
+                    "The variable ('{variable}') of <{tag_name}> is already present in the set of \
+                        <assignmentRule> and <rateRule> objects."
+                );
+                issues.push(SbmlIssue::new_error("10304", &rule, message));
             } else {
                 variables.insert(variable);
             }
