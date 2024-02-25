@@ -1,5 +1,5 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
+    apply_rule_10102, apply_rule_10301, apply_rule_10307, sanity_check, sanity_check_of_list,
     validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
@@ -8,21 +8,29 @@ use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for Event {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(trigger) = self.trigger().get() {
-            trigger.validate(issues, identifiers);
+            trigger.validate(issues, identifiers, meta_ids);
         }
         if let Some(priority) = self.priority().get() {
-            priority.validate(issues, identifiers);
+            priority.validate(issues, identifiers, meta_ids);
         }
         if let Some(delay) = self.delay().get() {
-            delay.validate(issues, identifiers);
+            delay.validate(issues, identifiers, meta_ids);
         }
         if let Some(list_of_event_assignments) = self.event_assignments().get() {
-            validate_list_of_objects(&list_of_event_assignments, issues, identifiers);
+            validate_list_of_objects(&list_of_event_assignments, issues, identifiers, meta_ids);
             Event::apply_rule_10305(&list_of_event_assignments, issues);
             Event::apply_rule_10306(&list_of_event_assignments, issues);
         }
@@ -100,9 +108,17 @@ impl Event {
 }
 
 impl SbmlValidable for Trigger {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -113,9 +129,17 @@ impl SbmlValidable for Trigger {
 impl SanityCheckable for Trigger {}
 
 impl SbmlValidable for Priority {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -126,9 +150,17 @@ impl SbmlValidable for Priority {
 impl SanityCheckable for Priority {}
 
 impl SbmlValidable for Delay {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -139,9 +171,17 @@ impl SbmlValidable for Delay {
 impl SanityCheckable for Delay {}
 
 impl SbmlValidable for EventAssignment {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(math) = self.math().get() {
             math.validate(issues);

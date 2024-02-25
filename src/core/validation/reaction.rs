@@ -1,5 +1,5 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
+    apply_rule_10102, apply_rule_10301, apply_rule_10307, sanity_check, sanity_check_of_list,
     validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{
@@ -10,26 +10,29 @@ use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for Reaction {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(
-            Some(self.id().get()),
-            self.xml_element(),
-            issues,
-            identifiers,
-        );
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(Some(self.id().get()), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(list_of_reactants) = self.reactants().get() {
-            validate_list_of_objects(&list_of_reactants, issues, identifiers);
+            validate_list_of_objects(&list_of_reactants, issues, identifiers, meta_ids);
         }
         if let Some(list_of_products) = self.products().get() {
-            validate_list_of_objects(&list_of_products, issues, identifiers);
+            validate_list_of_objects(&list_of_products, issues, identifiers, meta_ids);
         }
         if let Some(list_of_modifiers) = self.modifiers().get() {
-            validate_list_of_objects(&list_of_modifiers, issues, identifiers);
+            validate_list_of_objects(&list_of_modifiers, issues, identifiers, meta_ids);
         }
         if let Some(kinetic_law) = self.kinetic_law().get() {
-            kinetic_law.validate(issues, identifiers);
+            kinetic_law.validate(issues, identifiers, meta_ids);
         }
     }
 }
@@ -54,30 +57,53 @@ impl SanityCheckable for Reaction {
 }
 
 impl SbmlValidable for SpeciesReference {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
     }
 }
 
 impl SanityCheckable for SpeciesReference {}
 
 impl SbmlValidable for ModifierSpeciesReference {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
     }
 }
 
 impl SanityCheckable for ModifierSpeciesReference {}
 
 impl SbmlValidable for KineticLaw {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
-            validate_list_of_objects(&list_of_local_parameters, issues, identifiers);
+            validate_list_of_objects(&list_of_local_parameters, issues, identifiers, meta_ids);
             KineticLaw::apply_rule_10303(&list_of_local_parameters, issues);
         }
 
@@ -124,8 +150,16 @@ impl KineticLaw {
 }
 
 impl SbmlValidable for LocalParameter {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, _identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues)
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        _identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
     }
 }
 

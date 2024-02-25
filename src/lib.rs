@@ -146,7 +146,9 @@ impl Sbml {
 
         if let Some(model) = self.model().get() {
             let mut identifiers: HashSet<String> = HashSet::new();
-            model.validate(&mut issues, &mut identifiers);
+            let mut meta_ids: HashSet<String> = HashSet::new();
+
+            model.validate(&mut issues, &mut identifiers, &mut meta_ids);
         }
 
         issues

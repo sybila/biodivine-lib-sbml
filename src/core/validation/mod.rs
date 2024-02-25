@@ -32,7 +32,12 @@ mod unit_definition;
 /// Denotes an element that can be (and should be) validated against the SBML
 /// validation rules.
 pub(crate) trait SbmlValidable: XmlWrapper {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    );
 }
 
 /// Denotes an element that possess a way to self-test against
@@ -206,14 +211,18 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<String>,
+    meta_ids: &mut HashSet<String>,
 ) {
     let allowed = get_allowed_children(list.xml_element());
+    let xml_element = list.xml_element();
+
     apply_rule_10102(list.xml_element(), issues);
-    apply_rule_10301(list.id().get(), list.xml_element(), issues, identifiers);
+    apply_rule_10301(list.id().get(), xml_element, issues, identifiers);
+    apply_rule_10307(list.meta_id().get(), xml_element, issues, meta_ids);
 
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
-            object.validate(issues, identifiers);
+            object.validate(issues, identifiers, meta_ids);
         }
     }
 }
@@ -282,15 +291,37 @@ pub(crate) fn apply_rule_10301(
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<String>,
 ) {
-    if let Some(id) = id {
-        if identifiers.contains(&id) {
+    check_identifiers_uniqueness("10301", "id", id, xml_element, issues, identifiers);
+}
+
+/// ### Rule 10307
+/// Every *metaid* attribute value must be unique across the set of all *metaid* values in a model.
+pub(crate) fn apply_rule_10307(
+    meta_id: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+    meta_ids: &mut HashSet<String>,
+) {
+    check_identifiers_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
+}
+
+fn check_identifiers_uniqueness(
+    rule: &str,
+    attr_name: &str,
+    identifier: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+    identifiers: &mut HashSet<String>,
+) {
+    if let Some(identifier) = identifier {
+        if identifiers.contains(&identifier) {
             let tag_name = xml_element.tag_name();
             let message = format!(
-                "The identifier ('{id}') of <{tag_name}> is already present in the <model>."
+                "The {attr_name} ('{identifier}') of <{tag_name}> is already present in the <model>."
             );
-            issues.push(SbmlIssue::new_error("10301", xml_element, message));
+            issues.push(SbmlIssue::new_error(rule, xml_element, message));
         } else {
-            identifiers.insert(id);
+            identifiers.insert(identifier);
         }
     }
 }

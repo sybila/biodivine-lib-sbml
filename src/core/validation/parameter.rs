@@ -1,18 +1,23 @@
-use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
-use crate::core::Parameter;
-use crate::xml::{RequiredXmlProperty, XmlWrapper};
+use crate::core::validation::{
+    apply_rule_10102, apply_rule_10301, apply_rule_10307, SanityCheckable, SbmlValidable,
+};
+use crate::core::{Parameter, SBase};
+use crate::xml::{OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for Parameter {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(
-            Some(self.id().get()),
-            self.xml_element(),
-            issues,
-            identifiers,
-        );
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(Some(self.id().get()), xml_element, issues, identifiers);
+        apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
     }
 }
 
