@@ -111,7 +111,10 @@ impl KineticLaw {
         for local_parameter in list_of_local_parameters.as_vec() {
             let id = local_parameter.id().get();
             if identifiers.contains(&id) {
-                let message = format!("The identifier ('{id}') of <localParameter> is already present in the <listOfLocalParameters>.");
+                let message = format!(
+                    "The identifier ('{id}') of <localParameter> is \
+                already present in the <listOfLocalParameters>."
+                );
                 issues.push(SbmlIssue::new_error("10303", &local_parameter, message));
             } else {
                 identifiers.insert(id);
