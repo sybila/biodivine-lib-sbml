@@ -226,6 +226,7 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     apply_rule_10301(list.id().get(), xml_element, issues, identifiers);
     apply_rule_10307(list.meta_id().get(), xml_element, issues, meta_ids);
     apply_rule_10308(list.sbo_term().get(), xml_element, issues);
+    apply_rule_10309(list.meta_id().get(), xml_element, issues);
 
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
@@ -355,6 +356,26 @@ pub(crate) fn apply_rule_10308(
                 data type. The pattern is 'SBO:[0-9]{{7}}'"
             );
             issues.push(SbmlIssue::new_error("10308", xml_element, message))
+        }
+    }
+}
+
+/// ### Rule 10309
+/// The value of a *metaid* attribute must always conform to the syntax of the *XML* data type **ID**.
+pub(crate) fn apply_rule_10309(
+    meta_id: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    if let Some(value) = meta_id {
+        // TODO: is it possible to declare regex object in compile-time? Possibly as global constant?
+        let regex = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
+
+        if !regex.is_match(value.as_str()) {
+            let message = format!(
+                "The metaid value ('{value}') does not conform to the syntax of XML 1.0 ID type."
+            );
+            issues.push(SbmlIssue::new_error("10309", xml_element, message))
         }
     }
 }
