@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    SanityCheckable, SbmlValidable,
+    apply_rule_10310, SanityCheckable, SbmlValidable,
 };
 use crate::core::{SBase, Unit};
 use crate::xml::{OptionalXmlProperty, XmlWrapper};
@@ -20,6 +20,7 @@ impl SbmlValidable for Unit {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(self.id().get(), xml_element, issues);
     }
 }
 

@@ -227,6 +227,7 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     apply_rule_10307(list.meta_id().get(), xml_element, issues, meta_ids);
     apply_rule_10308(list.sbo_term().get(), xml_element, issues);
     apply_rule_10309(list.meta_id().get(), xml_element, issues);
+    apply_rule_10310(list.id().get(), xml_element, issues);
 
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
@@ -266,6 +267,27 @@ fn check_identifier_uniqueness(
             issues.push(SbmlIssue::new_error(rule, xml_element, message));
         } else {
             identifiers.insert(identifier);
+        }
+    }
+}
+
+/// Checks that a given value conforms to the given regex pattern. If not, error is logged in the
+/// vector of issues.
+fn check_pattern_of(
+    attr_name: &str,
+    value: &Option<String>,
+    pattern: &Regex,
+    xml_element: &XmlElement,
+    rule: &str,
+    data_type: &str,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    if let Some(value) = value {
+        if !pattern.is_match(value) {
+            let message = format!(
+                "The {attr_name} value ('{value}') does not conform to the syntax of {data_type} type."
+            );
+            issues.push(SbmlIssue::new_error(rule, xml_element, message))
         }
     }
 }
@@ -346,18 +368,16 @@ pub(crate) fn apply_rule_10308(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    if let Some(value) = sbo_term {
-        // TODO: is it possible to declare regex object in compile-time? Possibly as global constant?
-        let regex = Regex::new(r"SBO:\d{7}").unwrap();
-
-        if !regex.is_match(value.as_str()) {
-            let message = format!(
-                "The sbo_term value ('{value}') does not conform to the syntax of SBOTerm \
-                data type. The pattern is 'SBO:[0-9]{{7}}'"
-            );
-            issues.push(SbmlIssue::new_error("10308", xml_element, message))
-        }
-    }
+    let pattern = Regex::new(r"SBO:\d{7}").unwrap();
+    check_pattern_of(
+        "sboTerm",
+        &sbo_term,
+        &pattern,
+        xml_element,
+        "10308",
+        "SBML SBOTerm",
+        issues,
+    );
 }
 
 /// ### Rule 10309
@@ -367,15 +387,33 @@ pub(crate) fn apply_rule_10309(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    if let Some(value) = meta_id {
-        // TODO: is it possible to declare regex object in compile-time? Possibly as global constant?
-        let regex = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
+    let pattern = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
+    check_pattern_of(
+        "metaid",
+        &meta_id,
+        &pattern,
+        xml_element,
+        "10309",
+        " XML 1.0 ID",
+        issues,
+    );
+}
 
-        if !regex.is_match(value.as_str()) {
-            let message = format!(
-                "The metaid value ('{value}') does not conform to the syntax of XML 1.0 ID type."
-            );
-            issues.push(SbmlIssue::new_error("10309", xml_element, message))
-        }
-    }
+/// ### Rule 10310
+/// The value of an *id* attribute must always conform to the syntax of the SBML data type **SId**.
+pub(crate) fn apply_rule_10310(
+    id: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let pattern = Regex::new(r"^([a-zA-Z]|_)([a-zA-Z]|/d|_)*").unwrap();
+    check_pattern_of(
+        "id",
+        &id,
+        &pattern,
+        xml_element,
+        "10310",
+        " SBML SId",
+        issues,
+    );
 }

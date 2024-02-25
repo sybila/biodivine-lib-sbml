@@ -1,6 +1,7 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    sanity_check, sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10310, sanity_check, sanity_check_of_list, validate_list_of_objects,
+    SanityCheckable, SbmlValidable,
 };
 use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
@@ -23,6 +24,7 @@ impl SbmlValidable for Reaction {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(Some(self.id().get()), xml_element, issues);
 
         if let Some(list_of_reactants) = self.reactants().get() {
             validate_list_of_objects(&list_of_reactants, issues, identifiers, meta_ids);
@@ -71,6 +73,7 @@ impl SbmlValidable for SpeciesReference {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(self.id().get(), xml_element, issues);
     }
 }
 
@@ -90,6 +93,7 @@ impl SbmlValidable for ModifierSpeciesReference {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(self.id().get(), xml_element, issues);
     }
 }
 
@@ -109,6 +113,7 @@ impl SbmlValidable for KineticLaw {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(self.id().get(), xml_element, issues);
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
             validate_list_of_objects(&list_of_local_parameters, issues, identifiers, meta_ids);
@@ -170,6 +175,7 @@ impl SbmlValidable for LocalParameter {
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
+        apply_rule_10310(Some(self.id().get()), xml_element, issues);
     }
 }
 
