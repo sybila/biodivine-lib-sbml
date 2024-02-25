@@ -1,6 +1,6 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, apply_rule_10307, sanity_check, sanity_check_of_list,
-    validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, sanity_check,
+    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -19,6 +19,7 @@ impl SbmlValidable for Model {
         apply_rule_10102(xml_element, issues);
         apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);

@@ -9,6 +9,7 @@ use crate::xml::{
     XmlWrapper,
 };
 use crate::{Sbml, SbmlIssue};
+use regex::Regex;
 use std::collections::HashSet;
 use std::ops::Deref;
 use xml_doc::Element;
@@ -167,6 +168,8 @@ pub(crate) fn sanity_check_of_list<T: SanityCheckable>(
     }
 }
 
+/// Validates for a given element that its attributes (keys) are only from predefined set of
+/// attributes (keys). If not, an error is logged in the vector of issues.
 pub(crate) fn validate_allowed_attributes(
     xml_element: &XmlElement,
     attributes: &Vec<&str>,
@@ -187,6 +190,8 @@ pub(crate) fn validate_allowed_attributes(
     }
 }
 
+/// Validates for a given element that its children (tag names) are only from predefined set of
+/// children (tag names). If not, an error is logged in the vector of issues.
 pub(crate) fn validate_allowed_children(
     xml_element: &XmlElement,
     children_names: &Vec<&str>,
@@ -207,6 +212,7 @@ pub(crate) fn validate_allowed_children(
     }
 }
 
+/// Executes a validation of xml list object itself and all its children.
 pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
@@ -219,6 +225,7 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     apply_rule_10102(list.xml_element(), issues);
     apply_rule_10301(list.id().get(), xml_element, issues, identifiers);
     apply_rule_10307(list.meta_id().get(), xml_element, issues, meta_ids);
+    apply_rule_10308(list.sbo_term().get(), xml_element, issues);
 
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
@@ -235,6 +242,30 @@ pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'stat
         allowed
     } else {
         &[]
+    }
+}
+
+/// Checks that a given identifier is unique in the given set of identifiers. If the identifier
+/// is unique, it is included in the given set of identifiers, otherwise error is logged in the
+/// vector of issues.
+fn check_identifier_uniqueness(
+    rule: &str,
+    attr_name: &str,
+    identifier: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+    identifiers: &mut HashSet<String>,
+) {
+    if let Some(identifier) = identifier {
+        if identifiers.contains(&identifier) {
+            let tag_name = xml_element.tag_name();
+            let message = format!(
+                "The {attr_name} ('{identifier}') of <{tag_name}> is already present in the <model>."
+            );
+            issues.push(SbmlIssue::new_error(rule, xml_element, message));
+        } else {
+            identifiers.insert(identifier);
+        }
     }
 }
 
@@ -291,7 +322,7 @@ pub(crate) fn apply_rule_10301(
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<String>,
 ) {
-    check_identifiers_uniqueness("10301", "id", id, xml_element, issues, identifiers);
+    check_identifier_uniqueness("10301", "id", id, xml_element, issues, identifiers);
 }
 
 /// ### Rule 10307
@@ -302,26 +333,28 @@ pub(crate) fn apply_rule_10307(
     issues: &mut Vec<SbmlIssue>,
     meta_ids: &mut HashSet<String>,
 ) {
-    check_identifiers_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
+    check_identifier_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
 }
 
-fn check_identifiers_uniqueness(
-    rule: &str,
-    attr_name: &str,
-    identifier: Option<String>,
+/// ### Rule 10308
+/// The value of the attribute *sboTerm* must always conform to the syntax of the SBML data type
+/// **SBOTerm**, which is a string consisting of the characters `S', `B', `O', ':', followed by
+/// exactly seven digits.
+pub(crate) fn apply_rule_10308(
+    sbo_term: Option<String>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
-    identifiers: &mut HashSet<String>,
 ) {
-    if let Some(identifier) = identifier {
-        if identifiers.contains(&identifier) {
-            let tag_name = xml_element.tag_name();
+    if let Some(value) = sbo_term {
+        // TODO: is it possible to declare regex object in compile-time? Possibly as global constant?
+        let regex = Regex::new(r"SBO:\d{7}").unwrap();
+
+        if !regex.is_match(value.as_str()) {
             let message = format!(
-                "The {attr_name} ('{identifier}') of <{tag_name}> is already present in the <model>."
+                "The sbo_term value ('{value}') does not conform to the syntax of SBOTerm \
+                data type. The pattern is 'SBO:[0-9]{{7}}'"
             );
-            issues.push(SbmlIssue::new_error(rule, xml_element, message));
-        } else {
-            identifiers.insert(identifier);
+            issues.push(SbmlIssue::new_error("10308", xml_element, message))
         }
     }
 }

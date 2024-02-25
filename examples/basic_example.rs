@@ -9,7 +9,6 @@ fn main() {
     // let doc = Sbml::read_path("test-inputs/COVID19_immunotherapy_Mathematical_Model.xml").unwrap();
     // let doc = Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
     let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
-    // let doc = Sbml::read_path("syntactic/10102/10102-fail-01-33-sev2-l3v1.xml").unwrap();
 
     // let model = doc.model().get().unwrap();
     // Print the whole document:
