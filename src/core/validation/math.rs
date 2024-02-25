@@ -620,18 +620,23 @@ impl Math {
             }
         });
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_rule_determinants = model.algebraic_rule_ci_values();
+        let algebraic_rule_parameters = model.algebraic_rule_ci_values();
 
         for ci in ci_elements {
             let value = ci.text_content();
+            let is_target_constant = model.is_rateof_target_constant(value.as_str());
 
             if assignment_rule_variables.contains(&value) {
-                let message = format!("The value of target ('{value}') of rateOf <csymbol> found as a variable of <assignmentRule>.");
+                let message = format!(
+                    "The value of target ('{value}') of rateOf <csymbol> \
+                found as a variable of <assignmentRule>."
+                );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
-                // TODO: what does "determined by algebraicRule" mean and how to check it?
-                // TODO: same as 10225
-            } else if algebraic_rule_determinants.contains(&value) {
-                let message = format!("The value of target ('{value}') of rateOf <csymbol> determined by an <algebraicRule>.");
+            } else if !is_target_constant && algebraic_rule_parameters.contains(&value) {
+                let message = format!(
+                    "The value of target ('{value}') of rateOf <csymbol> \
+                determined by an <algebraicRule>."
+                );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
             }
         }

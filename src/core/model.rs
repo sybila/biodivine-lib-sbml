@@ -243,6 +243,47 @@ impl Model {
         }
     }
 
+    pub(crate) fn is_rateof_target_constant(&self, target: &str) -> bool {
+        if let Some(compartment) = self
+            .compartments()
+            .get()
+            .and_then(|list| list.iter().find(|c| c.id().get() == target))
+        {
+            return compartment.constant().get();
+        }
+        if let Some(parameter) = self
+            .parameters()
+            .get()
+            .and_then(|list| list.iter().find(|p| p.id().get() == target))
+        {
+            return parameter.constant().get();
+        }
+        if let Some(species) = self
+            .species()
+            .get()
+            .and_then(|list| list.iter().find(|s| s.id().get() == target))
+        {
+            return species.constant().get();
+        }
+        if let Some(reactions) = self.reactions().get() {
+            for reaction in reactions.iter() {
+                if let Some(species_ref) = reaction.reactants().get().and_then(|list| {
+                    list.iter()
+                        .find(|r| r.id().get().is_some_and(|id| id == target))
+                }) {
+                    return species_ref.constant().get();
+                }
+                if let Some(species_ref) = reaction.products().get().and_then(|list| {
+                    list.iter()
+                        .find(|p| p.id().get().is_some_and(|id| id == target))
+                }) {
+                    return species_ref.constant().get();
+                }
+            }
+        }
+        true
+    }
+
     /// Finds a species with the given *id*. If not found, returns `None`.
     pub(crate) fn find_species(&self, id: &str) -> Option<Species> {
         if let Some(species) = self.species().get() {
