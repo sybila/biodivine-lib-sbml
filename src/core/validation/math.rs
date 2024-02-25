@@ -1,14 +1,13 @@
-use std::str::FromStr;
-
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
-    MATHML_BINARY_OPERATORS, MATHML_NARY_OPERATORS, MATHML_UNARY_OPERATORS,
+    MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::get_allowed_children;
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
-use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::SbmlIssue;
+use std::str::FromStr;
 
 impl Math {
     /// ### Applies rules:
@@ -331,15 +330,13 @@ impl Math {
         }
     }
 
-    // TODO: create an issue "the identifiers of [LocalParameter](crate::core::reaction::LocalParameter) objects that are [Reaction](crate::core::reaction::Reaction) in which the [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw])"
-    // TODO: add comment about "any identifiers (in the SId namespace of the model) belonging to an object class defined by an SBML Level 3 package as having mathematical meaning." to existing issue about adding extensions/packages
     /// ### Rule 10215
     /// Outside a [FunctionDefinition] object, if a MathML **ci** element is not the first element within
     /// a MathML **apply**, then the **ci** element's value may only be chosen from the following set of
     /// identifiers: the identifiers of [Species], [Compartment], [Parameter], [SpeciesReference]
     /// and [Reaction] objects defined in the enclosing [Model] object; the identifiers of
     /// [LocalParameter] objects that are children of the [Reaction] in which the
-    /// [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw]);
+    /// [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw]),
     /// and any identifiers (in the SId namespace of the model) belonging to an
     /// object class defined by an SBML Level 3 package as having mathematical meaning.
     pub(crate) fn apply_rule_10215(&self, issues: &mut Vec<SbmlIssue>) {
