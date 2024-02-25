@@ -5,7 +5,7 @@ use crate::xml::{
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
-use xml_doc::{Document, Element, Node};
+use xml_doc::{Document, Element};
 
 /// [XmlWrapper] is a trait implemented by all types that can behave as an [XmlElement]
 /// (including [XmlElement] itself). In other words, instances of [XmlWrapper] provide
@@ -110,18 +110,103 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// referenced within this [XmlWrapper].
     ///
     /// Note that full_name generally consists of namespace prefix and actual name in following format: **prefix:name**.
-    fn attributes(&self) -> &HashMap<String, String> {
-        unimplemented!();
-        // let doc = self.read_doc();
-        // self.raw_element().attributes(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    fn attributes(&self) -> HashMap<String, String> {
+        let doc = self.read_doc();
+        self.raw_element().attributes(doc.deref()).clone()
     }
 
-    /// Returns the vector of children as a collection of [Node]s referenced within
-    /// this [XmlWrapper].
-    fn children(&self) -> &Vec<Node> {
-        unimplemented!();
-        // let doc = self.read_doc();
-        // self.raw_element().children(doc.deref()) // TODO: cannot return value referencing local variable `doc`. How to fix?
+    /// Returns true if this [XmlWrapper] instance has an attribute of the given name.
+    fn has_attribute(&self, name: &str) -> bool {
+        let doc = self.read_doc();
+        self.raw_element().attribute(doc.deref(), name).is_some()
+    }
+
+    /// Return the raw value of the specified attribute, if it is defined.
+    fn get_attribute(&self, name: &str) -> Option<String> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .attribute(doc.deref(), name)
+            .map(|it| it.to_string())
+    }
+
+    /// Return the text content of this element and all its children.
+    fn text_content(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().text_content(doc.deref())
+    }
+
+    /// Return the parent element of this [XmlWrapper] instance, if any.
+    fn parent(&self) -> Option<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .parent(doc.deref())
+            .map(|it| XmlElement::new_raw(self.document(), it))
+    }
+
+    /// Returns the vector of children referenced within this [XmlWrapper] as a collection
+    /// of [Element] objects. This method skips any child nodes that are not elements (such as
+    /// text or comments).
+    fn child_elements(&self) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .collect()
+    }
+
+    /// Get the `i-th` child element of this XML element. This operation ignores comments
+    /// or text content and only considers "true" child elements.
+    fn get_child_at(&self, index: usize) -> Option<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .children(doc.deref())
+            .iter()
+            .filter_map(|it| it.as_element())
+            .skip(index)
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .next()
+    }
+
+    /// Version of [Self::child_elements] with additional filtering function applied to the
+    /// output vector.
+    fn child_elements_filtered<P: FnMut(&XmlElement) -> bool>(
+        &self,
+        predicate: P,
+    ) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .filter(predicate)
+            .collect()
+    }
+
+    /// Version of [Self::child_elements] that recursively traverses all child nodes, not just
+    /// the immediate descendants.
+    fn recursive_child_elements(&self) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements_recursive(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .collect()
+    }
+
+    /// Version of [Self::recursive_child_elements] with additional filtering function applied
+    /// to the output vector.
+    fn recursive_child_elements_filtered<P: FnMut(&XmlElement) -> bool>(
+        &self,
+        predicate: P,
+    ) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements_recursive(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .filter(predicate)
+            .collect()
     }
 
     /// Returns the vector of names of children referenced within this [XmlWrapper].

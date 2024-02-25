@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase};
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList,
+    OptionalChild, OptionalProperty, OptionalXmlChild, RequiredProperty, RequiredXmlProperty,
+    XmlDefault, XmlDocument, XmlElement, XmlList,
 };
 use macros::{SBase, XmlWrapper};
 
@@ -97,12 +97,32 @@ impl XmlDefault for KineticLaw {
 }
 
 impl KineticLaw {
+    /// Try to find an instance of a [KineticLaw] element that is a parent of the given
+    /// child element.
+    ///
+    /// The child can be any SBML tag, as long as one of its transitive parents is a
+    /// [KineticLaw] element. If this is not satisfied, the method returns `None`.
+    pub fn for_child_element(child: &XmlElement) -> Option<Self> {
+        Self::search_in_parents(child, "kineticLaw")
+    }
+
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
     }
 
     pub fn local_parameters(&self) -> OptionalChild<XmlList<LocalParameter>> {
         self.optional_sbml_child("listOfLocalParameters")
+    }
+
+    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
+        if let Some(local_parameters) = self.local_parameters().get() {
+            local_parameters
+                .iter()
+                .map(|param| param.id().get())
+                .collect()
+        } else {
+            Vec::new()
+        }
     }
 }
 

@@ -1,10 +1,18 @@
-use crate::core::validation::apply_rule_10102;
-use crate::core::FunctionDefinition;
-use crate::xml::XmlWrapper;
+use crate::core::validation::{apply_rule_10102, apply_rule_10301, SanityCheckable, SbmlValidable};
+use crate::core::{FunctionDefinition, SBase};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
+use std::collections::HashSet;
 
-impl FunctionDefinition {
-    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+impl SbmlValidable for FunctionDefinition {
+    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
         apply_rule_10102(self.xml_element(), issues);
+        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+
+        if let Some(math) = self.math().get() {
+            math.validate(issues);
+        }
     }
 }
+
+impl SanityCheckable for FunctionDefinition {}

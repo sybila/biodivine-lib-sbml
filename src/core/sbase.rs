@@ -8,6 +8,8 @@ use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
     XmlWrapper,
 };
+use std::ops::Deref;
+use xml_doc::{Document, Element};
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus there is no need to implement concrete structure.
@@ -41,6 +43,37 @@ pub trait SBase: XmlWrapper {
 ///     In the end, this trait probably should not be accessible from the outside, but we can
 ///     discuss this later.
 pub(crate) trait SbmlUtils: SBase {
+    /// Create a new instance of `Self` by traversing the parents of the given
+    /// XML element until the appropriate tag is discovered. If no such tag is found,
+    /// returns `None`.
+    ///
+    /// TODO: Currently, this requires SBML core namespace.
+    fn search_in_parents(child: &XmlElement, tag_name: &str) -> Option<Self> {
+        let parent = {
+            let read_doc = child.read_doc();
+            fn check_name(doc: &Document, e: Element, tag_name: &str) -> bool {
+                let name = e.name(doc);
+                let Some(namespace) = e.namespace(doc) else {
+                    return false;
+                };
+
+                name == tag_name && namespace == URL_SBML_CORE
+            }
+
+            let mut parent = child.raw_element();
+            while !check_name(read_doc.deref(), parent, tag_name) {
+                let Some(node) = parent.parent(read_doc.deref()) else {
+                    return None;
+                };
+                parent = node;
+            }
+            parent
+        };
+        let model = XmlElement::new_raw(child.document(), parent);
+        // Safe because we checked that the element has the correct tag name and namespace.
+        Some(unsafe { Self::unchecked_cast(model) })
+    }
+
     /// Create a new instance of `Self` which is just an empty tag with the given `tag_name`
     /// and using SBML namespace.
     #[inline(always)]

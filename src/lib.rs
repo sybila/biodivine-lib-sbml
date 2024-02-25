@@ -1,28 +1,28 @@
+use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::{sanity_check, SanityCheckable, SbmlValidable};
+use crate::core::Model;
+use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
+use std::collections::HashSet;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-
-use xml_doc::{Document, Element};
-
 use xml::{OptionalChild, RequiredProperty};
-
-use crate::constants::namespaces::URL_SBML_CORE;
-use crate::core::Model;
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement};
+use xml_doc::{Document, Element};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
 ///  - [XmlDocument] | A thread and memory safe reference to a [Document].
-///  - [XmlElement] | A thread and memory safe reference to an [xml_doc::Element].
-///  - [xml::XmlWrapper] | A trait with utility functions for working with types
+///  - [XmlElement] | A thread and memory safe reference to an [Element].
+///  - [XmlWrapper] | A trait with utility functions for working with types
 ///  derived from [XmlElement].
-///  - [xml::XmlDefault] | An extension of [xml::XmlWrapper] which allows creation of "default"
+///  - [xml::XmlDefault] | An extension of [XmlWrapper] which allows creation of "default"
 ///  value for the derived type.
 ///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
 ///  accessing properties stored in XML attributes. Implementation can be generated using a derive
 ///  macro.
 ///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
 ///  child tags. Implementation can be generated using a derive macro.
-///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
+///  - [xml::XmlList] | A generic implementation of [XmlWrapper] which represents
 ///  a typed list of elements.
 ///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
 ///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
@@ -92,16 +92,37 @@ impl Sbml {
         OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
     }
 
-    pub fn level(&self) -> RequiredProperty<String> {
+    pub fn level(&self) -> RequiredProperty<u32> {
         RequiredProperty::new(&self.sbml_root, "level")
     }
 
-    pub fn version(&self) -> RequiredProperty<String> {
+    pub fn version(&self) -> RequiredProperty<u32> {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 
-    /// Validates the document against validation rules specified in the [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf)
-    ///
+    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+        sanity_check(&self.sbml_root, issues);
+        let doc = self.xml.read().unwrap();
+        let element = self.sbml_root.raw_element();
+
+        if !element.namespace_decls(doc.deref()).contains_key("") {
+            issues.push(SbmlIssue {
+                element,
+                message:
+                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>."
+                        .to_string(),
+                rule: "SANITY_CHECK".to_string(),
+                severity: SbmlIssueSeverity::Error,
+            })
+        }
+
+        if let Some(model) = self.model().get() {
+            model.sanity_check(issues);
+        }
+    }
+    /// Validates the document against validation rules specified in the
+    /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
+    /// Eventual issues are returned in the vector. Empty vector represents a valid document.
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *xml-doc* as writing
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
@@ -111,12 +132,25 @@ impl Sbml {
     /// is already satisfied implicitly by the use of the package *xml-doc* as loading
     /// a document without an error ensures that the document conforms to the basic
     /// structural and syntactic constraints.
-    pub fn validate(&self, issues: &mut Vec<SbmlIssue>) {
-        self.apply_rule_10102(issues);
+    pub fn validate(&self) -> Vec<SbmlIssue> {
+        let mut issues: Vec<SbmlIssue> = vec![];
+        self.sanity_check(&mut issues);
+
+        if !issues.is_empty() {
+            println!("Sanity check failed, skipping validation...");
+            return issues;
+        } else {
+            println!("Sanity check passed, proceeding with validation...");
+        }
+
+        self.apply_rule_10102(&mut issues);
 
         if let Some(model) = self.model().get() {
-            model.validate(issues);
+            let mut identifiers: HashSet<String> = HashSet::new();
+            model.validate(&mut issues, &mut identifiers);
         }
+
+        issues
     }
 }
 
@@ -134,7 +168,7 @@ impl Default for Sbml {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SbmlIssue {
     /// Refers to the "raw" XML element where the issue occurred.
     pub element: Element,
@@ -143,7 +177,20 @@ pub struct SbmlIssue {
     pub message: String,
 }
 
-#[derive(Debug)]
+impl SbmlIssue {
+    /// A helper method to more easily create an [SbmlIssue] with [SbmlIssueSeverity::Error]
+    /// severity.
+    pub fn new_error<S: ToString, E: XmlWrapper>(rule: &str, element: &E, message: S) -> SbmlIssue {
+        SbmlIssue {
+            element: element.raw_element(),
+            severity: SbmlIssueSeverity::Error,
+            rule: rule.to_string(),
+            message: message.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum SbmlIssueSeverity {
     /// An issue that makes the document impossible to read correctly (e.g. a function is
     /// used but not declared).
@@ -152,7 +199,7 @@ pub enum SbmlIssueSeverity {
     /// invalid (e.g. a variable is declared but never used).
     Warning,
     /// A suggestion that would improve the document but does not represent a significant
-    /// issue (e.g. an property is included when it does not have to be, or unknown tags
+    /// issue (e.g. a property is included when it does not have to be, or unknown tags
     /// or attributes are present in the document, e.g. due to the use of unofficial extensions).
     Info,
 }
@@ -177,7 +224,7 @@ mod tests {
     use crate::Sbml;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
-    /// Additionally checks if `Model` retrieval returns correct child.
+    /// Additionally, checks if `Model` retrieval returns correct child.
     #[test]
     pub fn test_document() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
@@ -186,12 +233,12 @@ mod tests {
         let version = doc.version().get();
 
         assert_eq!(
-            level, "3",
+            level, 3,
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
             level, "3"
         );
         assert_eq!(
-            version, "1",
+            version, 1,
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
             version, "1"
         );
@@ -805,6 +852,7 @@ mod tests {
         let assignment = event_assignments.top();
         assignment.math().ensure();
     }
+
     #[test]
     pub fn test_sbase() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
