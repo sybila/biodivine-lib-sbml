@@ -464,17 +464,6 @@ impl Math {
                     let message = format!("Invalid number ({arg_count}) of arguments for binary operator <{operator}>.");
                     issues.push(SbmlIssue::new_error("10218", &apply, message));
                 }
-            } else if MATHML_NARY_OPERATORS.contains(&operator.as_str()) && arg_count == 0 {
-                // TODO:
-                //  This is not correct? N-ary operators with zero arguments are only
-                //  discouraged if the meaning of the operator is not well defined.
-                let message = format!("An N-ary operator <{operator}> with 0 arguments found. Use of N-ary operators without any arguments is discouraged.");
-                issues.push(SbmlIssue {
-                    element: apply.raw_element(),
-                    message,
-                    rule: "10218".to_string(),
-                    severity: SbmlIssueSeverity::Warning,
-                });
             }
         }
     }
