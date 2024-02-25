@@ -8,7 +8,7 @@ use crate::xml::{
     DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
 };
-use crate::{Sbml, SbmlIssue, SbmlIssueSeverity};
+use crate::{Sbml, SbmlIssue};
 use std::collections::HashSet;
 use std::ops::Deref;
 use xml_doc::Element;
@@ -61,40 +61,30 @@ impl Sbml {
             issues.push(SbmlIssue::new_error("10102", &container, message));
         }
 
-        if let Some(root_element) = doc.root_element() {
-            if root_element.name(doc.deref()) == "sbml" {
-                validate_allowed_attributes(
-                    root_element,
-                    root_element.name(doc.deref()),
-                    &root_element
-                        .attributes(doc.deref())
-                        .keys()
-                        .map(|key| key.as_str())
-                        .collect::<Vec<&str>>(),
-                    issues,
-                );
+        let root_element = self.sbml_root.xml_element();
+        if root_element.tag_name() == "sbml" {
+            validate_allowed_attributes(
+                root_element,
+                &root_element
+                    .attributes()
+                    .keys()
+                    .map(|key| key.as_str())
+                    .collect::<Vec<&str>>(),
+                issues,
+            );
 
-                validate_allowed_children(
-                    root_element,
-                    root_element.name(doc.deref()),
-                    &root_element
-                        .children(doc.deref())
-                        .iter()
-                        .filter_map(|node| node.as_element().map(|it| it.full_name(doc.deref())))
-                        .collect(),
-                    issues,
-                );
-            } else {
-                issues.push(SbmlIssue {
-                    element: root_element,
-                    message: format!(
-                        "Invalid root element <{}> found.",
-                        root_element.name(doc.deref())
-                    ),
-                    rule: "10102".to_string(),
-                    severity: SbmlIssueSeverity::Error,
-                })
-            }
+            validate_allowed_children(
+                root_element,
+                &root_element
+                    .child_elements()
+                    .iter()
+                    .map(|xml_element| xml_element.raw_element().full_name(doc.deref()))
+                    .collect(),
+                issues,
+            );
+        } else {
+            let message = format!("Invalid root element <{}> found.", root_element.tag_name());
+            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
         }
     }
 }
@@ -152,16 +142,12 @@ fn sanity_type_check<T: XmlPropertyType>(
 ) {
     let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
     if property.is_err() {
-        issues.push(SbmlIssue {
-            element: xml_element.raw_element(),
-            message: format!(
-                "Sanity check failed: {0} On the attribute [{1}].",
-                property.err().unwrap(),
-                attribute_name
-            ),
-            rule: "SANITY_CHECK".to_string(),
-            severity: SbmlIssueSeverity::Error,
-        })
+        let message = format!(
+            "Sanity check failed: {0} On the attribute [{1}].",
+            property.err().unwrap(),
+            attribute_name
+        );
+        issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
     }
 }
 
@@ -177,49 +163,41 @@ pub(crate) fn sanity_check_of_list<T: SanityCheckable>(
 }
 
 pub(crate) fn validate_allowed_attributes(
-    element: Element,
-    element_name: &str,
+    xml_element: &XmlElement,
     attributes: &Vec<&str>,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name).unwrap();
+    let element_name = xml_element.tag_name();
+    let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name.as_str()).unwrap();
 
     for full_name in attributes {
         let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
         if !allowed_attributes.contains(&attr_name) {
-            issues.push(SbmlIssue {
-                element,
-                message: format!(
-                    "An unknown attribute [{}] of the element <{}> found.",
-                    attr_name, element_name
-                ),
-                rule: "10102".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+            let message = format!(
+                "An unknown attribute [{}] of the element <{}> found.",
+                attr_name, element_name
+            );
+            issues.push(SbmlIssue::new_error("10102", xml_element, message));
         }
     }
 }
 
 pub(crate) fn validate_allowed_children(
-    element: Element,
-    element_name: &str,
+    xml_element: &XmlElement,
     children_names: &Vec<&str>,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let allowed_children = ALLOWED_CHILDREN.get(element_name).unwrap();
+    let element_name = xml_element.tag_name();
+    let allowed_children = ALLOWED_CHILDREN.get(element_name.as_str()).unwrap();
 
     for child_full_name in children_names {
         let (_prefix, child_name) = Element::separate_prefix_name(child_full_name);
         if !allowed_children.contains(&child_name) {
-            issues.push(SbmlIssue {
-                element,
-                message: format!(
-                    "An unknown child <{}> of the element <{}> found.",
-                    child_name, element_name
-                ),
-                rule: "10102".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+            let message = format!(
+                "An unknown child <{}> of the element <{}> found.",
+                child_name, element_name
+            );
+            issues.push(SbmlIssue::new_error("10102", xml_element, message));
         }
     }
 }
@@ -259,7 +237,6 @@ pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'stat
 pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let doc = xml_element.read_doc();
     let element = xml_element.raw_element();
-    let element_name = xml_element.tag_name();
     let attributes = element
         .attributes(doc.deref())
         .keys()
@@ -272,8 +249,8 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
         .map(|element| element.full_name(doc.deref()))
         .collect();
 
-    validate_allowed_attributes(element, element_name.as_str(), &attributes, issues);
-    validate_allowed_children(element, element_name.as_str(), &children_names, issues);
+    validate_allowed_attributes(xml_element, &attributes, issues);
+    validate_allowed_children(xml_element, &children_names, issues);
 }
 
 // TODO: Complete implementation when adding extension/packages is solved
