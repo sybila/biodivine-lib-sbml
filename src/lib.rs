@@ -105,15 +105,14 @@ impl Sbml {
         let doc = self.xml.read().unwrap();
         let element = self.sbml_root.raw_element();
 
-        if !element.namespace_decls(doc.deref()).contains_key("") {
-            issues.push(SbmlIssue {
-                element,
-                message:
-                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>."
-                        .to_string(),
-                rule: "SANITY_CHECK".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+        if element.name(doc.deref()) == "sbml"
+            && !element.namespace_decls(doc.deref()).contains_key("")
+        {
+            issues.push(SbmlIssue::new_error(
+                "SANITY_CHECK",
+                &self.sbml_root,
+                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
+            ));
         }
 
         if let Some(model) = self.model().get() {
