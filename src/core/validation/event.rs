@@ -2,7 +2,7 @@ use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
     validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
-use crate::core::{Delay, Event, EventAssignment, Priority, SBase, Trigger};
+use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -24,6 +24,7 @@ impl SbmlValidable for Event {
         if let Some(list_of_event_assignments) = self.event_assignments().get() {
             validate_list_of_objects(&list_of_event_assignments, issues, identifiers);
             Event::apply_rule_10305(&list_of_event_assignments, issues);
+            Event::apply_rule_10306(&list_of_event_assignments, issues);
         }
     }
 }
@@ -69,6 +70,30 @@ impl Event {
                 issues.push(SbmlIssue::new_error("10305", &event_assignment, message));
             } else {
                 variables.insert(variable);
+            }
+        }
+    }
+
+    /// ### Rule 10306
+    /// An identifier used as the value of the attribute variable of an [EventAssignment] object
+    /// cannot also appear as the value of the variable attribute in an
+    /// [AssignmentRule](crate::core::rule::AssignmentRule) object. In other words, a given model
+    /// component cannot be the subject of both an assignment rule and an assignment by an event.
+    pub(crate) fn apply_rule_10306(
+        list_of_event_assignments: &XmlList<EventAssignment>,
+        issues: &mut Vec<SbmlIssue>,
+    ) {
+        let model = Model::for_child_element(list_of_event_assignments.xml_element()).unwrap();
+        let assignment_rule_variables = model.assignment_rule_variables();
+
+        for event_assignment in list_of_event_assignments.iter() {
+            let value = event_assignment.variable().get();
+            if assignment_rule_variables.contains(&value) {
+                let message = format!(
+                    "The variable ('{value}') of <eventAssignment> found \
+                as a variable of <assignmentRule>."
+                );
+                issues.push(SbmlIssue::new_error("10306", &event_assignment, message));
             }
         }
     }
