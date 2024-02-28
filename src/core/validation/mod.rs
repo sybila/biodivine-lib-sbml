@@ -272,22 +272,35 @@ fn check_identifier_uniqueness(
     }
 }
 
+/// Checks that a given value conforms to the syntax described in pattern.
+fn matches_pattern(value: &Option<String>, pattern: &Regex) -> bool {
+    if let Some(value) = value {
+        return pattern.is_match(value);
+    }
+    true
+}
+
 /// Check that a given value conforms to the **SId** syntax.
-fn matches_sid_pattern(value: &String) -> bool {
+fn matches_sid_pattern(value: &Option<String>) -> bool {
     let pattern = Regex::new(r"^([a-zA-Z]|_)([a-zA-Z]|/d|_)*").unwrap();
-    pattern.is_match(value)
+    matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **SBOTerm** syntax.
-fn matches_sboterm_pattern(value: &String) -> bool {
+fn matches_sboterm_pattern(value: &Option<String>) -> bool {
     let pattern = Regex::new(r"SBO:\d{7}").unwrap();
-    pattern.is_match(value)
+    matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **XML 1.0 ID** syntax.
-fn matches_xml_id_pattern(value: &String) -> bool {
+fn matches_xml_id_pattern(value: &Option<String>) -> bool {
     let pattern = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
-    pattern.is_match(value)
+    matches_pattern(value, &pattern)
+}
+
+/// Checks that a given value conform to the **UnitSId** syntax, which is the same as **SId** syntax.
+fn matches_unit_sid_pattern(value: &Option<String>) -> bool {
+    matches_sid_pattern(value)
 }
 
 /// ### Rule 10102
@@ -366,13 +379,12 @@ pub(crate) fn apply_rule_10308(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    if let Some(sbo_term) = sbo_term {
-        if !matches_sboterm_pattern(&sbo_term) {
-            let message = format!(
-                "The [sboTerm] value ('{sbo_term}') does not conform to the syntax of SBOTerm data type."
-            );
-            issues.push(SbmlIssue::new_error("10308", xml_element, message))
-        }
+    if !matches_sboterm_pattern(&sbo_term) {
+        let message = format!(
+            "The [sboTerm] value ('{0}') does not conform to the syntax of SBOTerm data type.",
+            sbo_term.unwrap()
+        );
+        issues.push(SbmlIssue::new_error("10308", xml_element, message))
     }
 }
 
@@ -383,13 +395,12 @@ pub(crate) fn apply_rule_10309(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    if let Some(meta_id) = meta_id {
-        if !matches_xml_id_pattern(&meta_id) {
-            let message = format!(
-                "The [metaId] value ('{meta_id}') does not conform to the syntax of XML 1.0 ID data type."
-            );
-            issues.push(SbmlIssue::new_error("10309", xml_element, message))
-        }
+    if !matches_xml_id_pattern(&meta_id) {
+        let message = format!(
+            "The [metaId] value ('{0}') does not conform to the syntax of XML 1.0 ID data type.",
+            meta_id.unwrap()
+        );
+        issues.push(SbmlIssue::new_error("10309", xml_element, message))
     }
 }
 
@@ -400,11 +411,26 @@ pub(crate) fn apply_rule_10310(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    if let Some(id) = id {
-        if !matches_sid_pattern(&id) {
-            let message =
-                format!("The [id] value ('{id}') does not conform to the syntax of SId data type.");
-            issues.push(SbmlIssue::new_error("10310", xml_element, message))
-        }
+    if !matches_sid_pattern(&id) {
+        let message = format!(
+            "The [id] value ('{0}') does not conform to the syntax of SId data type.",
+            id.unwrap()
+        );
+        issues.push(SbmlIssue::new_error("10310", xml_element, message))
+    }
+}
+
+pub(crate) fn apply_rule_10311(
+    attr_name: &str,
+    unit_sid: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    if !matches_unit_sid_pattern(&unit_sid) {
+        let message = format!(
+            "The [{attr_name}] value ('{0}') does not conform to the syntax of UnitSId data type.",
+            unit_sid.unwrap()
+        );
+        issues.push(SbmlIssue::new_error("10311", xml_element, message))
     }
 }
