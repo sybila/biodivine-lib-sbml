@@ -9,6 +9,7 @@ use crate::xml::{
     XmlWrapper,
 };
 use crate::{Sbml, SbmlIssue};
+use phf::map::Values;
 use regex::Regex;
 use std::collections::HashSet;
 use std::ops::Deref;
@@ -271,25 +272,22 @@ fn check_identifier_uniqueness(
     }
 }
 
-/// Checks that a given value conforms to the given regex pattern. If not, error is logged in the
-/// vector of issues.
-fn check_pattern_of(
-    attr_name: &str,
-    value: &Option<String>,
-    pattern: &Regex,
-    xml_element: &XmlElement,
-    rule: &str,
-    data_type: &str,
-    issues: &mut Vec<SbmlIssue>,
-) {
-    if let Some(value) = value {
-        if !pattern.is_match(value) {
-            let message = format!(
-                "The {attr_name} value ('{value}') does not conform to the syntax of {data_type} type."
-            );
-            issues.push(SbmlIssue::new_error(rule, xml_element, message))
-        }
-    }
+/// Check that a given value conforms to the **SId** syntax.
+fn matches_sid_pattern(value: &String) -> bool {
+    let pattern = Regex::new(r"^([a-zA-Z]|_)([a-zA-Z]|/d|_)*").unwrap();
+    pattern.is_match(value)
+}
+
+/// Checks that a given value conforms to the **SBOTerm** syntax.
+fn matches_sboterm_pattern(value: &String) -> bool {
+    let pattern = Regex::new(r"SBO:\d{7}").unwrap();
+    pattern.is_match(value)
+}
+
+/// Checks that a given value conforms to the **XML 1.0 ID** syntax.
+fn matches_xml_id_pattern(value: &String) -> bool {
+    let pattern = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
+    pattern.is_match(value)
 }
 
 /// ### Rule 10102
@@ -368,16 +366,14 @@ pub(crate) fn apply_rule_10308(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let pattern = Regex::new(r"SBO:\d{7}").unwrap();
-    check_pattern_of(
-        "sboTerm",
-        &sbo_term,
-        &pattern,
-        xml_element,
-        "10308",
-        "SBML SBOTerm",
-        issues,
-    );
+    if let Some(sbo_term) = sbo_term {
+        if !matches_sboterm_pattern(&sbo_term) {
+            let message = format!(
+                "The [sboTerm] value ('{sbo_term}') does not conform to the syntax of SBOTerm data type."
+            );
+            issues.push(SbmlIssue::new_error("10308", xml_element, message))
+        }
+    }
 }
 
 /// ### Rule 10309
@@ -387,16 +383,14 @@ pub(crate) fn apply_rule_10309(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let pattern = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
-    check_pattern_of(
-        "metaid",
-        &meta_id,
-        &pattern,
-        xml_element,
-        "10309",
-        " XML 1.0 ID",
-        issues,
-    );
+    if let Some(meta_id) = meta_id {
+        if !matches_xml_id_pattern(&meta_id) {
+            let message = format!(
+                "The [metaId] value ('{meta_id}') does not conform to the syntax of XML 1.0 ID data type."
+            );
+            issues.push(SbmlIssue::new_error("10309", xml_element, message))
+        }
+    }
 }
 
 /// ### Rule 10310
@@ -406,14 +400,11 @@ pub(crate) fn apply_rule_10310(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let pattern = Regex::new(r"^([a-zA-Z]|_)([a-zA-Z]|/d|_)*").unwrap();
-    check_pattern_of(
-        "id",
-        &id,
-        &pattern,
-        xml_element,
-        "10310",
-        " SBML SId",
-        issues,
-    );
+    if let Some(id) = id {
+        if !matches_sid_pattern(&id) {
+            let message =
+                format!("The [id] value ('{id}') does not conform to the syntax of SId data type.");
+            issues.push(SbmlIssue::new_error("10310", xml_element, message))
+        }
+    }
 }
