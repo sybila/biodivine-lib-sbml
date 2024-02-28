@@ -5,8 +5,8 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::xml::{
-    OptionalChild, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
+    OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
+    XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 
@@ -32,6 +32,34 @@ impl Model {
     /// returns `None`.
     pub fn for_child_element(child: &XmlElement) -> Option<Self> {
         Self::search_in_parents(child, "model")
+    }
+
+    pub fn substance_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("substanceUnits")
+    }
+
+    pub fn time_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("timeUnits")
+    }
+
+    pub fn volume_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("volumeUnits")
+    }
+
+    pub fn area_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("areaUnits")
+    }
+
+    pub fn length_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("lengthUnits")
+    }
+
+    pub fn extent_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("extentUnits")
+    }
+
+    pub fn conversion_factor(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("conversionFactor")
     }
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
