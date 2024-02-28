@@ -1,7 +1,7 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, sanity_check, sanity_check_of_list, validate_list_of_objects,
-    SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10311, sanity_check, sanity_check_of_list,
+    validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -23,6 +23,32 @@ impl SbmlValidable for Model {
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(self.meta_id().get(), xml_element, issues);
         apply_rule_10310(self.id().get(), xml_element, issues);
+        apply_rule_10311(
+            "substanceUnits",
+            self.substance_units().get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10311(
+            "volumeUnits",
+            self.volume_units().get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10311("areaUnits", self.area_units().get(), xml_element, issues);
+        apply_rule_10311(
+            "lengthUnits",
+            self.length_units().get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10311("timeUnits", self.time_units().get(), xml_element, issues);
+        apply_rule_10311(
+            "extentUnits",
+            self.extent_units().get(),
+            xml_element,
+            issues,
+        );
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);

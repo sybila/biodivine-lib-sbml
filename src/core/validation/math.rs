@@ -3,7 +3,7 @@ use crate::constants::element::{
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::constants::namespaces::URL_MATHML;
-use crate::core::validation::get_allowed_children;
+use crate::core::validation::{get_allowed_children, matches_unit_sid_pattern};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
@@ -65,6 +65,7 @@ impl Math {
         self.apply_rule_10223(issues);
         self.apply_rule_10224(issues);
         self.apply_rule_10225(issues);
+        self.apply_rule_10311(issues);
     }
 
     /// ### Rule 10201
@@ -690,6 +691,27 @@ impl Math {
             {
                 let message = format!("The <compartment>'s size with id '{compartment_id}' is possible to determine by an <algebraicRule>.");
                 issues.push(SbmlIssue::new_error("10225", &ci, message));
+            }
+        }
+    }
+
+    /// ### Rule 10311
+    /// The SBML units attribute on MathML **cn** elements must always conform to the syntax of the
+    /// SBML data type **UnitSId**. Full description of the rule [here](crate::core::validation::apply_rule_10311).
+    pub(crate) fn apply_rule_10311(&self, issues: &mut Vec<SbmlIssue>) {
+        let cn_elements = self.recursive_child_elements_filtered(|child| {
+            child.tag_name() == "cn" && child.has_attribute("units")
+        });
+
+        for cn in cn_elements {
+            let value = cn.get_attribute("units");
+
+            if !matches_unit_sid_pattern(&value) {
+                let message = format!(
+                    "The [units] value ('{0}') does not conform to the syntax of UnitSId data type.",
+                    value.unwrap()
+                );
+                issues.push(SbmlIssue::new_error("10311", self.xml_element(), message))
             }
         }
     }

@@ -16,7 +16,7 @@ pub const ALLOWED_SBASE_CHILDREN: &[&str] = extended_sbase_children!();
 
 pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_attributes!("xmlns", "level", "version"),
-    "model"=> ALLOWED_SBASE_ATTRIBUTES,
+    "model"=> extended_sbase_attributes!("substanceUnits", "timeUnits", "volumeUnits", "areaUnits", "lengthUnits", "extentUnits", "conversionFactor"),
     "listOfFunctionDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
     "functionDefinition" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfUnitDefinitions" => ALLOWED_SBASE_ATTRIBUTES,

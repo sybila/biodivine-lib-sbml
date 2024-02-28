@@ -9,7 +9,6 @@ use crate::xml::{
     XmlWrapper,
 };
 use crate::{Sbml, SbmlIssue};
-use phf::map::Values;
 use regex::Regex;
 use std::collections::HashSet;
 use std::ops::Deref;
@@ -420,6 +419,16 @@ pub(crate) fn apply_rule_10310(
     }
 }
 
+/// ### Rule 10311
+/// Unit identifiers (that is, the values of the **id** attribute on
+/// [UnitDefinition](unit_definition::UnitDefinition), the **units** attribute
+/// on [Compartment](compartment::Compartment), the **units** attribute on
+/// [Parameter](parameter::Parameter), the **units** attribute on
+/// [LocalParameter](reaction::LocalParameter), the **substanceUnits** attribute on
+/// [Species](species::Species), the SBML **units** attribute on MathML **cn** elements, and the
+/// **substanceUnits**, **volumeUnits**, **areaUnits**, **lengthUnits**, **timeUnits** and
+/// **extentUnits** on [Model](model::Model)) must always conform to the syntax of the SBML
+/// data type **UnitSId**.
 pub(crate) fn apply_rule_10311(
     attr_name: &str,
     unit_sid: Option<String>,
