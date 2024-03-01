@@ -104,7 +104,7 @@ fn test_inner(filter: Option<HashSet<String>>) -> TestResults {
             if !test_name.ends_with(".xml") {
                 continue;
             }
-            if !test_name.contains("l3v1") {
+            if !test_name.contains("l3v2") {
                 // Skip any tests that are not for SBML level 3 version 1.
                 continue;
             }
