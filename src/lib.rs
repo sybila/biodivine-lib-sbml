@@ -640,7 +640,9 @@ mod tests {
         let species_top = species.top();
         species_top.initial_amount().set(Some(&10.0));
         species_top.initial_concentration().set(Some(&0.5));
-        species_top.substance_units().set(Some(&BaseUnit::Sievert));
+        species_top
+            .substance_units()
+            .set(Some(&BaseUnit::Sievert.to_string()));
         species_top.has_only_substance_units().set(&false);
         species_top.boundary_condition().set(&true);
         species_top.constant().set(&false);
@@ -669,7 +671,7 @@ mod tests {
 
         let param_top = parameters.top();
         param_top.value().set(Some(&15.0));
-        param_top.units().set(Some(&BaseUnit::Ampere));
+        param_top.units().set(Some(&BaseUnit::Ampere.to_string()));
     }
 
     fn build_initial_assignments(model: &Model) {
