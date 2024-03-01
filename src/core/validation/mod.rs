@@ -3,7 +3,7 @@ use crate::constants::element::{
     REQUIRED_ATTRIBUTES,
 };
 use crate::constants::namespaces::URL_SBML_CORE;
-use crate::core::SBase;
+use crate::core::{BaseUnit, Model, SBase};
 use crate::xml::{
     DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
@@ -305,7 +305,7 @@ fn matches_unit_sid_pattern(value: &Option<String>) -> bool {
     matches_sid_pattern(value)
 }
 
-pub fn matches_xml_string_pattern(value: &Option<String>) -> bool {
+fn matches_xml_string_pattern(value: &Option<String>) -> bool {
     let pattern =
         Regex::new(r###"^[^&'"\uFFFE\uFFFF]*(?:&(amp|apos|quot);[^&'"\uFFFE\uFFFF]*)*$"###)
             .unwrap();
@@ -467,5 +467,40 @@ pub(crate) fn apply_rule_10312(
             name.unwrap()
         );
         issues.push(SbmlIssue::new_error("10312", xml_element, message))
+    }
+}
+
+/// ### Rule 10313
+/// Unit identifier references (that is, the *units* attribute on
+/// [Compartment](compartment::Compartment), the *units* attribute on
+/// [Parameter](parameter::Parameter), the *units* attribute on
+/// [LocalParameter](reaction::LocalParameter), the *substanceUnits* attribute on [Species],
+/// the SBML *units* attribute on MathML **ci** elements, and the *substanceUnits*, *volumeUnits*,
+/// *areaUnits*, *lengthUnits*, *timeUnits* and *extentUnits* on [Model]) must be the identifier of
+/// a [UnitDefinition] in the [Model], or the identifier of a predefined unit in SBML, that is, any
+/// of the following [BaseUnit]: `ampere`, `avogadro`, `becquerel`, `candela`, `coulomb`, `dimensionless`, `farad`, `gram`,
+// `gray`, `henry`, `hertz`, `item`, `joule`, `katal`, `kelvin`, `kilogram`, `litre`, `lumen`,
+// `lux`, `metre`, `mole`, `newton`, `ohm`, `pascal`, `radian`, `second`, `siemens`, `sievert`,
+// `steradian`, `tesla`, `volt`, `watt`, or `weber`.
+pub(crate) fn apply_rule_10313(
+    attr_name: &str,
+    unit_ref: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let Some(unit_ref) = unit_ref else {
+        return;
+    };
+    // TODO: could be optimized - make efficient passing of the vector of unit definition identifiers or global variable or something
+    let unit_definition_ids = Model::for_child_element(xml_element)
+        .unwrap()
+        .unit_definition_identifiers();
+
+    if !unit_definition_ids.contains(&unit_ref) && BaseUnit::try_from(unit_ref.as_str()).is_err() {
+        let message = format!(
+            "The [{attr_name}] attribute value ('{unit_ref}') is not a \
+        known <unitDefinition> identifier nor a valid base unit."
+        );
+        issues.push(SbmlIssue::new_error("10313", xml_element, message));
     }
 }

@@ -1,10 +1,10 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10311, apply_rule_10312, sanity_check, sanity_check_of_list,
-    validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, sanity_check,
+    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -25,33 +25,9 @@ impl SbmlValidable for Model {
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
         apply_rule_10309(meta_id.get(), xml_element, issues);
         apply_rule_10310(id.get(), xml_element, issues);
-        apply_rule_10311(
-            "substanceUnits",
-            self.substance_units().get(),
-            xml_element,
-            issues,
-        );
-        apply_rule_10311(
-            "volumeUnits",
-            self.volume_units().get(),
-            xml_element,
-            issues,
-        );
-        apply_rule_10311("areaUnits", self.area_units().get(), xml_element, issues);
-        apply_rule_10311(
-            "lengthUnits",
-            self.length_units().get(),
-            xml_element,
-            issues,
-        );
-        apply_rule_10311("timeUnits", self.time_units().get(), xml_element, issues);
-        apply_rule_10311(
-            "extentUnits",
-            self.extent_units().get(),
-            xml_element,
-            issues,
-        );
+        self.apply_rule_10311(xml_element, issues);
         apply_rule_10312(self.name().get(), xml_element, issues);
+        self.apply_rule_10313(xml_element, issues);
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);
@@ -122,5 +98,38 @@ impl SanityCheckable for Model {
         if let Some(list_of_events) = self.events().get() {
             sanity_check_of_list(&list_of_events, issues);
         }
+    }
+}
+
+impl Model {
+    pub(crate) fn apply_rule_10311(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+        let sbstnc_units = self.substance_units();
+        let volume_units = self.volume_units();
+        let area_units = self.area_units();
+        let length_units = self.length_units();
+        let time_units = self.time_units();
+        let extent_units = self.extent_units();
+
+        apply_rule_10311(sbstnc_units.name(), sbstnc_units.get(), xml_element, issues);
+        apply_rule_10311(volume_units.name(), volume_units.get(), xml_element, issues);
+        apply_rule_10311(area_units.name(), area_units.get(), xml_element, issues);
+        apply_rule_10311(length_units.name(), length_units.get(), xml_element, issues);
+        apply_rule_10311(time_units.name(), time_units.get(), xml_element, issues);
+        apply_rule_10311(extent_units.name(), extent_units.get(), xml_element, issues);
+    }
+    pub(crate) fn apply_rule_10313(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+        let sbstnc_units = self.substance_units();
+        let volume_units = self.volume_units();
+        let area_units = self.area_units();
+        let length_units = self.length_units();
+        let time_units = self.time_units();
+        let extent_units = self.extent_units();
+
+        apply_rule_10313(sbstnc_units.name(), sbstnc_units.get(), xml_element, issues);
+        apply_rule_10313(volume_units.name(), volume_units.get(), xml_element, issues);
+        apply_rule_10313(area_units.name(), area_units.get(), xml_element, issues);
+        apply_rule_10313(length_units.name(), length_units.get(), xml_element, issues);
+        apply_rule_10313(time_units.name(), time_units.get(), xml_element, issues);
+        apply_rule_10313(extent_units.name(), extent_units.get(), xml_element, issues);
     }
 }

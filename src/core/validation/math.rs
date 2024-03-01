@@ -3,7 +3,7 @@ use crate::constants::element::{
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::constants::namespaces::URL_MATHML;
-use crate::core::validation::{get_allowed_children, matches_unit_sid_pattern};
+use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
@@ -66,6 +66,7 @@ impl Math {
         self.apply_rule_10224(issues);
         self.apply_rule_10225(issues);
         self.apply_rule_10311(issues);
+        self.apply_rule_10313(issues);
     }
 
     /// ### Rule 10201
@@ -696,7 +697,7 @@ impl Math {
     }
 
     /// ### Rule 10311
-    /// The SBML units attribute on MathML **cn** elements must always conform to the syntax of the
+    /// The SBML *units* attribute on MathML **cn** elements must always conform to the syntax of the
     /// SBML data type **UnitSId**. Full description of the rule [here](crate::core::validation::apply_rule_10311).
     pub(crate) fn apply_rule_10311(&self, issues: &mut Vec<SbmlIssue>) {
         let cn_elements = self.recursive_child_elements_filtered(|child| {
@@ -713,6 +714,21 @@ impl Math {
                 );
                 issues.push(SbmlIssue::new_error("10311", self.xml_element(), message))
             }
+        }
+    }
+
+    /// ### Rule 10313
+    /// The *units* attribute on MathML **ci** elements must be the identifier of a
+    /// [UnitDefinition](crate::core::unit_definition::UnitDefinition) in the [Model], or the
+    /// identifier of a predefined unit in SBML. Full description of the rule [here](apply_rule_10313);
+    pub(crate) fn apply_rule_10313(&self, issues: &mut Vec<SbmlIssue>) {
+        let ci_elements = self.recursive_child_elements_filtered(|child| {
+            child.tag_name() == "ci" && child.has_attribute("units")
+        });
+
+        for ci in ci_elements {
+            let value = ci.get_attribute("units");
+            apply_rule_10313(ci.tag_name().as_str(), value, self.xml_element(), issues);
         }
     }
 }
