@@ -221,13 +221,16 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
 ) {
     let allowed = get_allowed_children(list.xml_element());
     let xml_element = list.xml_element();
+    let id = list.id();
+    let meta_id = list.meta_id();
 
     apply_rule_10102(list.xml_element(), issues);
-    apply_rule_10301(list.id().get(), xml_element, issues, identifiers);
-    apply_rule_10307(list.meta_id().get(), xml_element, issues, meta_ids);
+    apply_rule_10301(id.get(), xml_element, issues, identifiers);
+    apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
     apply_rule_10308(list.sbo_term().get(), xml_element, issues);
-    apply_rule_10309(list.meta_id().get(), xml_element, issues);
-    apply_rule_10310(list.id().get(), xml_element, issues);
+    apply_rule_10309(meta_id.get(), xml_element, issues);
+    apply_rule_10310(id.get(), xml_element, issues);
+    apply_rule_10312(list.name().get(), xml_element, issues);
 
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
@@ -300,6 +303,13 @@ fn matches_xml_id_pattern(value: &Option<String>) -> bool {
 /// Checks that a given value conform to the **UnitSId** syntax, which is the same as **SId** syntax.
 fn matches_unit_sid_pattern(value: &Option<String>) -> bool {
     matches_sid_pattern(value)
+}
+
+pub fn matches_xml_string_pattern(value: &Option<String>) -> bool {
+    let pattern =
+        Regex::new(r###"^[^&'"\uFFFE\uFFFF]*(?:&(amp|apos|quot);[^&'"\uFFFE\uFFFF]*)*$"###)
+            .unwrap();
+    matches_pattern(value, &pattern)
 }
 
 /// ### Rule 10102
@@ -380,7 +390,7 @@ pub(crate) fn apply_rule_10308(
 ) {
     if !matches_sboterm_pattern(&sbo_term) {
         let message = format!(
-            "The [sboTerm] value ('{0}') does not conform to the syntax of SBOTerm data type.",
+            "The [sboTerm] attribute value ('{0}') does not conform to the syntax of SBOTerm data type.",
             sbo_term.unwrap()
         );
         issues.push(SbmlIssue::new_error("10308", xml_element, message))
@@ -396,7 +406,7 @@ pub(crate) fn apply_rule_10309(
 ) {
     if !matches_xml_id_pattern(&meta_id) {
         let message = format!(
-            "The [metaId] value ('{0}') does not conform to the syntax of XML 1.0 ID data type.",
+            "The [metaId] attribute value ('{0}') does not conform to the syntax of XML 1.0 ID data type.",
             meta_id.unwrap()
         );
         issues.push(SbmlIssue::new_error("10309", xml_element, message))
@@ -412,7 +422,7 @@ pub(crate) fn apply_rule_10310(
 ) {
     if !matches_sid_pattern(&id) {
         let message = format!(
-            "The [id] value ('{0}') does not conform to the syntax of SId data type.",
+            "The [id] attribute value ('{0}') does not conform to the syntax of SId data type.",
             id.unwrap()
         );
         issues.push(SbmlIssue::new_error("10310", xml_element, message))
@@ -437,9 +447,25 @@ pub(crate) fn apply_rule_10311(
 ) {
     if !matches_unit_sid_pattern(&unit_sid) {
         let message = format!(
-            "The [{attr_name}] value ('{0}') does not conform to the syntax of UnitSId data type.",
+            "The [{attr_name}] attribute value ('{0}') does not conform to the syntax of UnitSId data type.",
             unit_sid.unwrap()
         );
         issues.push(SbmlIssue::new_error("10311", xml_element, message))
+    }
+}
+
+/// ### Rule 10312
+/// The value of a **name** attribute must always conform to the syntax of type **string**.
+pub(crate) fn apply_rule_10312(
+    name: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    if !matches_xml_string_pattern(&name) {
+        let message = format!(
+            "The [name] attribute value ('{0}') does not conform to the syntax of XML 1.0 string data type.",
+            name.unwrap()
+        );
+        issues.push(SbmlIssue::new_error("10312", xml_element, message))
     }
 }

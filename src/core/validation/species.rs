@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10311, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10311, apply_rule_10312, SanityCheckable, SbmlValidable,
 };
 use crate::core::{SBase, Species};
 use crate::xml::{OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
@@ -30,6 +30,7 @@ impl SbmlValidable for Species {
             xml_element,
             issues,
         );
+        apply_rule_10312(self.name().get(), xml_element, issues);
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10311, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10311, apply_rule_10312, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Compartment, SBase};
 use crate::xml::{OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
@@ -25,6 +25,7 @@ impl SbmlValidable for Compartment {
         apply_rule_10309(meta_id.get(), xml_element, issues);
         apply_rule_10310(Some(id.get()), xml_element, issues);
         apply_rule_10311("units", self.units().get(), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
     }
 }
 
