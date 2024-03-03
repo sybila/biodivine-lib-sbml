@@ -1,14 +1,13 @@
-use std::str::FromStr;
-
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
-    MATHML_BINARY_OPERATORS, MATHML_NARY_OPERATORS, MATHML_UNARY_OPERATORS,
+    MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::constants::namespaces::URL_MATHML;
-use crate::core::validation::get_allowed_children;
+use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
-use crate::{SbmlIssue, SbmlIssueSeverity};
+use crate::SbmlIssue;
+use std::str::FromStr;
 
 impl Math {
     /// ### Applies rules:
@@ -66,6 +65,8 @@ impl Math {
         self.apply_rule_10223(issues);
         self.apply_rule_10224(issues);
         self.apply_rule_10225(issues);
+        self.apply_rule_10311(issues);
+        self.apply_rule_10313(issues);
     }
 
     /// ### Rule 10201
@@ -331,15 +332,13 @@ impl Math {
         }
     }
 
-    // TODO: create an issue "the identifiers of [LocalParameter](crate::core::reaction::LocalParameter) objects that are [Reaction](crate::core::reaction::Reaction) in which the [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw])"
-    // TODO: add comment about "any identifiers (in the SId namespace of the model) belonging to an object class defined by an SBML Level 3 package as having mathematical meaning." to existing issue about adding extensions/packages
     /// ### Rule 10215
     /// Outside a [FunctionDefinition] object, if a MathML **ci** element is not the first element within
     /// a MathML **apply**, then the **ci** element's value may only be chosen from the following set of
     /// identifiers: the identifiers of [Species], [Compartment], [Parameter], [SpeciesReference]
     /// and [Reaction] objects defined in the enclosing [Model] object; the identifiers of
     /// [LocalParameter] objects that are children of the [Reaction] in which the
-    /// [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw]);
+    /// [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw]),
     /// and any identifiers (in the SId namespace of the model) belonging to an
     /// object class defined by an SBML Level 3 package as having mathematical meaning.
     pub(crate) fn apply_rule_10215(&self, issues: &mut Vec<SbmlIssue>) {
@@ -464,17 +463,6 @@ impl Math {
                     let message = format!("Invalid number ({arg_count}) of arguments for binary operator <{operator}>.");
                     issues.push(SbmlIssue::new_error("10218", &apply, message));
                 }
-            } else if MATHML_NARY_OPERATORS.contains(&operator.as_str()) && arg_count == 0 {
-                // TODO:
-                //  This is not correct? N-ary operators with zero arguments are only
-                //  discouraged if the meaning of the operator is not well defined.
-                let message = format!("An N-ary operator <{operator}> with 0 arguments found. Use of N-ary operators without any arguments is discouraged.");
-                issues.push(SbmlIssue {
-                    element: apply.raw_element(),
-                    message,
-                    rule: "10218".to_string(),
-                    severity: SbmlIssueSeverity::Warning,
-                });
             }
         }
     }
@@ -631,18 +619,23 @@ impl Math {
             }
         });
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_rule_determinants = model.algebraic_rule_ci_values();
+        let algebraic_rule_parameters = model.algebraic_rule_ci_values();
 
         for ci in ci_elements {
             let value = ci.text_content();
+            let is_target_constant = model.is_rateof_target_constant(value.as_str());
 
             if assignment_rule_variables.contains(&value) {
-                let message = format!("The value of target ('{value}') of rateOf <csymbol> found as a variable of <assignmentRule>.");
+                let message = format!(
+                    "The value of target ('{value}') of rateOf <csymbol> \
+                found as a variable of <assignmentRule>."
+                );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
-                // TODO: what does "determined by algebraicRule" mean and how to check it?
-                // TODO: same as 10225
-            } else if algebraic_rule_determinants.contains(&value) {
-                let message = format!("The value of target ('{value}') of rateOf <csymbol> determined by an <algebraicRule>.");
+            } else if !is_target_constant && algebraic_rule_parameters.contains(&value) {
+                let message = format!(
+                    "The value of target ('{value}') of rateOf <csymbol> \
+                determined by an <algebraicRule>."
+                );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
             }
         }
@@ -700,6 +693,42 @@ impl Math {
                 let message = format!("The <compartment>'s size with id '{compartment_id}' is possible to determine by an <algebraicRule>.");
                 issues.push(SbmlIssue::new_error("10225", &ci, message));
             }
+        }
+    }
+
+    /// ### Rule 10311
+    /// The SBML *units* attribute on MathML **cn** elements must always conform to the syntax of the
+    /// SBML data type **UnitSId**. Full description of the rule [here](crate::core::validation::apply_rule_10311).
+    pub(crate) fn apply_rule_10311(&self, issues: &mut Vec<SbmlIssue>) {
+        let cn_elements = self.recursive_child_elements_filtered(|child| {
+            child.tag_name() == "cn" && child.has_attribute("units")
+        });
+
+        for cn in cn_elements {
+            let value = cn.get_attribute("units");
+
+            if !matches_unit_sid_pattern(&value) {
+                let message = format!(
+                    "The [units] value ('{0}') does not conform to the syntax of UnitSId data type.",
+                    value.unwrap()
+                );
+                issues.push(SbmlIssue::new_error("10311", self.xml_element(), message))
+            }
+        }
+    }
+
+    /// ### Rule 10313
+    /// The *units* attribute on MathML **ci** elements must be the identifier of a
+    /// [UnitDefinition](crate::core::unit_definition::UnitDefinition) in the [Model], or the
+    /// identifier of a predefined unit in SBML. Full description of the rule [here](apply_rule_10313);
+    pub(crate) fn apply_rule_10313(&self, issues: &mut Vec<SbmlIssue>) {
+        let ci_elements = self.recursive_child_elements_filtered(|child| {
+            child.tag_name() == "ci" && child.has_attribute("units")
+        });
+
+        for ci in ci_elements {
+            let value = ci.get_attribute("units");
+            apply_rule_10313(ci.tag_name().as_str(), value, self.xml_element(), issues);
         }
     }
 }

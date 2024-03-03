@@ -3,7 +3,7 @@
 type Namespace = (&'static str, &'static str);
 
 /// The URL of the "core" SBML namespace.
-pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
+pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
 
 /// The URL of the HTML namespace.
 pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";

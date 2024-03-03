@@ -1,35 +1,47 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, sanity_check, sanity_check_of_list,
-    validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
+    apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, sanity_check,
+    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
 };
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
+use crate::xml::{
+    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlWrapper,
+};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
 impl SbmlValidable for Reaction {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(
-            Some(self.id().get()),
-            self.xml_element(),
-            issues,
-            identifiers,
-        );
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(Some(id.get()), xml_element, issues, identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
+        apply_rule_10309(meta_id.get(), xml_element, issues);
+        apply_rule_10310(Some(id.get()), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
 
         if let Some(list_of_reactants) = self.reactants().get() {
-            validate_list_of_objects(&list_of_reactants, issues, identifiers);
+            validate_list_of_objects(&list_of_reactants, issues, identifiers, meta_ids);
         }
         if let Some(list_of_products) = self.products().get() {
-            validate_list_of_objects(&list_of_products, issues, identifiers);
+            validate_list_of_objects(&list_of_products, issues, identifiers, meta_ids);
         }
         if let Some(list_of_modifiers) = self.modifiers().get() {
-            validate_list_of_objects(&list_of_modifiers, issues, identifiers);
+            validate_list_of_objects(&list_of_modifiers, issues, identifiers, meta_ids);
         }
         if let Some(kinetic_law) = self.kinetic_law().get() {
-            kinetic_law.validate(issues, identifiers);
+            kinetic_law.validate(issues, identifiers, meta_ids);
         }
     }
 }
@@ -54,30 +66,72 @@ impl SanityCheckable for Reaction {
 }
 
 impl SbmlValidable for SpeciesReference {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(id.get(), xml_element, issues, identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
+        apply_rule_10309(meta_id.get(), xml_element, issues);
+        apply_rule_10310(id.get(), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
     }
 }
 
 impl SanityCheckable for SpeciesReference {}
 
 impl SbmlValidable for ModifierSpeciesReference {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(id.get(), xml_element, issues, identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
+        apply_rule_10309(meta_id.get(), xml_element, issues);
+        apply_rule_10310(id.get(), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
     }
 }
 
 impl SanityCheckable for ModifierSpeciesReference {}
 
 impl SbmlValidable for KineticLaw {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues);
-        apply_rule_10301(self.id().get(), self.xml_element(), issues, identifiers);
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10301(id.get(), xml_element, issues, identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
+        apply_rule_10309(meta_id.get(), xml_element, issues);
+        apply_rule_10310(id.get(), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
-            validate_list_of_objects(&list_of_local_parameters, issues, identifiers);
+            validate_list_of_objects(&list_of_local_parameters, issues, identifiers, meta_ids);
             KineticLaw::apply_rule_10303(&list_of_local_parameters, issues);
         }
 
@@ -111,7 +165,10 @@ impl KineticLaw {
         for local_parameter in list_of_local_parameters.as_vec() {
             let id = local_parameter.id().get();
             if identifiers.contains(&id) {
-                let message = format!("The identifier ('{id}') of <localParameter> is already present in the <listOfLocalParameters>.");
+                let message = format!(
+                    "The identifier ('{id}') of <localParameter> is \
+                already present in the <listOfLocalParameters>."
+                );
                 issues.push(SbmlIssue::new_error("10303", &local_parameter, message));
             } else {
                 identifiers.insert(id);
@@ -121,8 +178,25 @@ impl KineticLaw {
 }
 
 impl SbmlValidable for LocalParameter {
-    fn validate(&self, issues: &mut Vec<SbmlIssue>, _identifiers: &mut HashSet<String>) {
-        apply_rule_10102(self.xml_element(), issues)
+    fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        _identifiers: &mut HashSet<String>,
+        meta_ids: &mut HashSet<String>,
+    ) {
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+        let units = self.units();
+
+        apply_rule_10102(xml_element, issues);
+        apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, issues);
+        apply_rule_10309(meta_id.get(), xml_element, issues);
+        apply_rule_10310(Some(id.get()), xml_element, issues);
+        apply_rule_10311(units.name(), units.get(), xml_element, issues);
+        apply_rule_10312(self.name().get(), xml_element, issues);
+        apply_rule_10313(units.name(), units.get(), xml_element, issues);
     }
 }
 

@@ -12,7 +12,7 @@ use std::ops::Deref;
 use xml_doc::{Document, Element};
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
-/// Thus there is no need to implement concrete structure.
+/// Thus, there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
     fn id(&self) -> OptionalProperty<String> {
         self.optional_sbml_property("id")

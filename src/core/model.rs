@@ -5,8 +5,8 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::xml::{
-    OptionalChild, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
+    OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
+    XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
 };
 use macros::{SBase, XmlWrapper};
 
@@ -32,6 +32,34 @@ impl Model {
     /// returns `None`.
     pub fn for_child_element(child: &XmlElement) -> Option<Self> {
         Self::search_in_parents(child, "model")
+    }
+
+    pub fn substance_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("substanceUnits")
+    }
+
+    pub fn time_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("timeUnits")
+    }
+
+    pub fn volume_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("volumeUnits")
+    }
+
+    pub fn area_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("areaUnits")
+    }
+
+    pub fn length_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("lengthUnits")
+    }
+
+    pub fn extent_units(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("extentUnits")
+    }
+
+    pub fn conversion_factor(&self) -> OptionalProperty<String> {
+        self.optional_sbml_property("conversionFactor")
     }
 
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
@@ -241,6 +269,47 @@ impl Model {
         } else {
             Vec::new()
         }
+    }
+
+    pub(crate) fn is_rateof_target_constant(&self, target: &str) -> bool {
+        if let Some(compartment) = self
+            .compartments()
+            .get()
+            .and_then(|list| list.iter().find(|c| c.id().get() == target))
+        {
+            return compartment.constant().get();
+        }
+        if let Some(parameter) = self
+            .parameters()
+            .get()
+            .and_then(|list| list.iter().find(|p| p.id().get() == target))
+        {
+            return parameter.constant().get();
+        }
+        if let Some(species) = self
+            .species()
+            .get()
+            .and_then(|list| list.iter().find(|s| s.id().get() == target))
+        {
+            return species.constant().get();
+        }
+        if let Some(reactions) = self.reactions().get() {
+            for reaction in reactions.iter() {
+                if let Some(species_ref) = reaction.reactants().get().and_then(|list| {
+                    list.iter()
+                        .find(|r| r.id().get().is_some_and(|id| id == target))
+                }) {
+                    return species_ref.constant().get();
+                }
+                if let Some(species_ref) = reaction.products().get().and_then(|list| {
+                    list.iter()
+                        .find(|p| p.id().get().is_some_and(|id| id == target))
+                }) {
+                    return species_ref.constant().get();
+                }
+            }
+        }
+        true
     }
 
     /// Finds a species with the given *id*. If not found, returns `None`.

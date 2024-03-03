@@ -105,15 +105,14 @@ impl Sbml {
         let doc = self.xml.read().unwrap();
         let element = self.sbml_root.raw_element();
 
-        if !element.namespace_decls(doc.deref()).contains_key("") {
-            issues.push(SbmlIssue {
-                element,
-                message:
-                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>."
-                        .to_string(),
-                rule: "SANITY_CHECK".to_string(),
-                severity: SbmlIssueSeverity::Error,
-            })
+        if element.name(doc.deref()) == "sbml"
+            && !element.namespace_decls(doc.deref()).contains_key("")
+        {
+            issues.push(SbmlIssue::new_error(
+                "SANITY_CHECK",
+                &self.sbml_root,
+                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
+            ));
         }
 
         if let Some(model) = self.model().get() {
@@ -147,7 +146,9 @@ impl Sbml {
 
         if let Some(model) = self.model().get() {
             let mut identifiers: HashSet<String> = HashSet::new();
-            model.validate(&mut issues, &mut identifiers);
+            let mut meta_ids: HashSet<String> = HashSet::new();
+
+            model.validate(&mut issues, &mut identifiers, &mut meta_ids);
         }
 
         issues
@@ -639,7 +640,9 @@ mod tests {
         let species_top = species.top();
         species_top.initial_amount().set(Some(&10.0));
         species_top.initial_concentration().set(Some(&0.5));
-        species_top.substance_units().set(Some(&BaseUnit::Sievert));
+        species_top
+            .substance_units()
+            .set(Some(&BaseUnit::Sievert.to_string()));
         species_top.has_only_substance_units().set(&false);
         species_top.boundary_condition().set(&true);
         species_top.constant().set(&false);
@@ -668,7 +671,7 @@ mod tests {
 
         let param_top = parameters.top();
         param_top.value().set(Some(&15.0));
-        param_top.units().set(Some(&BaseUnit::Ampere));
+        param_top.units().set(Some(&BaseUnit::Ampere.to_string()));
     }
 
     fn build_initial_assignments(model: &Model) {

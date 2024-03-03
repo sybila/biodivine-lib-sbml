@@ -1,5 +1,4 @@
 use crate::core::sbase::SbmlUtils;
-use crate::core::BaseUnit;
 use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
@@ -37,7 +36,7 @@ impl Species {
     }
 
     // TODO: need to embrace recommended units (p. 148)
-    pub fn substance_units(&self) -> OptionalProperty<BaseUnit> {
+    pub fn substance_units(&self) -> OptionalProperty<String> {
         self.optional_sbml_property("substanceUnits")
     }
 
