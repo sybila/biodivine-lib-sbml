@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, sanity_check, sanity_check_of_list,
+    apply_rule_10310, apply_rule_10312, apply_rule_10401, sanity_check, sanity_check_of_list,
     validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
@@ -202,6 +202,9 @@ impl SbmlValidable for EventAssignment {
         apply_rule_10310(id.get(), xml_element, issues);
         apply_rule_10312(self.name().get(), xml_element, issues);
 
+        if let Some(annotation) = self.annotation().get() {
+            apply_rule_10401(&annotation, issues);
+        }
         if let Some(math) = self.math().get() {
             math.validate(issues);
         }

@@ -370,6 +370,7 @@ pub(crate) fn apply_rule_10301(
 
 /// ### Rule 10307
 /// Every *metaid* attribute value must be unique across the set of all *metaid* values in a model.
+// TODO: might be placed inside SBASE validation method
 pub(crate) fn apply_rule_10307(
     meta_id: Option<String>,
     xml_element: &XmlElement,
@@ -379,6 +380,7 @@ pub(crate) fn apply_rule_10307(
     check_identifier_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10308
 /// The value of the attribute *sboTerm* must always conform to the syntax of the SBML data type
 /// **SBOTerm**, which is a string consisting of the characters `S', `B', `O', ':', followed by
@@ -397,6 +399,7 @@ pub(crate) fn apply_rule_10308(
     }
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10309
 /// The value of a *metaid* attribute must always conform to the syntax of the *XML* data type **ID**.
 pub(crate) fn apply_rule_10309(
@@ -454,6 +457,7 @@ pub(crate) fn apply_rule_10311(
     }
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10312
 /// The value of a **name** attribute must always conform to the syntax of type **string**.
 pub(crate) fn apply_rule_10312(
@@ -491,7 +495,7 @@ pub(crate) fn apply_rule_10313(
     let Some(unit_ref) = unit_ref else {
         return;
     };
-    // TODO: could be optimized - make efficient passing of the vector of unit definition identifiers or global variable or something
+    // TODO: could be optimized - make efficient passing of the vector of unit definition identifiers or use global variable or something else
     let unit_definition_ids = Model::for_child_element(xml_element)
         .unwrap()
         .unit_definition_identifiers();
@@ -502,5 +506,24 @@ pub(crate) fn apply_rule_10313(
         known <unitDefinition> identifier nor a valid base unit."
         );
         issues.push(SbmlIssue::new_error("10313", xml_element, message));
+    }
+}
+
+// TODO: might be placed inside SBASE validation method
+/// ### Rule 10401
+/// Every top-level XML element within an **Annotation** object must have an XML namespace declared.
+pub(crate) fn apply_rule_10401(annotation: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let top_level_elements = annotation.child_elements();
+
+    for element in top_level_elements {
+        // TODO: is this correct and sufficient?
+        if element.namespace_url().is_empty() {
+            let message = format!("XML namespace not declared for '{0}'.", element.full_name());
+            issues.push(SbmlIssue::new_error(
+                "10401",
+                element.xml_element(),
+                message,
+            ))
+        }
     }
 }

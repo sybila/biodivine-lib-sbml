@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10312, apply_rule_10401, SanityCheckable, SbmlValidable,
 };
 use crate::core::{InitialAssignment, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -26,6 +26,9 @@ impl SbmlValidable for InitialAssignment {
         apply_rule_10310(id.get(), xml_element, issues);
         apply_rule_10312(self.name().get(), xml_element, issues);
 
+        if let Some(annotation) = self.annotation().get() {
+            apply_rule_10401(&annotation, issues);
+        }
         if let Some(math) = self.math().get() {
             math.validate(issues);
         }

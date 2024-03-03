@@ -1,6 +1,6 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10311, apply_rule_10312, sanity_check, sanity_check_of_list,
+    apply_rule_10311, apply_rule_10312, apply_rule_10401, sanity_check, sanity_check_of_list,
     validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{SBase, UnitDefinition};
@@ -27,6 +27,9 @@ impl SbmlValidable for UnitDefinition {
         apply_rule_10311("id", id.get(), xml_element, issues);
         apply_rule_10312(self.name().get(), xml_element, issues);
 
+        if let Some(annotation) = self.annotation().get() {
+            apply_rule_10401(&annotation, issues);
+        }
         if let Some(list_of_units) = self.units().get() {
             validate_list_of_objects(&list_of_units, issues, identifiers, meta_ids);
         }
