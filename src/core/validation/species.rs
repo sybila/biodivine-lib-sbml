@@ -1,7 +1,7 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
     apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
-    apply_rule_10402, SanityCheckable, SbmlValidable,
+    apply_rule_10402, apply_rule_10404, SanityCheckable, SbmlValidable,
 };
 use crate::core::{SBase, Species};
 use crate::xml::{
@@ -35,6 +35,7 @@ impl SbmlValidable for Species {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
     }
 }

@@ -345,20 +345,20 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
 /// [Event](event::Event), [EventAssignment](event::EventAssignment),
 /// [FunctionDefinition](function_definition::FunctionDefinition),
 /// [InitialAssignment](initial_assignment::InitialAssignment), [KineticLaw](reaction::KineticLaw),
-/// [ListOfCompartments](model::Model::compartments), [ListOfConstraints](model::Model::constraints),
-/// [ListOfEventAssignments](event::Event::event_assignments), [ListOfEvents](model::Model::events),
-/// [ListOfFunctionDefinitions](model::Model::function_definitions),
-/// [ListOfInitialAssignments](model::Model::initial_assignments),
+/// [ListOfCompartments](Model::compartments), [ListOfConstraints](Model::constraints),
+/// [ListOfEventAssignments](event::Event::event_assignments), [ListOfEvents](Model::events),
+/// [ListOfFunctionDefinitions](Model::function_definitions),
+/// [ListOfInitialAssignments](Model::initial_assignments),
 /// [ListOfLocalParameters](reaction::KineticLaw::local_parameters),
-/// [ListOfModifierSpeciesReferences](reaction::Reaction::modifiers), [ListOfParameters](model::Model::parameters),
-/// [ListOfReactions](model::Model::reactions), [ListOfRules](model::Model::rules),
-/// [ListOfSpecies](model::Model::species), [ListOfSpeciesReferences](reaction::Reaction::reactants),
-/// [ListOfUnitDefinitions](model::Model::unit_definitions), [ListOfUnits](unit_definition::UnitDefinition::units),
-/// [Model](model::Model), [ModifierSpeciesReference](reaction::ModifierSpeciesReference),
+/// [ListOfModifierSpeciesReferences](reaction::Reaction::modifiers), [ListOfParameters](Model::parameters),
+/// [ListOfReactions](Model::reactions), [ListOfRules](Model::rules),
+/// [ListOfSpecies](Model::species), [ListOfSpeciesReferences](reaction::Reaction::reactants),
+/// [ListOfUnitDefinitions](Model::unit_definitions), [ListOfUnits](unit_definition::UnitDefinition::units),
+/// [Model](Model), [ModifierSpeciesReference](reaction::ModifierSpeciesReference),
 /// [Parameter](parameter::Parameter), [Priority](event::Priority), [RateRule](rule::RateRule),
 /// [Reaction](reaction::Reaction), [Species](species::Species), [SpeciesReference](reaction::SpeciesReference),
 /// [Trigger](event::Trigger), and [Unit](unit::Unit), plus the *id* attribute values of any SBML Level 3 package
-/// element defined to be in the *SId* namespace of the [Model](model::Model).
+/// element defined to be in the *SId* namespace of the [Model](Model).
 pub(crate) fn apply_rule_10301(
     id: Option<String>,
     xml_element: &XmlElement,
@@ -440,7 +440,7 @@ pub(crate) fn apply_rule_10310(
 /// [LocalParameter](reaction::LocalParameter), the **substanceUnits** attribute on
 /// [Species](species::Species), the SBML **units** attribute on MathML **cn** elements, and the
 /// **substanceUnits**, **volumeUnits**, **areaUnits**, **lengthUnits**, **timeUnits** and
-/// **extentUnits** on [Model](model::Model)) must always conform to the syntax of the SBML
+/// **extentUnits** on [Model]) must always conform to the syntax of the SBML
 /// data type **UnitSId**.
 pub(crate) fn apply_rule_10311(
     attr_name: &str,
@@ -531,6 +531,7 @@ pub(crate) fn apply_rule_10401(annotation: &XmlElement, issues: &mut Vec<SbmlIss
     }
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10402
 /// A given XML namespace cannot be the namespace of more than *one* top-level element within a
 // given **Annotation** object.
@@ -550,5 +551,20 @@ pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIss
         } else {
             unique_namespaces.insert(namespace);
         }
+    }
+}
+
+// TODO: might be placed inside SBASE validation method
+/// ### Rule 10404
+/// A given SBML element may contain at most *one* **Annotation** subobject.
+pub(crate) fn apply_rule_10404(element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let annotation_elements = element.child_elements_filtered(|el| el.tag_name() == "annotation");
+
+    if annotation_elements.len() > 1 {
+        let message = format!(
+            "Multiple annotation elements found in <{0}>.",
+            element.tag_name()
+        );
+        issues.push(SbmlIssue::new_error("10404", element, message));
     }
 }

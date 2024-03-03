@@ -1,7 +1,7 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, apply_rule_10401, apply_rule_10402, sanity_check,
-    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404,
+    sanity_check, sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
@@ -27,6 +27,7 @@ impl SbmlValidable for Event {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
         if let Some(trigger) = self.trigger().get() {
             trigger.validate(issues, identifiers, meta_ids);
@@ -134,6 +135,7 @@ impl SbmlValidable for Trigger {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -162,6 +164,7 @@ impl SbmlValidable for Priority {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -190,6 +193,7 @@ impl SbmlValidable for Delay {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
         if let Some(math) = self.math().get() {
             math.validate(issues);
@@ -221,6 +225,7 @@ impl SbmlValidable for EventAssignment {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
         }
         if let Some(math) = self.math().get() {
             math.validate(issues);
