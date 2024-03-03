@@ -1,6 +1,7 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, apply_rule_10401, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10312, apply_rule_10401, apply_rule_10402, SanityCheckable,
+    SbmlValidable,
 };
 use crate::core::{SBase, Unit};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -28,6 +29,7 @@ impl SbmlValidable for Unit {
 
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
+            apply_rule_10402(&annotation, issues);
         }
     }
 }

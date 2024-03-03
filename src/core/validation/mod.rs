@@ -518,12 +518,37 @@ pub(crate) fn apply_rule_10401(annotation: &XmlElement, issues: &mut Vec<SbmlIss
     for element in top_level_elements {
         // TODO: is this correct and sufficient?
         if element.namespace_url().is_empty() {
-            let message = format!("XML namespace not declared for '{0}'.", element.full_name());
+            let message = format!(
+                "XML namespace not declared for '{0}' in annotation.",
+                element.full_name()
+            );
             issues.push(SbmlIssue::new_error(
                 "10401",
                 element.xml_element(),
                 message,
             ))
+        }
+    }
+}
+
+/// ### Rule 10402
+/// A given XML namespace cannot be the namespace of more than *one* top-level element within a
+// given **Annotation** object.
+pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let top_level_elements =
+        annotation.child_elements_filtered(|el| !el.namespace_url().is_empty());
+    let mut unique_namespaces: HashSet<String> = HashSet::new();
+
+    for element in top_level_elements {
+        let namespace = element.namespace_url();
+
+        if unique_namespaces.contains(&namespace) {
+            let message = format!(
+                "XML namespace '{namespace}' found in multiple top-level elements of <annotation>."
+            );
+            issues.push(SbmlIssue::new_error("10402", &element, message));
+        } else {
+            unique_namespaces.insert(namespace);
         }
     }
 }
