@@ -1,14 +1,15 @@
+use std::collections::HashSet;
+
+use crate::core::{Model, Reaction, SBase, SimpleSpeciesReference, Species, SpeciesReference};
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
     apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
     apply_rule_10402, apply_rule_10404, SanityCheckable, SbmlValidable,
 };
-use crate::core::{SBase, Species};
+use crate::SbmlIssue;
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlProperty, XmlWrapper,
 };
-use crate::SbmlIssue;
-use std::collections::HashSet;
 
 impl SbmlValidable for Species {
     fn validate(
@@ -41,3 +42,37 @@ impl SbmlValidable for Species {
 }
 
 impl SanityCheckable for Species {}
+
+impl Species {
+    /// Determines if this particular species is referenced as a reactant or product in one or more
+    /// [Reaction] objects containing [KineticLaw] objects.
+    pub(crate) fn is_referenced_by_reaction(&self, model: &Model) -> bool {
+        let Some(reactions) = model.reactions().get() else {
+            false
+        };
+        let reactions = reactions
+            .as_vec()
+            .iter()
+            .filter(|r| {
+                r.kinetic_law().is_set() && (r.products().is_set() || r.reactants().is_set())
+            })
+            .collect::<Vec<Reaction>>();
+
+        for reaction in reactions {
+            let mut species_references: Vec<SpeciesReference> = Vec::new();
+            if let Some(reactants) = reaction.reactants().get() {
+                species_references.append(&mut reactants.as_vec());
+            }
+            if let Some(products) = reaction.products().get() {
+                species_references.append(&mut products.as_vec());
+            }
+
+            for s_reference in species_references {
+                if s_reference.species().get() == self.id().get() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+}

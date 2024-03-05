@@ -1,13 +1,16 @@
+use std::collections::{HashMap, HashSet};
+
+use crate::core::{AbstractRule, Model, SBase, Species, UnitDefinition};
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
     apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
     apply_rule_10402, apply_rule_10404, sanity_check, sanity_check_of_list,
-    validate_list_of_objects, SanityCheckable, SbmlValidable,
+    SanityCheckable, SbmlValidable, validate_list_of_objects,
 };
-use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
-use std::collections::HashSet;
+use crate::xml::{
+    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper,
+};
 
 impl SbmlValidable for Model {
     fn validate(
@@ -137,5 +140,38 @@ impl Model {
         apply_rule_10313(length_units.name(), length_units.get(), xml_element, issues);
         apply_rule_10313(time_units.name(), time_units.get(), xml_element, issues);
         apply_rule_10313(extent_units.name(), extent_units.get(), xml_element, issues);
+    }
+
+    pub(crate) fn apply_rule_10701(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+        enum VertexType {
+            EQUATION,
+            VARIABLE,
+        }
+        struct Vertex {
+            id: String,
+            vtype: VertexType,
+        }
+        let mut bipartite_graph = HashMap::new();
+
+        if let Some(species) = self.species().get() {
+            let species_list = species
+                .iter()
+                .filter(|species| {
+                    !species.boundary_condition().get()
+                        && !species.constant().get()
+                        && species.is_referenced_by_reaction(&self)
+                })
+                .collect::<Vec<Species>>();
+
+            for species in species_list {
+                bipartite_graph.insert(
+                    Vertex {
+                        id: species.id().get(),
+                        vtype: VertexType::EQUATION,
+                    },
+                    Vec::new(),
+                );
+            }
+        }
     }
 }
