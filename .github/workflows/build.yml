@@ -59,7 +59,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
-      - run: cargo test --all-features
+      - run: cargo test --all-features --release
 
   # Check code style
   clippy:
@@ -117,7 +117,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-tarpaulin
-      - run: cargo tarpaulin --verbose --lib --examples --all-features --out xml
+      - run: cargo tarpaulin --verbose --lib --examples --release --all-features --out xml
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4
         with:
