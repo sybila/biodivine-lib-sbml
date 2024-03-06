@@ -1,13 +1,19 @@
-use crate::constants::namespaces::URL_SBML_CORE;
-use crate::core::validation::{sanity_check, SanityCheckable, SbmlValidable};
-use crate::core::Model;
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 use std::collections::HashSet;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
-use xml::{OptionalChild, RequiredProperty};
+
 use xml_doc::{Document, Element, ReadOptions};
+
+use xml::{OptionalChild, RequiredProperty};
+
+use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::{
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10312, sanity_check, SanityCheckable, SbmlValidable,
+};
+use crate::core::{Model, SBase};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -162,10 +168,21 @@ impl Sbml {
             println!("Sanity check passed, proceeding with validation...");
         }
 
-        if let Some(model) = self.model().get() {
-            let mut identifiers: HashSet<String> = HashSet::new();
-            let mut meta_ids: HashSet<String> = HashSet::new();
+        let mut identifiers: HashSet<String> = HashSet::new();
+        let mut meta_ids: HashSet<String> = HashSet::new();
 
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10301(id.get(), xml_element, &mut issues, &mut identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, &mut issues, &mut meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, &mut issues);
+        apply_rule_10309(meta_id.get(), xml_element, &mut issues);
+        apply_rule_10310(id.get(), xml_element, &mut issues);
+        apply_rule_10312(self.name().get(), xml_element, &mut issues);
+
+        if let Some(model) = self.model().get() {
             model.validate(&mut issues, &mut identifiers, &mut meta_ids);
         }
 
@@ -186,6 +203,27 @@ impl Default for Sbml {
         }
     }
 }
+
+impl XmlWrapper for Sbml {
+    fn xml_element(&self) -> &XmlElement {
+        &self.sbml_root
+    }
+
+    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
+        Sbml {
+            xml: element.document(),
+            sbml_root: element.xml_element().clone(),
+        }
+    }
+}
+
+impl From<Sbml> for XmlElement {
+    fn from(value: Sbml) -> Self {
+        value.sbml_root
+    }
+}
+
+impl SBase for Sbml {}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SbmlIssue {
