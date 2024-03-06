@@ -78,7 +78,20 @@ fn test_inner(filter: Option<HashSet<String>>) {
             println!(" > Testing {:?}", test_file);
             let mut expected = read_expected_issues(result_file.to_str().unwrap());
 
-            let doc = Sbml::read_path(test_file.to_str().unwrap()).unwrap();
+            let Ok(doc) = Sbml::read_path(test_file.to_str().unwrap()) else {
+                // This process *can* fail if the document is not encoded correctly.
+                // In that case, rule 10101 should appear in the expected results. If it does
+                // not appear in this list, it is an error.
+                if !expected.contains_key(&"10101".to_string()) {
+                    let report = format!(
+                        "Test {}/{}: Found unexpected issue 10101 (severity Error).",
+                        name, test_case
+                    );
+                    error_problems.push(report);
+                }
+                continue;
+            };
+
             let issues: Vec<SbmlIssue> = doc.validate();
 
             for issue in issues {

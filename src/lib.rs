@@ -7,7 +7,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use xml::{OptionalChild, RequiredProperty};
-use xml_doc::{Document, Element};
+use xml_doc::{Document, Element, ReadOptions};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -50,9 +50,21 @@ impl Sbml {
             Ok(file_contents) => file_contents,
             Err(why) => return Err(why.to_string()),
         };
-        let doc = match Document::from_str(file_contents.as_str()) {
+        // Only accept documents that are using UTF-8.
+        let opts = ReadOptions {
+            enforce_encoding: true,
+            encoding: Some("UTF-8".to_string()),
+            ..Default::default()
+        };
+        let doc = match Document::parse_str_with_opts(file_contents.as_str(), opts) {
             Ok(doc) => doc,
-            Err(why) => return Err(why.to_string()),
+            Err(why) => {
+                return if matches!(why, xml_doc::Error::CannotDecode) {
+                    Err("SBML documents must use UTF-8 encoding.".to_string())
+                } else {
+                    Err(why.to_string())
+                }
+            }
         };
         let root = doc.root_element().unwrap();
         let xml_document = Arc::new(RwLock::new(doc));
