@@ -498,16 +498,15 @@ impl Math {
             let id = function_call.text_content();
 
             if func_identifiers.contains(&id) {
-                let expected_args = model
-                    .function_definition_arguments(id.as_str())
-                    .unwrap_or(0);
-
-                if arg_count != expected_args {
-                    let message = format!(
-                        "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
+                // Only check argument count if the function is actually declared.
+                if let Some(expected_args) = model.function_definition_arguments(&id) {
+                    if arg_count != expected_args {
+                        let message = format!(
+                            "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
                                 The function '{id}' takes {expected_args} arguments."
-                    );
-                    issues.push(SbmlIssue::new_error("10219", function_call, message));
+                        );
+                        issues.push(SbmlIssue::new_error("10219", function_call, message));
+                    }
                 }
             }
         }
