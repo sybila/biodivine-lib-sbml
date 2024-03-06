@@ -119,9 +119,24 @@ impl Sbml {
     }
 
     fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(&self.sbml_root, issues);
         let doc = self.xml.read().unwrap();
         let element = self.sbml_root.raw_element();
+
+        // For the root SBMl element, there are a few extra conditions related to the rule 10102.
+        if doc.container().child_elements(doc.deref()).len() != 1 {
+            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
+            let message = "The document contains multiple root nodes. \
+                Only one root <sbml> object is allowed.";
+            issues.push(SbmlIssue::new_error("10102", &container, message));
+        }
+
+        let root_element = self.sbml_root.xml_element();
+        if root_element.tag_name() != "sbml" {
+            let message = format!("Invalid root element <{}> found.", root_element.tag_name());
+            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
+        }
+
+        sanity_check(&self.sbml_root, issues);
 
         if element.name(doc.deref()) == "sbml"
             && !element.namespace_decls(doc.deref()).contains_key("")
@@ -132,8 +147,6 @@ impl Sbml {
                 "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
             ));
         }
-
-        self.apply_rule_10102(issues);
 
         if let Some(model) = self.model().get() {
             model.sanity_check(issues);

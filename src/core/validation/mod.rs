@@ -1,3 +1,10 @@
+use std::collections::{HashMap, HashSet};
+use std::ops::Deref;
+
+use const_format::formatcp;
+use regex::Regex;
+use xml_doc::Element;
+
 use crate::constants::element::{
     ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, MATHML_ALLOWED_CHILDREN,
     REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
@@ -8,12 +15,7 @@ use crate::xml::{
     DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
 };
-use crate::{Sbml, SbmlIssue};
-use const_format::formatcp;
-use regex::Regex;
-use std::collections::{HashMap, HashSet};
-use std::ops::Deref;
-use xml_doc::Element;
+use crate::SbmlIssue;
 
 mod compartment;
 mod constraint;
@@ -50,43 +52,6 @@ pub(crate) trait SbmlValidable: XmlWrapper {
 pub(crate) trait SanityCheckable: XmlWrapper {
     fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
         sanity_check(self.xml_element(), issues);
-    }
-}
-
-impl Sbml {
-    /// ### Rule 10102
-    /// An SBML XML document must not contain undefined elements or attributes in the SBML Level 3
-    /// Core namespace or in a SBML Level 3 package namespace. Documents containing unknown
-    /// elements or attributes placed in an SBML namespace do not conform to the SBML
-    /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
-    pub(crate) fn apply_rule_10102(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.xml.read().unwrap();
-
-        if doc.container().child_elements(doc.deref()).len() != 1 {
-            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
-            let message = "The document contains multiple root nodes. \
-                Only one root <sbml> object is allowed.";
-            issues.push(SbmlIssue::new_error("10102", &container, message));
-        }
-
-        let root_element = self.sbml_root.xml_element();
-        if root_element.tag_name() == "sbml" {
-            validate_allowed_attributes(
-                root_element,
-                &root_element
-                    .attributes()
-                    .keys()
-                    .map(|key| key.as_str())
-                    .collect::<Vec<&str>>(),
-                issues,
-            );
-
-            validate_allowed_children(root_element, issues);
-            validate_unique_children(root_element, issues);
-        } else {
-            let message = format!("Invalid root element <{}> found.", root_element.tag_name());
-            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
-        }
     }
 }
 
@@ -140,7 +105,11 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
 /// required or undeclared optional attributes.
 fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static str> {
     match tag_name {
-        "sbml" => Some("20108"),
+        "sbml" => match attr_name {
+            "level" => Some("20102"),
+            "version" => Some("20103"),
+            _ => Some("20108"),
+        },
         "model" => Some("20222"),
         "listOfFunctionDefinitions" => Some("20223"),
         "listOfUnitDefinitions" => Some("20224"),
