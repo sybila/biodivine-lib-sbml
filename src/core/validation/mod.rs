@@ -380,18 +380,3 @@ pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIss
         }
     }
 }
-
-// TODO: might be placed inside SBASE validation method
-/// ### Rule 10404
-/// A given SBML element may contain at most *one* **Annotation** subobject.
-pub(crate) fn apply_rule_10404(element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let annotation_elements = element.child_elements_filtered(|el| el.tag_name() == "annotation");
-
-    if annotation_elements.len() > 1 {
-        let message = format!(
-            "Multiple annotation elements found in <{0}>.",
-            element.tag_name()
-        );
-        issues.push(SbmlIssue::new_error("10404", element, message));
-    }
-}
