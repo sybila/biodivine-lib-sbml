@@ -200,7 +200,7 @@ impl Math {
                     "Attribute [type] found on element <{name}>, which is forbidden. \
                         Attribute [type] is only permitted on <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10204", &child, message));
+                issues.push(SbmlIssue::new_error("10206", &child, message));
             }
         }
     }
@@ -223,7 +223,7 @@ impl Math {
                     "Invalid type value found '{value}'. Permitted values are: \
                     'e-notation', 'real', 'integer' and 'rational'"
                 );
-                issues.push(SbmlIssue::new_error("10206", &child, message));
+                issues.push(SbmlIssue::new_error("10207", &child, message));
             }
         }
     }
