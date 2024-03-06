@@ -1,6 +1,6 @@
 use crate::constants::element::{
     ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, MATHML_ALLOWED_CHILDREN,
-    REQUIRED_ATTRIBUTES,
+    REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::{BaseUnit, Model, SBase};
@@ -11,7 +11,7 @@ use crate::xml::{
 use crate::{Sbml, SbmlIssue};
 use const_format::formatcp;
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 use xml_doc::Element;
 
@@ -101,6 +101,7 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
     let children = xml_element.child_elements_filtered(|e| e.namespace_url() == URL_SBML_CORE);
 
     validate_allowed_children(xml_element, &children, issues);
+    validate_unique_children(xml_element, &children, issues);
 
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
@@ -192,7 +193,7 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
 
 /// Similar to [tag_to_attribute_rule_id], resolves a tag name into a rule ID which specifies
 /// what child elements are allowed for that particular element.
-fn tag_to_child_rule_id(tag_name: &str) -> Option<&'static str> {
+fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
     match tag_name {
         "listOfFunctionDefinitions" => Some("20206"),
         "listOfUnitDefinitions" => Some("20207"),
@@ -209,6 +210,46 @@ fn tag_to_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "listOfModifiers" => Some("21105"),
         "listOfEventAssignments" => Some("21223"),
         "listOfLocalParameters" => Some("21128"),
+        _ => None,
+    }
+}
+
+fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'static str> {
+    // First, we catch the SBase-child issues. For the remaining elements, it depends.
+    // In some cases, there is one general rule to catch all issues (like for `model`).
+    // In other cases, each child has a separate rule defined in the specification
+    // (such as for `event`).
+
+    // Note that IDEA tends to get confused here and claims that some of these patterns are
+    // unreachable, but that seems to be a bug in their static analysis and the actual tests
+    // are passing without issues.
+    match (tag_name, child_name) {
+        (_, "annotation") => Some("10404"),
+        (_, "notes") => Some("10805"),
+        ("sbml", "model") => Some("20201"),
+        // This is technically too broad, but the only other options seems to be to write down
+        // all the list* objects, which is rather tedeous.
+        ("model", _) => Some("20205"),
+        ("functionDefinition", "math") => Some("20306"),
+        ("unitDefinition", "listOfUnits") => Some("20414"),
+        ("initialAssignment", "math") => Some("20804"),
+        ("assignmentRule", "math") | ("rateRule", "math") | ("algebraicRule", "math") => {
+            Some("20907")
+        }
+        ("constraint", "math") => Some("21007"),
+        ("constraint", "message") => Some("21008"),
+        // Same as `model` above, there is a lot of unique children to enumerate...
+        ("reaction", _) => Some("21106"),
+        ("kineticLaw", "listOfLocalParameters") => Some("21127"),
+        ("kineticLaw", "math") => Some("21130"),
+        ("event", "trigger") => Some("21201"),
+        ("trigger", "math") => Some("21209"),
+        ("delay", "math") => Some("21210"),
+        ("event", "delay") => Some("21221"),
+        ("event", "listOfEventAssignments") => Some("21222"),
+        ("event", "priority") => Some("21230"),
+        ("priority", "math") => Some("21231"),
+        ("eventAssignment", "math") => Some("21213"),
         _ => None,
     }
 }
@@ -325,8 +366,40 @@ pub(crate) fn validate_allowed_children(
                 "An unknown child <{}> of the element <{}> found.",
                 child_name, element_name
             );
-            let rule_id = tag_to_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
             issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+        }
+    }
+}
+
+/// Validates for a given element that its children that are required to appear at most once
+/// indeed do. Logs error if this is violated.
+pub(crate) fn validate_unique_children(
+    xml_element: &XmlElement,
+    children: &[XmlElement],
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let element_name = xml_element.tag_name();
+    let unique_children = UNIQUE_CHILDREN.get(element_name.as_str()).unwrap();
+
+    let mut counts = HashMap::new();
+    for child in children {
+        let entry = counts.entry(child.tag_name());
+        let count = entry.or_insert(0usize);
+        *count += 1;
+    }
+
+    for name in *unique_children {
+        if let Some(count) = counts.get(&name.to_string()) {
+            if *count > 1 {
+                let message = format!(
+                    "Multiple instances of child <{}> found in element <{}>.",
+                    name, element_name
+                );
+                let rule_id = tag_to_unique_child_rule_id(element_name.as_str(), name)
+                    .unwrap_or("SANITY_CHECK");
+                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+            }
         }
     }
 }
