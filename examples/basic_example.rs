@@ -8,11 +8,7 @@ use biodivine_lib_sbml::Sbml;
 fn main() {
     // let doc = Sbml::read_path("test-inputs/COVID19_immunotherapy_Mathematical_Model.xml").unwrap();
     // let doc = Sbml::read_path("test-inputs/cholesterol_metabolism_and_atherosclerosis.xml").unwrap();
-    //let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
-    let doc = Sbml::read_path(
-        "/Users/daemontus/Code/biodivine-lib-sbml/syntactic/21226/21226-fail-02-08-sev2-l3v2.xml",
-    )
-    .unwrap();
+    let doc = Sbml::read_path("test-inputs/Mukandavire2020.xml").unwrap();
 
     // let model = doc.model().get().unwrap();
     // Print the whole document:
