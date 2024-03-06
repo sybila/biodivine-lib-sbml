@@ -1,20 +1,14 @@
-use std::collections::{HashMap, HashSet};
-use std::ops::Deref;
+use std::collections::HashSet;
 
 use const_format::formatcp;
 use regex::Regex;
-use xml_doc::Element;
 
-use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, MATHML_ALLOWED_CHILDREN,
-    REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
-};
-use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
+use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
 use crate::core::{BaseUnit, Model, SBase};
-use crate::xml::{
-    DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
-    XmlWrapper,
-};
+use crate::xml::OptionalXmlProperty;
+use crate::xml::XmlElement;
+use crate::xml::XmlList;
+use crate::xml::XmlWrapper;
 use crate::SbmlIssue;
 
 mod compartment;
@@ -28,9 +22,25 @@ mod parameter;
 mod reaction;
 mod rule;
 mod species;
+/// This module implements basic integrity checks that are necessary to enable full validation.
+/// In general, these should ensure that our XML abstractions work as expected and the model
+/// is safe to work with. In particular:
+///  - All required properties are set.
+///  - All properties have the correct type.
+///  - All required child elements are present.
+///  - All child elements appear only once in their parents.
+///  - All XML lists only contain children of the allowed type.
+///  - Namespaces are correctly applied.
+///
+/// Most of these checks are technically covered by rule 10102, but for most SBML elements, a more
+/// specific rule ID exists as well. In order to avoid implementing all these rules
+/// independently, we perform a single recursive "type check" procedure that then maps
+/// any discovered issues to the correct rule ID (and defaults to 10102 or other appropriate rule
+/// when an element-specific rule does not exist).
+pub(crate) mod type_check;
 mod unit;
 mod unit_definition;
-mod xml;
+mod xml_definitions;
 
 /// Denotes an element that can be (and should be) validated against the SBML
 /// validation rules.
@@ -41,337 +51,6 @@ pub(crate) trait SbmlValidable: XmlWrapper {
         identifiers: &mut HashSet<String>,
         meta_ids: &mut HashSet<String>,
     );
-}
-
-/// Denotes an element that possess a way to self-test against
-/// the most critical checks (sanity test). This should be executed **before** actual document
-/// validation. Failing sanity tests skips the validation. That is, because reading such a (insane)
-/// document would cause panic.
-pub(crate) trait SanityCheckable: XmlWrapper {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
-    }
-}
-
-/// Performs very basic and the most critical sanity checks. more precisely:
-/// - no invalid child elements are present in the model.
-/// - the document contains all required children and attributes.
-/// - each attribute value has correct type.
-/// Any failing check is logged in *issues*.
-pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let attributes = xml_element.attributes();
-    let element_name = xml_element.tag_name();
-
-    apply_rule_10102_and_derivatives(xml_element, issues);
-
-    if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
-        for req_attr in required.iter() {
-            if !attributes.contains_key(&req_attr.to_string()) {
-                let message = format!(
-                    "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
-                );
-                let rule_id = tag_to_attribute_rule_id(element_name.as_str(), req_attr)
-                    .unwrap_or("SANITY_CHECK");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
-            }
-        }
-    }
-
-    // check that each attribute contains a value of the correct type
-    for attr in attributes {
-        let attr_name = attr.0.as_str();
-        let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
-            break;
-        };
-
-        // t => (attribute name, attribute value)
-        for t in types {
-            if &attr_name == t.0 {
-                match *t.1 {
-                    "positive_int" => sanity_type_check::<u32>(attr_name, xml_element, issues),
-                    "int" => sanity_type_check::<i32>(attr_name, xml_element, issues),
-                    "double" => sanity_type_check::<f64>(attr_name, xml_element, issues),
-                    "boolean" => sanity_type_check::<bool>(attr_name, xml_element, issues),
-                    _ => (),
-                }
-            };
-        }
-    }
-}
-
-/// Resolve tag name to attribute consistency rule. These are used when testing for missing
-/// required or undeclared optional attributes.
-fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static str> {
-    match tag_name {
-        "sbml" => match attr_name {
-            "level" => Some("20102"),
-            "version" => Some("20103"),
-            _ => Some("20108"),
-        },
-        "model" => Some("20222"),
-        "listOfFunctionDefinitions" => Some("20223"),
-        "listOfUnitDefinitions" => Some("20224"),
-        "listOfCompartments" => Some("20225"),
-        "listOfSpecies" => Some("20226"),
-        "listOfParameters" => Some("20227"),
-        "listOfInitialAssignments" => Some("20228"),
-        "listOfRules" => Some("20229"),
-        "listOfConstraints" => Some("20230"),
-        "listOfReactions" => Some("20231"),
-        "listOfEvents" => Some("20232"),
-        "functionDefinition" => Some("20307"),
-        "unitDefinition" => Some("20419"),
-        "listOfUnits" => Some("20420"),
-        "unit" => Some("20421"),
-        "compartment" => Some("20517"),
-        "species" => match attr_name {
-            "compartment" => Some("20614"),
-            _ => Some("20623"),
-        },
-        "parameter" => Some("20706"),
-        "initialAssignment" => Some("20805"),
-        "assignmentRule" => Some("20908"),
-        "rateRule" => Some("20909"),
-        "algebraicRule" => Some("20910"),
-        "constraint" => Some("21009"),
-        "reaction" => Some("21110"),
-        "speciesReference" => Some("21116"),
-        "modifierSpeciesReference" => Some("21117"),
-        "listOfLocalParameters" => Some("21129"),
-        "kineticLaw" => Some("21132"),
-        "listOfReactants" | "listOfProducts" => Some("21150"),
-        "listOfModifiers" => Some("21151"),
-        "localParameter" => Some("21172"),
-        "eventAssignment" => Some("21214"),
-        "listOfEventAssignments" => Some("21224"),
-        "event" => Some("21225"),
-        "trigger" => Some("21226"),
-        "delay" => Some("21227"),
-        "priority" => Some("21232"),
-        _ => None,
-    }
-}
-
-/// Similar to [tag_to_attribute_rule_id], resolves a tag name into a rule ID which specifies
-/// what child elements are allowed for that particular element.
-fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
-    match tag_name {
-        "listOfFunctionDefinitions" => Some("20206"),
-        "listOfUnitDefinitions" => Some("20207"),
-        "listOfCompartments" => Some("20208"),
-        "listOfSpecies" => Some("20209"),
-        "listOfParameters" => Some("20210"),
-        "listOfInitialAssignments" => Some("20211"),
-        "listOfRules" => Some("20212"),
-        "listOfConstraints" => Some("20213"),
-        "listOfReactions" => Some("20214"),
-        "listOfEvents" => Some("20215"),
-        "listOfUnits" => Some("20415"),
-        "listOfReactants" | "listOfProducts" => Some("21104"),
-        "listOfModifiers" => Some("21105"),
-        "listOfEventAssignments" => Some("21223"),
-        "listOfLocalParameters" => Some("21128"),
-        _ => None,
-    }
-}
-
-fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'static str> {
-    // First, we catch the SBase-child issues. For the remaining elements, it depends.
-    // In some cases, there is one general rule to catch all issues (like for `model`).
-    // In other cases, each child has a separate rule defined in the specification
-    // (such as for `event`).
-
-    // Note that IDEA tends to get confused here and claims that some of these patterns are
-    // unreachable, but that seems to be a bug in their static analysis and the actual tests
-    // are passing without issues.
-    match (tag_name, child_name) {
-        (_, "annotation") => Some("10404"),
-        (_, "notes") => Some("10805"),
-        ("sbml", "model") => Some("20201"),
-        // This is technically too broad, but the only other options seems to be to write down
-        // all the list* objects, which is rather tedeous.
-        ("model", _) => Some("20205"),
-        ("functionDefinition", "math") => Some("20306"),
-        ("unitDefinition", "listOfUnits") => Some("20414"),
-        ("initialAssignment", "math") => Some("20804"),
-        ("assignmentRule", "math") | ("rateRule", "math") | ("algebraicRule", "math") => {
-            Some("20907")
-        }
-        ("constraint", "math") => Some("21007"),
-        ("constraint", "message") => Some("21008"),
-        // Same as `model` above, there is a lot of unique children to enumerate...
-        ("reaction", _) => Some("21106"),
-        ("kineticLaw", "listOfLocalParameters") => Some("21127"),
-        ("kineticLaw", "math") => Some("21130"),
-        ("event", "trigger") => Some("21201"),
-        ("trigger", "math") => Some("21209"),
-        ("delay", "math") => Some("21210"),
-        ("event", "delay") => Some("21221"),
-        ("event", "listOfEventAssignments") => Some("21222"),
-        ("event", "priority") => Some("21230"),
-        ("priority", "math") => Some("21231"),
-        ("eventAssignment", "math") => Some("21213"),
-        _ => None,
-    }
-}
-
-/// Performs a type check of a value of a specific attribute.
-/// If check fails, error is logged in *issues*.
-fn sanity_type_check<T: XmlPropertyType>(
-    attribute_name: &str,
-    xml_element: &XmlElement,
-    issues: &mut Vec<SbmlIssue>,
-) {
-    let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
-    if property.is_err() {
-        let message = format!(
-            "Sanity check failed: {0} On the attribute [{1}].",
-            property.err().unwrap(),
-            attribute_name
-        );
-        issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
-    }
-}
-
-pub(crate) fn sanity_check_of_list<T: SanityCheckable>(
-    xml_list: &XmlList<T>,
-    issues: &mut Vec<SbmlIssue>,
-) {
-    let element = xml_list.xml_element();
-    let name = element.tag_name();
-    sanity_check(element, issues);
-
-    if let Some(allowed) = ALLOWED_CHILDREN.get(name.as_str()) {
-        // TODO:
-        //      This is a minor hack which ensures we don't run sanity check on invalid child
-        //      elements, as this is what SBML test suite seems to be doing. But it is not an
-        //      explicit part of the specification as far as I can tell. Nevertheless, we are
-        //      doing a similar thing in the `validate_list_of` method. In the future, it would
-        //      be good if this part can be handled by the XmlList directly: i.e. we could get
-        //      an iterator which goes through all *allowed* elements only.
-
-        // Only sanity-check the allowed children. The rest is going to be reported as an
-        // error and is probably malformed anyway.
-        for object in xml_list.iter() {
-            if !allowed.contains(&object.tag_name().as_str()) {
-                // This is a linear-time check, which is not great, but the list of allowed
-                // children is typically very short anyway.
-                continue;
-            }
-            object.sanity_check(issues);
-        }
-    } else {
-        // Sanity-check everyone.
-        for object in xml_list.iter() {
-            object.sanity_check(issues);
-        }
-    }
-}
-
-/// Validates for a given element that its attributes (keys) are only from predefined set of
-/// attributes (keys). If not, an error is logged in the vector of issues.
-pub(crate) fn validate_allowed_attributes(
-    xml_element: &XmlElement,
-    attributes: &Vec<&str>,
-    issues: &mut Vec<SbmlIssue>,
-) {
-    let element_name = xml_element.tag_name();
-    let allowed_attributes = ALLOWED_ATTRIBUTES.get(element_name.as_str()).unwrap();
-
-    for full_name in attributes {
-        let (prefix, attr_name) = Element::separate_prefix_name(full_name);
-
-        if !prefix.is_empty() {
-            // According to the specification, the SBML core attributes should be placed in the
-            // default empty namespace, with any additional attributes (e.g. added by packages)
-            // placed in their respective namespaces. Hence, we can skip validating anything with
-            // a non-empty prefix, as this is likely a non-core attribute. however...
-            // TODO:
-            //      If we find an attribute that has the core namespace but uses a prefix,
-            //      we should report this as an error too, because it is technically out of spec.
-            continue;
-        }
-
-        if !allowed_attributes.contains(&attr_name) {
-            let message = format!(
-                "An unknown attribute [{}] of the element <{}> found.",
-                attr_name, element_name
-            );
-            // This is not written in the specification, but it seems that for validation of
-            // attributes, the official implementation gives precedence to the more
-            // element-specific rules, as opposed to using the generic "10102" rule ID.
-            // We thus override the default ID if an element with a more specific rule
-            // ID is detected.
-            let rule_id =
-                tag_to_attribute_rule_id(element_name.as_str(), attr_name).unwrap_or("10102");
-            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
-        }
-    }
-}
-
-/// Validates for a given element that its children (tag names) are only from predefined set of
-/// children (tag names). If not, an error is logged in the vector of issues.
-pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let element_name = xml_element.tag_name();
-    let allowed_children = ALLOWED_CHILDREN.get(element_name.as_str()).unwrap();
-
-    for child in xml_element.child_elements() {
-        let child_name = child.tag_name();
-        let child_namespace = child.namespace_url();
-        if child_name == "math"
-            && allowed_children.contains(&"math")
-            && child_namespace != URL_MATHML
-        {
-            // A special case to handle rule 10201, in which a `math` element is found without
-            // the proper MathML namespace. This only works if we are actually expecting a `math`
-            // element at this position.
-            let message = "Found a <math> element without the proper MathML namespace.".to_string();
-            issues.push(SbmlIssue::new_error("10201", xml_element, message));
-        } else if child_namespace == URL_SBML_CORE {
-            // All other children are expected to be in the SBML Core namespace.
-            if !allowed_children.contains(&child_name.as_str()) {
-                let message = format!(
-                    "An unknown child <{}> of the element <{}> found.",
-                    child_name, element_name
-                );
-                let rule_id =
-                    tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
-            }
-        }
-    }
-}
-
-/// Validates for a given element that its children that are required to appear at most once
-/// indeed do. Logs error if this is violated.
-pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let element_name = xml_element.tag_name();
-    let unique_children = UNIQUE_CHILDREN.get(element_name.as_str()).unwrap();
-
-    let mut counts = HashMap::new();
-    for child in xml_element.child_elements() {
-        let child_name = child.tag_name();
-        let child_namespace = child.namespace_url();
-        if child_namespace == URL_SBML_CORE || child_namespace == URL_MATHML {
-            let entry = counts.entry(child_name);
-            let count = entry.or_insert(0usize);
-            *count += 1;
-        }
-    }
-
-    for name in *unique_children {
-        if let Some(count) = counts.get(&name.to_string()) {
-            if *count > 1 {
-                let message = format!(
-                    "Multiple instances of child <{}> found in element <{}>.",
-                    name, element_name
-                );
-                let rule_id = tag_to_unique_child_rule_id(element_name.as_str(), name)
-                    .unwrap_or("SANITY_CHECK");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
-            }
-        }
-    }
 }
 
 /// Executes a validation of xml list object itself and all its children.
@@ -459,10 +138,10 @@ fn matches_sboterm_pattern(value: &Option<String>) -> bool {
 fn matches_xml_id_pattern(value: &Option<String>) -> bool {
     let pattern = formatcp!(
         "^[{0}_:][{0}{1}.\\-_:{2}{3}]*$",
-        xml::build_letter_group(),
-        xml::build_digit_group(),
-        xml::build_combining_char_group(),
-        xml::build_extender_group(),
+        xml_definitions::build_letter_group(),
+        xml_definitions::build_digit_group(),
+        xml_definitions::build_combining_char_group(),
+        xml_definitions::build_extender_group(),
     );
     let pattern = Regex::new(pattern).unwrap();
     matches_pattern(value, &pattern)
@@ -482,25 +161,6 @@ fn matches_xml_string_pattern(value: &Option<String>) -> bool {
         Regex::new(r###"^[^&'"\uFFFE\uFFFF]*(?:&(amp|apos|quot);[^&'"\uFFFE\uFFFF]*)*$"###)
             .unwrap();
     matches_pattern(value, &pattern)
-}
-
-/// ### Rule 10102
-/// An SBML XML document must not contain undefined elements or attributes in the SBML Level 3
-/// Core namespace or in a SBML Level 3 package namespace. Documents containing unknown
-/// elements or attributes placed in an SBML namespace do not conform to the SBML
-/// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
-fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let doc = xml_element.read_doc();
-    let element = xml_element.raw_element();
-    let attributes = element
-        .attributes(doc.deref())
-        .keys()
-        .map(|key| key.as_str())
-        .collect::<Vec<&str>>();
-
-    validate_allowed_attributes(xml_element, &attributes, issues);
-    validate_allowed_children(xml_element, issues);
-    validate_unique_children(xml_element, issues);
 }
 
 // TODO: Complete implementation when adding extension/packages is solved

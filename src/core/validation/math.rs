@@ -1,17 +1,16 @@
+use std::str::FromStr;
+
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
-use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
-use std::str::FromStr;
 
 impl Math {
     /// ### Applies rules:
-    ///  - **[10201](Math::apply_rule_10201)** - MathML content is permitted only within [Math] element.
     ///  - **[10202](Math::apply_rule_10202)** - Validates list of permitted elements within [Math] element.
     ///  - **[10203](Math::apply_rule_10203)** - Ensures *encoding* attribute correct placement.
     ///  - **[10204](Math::apply_rule_10204)** - Ensures *definitionURL* attribute correct placement.
@@ -30,6 +29,9 @@ impl Math {
     ///  - **[10224](Math::apply_rule_10224)** - Validates the argument of *rateOf* *csymbol* element.
     ///  - **[10225](Math::apply_rule_10225)** - Validates the value of argument of *rateOf* *csymbol* element.
     ///
+    /// Rule **10201** is applied as part of the type check, because without it,
+    /// we cannot create a valid [Math] element.
+    ///
     /// ### Ignored rules as of SBML Level 3 Version 1 Core:
     /// - **10209** - "The arguments of the MathML logical operators and, not, or, and xor must evaluate to Boolean values."
     /// - **10210** - "The arguments to the following MathML constructs must evaluate to numeric values (more specifically, they
@@ -47,7 +49,6 @@ impl Math {
     /// or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
     /// AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
-        self.apply_rule_10201(issues);
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
         self.apply_rule_10204(issues);
@@ -67,26 +68,6 @@ impl Math {
         self.apply_rule_10225(issues);
         self.apply_rule_10311(issues);
         self.apply_rule_10313(issues);
-    }
-
-    /// ### Rule 10201
-    /// This rule is *partially* satisfied by the implementation of the rule
-    /// [10102](crate::core::validation::apply_rule_10102_and_derivatives) as we check each
-    /// element present for its allowed children (except [Math] element that is
-    /// the subject of this validation procedure) and thus **MathML** content
-    /// can be present only within a [Math] element. However, additional check for
-    /// explicit or implicit valid namespace of a [Math] element must be performed.
-    ///
-    /// TODO:
-    ///     This condition is never triggered, because when the `math` element has the wrong
-    ///     namespace, the `Math` object is never created and thus cannot be validated. And since
-    ///     `math` elements are typically optional, this does not create any
-    fn apply_rule_10201(&self, issues: &mut Vec<SbmlIssue>) {
-        let namespace = self.namespace_url();
-        if namespace != URL_MATHML {
-            let message = format!("Wrong namespace usage in a `math` element. Found `{namespace}`, but `{URL_MATHML}` should be used.");
-            issues.push(SbmlIssue::new_error("10201", self, message));
-        }
     }
 
     // TODO: Complete implementation when adding extensions/packages is solved

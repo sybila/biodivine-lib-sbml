@@ -1,7 +1,8 @@
+use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
-    apply_rule_10404, SanityCheckable, SbmlValidable,
+    apply_rule_10404, SbmlValidable,
 };
 use crate::core::{Compartment, SBase};
 use crate::xml::{
@@ -39,4 +40,4 @@ impl SbmlValidable for Compartment {
     }
 }
 
-impl SanityCheckable for Compartment {}
+impl CanTypeCheck for Compartment {}

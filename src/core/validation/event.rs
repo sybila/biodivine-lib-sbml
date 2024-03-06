@@ -1,7 +1,8 @@
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, sanity_check,
-    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404,
+    validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
@@ -45,21 +46,21 @@ impl SbmlValidable for Event {
     }
 }
 
-impl SanityCheckable for Event {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
+impl CanTypeCheck for Event {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
 
         if let Some(trigger) = self.trigger().get() {
-            trigger.sanity_check(issues);
+            trigger.type_check(issues);
         }
         if let Some(priority) = self.priority().get() {
-            priority.sanity_check(issues);
+            priority.type_check(issues);
         }
         if let Some(delay) = self.delay().get() {
-            delay.sanity_check(issues);
+            delay.type_check(issues);
         }
         if let Some(list_of_event_assignments) = self.event_assignments().get() {
-            sanity_check_of_list(&list_of_event_assignments, issues);
+            type_check_of_list(&list_of_event_assignments, issues);
         }
     }
 }
@@ -141,7 +142,7 @@ impl SbmlValidable for Trigger {
     }
 }
 
-impl SanityCheckable for Trigger {}
+impl CanTypeCheck for Trigger {}
 
 impl SbmlValidable for Priority {
     fn validate(
@@ -169,7 +170,7 @@ impl SbmlValidable for Priority {
     }
 }
 
-impl SanityCheckable for Priority {}
+impl CanTypeCheck for Priority {}
 
 impl SbmlValidable for Delay {
     fn validate(
@@ -197,7 +198,7 @@ impl SbmlValidable for Delay {
     }
 }
 
-impl SanityCheckable for Delay {}
+impl CanTypeCheck for Delay {}
 
 impl SbmlValidable for EventAssignment {
     fn validate(
@@ -228,4 +229,4 @@ impl SbmlValidable for EventAssignment {
     }
 }
 
-impl SanityCheckable for EventAssignment {}
+impl CanTypeCheck for EventAssignment {}

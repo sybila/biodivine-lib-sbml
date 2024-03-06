@@ -1,8 +1,8 @@
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
-    apply_rule_10404, sanity_check, sanity_check_of_list, validate_list_of_objects,
-    SanityCheckable, SbmlValidable,
+    apply_rule_10404, validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{
     KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
@@ -51,21 +51,21 @@ impl SbmlValidable for Reaction {
     }
 }
 
-impl SanityCheckable for Reaction {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
+impl CanTypeCheck for Reaction {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
 
         if let Some(list_of_reactants) = self.reactants().get() {
-            sanity_check_of_list(&list_of_reactants, issues);
+            type_check_of_list(&list_of_reactants, issues);
         }
         if let Some(list_of_products) = self.products().get() {
-            sanity_check_of_list(&list_of_products, issues);
+            type_check_of_list(&list_of_products, issues);
         }
         if let Some(list_of_modifiers) = self.modifiers().get() {
-            sanity_check_of_list(&list_of_modifiers, issues);
+            type_check_of_list(&list_of_modifiers, issues);
         }
         if let Some(kinetic_law) = self.kinetic_law().get() {
-            kinetic_law.sanity_check(issues);
+            kinetic_law.type_check(issues);
         }
     }
 }
@@ -96,7 +96,7 @@ impl SbmlValidable for SpeciesReference {
     }
 }
 
-impl SanityCheckable for SpeciesReference {}
+impl CanTypeCheck for SpeciesReference {}
 
 impl SbmlValidable for ModifierSpeciesReference {
     fn validate(
@@ -124,7 +124,7 @@ impl SbmlValidable for ModifierSpeciesReference {
     }
 }
 
-impl SanityCheckable for ModifierSpeciesReference {}
+impl CanTypeCheck for ModifierSpeciesReference {}
 
 impl SbmlValidable for KineticLaw {
     fn validate(
@@ -159,12 +159,12 @@ impl SbmlValidable for KineticLaw {
     }
 }
 
-impl SanityCheckable for KineticLaw {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
+impl CanTypeCheck for KineticLaw {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
-            sanity_check_of_list(&list_of_local_parameters, issues);
+            type_check_of_list(&list_of_local_parameters, issues);
         }
     }
 }
@@ -223,4 +223,4 @@ impl SbmlValidable for LocalParameter {
     }
 }
 
-impl SanityCheckable for LocalParameter {}
+impl CanTypeCheck for LocalParameter {}

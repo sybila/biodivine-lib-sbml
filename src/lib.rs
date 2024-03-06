@@ -8,9 +8,10 @@ use xml_doc::{Document, Element, ReadOptions};
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10312, sanity_check, SanityCheckable, SbmlValidable,
+    apply_rule_10312, SbmlValidable,
 };
 use crate::core::{Model, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
@@ -125,7 +126,14 @@ impl Sbml {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
+    /// Perform a basic type checking procedure. If this procedure passes without issues,
+    /// the document is safe to work with. If some issues are found, working with the document
+    /// can cause the program to panic.
+    ///
+    /// Note that [Sbml::validate] internally also performs a type check before running the full
+    /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
+    /// with no issues.
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.xml.read().unwrap();
         let element = self.sbml_root.raw_element();
 
@@ -143,7 +151,7 @@ impl Sbml {
             issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
         }
 
-        sanity_check(&self.sbml_root, issues);
+        internal_type_check(&self.sbml_root, issues);
 
         if element.name(doc.deref()) == "sbml"
             && !element.namespace_decls(doc.deref()).contains_key("")
@@ -156,16 +164,18 @@ impl Sbml {
         }
 
         if let Some(model) = self.model().get() {
-            model.sanity_check(issues);
+            model.type_check(issues);
         }
     }
+
     /// Validates the document against validation rules specified in the
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     /// Eventual issues are returned in the vector. Empty vector represents a valid document.
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *xml-doc* as writing
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
-    /// UTF-16, ISO 8859-1, GBK or EUC-KR.
+    /// UTF-16, ISO 8859-1, GBK or EUC-KR. The specific error is currently covered
+    /// in [Self::read_str].
     ///
     /// ### Rule 10104
     /// is already satisfied implicitly by the use of the package *xml-doc* as loading
@@ -173,19 +183,10 @@ impl Sbml {
     /// structural and syntactic constraints.
     pub fn validate(&self) -> Vec<SbmlIssue> {
         let mut issues: Vec<SbmlIssue> = vec![];
-        // Applies rule 10102 and other derived rules which enforce that:
-        //  - Only allowed attributes and child elements appear in the SBML core and MathML
-        //    namespaces.
-        //  - Children that should appear at most once actually do.
-        //  - Required attributes are set.
-        //  - All declared attributes have correct types.
-        self.sanity_check(&mut issues);
+        self.type_check(&mut issues);
 
         if !issues.is_empty() {
-            println!("Sanity check failed, skipping validation...");
             return issues;
-        } else {
-            println!("Sanity check passed, proceeding with validation...");
         }
 
         let mut identifiers: HashSet<String> = HashSet::new();

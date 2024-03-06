@@ -1,7 +1,8 @@
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310, apply_rule_10311,
-    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, sanity_check,
-    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404,
+    validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlWrapper};
@@ -37,12 +38,12 @@ impl SbmlValidable for UnitDefinition {
     }
 }
 
-impl SanityCheckable for UnitDefinition {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
+impl CanTypeCheck for UnitDefinition {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
 
         if let Some(list_of_units) = self.units().get() {
-            sanity_check_of_list(&list_of_units, issues);
+            type_check_of_list(&list_of_units, issues);
         }
     }
 }

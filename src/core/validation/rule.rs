@@ -1,7 +1,7 @@
+use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, SanityCheckable,
-    SbmlValidable,
+    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, SbmlValidable,
 };
 use crate::core::{AbstractRule, Rule, RuleTypes, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
@@ -37,7 +37,7 @@ impl SbmlValidable for AbstractRule {
     }
 }
 
-impl SanityCheckable for AbstractRule {}
+impl CanTypeCheck for AbstractRule {}
 
 impl AbstractRule {
     /// ### Rule 10304
