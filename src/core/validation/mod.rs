@@ -9,6 +9,7 @@ use crate::xml::{
     XmlWrapper,
 };
 use crate::{Sbml, SbmlIssue};
+use const_format::formatcp;
 use regex::Regex;
 use std::collections::HashSet;
 use std::ops::Deref;
@@ -29,6 +30,7 @@ mod species;
 mod test_suite;
 mod unit;
 mod unit_definition;
+mod xml;
 
 /// Denotes an element that can be (and should be) validated against the SBML
 /// validation rules.
@@ -401,19 +403,26 @@ fn matches_pattern(value: &Option<String>, pattern: &Regex) -> bool {
 
 /// Check that a given value conforms to the **SId** syntax.
 fn matches_sid_pattern(value: &Option<String>) -> bool {
-    let pattern = Regex::new(r"^([a-zA-Z]|_)([a-zA-Z]|/d|_)*").unwrap();
+    let pattern = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*$").unwrap();
     matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **SBOTerm** syntax.
 fn matches_sboterm_pattern(value: &Option<String>) -> bool {
-    let pattern = Regex::new(r"SBO:\d{7}").unwrap();
+    let pattern = Regex::new(r"^SBO:\d{7}$").unwrap();
     matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **XML 1.0 ID** syntax.
 fn matches_xml_id_pattern(value: &Option<String>) -> bool {
-    let pattern = Regex::new(r"^(\p{L}|_|:)(\p{L}|\d|\.|-|_|:|\p{M})*").unwrap();
+    let pattern = formatcp!(
+        "^[{0}_:][{0}{1}.\\-_:{2}{3}]*$",
+        xml::build_letter_group(),
+        xml::build_digit_group(),
+        xml::build_combining_char_group(),
+        xml::build_extender_group(),
+    );
+    let pattern = Regex::new(pattern).unwrap();
     matches_pattern(value, &pattern)
 }
 
@@ -423,6 +432,10 @@ fn matches_unit_sid_pattern(value: &Option<String>) -> bool {
 }
 
 fn matches_xml_string_pattern(value: &Option<String>) -> bool {
+    // TODO:
+    //      The `&` `'` and `"` escaping is probably handled by `xml-doc` and we should just see
+    //      "normal", unescaped strings in XML attributes, hence this check is probably a bit
+    //      too aggressive. But we should make sure to test this.
     let pattern =
         Regex::new(r###"^[^&'"\uFFFE\uFFFF]*(?:&(amp|apos|quot);[^&'"\uFFFE\uFFFF]*)*$"###)
             .unwrap();
