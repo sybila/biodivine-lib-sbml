@@ -59,8 +59,8 @@ fn test_inner(filter: Option<HashSet<String>>) {
             if !test_name.ends_with(".xml") {
                 continue;
             }
-            if !test_name.contains("l3v1") {
-                // Skip any tests that are not for SBML level 3 version 1.
+            if !test_name.contains("l3v2") {
+                // Skip any tests that are not for SBML level 3 version 2.
                 continue;
             }
 
@@ -96,8 +96,8 @@ fn test_inner(filter: Option<HashSet<String>>) {
 
             for issue in issues {
                 if test_issue(issue.rule.as_str()) {
-                    if expected.contains_key(&issue.rule) {
-                        expected.remove(&issue.rule);
+                    if let Some(entry) = expected.get_mut(&issue.rule) {
+                        entry.1 -= 1;
                     } else {
                         println!(
                             " >> Found issue {} that is not in the expected list: {}",
@@ -116,7 +116,11 @@ fn test_inner(filter: Option<HashSet<String>>) {
                 }
             }
 
-            for (id, sev) in expected {
+            for (id, (sev, count)) in expected {
+                if count == 0 {
+                    // All issues of this type have been discovered.
+                    continue;
+                }
                 if test_issue(id.as_str()) {
                     println!(" >> Missed expected issue {}.", id);
                     let report = format!(
@@ -143,7 +147,7 @@ fn test_inner(filter: Option<HashSet<String>>) {
     }
 }
 
-fn read_expected_issues(result_file: &str) -> HashMap<String, SbmlIssueSeverity> {
+fn read_expected_issues(result_file: &str) -> HashMap<String, (SbmlIssueSeverity, usize)> {
     let content = std::fs::read_to_string(result_file).unwrap();
     let mut last_rule = None;
     let mut result = HashMap::new();
@@ -166,7 +170,11 @@ fn read_expected_issues(result_file: &str) -> HashMap<String, SbmlIssueSeverity>
                     panic!("Unknown severity {}", split[1].trim());
                 }
             };
-            result.insert(last_rule.as_ref().unwrap().clone(), s);
+            let key = last_rule.as_ref().unwrap().clone();
+            let entry = result.entry(key);
+            let value = entry.or_insert((s, 0));
+            assert_eq!(value.0, s);
+            value.1 += 1;
             last_rule = None;
         }
     }
