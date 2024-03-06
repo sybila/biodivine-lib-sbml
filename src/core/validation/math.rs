@@ -470,6 +470,22 @@ impl Math {
                 }
             }
         }
+
+        let piecewise_elements =
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "piecewise");
+
+        for e in piecewise_elements {
+            // Explicitly handle the piecewise operator that is technically n-ary, but must
+            // have at least one child.
+            let arg_count = e.child_elements().len();
+            if arg_count < 1 {
+                let message = format!(
+                    "Invalid number ({arg_count}) of arguments for the operator <piecewise>. \
+                        The operator <piecewise> must contain at least one <piece> or <otherwise> element."
+                );
+                issues.push(SbmlIssue::new_error("10218", &e, message));
+            }
+        }
     }
 
     /// ### Rule 10219
