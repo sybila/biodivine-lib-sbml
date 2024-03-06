@@ -345,20 +345,20 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
 /// [Event](event::Event), [EventAssignment](event::EventAssignment),
 /// [FunctionDefinition](function_definition::FunctionDefinition),
 /// [InitialAssignment](initial_assignment::InitialAssignment), [KineticLaw](reaction::KineticLaw),
-/// [ListOfCompartments](model::Model::compartments), [ListOfConstraints](model::Model::constraints),
-/// [ListOfEventAssignments](event::Event::event_assignments), [ListOfEvents](model::Model::events),
-/// [ListOfFunctionDefinitions](model::Model::function_definitions),
-/// [ListOfInitialAssignments](model::Model::initial_assignments),
+/// [ListOfCompartments](Model::compartments), [ListOfConstraints](Model::constraints),
+/// [ListOfEventAssignments](event::Event::event_assignments), [ListOfEvents](Model::events),
+/// [ListOfFunctionDefinitions](Model::function_definitions),
+/// [ListOfInitialAssignments](Model::initial_assignments),
 /// [ListOfLocalParameters](reaction::KineticLaw::local_parameters),
-/// [ListOfModifierSpeciesReferences](reaction::Reaction::modifiers), [ListOfParameters](model::Model::parameters),
-/// [ListOfReactions](model::Model::reactions), [ListOfRules](model::Model::rules),
-/// [ListOfSpecies](model::Model::species), [ListOfSpeciesReferences](reaction::Reaction::reactants),
-/// [ListOfUnitDefinitions](model::Model::unit_definitions), [ListOfUnits](unit_definition::UnitDefinition::units),
-/// [Model](model::Model), [ModifierSpeciesReference](reaction::ModifierSpeciesReference),
+/// [ListOfModifierSpeciesReferences](reaction::Reaction::modifiers), [ListOfParameters](Model::parameters),
+/// [ListOfReactions](Model::reactions), [ListOfRules](Model::rules),
+/// [ListOfSpecies](Model::species), [ListOfSpeciesReferences](reaction::Reaction::reactants),
+/// [ListOfUnitDefinitions](Model::unit_definitions), [ListOfUnits](unit_definition::UnitDefinition::units),
+/// [Model](Model), [ModifierSpeciesReference](reaction::ModifierSpeciesReference),
 /// [Parameter](parameter::Parameter), [Priority](event::Priority), [RateRule](rule::RateRule),
 /// [Reaction](reaction::Reaction), [Species](species::Species), [SpeciesReference](reaction::SpeciesReference),
 /// [Trigger](event::Trigger), and [Unit](unit::Unit), plus the *id* attribute values of any SBML Level 3 package
-/// element defined to be in the *SId* namespace of the [Model](model::Model).
+/// element defined to be in the *SId* namespace of the [Model](Model).
 pub(crate) fn apply_rule_10301(
     id: Option<String>,
     xml_element: &XmlElement,
@@ -370,6 +370,7 @@ pub(crate) fn apply_rule_10301(
 
 /// ### Rule 10307
 /// Every *metaid* attribute value must be unique across the set of all *metaid* values in a model.
+// TODO: might be placed inside SBASE validation method
 pub(crate) fn apply_rule_10307(
     meta_id: Option<String>,
     xml_element: &XmlElement,
@@ -379,6 +380,7 @@ pub(crate) fn apply_rule_10307(
     check_identifier_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10308
 /// The value of the attribute *sboTerm* must always conform to the syntax of the SBML data type
 /// **SBOTerm**, which is a string consisting of the characters `S', `B', `O', ':', followed by
@@ -397,6 +399,7 @@ pub(crate) fn apply_rule_10308(
     }
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10309
 /// The value of a *metaid* attribute must always conform to the syntax of the *XML* data type **ID**.
 pub(crate) fn apply_rule_10309(
@@ -437,7 +440,7 @@ pub(crate) fn apply_rule_10310(
 /// [LocalParameter](reaction::LocalParameter), the **substanceUnits** attribute on
 /// [Species](species::Species), the SBML **units** attribute on MathML **cn** elements, and the
 /// **substanceUnits**, **volumeUnits**, **areaUnits**, **lengthUnits**, **timeUnits** and
-/// **extentUnits** on [Model](model::Model)) must always conform to the syntax of the SBML
+/// **extentUnits** on [Model]) must always conform to the syntax of the SBML
 /// data type **UnitSId**.
 pub(crate) fn apply_rule_10311(
     attr_name: &str,
@@ -454,6 +457,7 @@ pub(crate) fn apply_rule_10311(
     }
 }
 
+// TODO: might be placed inside SBASE validation method
 /// ### Rule 10312
 /// The value of a **name** attribute must always conform to the syntax of type **string**.
 pub(crate) fn apply_rule_10312(
@@ -491,7 +495,7 @@ pub(crate) fn apply_rule_10313(
     let Some(unit_ref) = unit_ref else {
         return;
     };
-    // TODO: could be optimized - make efficient passing of the vector of unit definition identifiers or global variable or something
+    // TODO: could be optimized - make efficient passing of the vector of unit definition identifiers or use global variable or something else
     let unit_definition_ids = Model::for_child_element(xml_element)
         .unwrap()
         .unit_definition_identifiers();
@@ -502,5 +506,65 @@ pub(crate) fn apply_rule_10313(
         known <unitDefinition> identifier nor a valid base unit."
         );
         issues.push(SbmlIssue::new_error("10313", xml_element, message));
+    }
+}
+
+// TODO: might be placed inside SBASE validation method
+/// ### Rule 10401
+/// Every top-level XML element within an **Annotation** object must have an XML namespace declared.
+pub(crate) fn apply_rule_10401(annotation: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let top_level_elements = annotation.child_elements();
+
+    for element in top_level_elements {
+        // TODO: is this correct and sufficient?
+        if element.namespace_url().is_empty() {
+            let message = format!(
+                "XML namespace not declared for '{0}' in annotation.",
+                element.full_name()
+            );
+            issues.push(SbmlIssue::new_error(
+                "10401",
+                element.xml_element(),
+                message,
+            ))
+        }
+    }
+}
+
+// TODO: might be placed inside SBASE validation method
+/// ### Rule 10402
+/// A given XML namespace cannot be the namespace of more than *one* top-level element within a
+// given **Annotation** object.
+pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let top_level_elements =
+        annotation.child_elements_filtered(|el| !el.namespace_url().is_empty());
+    let mut unique_namespaces: HashSet<String> = HashSet::new();
+
+    for element in top_level_elements {
+        let namespace = element.namespace_url();
+
+        if unique_namespaces.contains(&namespace) {
+            let message = format!(
+                "XML namespace '{namespace}' found in multiple top-level elements of <annotation>."
+            );
+            issues.push(SbmlIssue::new_error("10402", &element, message));
+        } else {
+            unique_namespaces.insert(namespace);
+        }
+    }
+}
+
+// TODO: might be placed inside SBASE validation method
+/// ### Rule 10404
+/// A given SBML element may contain at most *one* **Annotation** subobject.
+pub(crate) fn apply_rule_10404(element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let annotation_elements = element.child_elements_filtered(|el| el.tag_name() == "annotation");
+
+    if annotation_elements.len() > 1 {
+        let message = format!(
+            "Multiple annotation elements found in <{0}>.",
+            element.tag_name()
+        );
+        issues.push(SbmlIssue::new_error("10404", element, message));
     }
 }

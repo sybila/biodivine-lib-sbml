@@ -95,6 +95,16 @@ pub trait XmlWrapper: Into<XmlElement> {
         self.raw_element().name(doc.deref()).to_string()
     }
 
+    fn prefix(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().prefix(doc.deref()).to_string()
+    }
+
+    fn full_name(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().full_name(doc.deref()).to_string()
+    }
+
     /// Returns the namespace URL of the XML tag referenced within this [XmlWrapper].
     ///
     /// Same notes about value immutability as for [Self::name] apply.

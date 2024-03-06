@@ -1,9 +1,10 @@
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, SanityCheckable, SbmlValidable,
+    apply_rule_10310, apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404,
+    SanityCheckable, SbmlValidable,
 };
 use crate::core::{SBase, Unit};
-use crate::xml::{OptionalXmlProperty, XmlWrapper};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -25,6 +26,12 @@ impl SbmlValidable for Unit {
         apply_rule_10309(meta_id.get(), xml_element, issues);
         apply_rule_10310(id.get(), xml_element, issues);
         apply_rule_10312(self.name().get(), xml_element, issues);
+
+        if let Some(annotation) = self.annotation().get() {
+            apply_rule_10401(&annotation, issues);
+            apply_rule_10402(&annotation, issues);
+            apply_rule_10404(xml_element, issues);
+        }
     }
 }
 
