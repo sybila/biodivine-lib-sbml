@@ -252,7 +252,11 @@ impl Model {
 
     /// Returns a vector of values from within the **ci** elements appearing in all [AlgebraicRule]
     /// objects in this model.
-    pub(crate) fn algebraic_rule_ci_values(&self) -> Vec<String> {
+    ///
+    /// Does not include instances when **ci** is used as an argument of the `rateOf` symbol, since
+    /// this technically does not count as a "variable" (i.e. the expression determines the
+    /// rate of the symbol, not the value of the symbol).  
+    pub(crate) fn algebraic_rule_ci_variables(&self) -> Vec<String> {
         if let Some(rules) = self.rules().get() {
             rules
                 .iter()
@@ -261,7 +265,26 @@ impl Model {
                 .flat_map(|math| {
                     math.recursive_child_elements()
                         .into_iter()
-                        .filter(|child| child.tag_name() == "ci")
+                        .filter(|child| {
+                            if child.tag_name() == "ci" {
+                                if let Some(parent) = child.parent() {
+                                    let is_apply = parent.tag_name() == "apply";
+                                    let is_rate_of = parent
+                                        .get_child_at(0)
+                                        .map(|it| {
+                                            it.get_attribute("definitionURL").is_some_and(|url| {
+                                                url == "http://www.sbml.org/sbml/symbols/rateOf"
+                                            })
+                                        })
+                                        .unwrap_or(false);
+                                    !(is_apply && is_rate_of)
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            }
+                        })
                         .map(|ci| ci.text_content())
                         .collect::<Vec<String>>()
                 })

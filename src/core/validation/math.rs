@@ -639,7 +639,7 @@ impl Math {
             }
         });
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_rule_parameters = model.algebraic_rule_ci_values();
+        let algebraic_rule_parameters = model.algebraic_rule_ci_variables();
 
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
@@ -670,7 +670,7 @@ impl Math {
     pub(crate) fn apply_rule_10225(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_ci_values = model.algebraic_rule_ci_values();
+        let algebraic_ci_values = model.algebraic_rule_ci_variables();
         let apply_elements = self.recursive_child_elements_filtered(|child| {
             child.tag_name() == "apply" && {
                 let children = child.child_elements();
