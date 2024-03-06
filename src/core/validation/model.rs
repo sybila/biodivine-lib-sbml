@@ -2,7 +2,7 @@ use crate::core::validation::type_check::{internal_type_check, type_check_of_lis
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
-    apply_rule_10404, validate_list_of_objects, SbmlValidable,
+    validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
@@ -32,7 +32,6 @@ impl SbmlValidable for Model {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
-            apply_rule_10404(xml_element, issues);
         }
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);

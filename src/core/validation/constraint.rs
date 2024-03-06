@@ -1,7 +1,7 @@
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, SbmlValidable,
+    apply_rule_10312, apply_rule_10401, apply_rule_10402, SbmlValidable,
 };
 use crate::core::{Constraint, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
@@ -29,7 +29,6 @@ impl SbmlValidable for Constraint {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
-            apply_rule_10404(xml_element, issues);
         }
         if let Some(math) = self.math().get() {
             math.validate(issues);
