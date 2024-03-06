@@ -2,7 +2,7 @@ use crate::core::sbase::SbmlUtils;
 use crate::xml::{
     RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 

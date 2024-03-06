@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
 use crate::xml::{OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement};
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct InitialAssignment(XmlElement);

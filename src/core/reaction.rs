@@ -4,7 +4,7 @@ use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, RequiredProperty, RequiredXmlProperty,
     XmlDefault, XmlDocument, XmlElement, XmlList,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Reaction(XmlElement);

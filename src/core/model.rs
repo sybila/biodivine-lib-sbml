@@ -8,7 +8,7 @@ use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
     XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 use std::ops::Deref;
 

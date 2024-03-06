@@ -39,6 +39,9 @@ pub mod core;
 
 pub mod constants;
 
+#[cfg(test)]
+pub mod test_suite;
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
@@ -51,18 +54,14 @@ pub struct Sbml {
 }
 
 impl Sbml {
-    pub fn read_path(path: &str) -> Result<Sbml, String> {
-        let file_contents = match std::fs::read_to_string(path) {
-            Ok(file_contents) => file_contents,
-            Err(why) => return Err(why.to_string()),
-        };
+    pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
         // Only accept documents that are using UTF-8.
         let opts = ReadOptions {
             enforce_encoding: true,
             encoding: Some("UTF-8".to_string()),
             ..Default::default()
         };
-        let doc = match Document::parse_str_with_opts(file_contents.as_str(), opts) {
+        let doc = match Document::parse_str_with_opts(file_contents, opts) {
             Ok(doc) => doc,
             Err(why) => {
                 return if matches!(why, xml_doc::Error::CannotDecode) {
@@ -78,6 +77,14 @@ impl Sbml {
             xml: xml_document.clone(),
             sbml_root: XmlElement::new_raw(xml_document, root),
         })
+    }
+
+    pub fn read_path(path: &str) -> Result<Sbml, String> {
+        let file_contents = match std::fs::read_to_string(path) {
+            Ok(file_contents) => file_contents,
+            Err(why) => return Err(why.to_string()),
+        };
+        Self::read_str(file_contents.as_str())
     }
 
     pub fn write_path(&self, path: &str) -> Result<(), String> {

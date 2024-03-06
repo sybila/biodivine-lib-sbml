@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
 use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement};
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual function definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
