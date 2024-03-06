@@ -127,6 +127,8 @@ impl Sbml {
             ));
         }
 
+        self.apply_rule_10102(issues);
+
         if let Some(model) = self.model().get() {
             model.sanity_check(issues);
         }
@@ -145,6 +147,12 @@ impl Sbml {
     /// structural and syntactic constraints.
     pub fn validate(&self) -> Vec<SbmlIssue> {
         let mut issues: Vec<SbmlIssue> = vec![];
+        // Applies rule 10102 and other derived rules which enforce that:
+        //  - Only allowed attributes and child elements appear in the SBML core and MathML
+        //    namespaces.
+        //  - Children that should appear at most once actually do.
+        //  - Required attributes are set.
+        //  - All declared attributes have correct types.
         self.sanity_check(&mut issues);
 
         if !issues.is_empty() {
@@ -153,8 +161,6 @@ impl Sbml {
         } else {
             println!("Sanity check passed, proceeding with validation...");
         }
-
-        self.apply_rule_10102(&mut issues);
 
         if let Some(model) = self.model().get() {
             let mut identifiers: HashSet<String> = HashSet::new();

@@ -71,11 +71,16 @@ impl Math {
 
     /// ### Rule 10201
     /// This rule is *partially* satisfied by the implementation of the rule
-    /// [10102](crate::core::validation::apply_rule_10102) as we check each
+    /// [10102](crate::core::validation::apply_rule_10102_and_derivatives) as we check each
     /// element present for its allowed children (except [Math] element that is
     /// the subject of this validation procedure) and thus **MathML** content
     /// can be present only within a [Math] element. However, additional check for
     /// explicit or implicit valid namespace of a [Math] element must be performed.
+    ///
+    /// TODO:
+    ///     This condition is never triggered, because when the `math` element has the wrong
+    ///     namespace, the `Math` object is never created and thus cannot be validated. And since
+    ///     `math` elements are typically optional, this does not create any
     fn apply_rule_10201(&self, issues: &mut Vec<SbmlIssue>) {
         let namespace = self.namespace_url();
         if namespace != URL_MATHML {

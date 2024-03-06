@@ -1,7 +1,7 @@
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404,
-    sanity_check, sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10312, apply_rule_10401, apply_rule_10402, apply_rule_10404, sanity_check,
+    sanity_check_of_list, validate_list_of_objects, SanityCheckable, SbmlValidable,
 };
 use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
@@ -17,7 +17,6 @@ impl SbmlValidable for Event {
     ) {
         let xml_element = self.xml_element();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -125,7 +124,6 @@ impl SbmlValidable for Trigger {
     ) {
         let xml_element = self.xml_element();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -154,7 +152,6 @@ impl SbmlValidable for Priority {
     ) {
         let xml_element = self.xml_element();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -183,7 +180,6 @@ impl SbmlValidable for Delay {
     ) {
         let xml_element = self.xml_element();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(self.id().get(), xml_element, issues, identifiers);
         apply_rule_10307(self.meta_id().get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -214,7 +210,6 @@ impl SbmlValidable for EventAssignment {
         let id = self.id();
         let meta_id = self.meta_id();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(id.get(), xml_element, issues, identifiers);
         apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);

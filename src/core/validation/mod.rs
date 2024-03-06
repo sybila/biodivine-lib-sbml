@@ -2,7 +2,7 @@ use crate::constants::element::{
     ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, MATHML_ALLOWED_CHILDREN,
     REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
 };
-use crate::constants::namespaces::URL_SBML_CORE;
+use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
 use crate::core::{BaseUnit, Model, SBase};
 use crate::xml::{
     DynamicProperty, OptionalXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
@@ -81,7 +81,8 @@ impl Sbml {
                 issues,
             );
 
-            validate_allowed_children(root_element, &root_element.child_elements(), issues);
+            validate_allowed_children(root_element, issues);
+            validate_unique_children(root_element, issues);
         } else {
             let message = format!("Invalid root element <{}> found.", root_element.tag_name());
             issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
@@ -98,18 +99,11 @@ pub(crate) fn sanity_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>
     let attributes = xml_element.attributes();
     let element_name = xml_element.tag_name();
 
-    let children = xml_element.child_elements_filtered(|e| e.namespace_url() == URL_SBML_CORE);
-
-    validate_allowed_children(xml_element, &children, issues);
-    validate_unique_children(xml_element, &children, issues);
+    apply_rule_10102_and_derivatives(xml_element, issues);
 
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
             if !attributes.contains_key(&req_attr.to_string()) {
-                // TODO:
-                //      These have their own SBML issue IDs assigned to them. We have started
-                //      adding concrete issue IDs based on the element name, but we probably
-                //      should double-check that all relevant issues are covered by this.
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
                 );
@@ -350,43 +344,52 @@ pub(crate) fn validate_allowed_attributes(
 
 /// Validates for a given element that its children (tag names) are only from predefined set of
 /// children (tag names). If not, an error is logged in the vector of issues.
-pub(crate) fn validate_allowed_children(
-    xml_element: &XmlElement,
-    children: &[XmlElement],
-    issues: &mut Vec<SbmlIssue>,
-) {
+pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
     let allowed_children = ALLOWED_CHILDREN.get(element_name.as_str()).unwrap();
 
-    for child in children {
-        let child_full_name = child.full_name();
-        let (_prefix, child_name) = Element::separate_prefix_name(child_full_name.as_str());
-        if !allowed_children.contains(&child_name) {
-            let message = format!(
-                "An unknown child <{}> of the element <{}> found.",
-                child_name, element_name
-            );
-            let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
-            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+    for child in xml_element.child_elements() {
+        let child_name = child.tag_name();
+        let child_namespace = child.namespace_url();
+        if child_name == "math"
+            && allowed_children.contains(&"math")
+            && child_namespace != URL_MATHML
+        {
+            // A special case to handle rule 10201, in which a `math` element is found without
+            // the proper MathML namespace. This only works if we are actually expecting a `math`
+            // element at this position.
+            let message = "Found a <math> element without the proper MathML namespace.".to_string();
+            issues.push(SbmlIssue::new_error("10201", xml_element, message));
+        } else if child_namespace == URL_SBML_CORE {
+            // All other children are expected to be in the SBML Core namespace.
+            if !allowed_children.contains(&child_name.as_str()) {
+                let message = format!(
+                    "An unknown child <{}> of the element <{}> found.",
+                    child_name, element_name
+                );
+                let rule_id =
+                    tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
+                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+            }
         }
     }
 }
 
 /// Validates for a given element that its children that are required to appear at most once
 /// indeed do. Logs error if this is violated.
-pub(crate) fn validate_unique_children(
-    xml_element: &XmlElement,
-    children: &[XmlElement],
-    issues: &mut Vec<SbmlIssue>,
-) {
+pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
     let unique_children = UNIQUE_CHILDREN.get(element_name.as_str()).unwrap();
 
     let mut counts = HashMap::new();
-    for child in children {
-        let entry = counts.entry(child.tag_name());
-        let count = entry.or_insert(0usize);
-        *count += 1;
+    for child in xml_element.child_elements() {
+        let child_name = child.tag_name();
+        let child_namespace = child.namespace_url();
+        if child_namespace == URL_SBML_CORE || child_namespace == URL_MATHML {
+            let entry = counts.entry(child_name);
+            let count = entry.or_insert(0usize);
+            *count += 1;
+        }
     }
 
     for name in *unique_children {
@@ -416,7 +419,6 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     let id = list.id();
     let meta_id = list.meta_id();
 
-    apply_rule_10102(list.xml_element(), issues);
     apply_rule_10301(id.get(), xml_element, issues, identifiers);
     apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
     apply_rule_10308(list.sbo_term().get(), xml_element, issues);
@@ -520,7 +522,7 @@ fn matches_xml_string_pattern(value: &Option<String>) -> bool {
 /// Core namespace or in a SBML Level 3 package namespace. Documents containing unknown
 /// elements or attributes placed in an SBML namespace do not conform to the SBML
 /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
-pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let doc = xml_element.read_doc();
     let element = xml_element.raw_element();
     let attributes = element
@@ -528,11 +530,10 @@ pub(crate) fn apply_rule_10102(xml_element: &XmlElement, issues: &mut Vec<SbmlIs
         .keys()
         .map(|key| key.as_str())
         .collect::<Vec<&str>>();
-    let children =
-        xml_element.child_elements_filtered(|element| element.namespace_url() == URL_SBML_CORE);
 
     validate_allowed_attributes(xml_element, &attributes, issues);
-    validate_allowed_children(xml_element, &children, issues);
+    validate_allowed_children(xml_element, issues);
+    validate_unique_children(xml_element, issues);
 }
 
 // TODO: Complete implementation when adding extension/packages is solved
