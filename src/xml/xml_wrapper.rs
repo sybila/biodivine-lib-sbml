@@ -125,18 +125,32 @@ pub trait XmlWrapper: Into<XmlElement> {
         self.raw_element().attributes(doc.deref()).clone()
     }
 
-    /// Returns true if this [XmlWrapper] instance has an attribute of the given name.
+    /// Returns true if this [XmlWrapper] instance has an attribute of the given name, ignoring
+    /// the namespace of the attribute.
     fn has_attribute(&self, name: &str) -> bool {
         let doc = self.read_doc();
-        self.raw_element().attribute(doc.deref(), name).is_some()
+        let attributes = self.raw_element().attributes(doc.deref());
+        for full_name in attributes.keys() {
+            let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
+            if attr_name == name {
+                return true;
+            }
+        }
+        false
     }
 
-    /// Return the raw value of the specified attribute, if it is defined.
+    /// Return the raw value of the specified attribute, if it is defined. Ignores the namespace
+    /// of the attribute.
     fn get_attribute(&self, name: &str) -> Option<String> {
         let doc = self.read_doc();
-        self.raw_element()
-            .attribute(doc.deref(), name)
-            .map(|it| it.to_string())
+        let attributes = self.raw_element().attributes(doc.deref());
+        for (full_name, value) in attributes {
+            let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
+            if attr_name == name {
+                return Some(value.clone());
+            }
+        }
+        None
     }
 
     /// Return the text content of this element and all its children.

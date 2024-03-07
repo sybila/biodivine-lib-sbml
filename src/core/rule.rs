@@ -4,7 +4,7 @@ use crate::xml::{
     OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
     XmlNamedSubtype, XmlSupertype,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 pub enum RuleTypes {
     // Other is used to represent rules that are only defined in (hypothetical) SBML extensions

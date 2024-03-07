@@ -1,13 +1,20 @@
-use crate::constants::namespaces::URL_SBML_CORE;
-use crate::core::validation::{sanity_check, SanityCheckable, SbmlValidable};
-use crate::core::Model;
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 use std::collections::HashSet;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
+
+use xml_doc::{Document, Element, ReadOptions};
+
 use xml::{OptionalChild, RequiredProperty};
-use xml_doc::{Document, Element};
+
+use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
+use crate::core::validation::{
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10312, SbmlValidable,
+};
+use crate::core::{Model, SBase};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
@@ -33,6 +40,9 @@ pub mod core;
 
 pub mod constants;
 
+#[cfg(test)]
+pub mod test_suite;
+
 /// The object that "wraps" an XML document in a SBML-specific API.
 ///
 /// This is mostly just the place where you can specify what SBML version and
@@ -45,14 +55,22 @@ pub struct Sbml {
 }
 
 impl Sbml {
-    pub fn read_path(path: &str) -> Result<Sbml, String> {
-        let file_contents = match std::fs::read_to_string(path) {
-            Ok(file_contents) => file_contents,
-            Err(why) => return Err(why.to_string()),
+    pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
+        // Only accept documents that are using UTF-8.
+        let opts = ReadOptions {
+            enforce_encoding: true,
+            encoding: Some("UTF-8".to_string()),
+            ..Default::default()
         };
-        let doc = match Document::from_str(file_contents.as_str()) {
+        let doc = match Document::parse_str_with_opts(file_contents, opts) {
             Ok(doc) => doc,
-            Err(why) => return Err(why.to_string()),
+            Err(why) => {
+                return if matches!(why, xml_doc::Error::CannotDecode) {
+                    Err("SBML documents must use UTF-8 encoding.".to_string())
+                } else {
+                    Err(why.to_string())
+                }
+            }
         };
         let root = doc.root_element().unwrap();
         let xml_document = Arc::new(RwLock::new(doc));
@@ -60,6 +78,14 @@ impl Sbml {
             xml: xml_document.clone(),
             sbml_root: XmlElement::new_raw(xml_document, root),
         })
+    }
+
+    pub fn read_path(path: &str) -> Result<Sbml, String> {
+        let file_contents = match std::fs::read_to_string(path) {
+            Ok(file_contents) => file_contents,
+            Err(why) => return Err(why.to_string()),
+        };
+        Self::read_str(file_contents.as_str())
     }
 
     pub fn write_path(&self, path: &str) -> Result<(), String> {
@@ -100,10 +126,32 @@ impl Sbml {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(&self.sbml_root, issues);
+    /// Perform a basic type checking procedure. If this procedure passes without issues,
+    /// the document is safe to work with. If some issues are found, working with the document
+    /// can cause the program to panic.
+    ///
+    /// Note that [Sbml::validate] internally also performs a type check before running the full
+    /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
+    /// with no issues.
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
         let doc = self.xml.read().unwrap();
         let element = self.sbml_root.raw_element();
+
+        // For the root SBMl element, there are a few extra conditions related to the rule 10102.
+        if doc.container().child_elements(doc.deref()).len() != 1 {
+            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
+            let message = "The document contains multiple root nodes. \
+                Only one root <sbml> object is allowed.";
+            issues.push(SbmlIssue::new_error("10102", &container, message));
+        }
+
+        let root_element = self.sbml_root.xml_element();
+        if root_element.tag_name() != "sbml" {
+            let message = format!("Invalid root element <{}> found.", root_element.tag_name());
+            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
+        }
+
+        internal_type_check(&self.sbml_root, issues);
 
         if element.name(doc.deref()) == "sbml"
             && !element.namespace_decls(doc.deref()).contains_key("")
@@ -116,16 +164,18 @@ impl Sbml {
         }
 
         if let Some(model) = self.model().get() {
-            model.sanity_check(issues);
+            model.type_check(issues);
         }
     }
+
     /// Validates the document against validation rules specified in the
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     /// Eventual issues are returned in the vector. Empty vector represents a valid document.
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *xml-doc* as writing
     /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
-    /// UTF-16, ISO 8859-1, GBK or EUC-KR.
+    /// UTF-16, ISO 8859-1, GBK or EUC-KR. The specific error is currently covered
+    /// in [Self::read_str].
     ///
     /// ### Rule 10104
     /// is already satisfied implicitly by the use of the package *xml-doc* as loading
@@ -133,21 +183,27 @@ impl Sbml {
     /// structural and syntactic constraints.
     pub fn validate(&self) -> Vec<SbmlIssue> {
         let mut issues: Vec<SbmlIssue> = vec![];
-        self.sanity_check(&mut issues);
+        self.type_check(&mut issues);
 
         if !issues.is_empty() {
-            println!("Sanity check failed, skipping validation...");
             return issues;
-        } else {
-            println!("Sanity check passed, proceeding with validation...");
         }
 
-        self.apply_rule_10102(&mut issues);
+        let mut identifiers: HashSet<String> = HashSet::new();
+        let mut meta_ids: HashSet<String> = HashSet::new();
+
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10301(id.get(), xml_element, &mut issues, &mut identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, &mut issues, &mut meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, &mut issues);
+        apply_rule_10309(meta_id.get(), xml_element, &mut issues);
+        apply_rule_10310(id.get(), xml_element, &mut issues);
+        apply_rule_10312(self.name().get(), xml_element, &mut issues);
 
         if let Some(model) = self.model().get() {
-            let mut identifiers: HashSet<String> = HashSet::new();
-            let mut meta_ids: HashSet<String> = HashSet::new();
-
             model.validate(&mut issues, &mut identifiers, &mut meta_ids);
         }
 
@@ -168,6 +224,27 @@ impl Default for Sbml {
         }
     }
 }
+
+impl XmlWrapper for Sbml {
+    fn xml_element(&self) -> &XmlElement {
+        &self.sbml_root
+    }
+
+    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
+        Sbml {
+            xml: element.document(),
+            sbml_root: element.xml_element().clone(),
+        }
+    }
+}
+
+impl From<Sbml> for XmlElement {
+    fn from(value: Sbml) -> Self {
+        value.sbml_root
+    }
+}
+
+impl SBase for Sbml {}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SbmlIssue {

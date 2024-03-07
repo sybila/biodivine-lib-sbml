@@ -2,7 +2,7 @@ use crate::core::sbase::SbmlUtils;
 use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual compartment definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
