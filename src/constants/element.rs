@@ -97,9 +97,9 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "reaction" => &["id", "reversible"],
     "listOfReactants" => &[],
     "listOfProducts" => &[],
-    "speciesReference" => &["constant"],
+    "speciesReference" => &["constant", "species"],
     "listOfModifiers" => &[],
-    "modifierSpeciesReference" => &[],
+    "modifierSpeciesReference" => &["species"],
     "kineticLaw" => &[],
     "listOfLocalParameters" => &[],
     "localParameter" => &["id"],
@@ -151,6 +151,52 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "priority" => extended_sbase_children!("math"),
     "delay" => extended_sbase_children!("math"),
     "listOfEventAssignments" => extended_sbase_children!("eventAssignment"),
+    "eventAssignment" => extended_sbase_children!("math")
+};
+
+/// This lists the (optional) child elements that must be unique in each SBML Core element.
+///
+/// For the most part, this is the same as [ALLOWED_CHILDREN], except for lists, where the item
+/// elements can obviously repeat.
+pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
+    "sbml" => extended_sbase_children!("model"),
+    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),
+    "listOfFunctionDefinitions" => extended_sbase_children!(),
+    "functionDefinition" => extended_sbase_children!("math"),
+    "listOfUnitDefinitions" => extended_sbase_children!(),
+    "unitDefinition" => extended_sbase_children!("listOfUnits"),
+    "listOfUnits" => extended_sbase_children!(),
+    "unit" => extended_sbase_children!(),
+    "listOfCompartments" => extended_sbase_children!(),
+    "compartment" => extended_sbase_children!(),
+    "listOfSpecies" => extended_sbase_children!(),
+    "species" => extended_sbase_children!(),
+    "listOfParameters" => extended_sbase_children!(),
+    "parameter" => extended_sbase_children!(),
+    "listOfInitialAssignments" => extended_sbase_children!(),
+    "initialAssignment" => extended_sbase_children!("math"),
+    "listOfRules" => extended_sbase_children!(),
+    "algebraicRule" => extended_sbase_children!("math"),
+    "assignmentRule" => extended_sbase_children!("math"),
+    "rateRule" => extended_sbase_children!("math"),
+    "listOfConstraints" => extended_sbase_children!(),
+    "constraint" => extended_sbase_children!("math", "message"),
+    "listOfReactions" => extended_sbase_children!(),
+    "reaction" => extended_sbase_children!("listOfReactants", "listOfProducts", "listOfModifiers", "kineticLaw"),
+    "listOfReactants" => extended_sbase_children!(),
+    "listOfProducts" => extended_sbase_children!(),
+    "speciesReference" => extended_sbase_children!(),
+    "listOfModifiers" => extended_sbase_children!(),
+    "modifierSpeciesReference" => extended_sbase_children!(),
+    "kineticLaw" => extended_sbase_children!("math", "listOfLocalParameters"),
+    "listOfLocalParameters" => extended_sbase_children!(),
+    "localParameter" => extended_sbase_children!(),
+    "listOfEvents" => extended_sbase_children!(),
+    "event" => extended_sbase_children!("trigger", "priority", "delay", "listOfEventAssignments"),
+    "trigger" => extended_sbase_children!("math"),
+    "priority" => extended_sbase_children!("math"),
+    "delay" => extended_sbase_children!("math"),
+    "listOfEventAssignments" => extended_sbase_children!(),
     "eventAssignment" => extended_sbase_children!("math")
 };
 

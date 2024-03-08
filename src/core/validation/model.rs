@@ -1,20 +1,15 @@
-use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
-
-use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
-use crate::core::RuleTypes::{Algebraic, Assignment};
-use crate::core::RuleTypes::Rate;
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
-    apply_rule_10402, apply_rule_10404, sanity_check, sanity_check_of_list,
-    SanityCheckable, SbmlValidable, validate_list_of_objects,
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
+    validate_list_of_objects, SbmlValidable,
 };
-use crate::core::validation::model::VertexType::{EQUATION, VARIABLE};
+use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
-use crate::xml::{
-    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper,
-};
+use std::collections::{HashMap, HashSet};
+use crate::core::RuleTypes::{Algebraic, Assignment, Rate};
+use crate::core::validation::model::VertexType::{EQUATION, VARIABLE};
 
 impl SbmlValidable for Model {
     fn validate(
@@ -27,7 +22,6 @@ impl SbmlValidable for Model {
         let id = self.id();
         let meta_id = self.meta_id();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(id.get(), xml_element, issues, identifiers);
         apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -40,7 +34,6 @@ impl SbmlValidable for Model {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
-            apply_rule_10404(xml_element, issues);
         }
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);
@@ -77,39 +70,39 @@ impl SbmlValidable for Model {
     }
 }
 
-impl SanityCheckable for Model {
-    fn sanity_check(&self, issues: &mut Vec<SbmlIssue>) {
-        sanity_check(self.xml_element(), issues);
+impl CanTypeCheck for Model {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
-            sanity_check_of_list(&list_of_function_definition, issues);
+            type_check_of_list(&list_of_function_definition, issues);
         }
         if let Some(list_of_unit_definitions) = self.unit_definitions().get() {
-            sanity_check_of_list(&list_of_unit_definitions, issues);
+            type_check_of_list(&list_of_unit_definitions, issues);
         }
         if let Some(list_of_compartments) = self.compartments().get() {
-            sanity_check_of_list(&list_of_compartments, issues);
+            type_check_of_list(&list_of_compartments, issues);
         }
         if let Some(list_of_species) = self.species().get() {
-            sanity_check_of_list(&list_of_species, issues);
+            type_check_of_list(&list_of_species, issues);
         }
         if let Some(list_of_parameters) = self.parameters().get() {
-            sanity_check_of_list(&list_of_parameters, issues);
+            type_check_of_list(&list_of_parameters, issues);
         }
         if let Some(list_of_initial_assignment) = self.initial_assignments().get() {
-            sanity_check_of_list(&list_of_initial_assignment, issues);
+            type_check_of_list(&list_of_initial_assignment, issues);
         }
         if let Some(list_of_rules) = self.rules().get() {
-            sanity_check_of_list(&list_of_rules, issues);
+            type_check_of_list(&list_of_rules, issues);
         }
         if let Some(list_of_constraint) = self.constraints().get() {
-            sanity_check_of_list(&list_of_constraint, issues);
+            type_check_of_list(&list_of_constraint, issues);
         }
         if let Some(list_of_reactions) = self.reactions().get() {
-            sanity_check_of_list(&list_of_reactions, issues);
+            type_check_of_list(&list_of_reactions, issues);
         }
         if let Some(list_of_events) = self.events().get() {
-            sanity_check_of_list(&list_of_events, issues);
+            type_check_of_list(&list_of_events, issues);
         }
     }
 }

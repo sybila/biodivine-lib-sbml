@@ -1,17 +1,16 @@
+use std::str::FromStr;
+
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
-use crate::constants::namespaces::URL_MATHML;
 use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
-use std::str::FromStr;
 
 impl Math {
     /// ### Applies rules:
-    ///  - **[10201](Math::apply_rule_10201)** - MathML content is permitted only within [Math] element.
     ///  - **[10202](Math::apply_rule_10202)** - Validates list of permitted elements within [Math] element.
     ///  - **[10203](Math::apply_rule_10203)** - Ensures *encoding* attribute correct placement.
     ///  - **[10204](Math::apply_rule_10204)** - Ensures *definitionURL* attribute correct placement.
@@ -30,6 +29,9 @@ impl Math {
     ///  - **[10224](Math::apply_rule_10224)** - Validates the argument of *rateOf* *csymbol* element.
     ///  - **[10225](Math::apply_rule_10225)** - Validates the value of argument of *rateOf* *csymbol* element.
     ///
+    /// Rule **10201** is applied as part of the type check, because without it,
+    /// we cannot create a valid [Math] element.
+    ///
     /// ### Ignored rules as of SBML Level 3 Version 1 Core:
     /// - **10209** - "The arguments of the MathML logical operators and, not, or, and xor must evaluate to Boolean values."
     /// - **10210** - "The arguments to the following MathML constructs must evaluate to numeric values (more specifically, they
@@ -47,7 +49,6 @@ impl Math {
     /// or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
     /// AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
-        self.apply_rule_10201(issues);
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
         self.apply_rule_10204(issues);
@@ -67,21 +68,6 @@ impl Math {
         self.apply_rule_10225(issues);
         self.apply_rule_10311(issues);
         self.apply_rule_10313(issues);
-    }
-
-    /// ### Rule 10201
-    /// This rule is *partially* satisfied by the implementation of the rule
-    /// [10102](crate::core::validation::apply_rule_10102) as we check each
-    /// element present for its allowed children (except [Math] element that is
-    /// the subject of this validation procedure) and thus **MathML** content
-    /// can be present only within a [Math] element. However, additional check for
-    /// explicit or implicit valid namespace of a [Math] element must be performed.
-    fn apply_rule_10201(&self, issues: &mut Vec<SbmlIssue>) {
-        let namespace = self.namespace_url();
-        if namespace != URL_MATHML {
-            let message = format!("Wrong namespace usage in a `math` element. Found `{namespace}`, but `{URL_MATHML}` should be used.");
-            issues.push(SbmlIssue::new_error("10201", self, message));
-        }
     }
 
     // TODO: Complete implementation when adding extensions/packages is solved
@@ -195,7 +181,7 @@ impl Math {
                     "Attribute [type] found on element <{name}>, which is forbidden. \
                         Attribute [type] is only permitted on <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10204", &child, message));
+                issues.push(SbmlIssue::new_error("10206", &child, message));
             }
         }
     }
@@ -218,7 +204,7 @@ impl Math {
                     "Invalid type value found '{value}'. Permitted values are: \
                     'e-notation', 'real', 'integer' and 'rational'"
                 );
-                issues.push(SbmlIssue::new_error("10206", &child, message));
+                issues.push(SbmlIssue::new_error("10207", &child, message));
             }
         }
     }
@@ -465,6 +451,22 @@ impl Math {
                 }
             }
         }
+
+        let piecewise_elements =
+            self.recursive_child_elements_filtered(|child| child.tag_name() == "piecewise");
+
+        for e in piecewise_elements {
+            // Explicitly handle the piecewise operator that is technically n-ary, but must
+            // have at least one child.
+            let arg_count = e.child_elements().len();
+            if arg_count < 1 {
+                let message = format!(
+                    "Invalid number ({arg_count}) of arguments for the operator <piecewise>. \
+                        The operator <piecewise> must contain at least one <piece> or <otherwise> element."
+                );
+                issues.push(SbmlIssue::new_error("10218", &e, message));
+            }
+        }
     }
 
     /// ### Rule 10219
@@ -493,16 +495,15 @@ impl Math {
             let id = function_call.text_content();
 
             if func_identifiers.contains(&id) {
-                let expected_args = model
-                    .function_definition_arguments(id.as_str())
-                    .unwrap_or(0);
-
-                if arg_count != expected_args {
-                    let message = format!(
-                        "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
+                // Only check argument count if the function is actually declared.
+                if let Some(expected_args) = model.function_definition_arguments(&id) {
+                    if arg_count != expected_args {
+                        let message = format!(
+                            "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
                                 The function '{id}' takes {expected_args} arguments."
-                    );
-                    issues.push(SbmlIssue::new_error("10219", function_call, message));
+                        );
+                        issues.push(SbmlIssue::new_error("10219", function_call, message));
+                    }
                 }
             }
         }
@@ -602,7 +603,7 @@ impl Math {
     /// [AlgebraicRule](crate::core::rule::AlgebraicRule).
     pub(crate) fn apply_rule_10224(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
-        let ci_elements = self.recursive_child_elements_filtered(|child| {
+        let apply_elements = self.recursive_child_elements_filtered(|child| {
             child.tag_name() == "apply" && {
                 let children = child.child_elements();
                 if children.len() < 2 {
@@ -619,9 +620,10 @@ impl Math {
             }
         });
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_rule_parameters = model.algebraic_rule_ci_values();
+        let algebraic_rule_parameters = model.algebraic_rule_ci_variables();
 
-        for ci in ci_elements {
+        for apply in apply_elements {
+            let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
             let value = ci.text_content();
             let is_target_constant = model.is_rateof_target_constant(value.as_str());
 
@@ -649,8 +651,8 @@ impl Math {
     pub(crate) fn apply_rule_10225(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
         let assignment_rule_variables = model.assignment_rule_variables();
-        let algebraic_ci_values = model.algebraic_rule_ci_values();
-        let ci_elements = self.recursive_child_elements_filtered(|child| {
+        let algebraic_ci_values = model.algebraic_rule_ci_variables();
+        let apply_elements = self.recursive_child_elements_filtered(|child| {
             child.tag_name() == "apply" && {
                 let children = child.child_elements();
                 if children.len() < 2 {
@@ -667,7 +669,8 @@ impl Math {
             }
         });
 
-        for ci in ci_elements {
+        for apply in apply_elements {
+            let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
             let value = ci.text_content();
 
             let Some(species) = model.find_species(value.as_str()) else {

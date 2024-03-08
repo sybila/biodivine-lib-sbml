@@ -1,6 +1,6 @@
 use crate::constants::namespaces::NS_MATHML;
 use crate::xml::{XmlDefault, XmlDocument, XmlElement, XmlWrapper};
-use macros::XmlWrapper;
+use sbml_macros::XmlWrapper;
 
 /// A [Math] element represents an [XmlElement] related to MathML which is
 /// separated from SBML specification.

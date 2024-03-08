@@ -1,15 +1,15 @@
-use std::collections::HashSet;
-
-use crate::core::{Model, Reaction, SBase, SimpleSpeciesReference, Species, SpeciesReference};
+use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::{
-    apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
-    apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
-    apply_rule_10402, apply_rule_10404, SanityCheckable, SbmlValidable,
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
+    SbmlValidable,
 };
-use crate::SbmlIssue;
+use crate::core::{Model, Reaction, SBase, SimpleSpeciesReference, Species, SpeciesReference};
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlProperty, XmlWrapper,
 };
+use crate::SbmlIssue;
+use std::collections::HashSet;
 
 impl SbmlValidable for Species {
     fn validate(
@@ -23,7 +23,6 @@ impl SbmlValidable for Species {
         let meta_id = self.meta_id();
         let sbstnc_units = self.substance_units();
 
-        apply_rule_10102(xml_element, issues);
         apply_rule_10301(Some(id.get()), xml_element, issues, identifiers);
         apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
         apply_rule_10308(self.sbo_term().get(), xml_element, issues);
@@ -36,12 +35,11 @@ impl SbmlValidable for Species {
         if let Some(annotation) = self.annotation().get() {
             apply_rule_10401(&annotation, issues);
             apply_rule_10402(&annotation, issues);
-            apply_rule_10404(xml_element, issues);
         }
     }
 }
 
-impl SanityCheckable for Species {}
+impl CanTypeCheck for Species {}
 
 impl Species {
     /// Determines if this particular species is referenced as a reactant or product in one or more

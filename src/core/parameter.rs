@@ -2,7 +2,7 @@ use crate::core::sbase::SbmlUtils;
 use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual parameter definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
