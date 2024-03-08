@@ -152,39 +152,28 @@ impl Model {
         self.load_vertices(bipartite_graph)
     }
 
-    // TODO: needs refactoring because this function is way too BIG
     fn load_vertices(&self, mut graph: HashMap<Vertex, Vec<Vertex>>) {
         let mut vertices_equation: Vec<VertexKey> = Vec::new();
         let mut vertices_variable: Vec<VertexKey> = Vec::new();
-        // - get equation vertices as of species having boundaryCondition=false AND constant=false AND
-        //   which are referenced as reactant or product in one or more Reaction objects that contain
-        //   KineticLaw objects
-        // - also get variable vertices as of species having constant=false
-        self.species().get().and_then(|species| {
-            Some(species.iter().for_each(|s| {
-                if (!s.boundary_condition().get()
-                    && !s.constant().get()
-                    && s.is_referenced_by_reaction(&self))
-                {
-                    vertices_equation.push(VertexKey::SPECIES)
-                }
-                if (!s.constant().get()) {
-                    vertices_variable.push(VertexKey::SPECIES)
-                }
-            }))
-        });
-        // get equation vertices as of rules
-        self.rules().get().and_then(|rules| {
-            Some(rules.iter().for_each(|r| match r.cast() {
-                Assignment(_) => vertices_equation.push(VertexKey::ASSIGNMENT_RULE),
-                Rate(_) => vertices_equation.push(VertexKey::RATE_RULE),
-                Algebraic(_) => vertices_equation.push(VertexKey::ALGEBRAIC_RULE),
-                _ => (),
-            }))
-        });
-        // - get equation vertices as of kinetic law
-        // - also get variable vertices as of SpeciesReference objects (reactants and products of a Reaction)
-        // - also get variable vertices as of Reaction objects
+
+        self.get_vertices_species(&mut vertices_equation, &mut vertices_variable);
+        self.get_vertices_rules(&mut vertices_equation);
+        self.get_vertices_reactions(&mut vertices_equation, &mut vertices_variable);
+        self.get_vertices_compartments(&mut vertices_variable);
+
+        insert_vertices(&mut graph, vertices_equation, EQUATION);
+        insert_vertices(&mut graph, vertices_variable, VARIABLE);
+    }
+
+    /// Performs the following:
+    /// - get equation vertices as of kinetic law
+    /// - also get variable vertices as of SpeciesReference objects (reactants and products of a Reaction)
+    /// - also get variable vertices as of Reaction objects
+    fn get_vertices_reactions(
+        &self,
+        vertices_equation: &mut Vec<VertexKey>,
+        vertices_variable: &mut Vec<VertexKey>,
+    ) {
         self.reactions().get().and_then(|reactions| {
             Some(reactions.iter().for_each(|reaction| {
                 reaction
@@ -210,8 +199,49 @@ impl Model {
                 vertices_variable.push(VertexKey::REACTION)
             }))
         });
+    }
 
-        // get variable vertices as of compartments having constant=false
+    /// Performs the following:
+    /// - get equation vertices as of species having boundaryCondition=false AND constant=false AND
+    ///   which are referenced as reactant or product in one or more Reaction objects that contain
+    ///   KineticLaw objects
+    /// - also get variable vertices as of species having constant=false
+    fn get_vertices_species(
+        &self,
+        vertices_equation: &mut Vec<VertexKey>,
+        vertices_variable: &mut Vec<VertexKey>,
+    ) {
+        self.species().get().and_then(|species| {
+            Some(species.iter().for_each(|s| {
+                if (!s.boundary_condition().get()
+                    && !s.constant().get()
+                    && s.is_referenced_by_reaction(&self))
+                {
+                    vertices_equation.push(VertexKey::SPECIES)
+                }
+                if (!s.constant().get()) {
+                    vertices_variable.push(VertexKey::SPECIES)
+                }
+            }))
+        });
+    }
+
+    /// Performs the following:
+    /// - get equation vertices as of rules
+    fn get_vertices_rules(&self, vertices_equation: &mut Vec<VertexKey>) {
+        self.rules().get().and_then(|rules| {
+            Some(rules.iter().for_each(|r| match r.cast() {
+                Assignment(_) => vertices_equation.push(VertexKey::ASSIGNMENT_RULE),
+                Rate(_) => vertices_equation.push(VertexKey::RATE_RULE),
+                Algebraic(_) => vertices_equation.push(VertexKey::ALGEBRAIC_RULE),
+                _ => (),
+            }))
+        });
+    }
+
+    /// Performs the following:
+    /// - get variable vertices as of compartments having constant=false
+    fn get_vertices_compartments(&self, vertices_variable: &mut Vec<VertexKey>) {
         self.compartments().get().and_then(|compartments| {
             Some(
                 compartments
@@ -220,6 +250,11 @@ impl Model {
                     .for_each(|compartment| vertices_variable.push(VertexKey::COMPARTMENT)),
             )
         });
+    }
+
+    /// Performs the following:
+    /// - get variable vertices as of parameters having constant=false
+    fn get_vertices_parameters(&self, vertices_variable: &mut Vec<VertexKey>) {
         self.parameters().get().and_then(|parameters| {
             Some(
                 parameters
@@ -228,9 +263,6 @@ impl Model {
                     .for_each(|p| vertices_variable.push(VertexKey::PARAMETER)),
             )
         });
-
-        insert_vertices(&mut graph, vertices_equation, EQUATION);
-        insert_vertices(&mut graph, vertices_variable, VARIABLE);
     }
 }
 
