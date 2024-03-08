@@ -1,6 +1,7 @@
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
 use std::ops::DerefMut;
+use std::sync::Arc;
 use xml_doc::Element;
 
 /// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [Document].
@@ -15,6 +16,14 @@ pub struct XmlElement {
     pub(super) document: XmlDocument,
     pub(super) element: Element,
 }
+
+impl PartialEq for XmlElement {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.document, &other.document) && self.element == other.element
+    }
+}
+
+impl Eq for XmlElement {}
 
 impl XmlElement {
     /// Wrap an existing [Element] as [XmlElement] in the context of the given [XmlDocument].
