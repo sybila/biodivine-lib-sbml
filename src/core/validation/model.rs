@@ -1,15 +1,17 @@
+use crate::core::validation::model::VertexType::{Equation, Variable};
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
     validate_list_of_objects, SbmlValidable,
 };
+use crate::core::RuleTypes::{Algebraic, Assignment, Rate};
 use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper};
+use crate::xml::{
+    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper,
+};
 use crate::SbmlIssue;
 use std::collections::{HashMap, HashSet};
-use crate::core::RuleTypes::{Algebraic, Assignment, Rate};
-use crate::core::validation::model::VertexType::{EQUATION, VARIABLE};
 
 impl SbmlValidable for Model {
     fn validate(
@@ -142,10 +144,10 @@ impl Model {
     pub(crate) fn apply_rule_10601(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
         let mut bipartite_graph: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
 
-        self.load_vertices(bipartite_graph)
+        self.load_vertices(&mut bipartite_graph)
     }
 
-    fn load_vertices(&self, mut graph: HashMap<Vertex, Vec<Vertex>>) {
+    fn load_vertices(&self, graph: &mut HashMap<Vertex, Vec<Vertex>>) {
         let mut vertices_equation: Vec<VertexKey> = Vec::new();
         let mut vertices_variable: Vec<VertexKey> = Vec::new();
 
@@ -153,9 +155,10 @@ impl Model {
         self.get_vertices_rules(&mut vertices_equation);
         self.get_vertices_reactions(&mut vertices_equation, &mut vertices_variable);
         self.get_vertices_compartments(&mut vertices_variable);
+        self.get_vertices_parameters(&mut vertices_variable);
 
-        insert_vertices(&mut graph, vertices_equation, EQUATION);
-        insert_vertices(&mut graph, vertices_variable, VARIABLE);
+        insert_vertices(graph, vertices_equation, Equation);
+        insert_vertices(graph, vertices_variable, Variable);
     }
 
     /// Performs the following:
@@ -172,13 +175,13 @@ impl Model {
                 reaction
                     .kinetic_law()
                     .get()
-                    .and_then(|kinetic_law| Some(vertices_equation.push(VertexKey::KINETIC_LAW)));
+                    .and_then(|_| Some(vertices_equation.push(VertexKey::KineticLaw)));
                 reaction.reactants().get().and_then(|reactants| {
                     Some(
                         reactants
                             .iter()
                             .filter(|reactant| !reactant.constant().get())
-                            .for_each(|_| vertices_variable.push(VertexKey::SPECIES_REFERENCE)),
+                            .for_each(|_| vertices_variable.push(VertexKey::SpeciesReference)),
                     )
                 });
                 reaction.products().get().and_then(|products| {
@@ -186,10 +189,10 @@ impl Model {
                         products
                             .iter()
                             .filter(|product| !product.constant().get())
-                            .for_each(|_| vertices_variable.push(VertexKey::SPECIES_REFERENCE)),
+                            .for_each(|_| vertices_variable.push(VertexKey::SpeciesReference)),
                     )
                 });
-                vertices_variable.push(VertexKey::REACTION)
+                vertices_variable.push(VertexKey::Reaction)
             }))
         });
     }
@@ -206,14 +209,14 @@ impl Model {
     ) {
         self.species().get().and_then(|species| {
             Some(species.iter().for_each(|s| {
-                if (!s.boundary_condition().get()
+                if !s.boundary_condition().get()
                     && !s.constant().get()
-                    && s.is_referenced_by_reaction(&self))
+                    && s.is_referenced_by_reaction(&self)
                 {
-                    vertices_equation.push(VertexKey::SPECIES)
+                    vertices_equation.push(VertexKey::Species)
                 }
-                if (!s.constant().get()) {
-                    vertices_variable.push(VertexKey::SPECIES)
+                if !s.constant().get() {
+                    vertices_variable.push(VertexKey::Species)
                 }
             }))
         });
@@ -224,9 +227,9 @@ impl Model {
     fn get_vertices_rules(&self, vertices_equation: &mut Vec<VertexKey>) {
         self.rules().get().and_then(|rules| {
             Some(rules.iter().for_each(|r| match r.cast() {
-                Assignment(_) => vertices_equation.push(VertexKey::ASSIGNMENT_RULE),
-                Rate(_) => vertices_equation.push(VertexKey::RATE_RULE),
-                Algebraic(_) => vertices_equation.push(VertexKey::ALGEBRAIC_RULE),
+                Assignment(_) => vertices_equation.push(VertexKey::AssignmentRule),
+                Rate(_) => vertices_equation.push(VertexKey::RateRule),
+                Algebraic(_) => vertices_equation.push(VertexKey::AlgebraicRule),
                 _ => (),
             }))
         });
@@ -234,15 +237,13 @@ impl Model {
 
     /// Performs the following:
     /// - get variable vertices as of compartments having constant=false
-    fn get_vertices_compartments(&self, vertices_variable: &mut Vec<VertexKey>) {
-        self.compartments().get().and_then(|compartments| {
-            Some(
-                compartments
-                    .iter()
-                    .filter(|c| !c.constant().get())
-                    .for_each(|compartment| vertices_variable.push(VertexKey::COMPARTMENT)),
-            )
-        });
+    fn get_vertices_compartments(&self, vertices_variable: &mut Vec<VertexKey>) -> Option<()> {
+        let compartments = self.compartments().get()?;
+        compartments
+            .iter()
+            .filter(|c| !c.constant().get())
+            .for_each(|_| vertices_variable.push(VertexKey::Compartment));
+        Some(())
     }
 
     /// Performs the following:
@@ -253,30 +254,32 @@ impl Model {
                 parameters
                     .iter()
                     .filter(|p| !p.constant().get())
-                    .for_each(|p| vertices_variable.push(VertexKey::PARAMETER)),
+                    .for_each(|_| vertices_variable.push(VertexKey::Parameter)),
             )
         });
     }
 }
 
+#[derive(PartialEq, Eq, Hash)]
 enum VertexKey {
-    SPECIES,
-    ASSIGNMENT_RULE,
-    RATE_RULE,
-    ALGEBRAIC_RULE,
-    KINETIC_LAW,
-    COMPARTMENT,
-    PARAMETER,
-    SPECIES_REFERENCE,
-    REACTION,
+    Species,
+    AssignmentRule,
+    RateRule,
+    AlgebraicRule,
+    KineticLaw,
+    Compartment,
+    Parameter,
+    SpeciesReference,
+    Reaction,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum VertexType {
-    EQUATION,
-    VARIABLE,
+    Equation,
+    Variable,
 }
 
+#[derive(Hash, PartialEq, Eq)]
 struct Vertex {
     v_key: VertexKey,
     v_type: VertexType,

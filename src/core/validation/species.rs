@@ -46,10 +46,9 @@ impl Species {
     /// [Reaction] objects containing [KineticLaw] objects.
     pub(crate) fn is_referenced_by_reaction(&self, model: &Model) -> bool {
         let Some(reactions) = model.reactions().get() else {
-            false
+            return false;
         };
         let reactions = reactions
-            .as_vec()
             .iter()
             .filter(|r| {
                 r.kinetic_law().is_set() && (r.products().is_set() || r.reactants().is_set())
