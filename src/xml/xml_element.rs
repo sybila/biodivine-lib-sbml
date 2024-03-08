@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
 use std::ops::DerefMut;
@@ -20,6 +21,12 @@ pub struct XmlElement {
 impl PartialEq for XmlElement {
     fn eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.document, &other.document) && self.element == other.element
+    }
+}
+
+impl Hash for XmlElement{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.element.hash(state);
     }
 }
 
