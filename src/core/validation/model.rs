@@ -1,18 +1,17 @@
-use std::collections::{HashMap, HashSet};
-
-use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
-use crate::core::RuleTypes::{Algebraic, Assignment, Rate};
+use crate::core::validation::model::VertexType::{Equation, Variable};
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
-    SbmlValidable, validate_list_of_objects,
+    validate_list_of_objects, SbmlValidable,
 };
-use crate::core::validation::model::VertexType::{Equation, Variable};
-use crate::core::validation::type_check::{CanTypeCheck, internal_type_check, type_check_of_list};
-use crate::SbmlIssue;
+use crate::core::RuleTypes::{Algebraic, Assignment, Rate};
+use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper,
 };
+use crate::SbmlIssue;
+use std::collections::{HashMap, HashSet};
 
 impl SbmlValidable for Model {
     fn validate(
@@ -144,7 +143,9 @@ impl Model {
 
     pub(crate) fn apply_rule_10601(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
         let mut bipartite_graph: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
-        self.load_vertices(&mut bipartite_graph)
+
+        self.load_vertices(&mut bipartite_graph);
+        compute_edges(&mut bipartite_graph);
     }
 
     fn load_vertices(&self, graph: &mut HashMap<Vertex, Vec<Vertex>>) {
@@ -172,16 +173,18 @@ impl Model {
     ) {
         self.reactions().get().and_then(|reactions| {
             Some(reactions.iter().for_each(|reaction| {
-                reaction
-                    .kinetic_law()
-                    .get()
-                    .and_then(|kl| Some(vertices_equation.push((VertexKey::KineticLaw, kl.xml_element().clone()))));
+                reaction.kinetic_law().get().and_then(|kl| {
+                    Some(vertices_equation.push((VertexKey::KineticLaw, kl.xml_element().clone())))
+                });
                 reaction.reactants().get().and_then(|reactants| {
                     Some(
                         reactants
                             .iter()
                             .filter(|reactant| !reactant.constant().get())
-                            .for_each(|r| vertices_variable.push((VertexKey::SpeciesReference, r.xml_element().clone()))),
+                            .for_each(|r| {
+                                vertices_variable
+                                    .push((VertexKey::SpeciesReference, r.xml_element().clone()))
+                            }),
                     )
                 });
                 reaction.products().get().and_then(|products| {
@@ -189,7 +192,10 @@ impl Model {
                         products
                             .iter()
                             .filter(|product| !product.constant().get())
-                            .for_each(|p| vertices_variable.push((VertexKey::SpeciesReference, p.xml_element().clone()))),
+                            .for_each(|p| {
+                                vertices_variable
+                                    .push((VertexKey::SpeciesReference, p.xml_element().clone()))
+                            }),
                     )
                 });
                 vertices_variable.push((VertexKey::Reaction, reaction.xml_element().clone()))
@@ -227,9 +233,13 @@ impl Model {
     fn get_vertices_rules(&self, vertices_equation: &mut Vec<(VertexKey, XmlElement)>) {
         self.rules().get().and_then(|rules| {
             Some(rules.iter().for_each(|r| match r.cast() {
-                Assignment(r) => vertices_equation.push((VertexKey::AssignmentRule, r.xml_element().clone())),
+                Assignment(r) => {
+                    vertices_equation.push((VertexKey::AssignmentRule, r.xml_element().clone()))
+                }
                 Rate(r) => vertices_equation.push((VertexKey::RateRule, r.xml_element().clone())),
-                Algebraic(r) => vertices_equation.push((VertexKey::AlgebraicRule, r.xml_element().clone())),
+                Algebraic(r) => {
+                    vertices_equation.push((VertexKey::AlgebraicRule, r.xml_element().clone()))
+                }
                 _ => (),
             }))
         });
@@ -237,12 +247,17 @@ impl Model {
 
     /// Performs the following:
     /// - get variable vertices as of compartments having constant=false
-    fn get_vertices_compartments(&self, vertices_variable: &mut Vec<(VertexKey, XmlElement)>) -> Option<()> {
+    fn get_vertices_compartments(
+        &self,
+        vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
+    ) -> Option<()> {
         let compartments = self.compartments().get()?;
         compartments
             .iter()
             .filter(|c| !c.constant().get())
-            .for_each(|c| vertices_variable.push((VertexKey::Compartment, c.xml_element().clone())));
+            .for_each(|c| {
+                vertices_variable.push((VertexKey::Compartment, c.xml_element().clone()))
+            });
         Some(())
     }
 
@@ -254,7 +269,9 @@ impl Model {
                 parameters
                     .iter()
                     .filter(|p| !p.constant().get())
-                    .for_each(|p| vertices_variable.push((VertexKey::Parameter, p.xml_element().clone()))),
+                    .for_each(|p| {
+                        vertices_variable.push((VertexKey::Parameter, p.xml_element().clone()))
+                    }),
             )
         });
     }
@@ -283,7 +300,7 @@ enum VertexType {
 struct Vertex {
     v_key: VertexKey,
     v_type: VertexType,
-    xml_element: XmlElement
+    xml_element: XmlElement,
 }
 
 fn insert_vertices(
@@ -296,9 +313,11 @@ fn insert_vertices(
             Vertex {
                 v_key: key_element.0,
                 v_type: vertex_type,
-                xml_element: key_element.1
+                xml_element: key_element.1,
             },
             Vec::new(),
         );
     }
 }
+
+fn compute_edges(graph: &mut HashMap<Vertex, Vec<Vertex>>) {}

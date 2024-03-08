@@ -1,6 +1,6 @@
-use std::hash::{Hash, Hasher};
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
+use std::hash::{Hash, Hasher};
 use std::ops::DerefMut;
 use std::sync::Arc;
 use xml_doc::Element;
@@ -24,7 +24,7 @@ impl PartialEq for XmlElement {
     }
 }
 
-impl Hash for XmlElement{
+impl Hash for XmlElement {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.element.hash(state);
     }
