@@ -146,7 +146,7 @@ impl Model {
         apply_rule_10313(extent_units.name(), extent_units.get(), xml_element, issues);
     }
 
-    pub(crate) fn apply_rule_10701(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    pub(crate) fn apply_rule_10601(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
         let mut bipartite_graph: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
 
         self.load_vertices(bipartite_graph)
