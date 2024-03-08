@@ -1,12 +1,16 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 
-use crate::core::{AbstractRule, Model, SBase, Species, UnitDefinition};
+use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
+use crate::core::RuleTypes::{Algebraic, Assignment};
+use crate::core::RuleTypes::Rate;
 use crate::core::validation::{
     apply_rule_10102, apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309,
     apply_rule_10310, apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401,
     apply_rule_10402, apply_rule_10404, sanity_check, sanity_check_of_list,
     SanityCheckable, SbmlValidable, validate_list_of_objects,
 };
+use crate::core::validation::model::VertexType::{EQUATION, VARIABLE};
 use crate::SbmlIssue;
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlElement, XmlProperty, XmlWrapper,
@@ -143,35 +147,128 @@ impl Model {
     }
 
     pub(crate) fn apply_rule_10701(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-        enum VertexType {
-            EQUATION,
-            VARIABLE,
-        }
-        struct Vertex {
-            id: String,
-            vtype: VertexType,
-        }
-        let mut bipartite_graph = HashMap::new();
+        let mut bipartite_graph: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
 
-        if let Some(species) = self.species().get() {
-            let species_list = species
-                .iter()
-                .filter(|species| {
-                    !species.boundary_condition().get()
-                        && !species.constant().get()
-                        && species.is_referenced_by_reaction(&self)
-                })
-                .collect::<Vec<Species>>();
+        self.load_vertices(bipartite_graph)
+    }
 
-            for species in species_list {
-                bipartite_graph.insert(
-                    Vertex {
-                        id: species.id().get(),
-                        vtype: VertexType::EQUATION,
-                    },
-                    Vec::new(),
-                );
-            }
-        }
+    // TODO: needs refactoring because this function is way too BIG
+    fn load_vertices(&self, mut graph: HashMap<Vertex, Vec<Vertex>>) {
+        let mut vertices_equation: Vec<VertexKey> = Vec::new();
+        let mut vertices_variable: Vec<VertexKey> = Vec::new();
+        // - get equation vertices as of species having boundaryCondition=false AND constant=false AND
+        //   which are referenced as reactant or product in one or more Reaction objects that contain
+        //   KineticLaw objects
+        // - also get variable vertices as of species having constant=false
+        self.species().get().and_then(|species| {
+            Some(species.iter().for_each(|s| {
+                if (!s.boundary_condition().get()
+                    && !s.constant().get()
+                    && s.is_referenced_by_reaction(&self))
+                {
+                    vertices_equation.push(VertexKey::SPECIES)
+                }
+                if (!s.constant().get()) {
+                    vertices_variable.push(VertexKey::SPECIES)
+                }
+            }))
+        });
+        // get equation vertices as of rules
+        self.rules().get().and_then(|rules| {
+            Some(rules.iter().for_each(|r| match r.cast() {
+                Assignment(_) => vertices_equation.push(VertexKey::ASSIGNMENT_RULE),
+                Rate(_) => vertices_equation.push(VertexKey::RATE_RULE),
+                Algebraic(_) => vertices_equation.push(VertexKey::ALGEBRAIC_RULE),
+                _ => (),
+            }))
+        });
+        // - get equation vertices as of kinetic law
+        // - also get variable vertices as of SpeciesReference objects (reactants and products of a Reaction)
+        // - also get variable vertices as of Reaction objects
+        self.reactions().get().and_then(|reactions| {
+            Some(reactions.iter().for_each(|reaction| {
+                reaction
+                    .kinetic_law()
+                    .get()
+                    .and_then(|kinetic_law| Some(vertices_equation.push(VertexKey::KINETIC_LAW)));
+                reaction.reactants().get().and_then(|reactants| {
+                    Some(
+                        reactants
+                            .iter()
+                            .filter(|reactant| !reactant.constant().get())
+                            .for_each(|_| vertices_variable.push(VertexKey::SPECIES_REFERENCE)),
+                    )
+                });
+                reaction.products().get().and_then(|products| {
+                    Some(
+                        products
+                            .iter()
+                            .filter(|product| !product.constant().get())
+                            .for_each(|_| vertices_variable.push(VertexKey::SPECIES_REFERENCE)),
+                    )
+                });
+                vertices_variable.push(VertexKey::REACTION)
+            }))
+        });
+
+        // get variable vertices as of compartments having constant=false
+        self.compartments().get().and_then(|compartments| {
+            Some(
+                compartments
+                    .iter()
+                    .filter(|c| !c.constant().get())
+                    .for_each(|compartment| vertices_variable.push(VertexKey::COMPARTMENT)),
+            )
+        });
+        self.parameters().get().and_then(|parameters| {
+            Some(
+                parameters
+                    .iter()
+                    .filter(|p| !p.constant().get())
+                    .for_each(|p| vertices_variable.push(VertexKey::PARAMETER)),
+            )
+        });
+
+        insert_vertices(&mut graph, vertices_equation, EQUATION);
+        insert_vertices(&mut graph, vertices_variable, VARIABLE);
+    }
+}
+
+enum VertexKey {
+    SPECIES,
+    ASSIGNMENT_RULE,
+    RATE_RULE,
+    ALGEBRAIC_RULE,
+    KINETIC_LAW,
+    COMPARTMENT,
+    PARAMETER,
+    SPECIES_REFERENCE,
+    REACTION,
+}
+
+#[derive(Clone, Copy)]
+enum VertexType {
+    EQUATION,
+    VARIABLE,
+}
+
+struct Vertex {
+    v_key: VertexKey,
+    v_type: VertexType,
+}
+
+fn insert_vertices(
+    graph: &mut HashMap<Vertex, Vec<Vertex>>,
+    keys: Vec<VertexKey>,
+    vertex_type: VertexType,
+) {
+    for key in keys {
+        graph.insert(
+            Vertex {
+                v_key: key,
+                v_type: vertex_type,
+            },
+            Vec::new(),
+        );
     }
 }
