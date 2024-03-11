@@ -142,138 +142,10 @@ impl Model {
     }
 
     pub(crate) fn apply_rule_10601(&self, xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-        let mut bipartite_graph: HashMap<Vertex, Vec<Vertex>> = HashMap::new();
+        let mut bipartite_graph: HashMap<Vertex, Vec<&Vertex>> = HashMap::new();
 
-        self.load_vertices(&mut bipartite_graph);
+        load_vertices(&self, &mut bipartite_graph);
         compute_edges(&mut bipartite_graph);
-    }
-
-    fn load_vertices(&self, graph: &mut HashMap<Vertex, Vec<Vertex>>) {
-        let mut vertices_equation: Vec<(VertexKey, XmlElement)> = Vec::new();
-        let mut vertices_variable: Vec<(VertexKey, XmlElement)> = Vec::new();
-
-        self.get_vertices_species(&mut vertices_equation, &mut vertices_variable);
-        self.get_vertices_rules(&mut vertices_equation);
-        self.get_vertices_reactions(&mut vertices_equation, &mut vertices_variable);
-        self.get_vertices_compartments(&mut vertices_variable);
-        self.get_vertices_parameters(&mut vertices_variable);
-
-        insert_vertices(graph, vertices_equation, Equation);
-        insert_vertices(graph, vertices_variable, Variable);
-    }
-
-    /// Performs the following:
-    /// - get equation vertices as of kinetic law
-    /// - also get variable vertices as of SpeciesReference objects (reactants and products of a Reaction)
-    /// - also get variable vertices as of Reaction objects
-    fn get_vertices_reactions(
-        &self,
-        vertices_equation: &mut Vec<(VertexKey, XmlElement)>,
-        vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
-    ) {
-        self.reactions().get().and_then(|reactions| {
-            Some(reactions.iter().for_each(|reaction| {
-                reaction.kinetic_law().get().and_then(|kl| {
-                    Some(vertices_equation.push((VertexKey::KineticLaw, kl.xml_element().clone())))
-                });
-                reaction.reactants().get().and_then(|reactants| {
-                    Some(
-                        reactants
-                            .iter()
-                            .filter(|reactant| !reactant.constant().get())
-                            .for_each(|r| {
-                                vertices_variable
-                                    .push((VertexKey::SpeciesReference, r.xml_element().clone()))
-                            }),
-                    )
-                });
-                reaction.products().get().and_then(|products| {
-                    Some(
-                        products
-                            .iter()
-                            .filter(|product| !product.constant().get())
-                            .for_each(|p| {
-                                vertices_variable
-                                    .push((VertexKey::SpeciesReference, p.xml_element().clone()))
-                            }),
-                    )
-                });
-                vertices_variable.push((VertexKey::Reaction, reaction.xml_element().clone()))
-            }))
-        });
-    }
-
-    /// Performs the following:
-    /// - get equation vertices as of species having boundaryCondition=false AND constant=false AND
-    ///   which are referenced as reactant or product in one or more Reaction objects that contain
-    ///   KineticLaw objects
-    /// - also get variable vertices as of species having constant=false
-    fn get_vertices_species(
-        &self,
-        vertices_equation: &mut Vec<(VertexKey, XmlElement)>,
-        vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
-    ) {
-        self.species().get().and_then(|species| {
-            Some(species.iter().for_each(|s| {
-                if !s.boundary_condition().get()
-                    && !s.constant().get()
-                    && s.is_referenced_by_reaction(&self)
-                {
-                    vertices_equation.push((VertexKey::Species, s.xml_element().clone()))
-                }
-                if !s.constant().get() {
-                    vertices_variable.push((VertexKey::Species, s.xml_element().clone()))
-                }
-            }))
-        });
-    }
-
-    /// Performs the following:
-    /// - get equation vertices as of rules
-    fn get_vertices_rules(&self, vertices_equation: &mut Vec<(VertexKey, XmlElement)>) {
-        self.rules().get().and_then(|rules| {
-            Some(rules.iter().for_each(|r| match r.cast() {
-                Assignment(r) => {
-                    vertices_equation.push((VertexKey::AssignmentRule, r.xml_element().clone()))
-                }
-                Rate(r) => vertices_equation.push((VertexKey::RateRule, r.xml_element().clone())),
-                Algebraic(r) => {
-                    vertices_equation.push((VertexKey::AlgebraicRule, r.xml_element().clone()))
-                }
-                _ => (),
-            }))
-        });
-    }
-
-    /// Performs the following:
-    /// - get variable vertices as of compartments having constant=false
-    fn get_vertices_compartments(
-        &self,
-        vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
-    ) -> Option<()> {
-        let compartments = self.compartments().get()?;
-        compartments
-            .iter()
-            .filter(|c| !c.constant().get())
-            .for_each(|c| {
-                vertices_variable.push((VertexKey::Compartment, c.xml_element().clone()))
-            });
-        Some(())
-    }
-
-    /// Performs the following:
-    /// - get variable vertices as of parameters having constant=false
-    fn get_vertices_parameters(&self, vertices_variable: &mut Vec<(VertexKey, XmlElement)>) {
-        self.parameters().get().and_then(|parameters| {
-            Some(
-                parameters
-                    .iter()
-                    .filter(|p| !p.constant().get())
-                    .for_each(|p| {
-                        vertices_variable.push((VertexKey::Parameter, p.xml_element().clone()))
-                    }),
-            )
-        });
     }
 }
 
@@ -304,7 +176,7 @@ struct Vertex {
 }
 
 fn insert_vertices(
-    graph: &mut HashMap<Vertex, Vec<Vertex>>,
+    graph: &mut HashMap<Vertex, Vec<&Vertex>>,
     key_element_list: Vec<(VertexKey, XmlElement)>,
     vertex_type: VertexType,
 ) {
@@ -320,4 +192,156 @@ fn insert_vertices(
     }
 }
 
-fn compute_edges(graph: &mut HashMap<Vertex, Vec<Vertex>>) {}
+fn load_vertices(model: &Model, graph: &mut HashMap<Vertex, Vec<&Vertex>>) {
+    let mut vertices_equation: Vec<(VertexKey, XmlElement)> = Vec::new();
+    let mut vertices_variable: Vec<(VertexKey, XmlElement)> = Vec::new();
+
+    get_vertices_species(model, &mut vertices_equation, &mut vertices_variable);
+    get_vertices_rules(model, &mut vertices_equation);
+    get_vertices_reactions(model, &mut vertices_equation, &mut vertices_variable);
+    get_vertices_compartments(model, &mut vertices_variable);
+    get_vertices_parameters(model, &mut vertices_variable);
+
+    insert_vertices(graph, vertices_equation, Equation);
+    insert_vertices(graph, vertices_variable, Variable);
+}
+
+/// Performs the following:
+/// - get equation vertices as of species having boundaryCondition=false AND constant=false AND
+///   which are referenced as reactant or product in one or more Reaction objects that contain
+///   KineticLaw objects
+/// - also get variable vertices as of species having constant=false
+fn get_vertices_species(
+    model: &Model,
+    vertices_equation: &mut Vec<(VertexKey, XmlElement)>,
+    vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
+) {
+    model.species().get().and_then(|species| {
+        Some(species.iter().for_each(|s| {
+            if !s.boundary_condition().get()
+                && !s.constant().get()
+                && s.is_referenced_by_reaction(model)
+            {
+                vertices_equation.push((VertexKey::Species, s.xml_element().clone()))
+            }
+            if !s.constant().get() {
+                vertices_variable.push((VertexKey::Species, s.xml_element().clone()))
+            }
+        }))
+    });
+}
+
+/// Performs the following:
+/// - get equation vertices as of rules
+fn get_vertices_rules(model: &Model, vertices_equation: &mut Vec<(VertexKey, XmlElement)>) {
+    model.rules().get().and_then(|rules| {
+        Some(rules.iter().for_each(|r| match r.cast() {
+            Assignment(r) => {
+                vertices_equation.push((VertexKey::AssignmentRule, r.xml_element().clone()))
+            }
+            Rate(r) => vertices_equation.push((VertexKey::RateRule, r.xml_element().clone())),
+            Algebraic(r) => {
+                vertices_equation.push((VertexKey::AlgebraicRule, r.xml_element().clone()))
+            }
+            _ => (),
+        }))
+    });
+}
+
+/// Performs the following:
+/// - get equation vertices as of kinetic law
+/// - also get variable vertices as of SpeciesReference objects (reactants and products of a Reaction)
+/// - also get variable vertices as of Reaction objects
+fn get_vertices_reactions(
+    model: &Model,
+    vertices_equation: &mut Vec<(VertexKey, XmlElement)>,
+    vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
+) {
+    model.reactions().get().and_then(|reactions| {
+        Some(reactions.iter().for_each(|reaction| {
+            reaction.kinetic_law().get().and_then(|kl| {
+                Some(vertices_equation.push((VertexKey::KineticLaw, kl.xml_element().clone())))
+            });
+            reaction.reactants().get().and_then(|reactants| {
+                Some(
+                    reactants
+                        .iter()
+                        .filter(|reactant| !reactant.constant().get())
+                        .for_each(|r| {
+                            vertices_variable
+                                .push((VertexKey::SpeciesReference, r.xml_element().clone()))
+                        }),
+                )
+            });
+            reaction.products().get().and_then(|products| {
+                Some(
+                    products
+                        .iter()
+                        .filter(|product| !product.constant().get())
+                        .for_each(|p| {
+                            vertices_variable
+                                .push((VertexKey::SpeciesReference, p.xml_element().clone()))
+                        }),
+                )
+            });
+            vertices_variable.push((VertexKey::Reaction, reaction.xml_element().clone()))
+        }))
+    });
+}
+
+/// Performs the following:
+/// - get variable vertices as of compartments having constant=false
+fn get_vertices_compartments(
+    model: &Model,
+    vertices_variable: &mut Vec<(VertexKey, XmlElement)>,
+) -> Option<()> {
+    let compartments = model.compartments().get()?;
+    compartments
+        .iter()
+        .filter(|c| !c.constant().get())
+        .for_each(|c| vertices_variable.push((VertexKey::Compartment, c.xml_element().clone())));
+    Some(())
+}
+
+/// Performs the following:
+/// - get variable vertices as of parameters having constant=false
+fn get_vertices_parameters(model: &Model, vertices_variable: &mut Vec<(VertexKey, XmlElement)>) {
+    model.parameters().get().and_then(|parameters| {
+        Some(
+            parameters
+                .iter()
+                .filter(|p| !p.constant().get())
+                .for_each(|p| {
+                    vertices_variable.push((VertexKey::Parameter, p.xml_element().clone()))
+                }),
+        )
+    });
+}
+
+fn compute_edges(graph: &mut HashMap<Vertex, Vec<&Vertex>>) {
+    compute_species_to_species_edges(graph);
+}
+
+/// For every species that represents a variable (vertex), creates an edge to corresponding species that
+/// represents an equation (vertex)
+fn compute_species_to_species_edges(graph: &mut HashMap<Vertex, Vec<&Vertex>>) {
+    let species_equation = graph
+        .iter()
+        .filter(|entry| entry.0.v_key == VertexKey::Species && entry.0.v_type == Equation)
+        .collect::<Vec<(&Vertex, &Vec<&Vertex>)>>();
+    let species_variable = graph
+        .iter()
+        .filter(|entry| entry.0.v_key == VertexKey::Species && entry.0.v_type == Variable)
+        .collect::<Vec<(&Vertex, &Vec<&Vertex>)>>();
+
+    for mut species_eq in species_equation {
+        for mut species_var in species_variable {
+            if species_eq.0.xml_element == species_var.0.xml_element {
+                species_eq.1.push(species_var.0);
+                species_var.1.push(species_eq.0);
+            }
+        }
+    }
+}
+
+fn compute_assignment_rule_to_other_edges(graph: &mut HashMap<Vertex, Vec<&Vertex>>) {}
