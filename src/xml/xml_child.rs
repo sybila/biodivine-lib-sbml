@@ -59,7 +59,7 @@ pub trait XmlChild<T: XmlWrapper> {
     /// Replace the referenced child element with a new [XmlWrapper] element and return the
     /// previous value (if any).
     ///
-    /// If the corresponding child element already exists, it is replaced. Otherwise the element
+    /// If the corresponding child element already exists, it is replaced. Otherwise, the element
     /// is inserted as a new last child.
     ///
     /// # Panics
@@ -209,10 +209,10 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     }
 }
 
-/// Expands the capabilities of [OptionalXmlChild] when `T` implements [XmlDefault].
+/// Expands the capabilities of [OptionalXmlChild] to allow automatic creation
+/// of the child elements.
 pub trait XmlChildDefault<T: XmlWrapper>: OptionalXmlChild<T> {
-    /// The same as [XmlChild::get], but if the child does not exist, it is created using
-    /// [XmlDefault::default].
+    /// The same as [XmlChild::get], but if the child does not exist, it is created.
     ///
     /// *Warning:* If a new element is created, it is typically inserted as the *last* child.
     fn get_or_create(&self) -> T {
@@ -220,7 +220,7 @@ pub trait XmlChildDefault<T: XmlWrapper>: OptionalXmlChild<T> {
         self.get().unwrap()
     }
 
-    /// Creates the child element using [XmlDefault::default] if it does not exist.
+    /// If the underlying XML child element does not exist, it is created.
     ///
     /// *Warning:* If a new element is created, it is typically inserted as the *last* child.
     fn ensure(&self);
