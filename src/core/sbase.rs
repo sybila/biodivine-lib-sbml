@@ -62,10 +62,7 @@ pub(crate) trait SbmlUtils: SBase {
 
             let mut parent = child.raw_element();
             while !check_name(read_doc.deref(), parent, tag_name) {
-                let Some(node) = parent.parent(read_doc.deref()) else {
-                    return None;
-                };
-                parent = node;
+                parent = parent.parent(read_doc.deref())?;
             }
             parent
         };

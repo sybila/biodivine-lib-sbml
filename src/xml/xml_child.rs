@@ -116,9 +116,7 @@ pub trait XmlChild<T: XmlWrapper> {
     ///
     /// Can panic if the child cannot be detached (should not happen in normal situations).
     fn clear_raw(&self) -> Option<XmlElement> {
-        let Some(to_remove) = self.get_raw() else {
-            return None;
-        };
+        let to_remove = self.get_raw()?;
         if let Err(e) = to_remove.try_detach() {
             panic!("{}", e);
         }
