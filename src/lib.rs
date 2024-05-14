@@ -111,10 +111,6 @@ impl Sbml {
     }
 
     pub fn model(&self) -> OptionalChild<Model> {
-        // TODO:
-        //  This is technically not entirely valid because we should check the namespace
-        //  of the model element as well, but it's good enough for a demo. Also, some of this
-        //  may need better error handling.
         OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
     }
 

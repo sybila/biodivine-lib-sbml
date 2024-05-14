@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="2" version="4">
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
     <model id="McAuley2012___Whole_body_Cholesterol_Metabolism" metaid="COPASI0"
            name="Davies2023 - Cholesterol Metabolism and Atherosclerosis Model">
         <notes>
