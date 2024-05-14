@@ -210,7 +210,7 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
 /// Expands the capabilities of [OptionalXmlChild] to allow automatic creation
 /// of the child elements.
 pub trait XmlChildDefault<T: XmlWrapper>: OptionalXmlChild<T> {
-    /// The same as [XmlChild::get], but if the child does not exist, it is created.
+    /// The same as [OptionalXmlChild::get], but if the child does not exist, it is created.
     ///
     /// *Warning:* If a new element is created, it is typically inserted as the *last* child.
     fn get_or_create(&self) -> T {

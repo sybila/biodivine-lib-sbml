@@ -12,7 +12,7 @@ use sbml_macros::{SBase, XmlWrapper};
 
 use std::ops::Deref;
 
-/// A type-safe representation of an SBML <model> element.
+/// A type-safe representation of an SBML \<model\> element.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Model(XmlElement);
 

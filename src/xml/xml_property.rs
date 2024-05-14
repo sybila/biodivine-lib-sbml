@@ -80,7 +80,7 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
             .remove(name);
     }
 
-    /// Write a raw [value] into this [XmlProperty].
+    /// Write a raw `value` into this [XmlProperty].
     ///
     /// # Document validity
     ///
@@ -101,7 +101,7 @@ pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the [XmlProperty::read_checked] produces an error.
+    /// Panics if the [XmlProperty::get_checked] produces an error.
     fn get(&self) -> Option<T> {
         match self.get_checked() {
             Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
@@ -130,7 +130,7 @@ pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the [XmlProperty::read_checked] method produces an error or a `None` value.
+    /// Panics if the [XmlProperty::get_checked] method produces an error or a `None` value.
     fn get(&self) -> T {
         match self.get_checked() {
             Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),

@@ -88,7 +88,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     ///
     /// Note that for most implementations of [XmlWrapper], this value will be a compile time
     /// constant. However, this is not strictly required by [XmlWrapper], so there can be
-    /// implementations where this value changes depending on context. For example, [XmlList]
+    /// implementations where this value changes depending on context. For example, [crate::xml::XmlList]
     /// implements [XmlWrapper], but only determines its name at runtime.
     fn tag_name(&self) -> String {
         let doc = self.read_doc();
@@ -107,7 +107,7 @@ pub trait XmlWrapper: Into<XmlElement> {
 
     /// Returns the namespace URL of the XML tag referenced within this [XmlWrapper].
     ///
-    /// Same notes about value immutability as for [Self::name] apply.
+    /// Same notes about value immutability as for [Self::tag_name] apply.
     fn namespace_url(&self) -> String {
         let doc = self.read_doc();
         self.raw_element()
@@ -244,12 +244,12 @@ pub trait XmlWrapper: Into<XmlElement> {
         //     .collect()
     }
 
-    /// Get a reference to a specific **required** [XmlProperty] of this XML element.
+    /// Get a reference to a specific [RequiredDynamicProperty] of this XML element.
     ///
     /// # Safety
     ///
     /// Note that individual [XmlWrapper] implementations should provide type safe access
-    /// to their known/required properties through specialised [XmlProperty] implementations
+    /// to their known/required properties through specialised [crate::xml::XmlProperty] implementations
     /// instead of relying on [RequiredDynamicProperty]. Using this method is to some extent
     /// equivalent to using [Self::unchecked_cast], because the validity of the requested
     /// property is not verified in any way.
@@ -257,14 +257,14 @@ pub trait XmlWrapper: Into<XmlElement> {
         RequiredDynamicProperty::new(self.xml_element(), name)
     }
 
-    /// Get a reference to a specific **optional** [XmlProperty] of this XML element.
+    /// Get a reference to a specific [OptionalDynamicProperty] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn optional_property<T: XmlPropertyType>(&self, name: &str) -> OptionalDynamicProperty<T> {
         OptionalDynamicProperty::new(self.xml_element(), name)
     }
 
-    /// Get a reference to a specific **optional** [XmlChild] of this XML element.
+    /// Get a reference to a specific [OptionalDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn optional_child<T: XmlWrapper>(
@@ -275,7 +275,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         OptionalDynamicChild::new(self.xml_element(), name, namespace_url)
     }
 
-    /// Get a reference to a specific **required** [XmlChild] of this XML element.
+    /// Get a reference to a specific [RequiredDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn required_child<T: XmlWrapper>(

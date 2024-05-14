@@ -4,9 +4,9 @@ use std::ops::DerefMut;
 use std::sync::Arc;
 use xml_doc::Element;
 
-/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [Document].
+/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [xml_doc::Document].
 ///
-/// Internally, this is achieved through a reference counted [RwLock] (see [XmlDocument]).
+/// Internally, this is achieved through a reference counted [std::sync::RwLock] (see [XmlDocument]).
 ///
 /// Note that a lot of the useful functionality of [XmlElement] is actually implemented
 /// through the [XmlWrapper] trait. The main difference is that [XmlWrapper] can be also
