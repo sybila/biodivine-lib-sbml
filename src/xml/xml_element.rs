@@ -4,7 +4,7 @@ use biodivine_xml_doc::Element;
 use std::ops::DerefMut;
 use std::sync::Arc;
 
-/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [xml_doc::Document].
+/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [biodivine_xml_doc::Document].
 ///
 /// Internally, this is achieved through a reference counted [std::sync::RwLock] (see [XmlDocument]).
 ///

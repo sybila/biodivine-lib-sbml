@@ -1,9 +1,102 @@
+//!
+//! This crate provides a Rust interface for reading, editing, and validating Systems Biology
+//! Markup Language (SBML) files. Main features:
+//!
+//!  - Complete support for the SBML Level 3 Version 2 core specification.
+//!  - Validation of the *required* SBML conformance rules, including validation of proper namespace usage.
+//!  - Ability to (safely) edit invalid or partially corrupted files (e.g. to fix errors).
+//!  - Full access to the raw underlying XML document through the `xml-doc` interface.
+//!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
+//!  - Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
+//!
+//! For basic usage, explore the documentation of SBML objects declared in the [core]
+//! module. More advanced operations can be then performed using the XML abstraction layer
+//! described in module [xml].
+//!
+//! Note that primary documentation of the SBML objects is adapted from the SBML specification,
+//! including figures.
+//!
+//! ### Example
+//!
+//! ```rust
+//! use biodivine_lib_sbml::*;
+//! use biodivine_lib_sbml::core::*;
+//! use biodivine_lib_sbml::xml::*;
+//!
+//! let doc = Sbml::read_path("./test-inputs/model.sbml")
+//!     .expect("This document is not valid XML.");
+//!
+//! // First, we want to know if the document we
+//! // just read is valid SBML.//!
+//! let issues = doc.validate();
+//! if issues.len() > 0 {
+//!     // Note that these could be just warnings/notes. //!
+//!     // You can check `SbmlIssue::severity` of each item
+//!     // to detect fatal errors.
+//!     eprintln!("This document has issues:");
+//!     for issue in issues {
+//!         eprintln!("{:?}", issue);
+//!     }
+//! }
+//!
+//! let model = doc
+//!     .model()
+//!     .get()
+//!     // This is strange but allowed by the specification.
+//!     .expect("This document does not contain any model.");
+//!
+//! // Note that individual lists of model components
+//! // are also optional in the specification. Here,
+//! // an empty list is created if it does not exist.
+//! let species = model.species().get_or_create();
+//! let compartments = model.compartments().get_or_create();
+//! println!(
+//!     "This model has {} compartments and {} species.",
+//!     compartments.len(),
+//!     species.len(),
+//! );
+//!
+//! // We can use `DynamicProperty` and `DynamicChild` to access
+//! // items that are not in the SBML core specification.
+//! let qual_namespace = "http://www.sbml.org/sbml/level3/version1/qual/version1";
+//!
+//! // For example, here, we are reading the list of qualitative species defined
+//! // in the sbml-qual package as a "generic" list of `XmlElement` objects.
+//! let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
+//!     model.optional_child("listOfQualitativeSpecies", qual_namespace);
+//! println!(
+//!     "This model has {} qualitative species.",
+//!     qual_species.get_or_create().len(),
+//! );
+//!
+//! // We can also modify the model.
+//!
+//! // First, create a new instance of a `Species` object.
+//! let species_id = "sp-1".to_string();
+//! let compartment_id = compartments.get(0).id().get();
+//! let s = Species::new(model.document(), &species_id, &compartment_id);
+//! let species_name = "MySpecies".to_string();
+//! s.name().set_some(&species_name);
+//!
+//! // Then, add it to the current list of species.
+//! species.push(s);
+//! assert_eq!(species.get(0).name().get(), Some(species_name));
+//!
+//! // Finally, we can print the model back as XML:
+//! let xml_string = doc.to_xml_string()
+//!     .expect("Encoding error.");
+//!
+//! println!("{} ... ", &xml_string[..200]);
+//! ```
+//!
+
 use std::collections::HashSet;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
 use biodivine_xml_doc::{Document, Element, ReadOptions};
+use embed_doc_image::embed_doc_image;
 
 use xml::{OptionalChild, RequiredProperty};
 
@@ -16,44 +109,103 @@ use crate::core::validation::{
 use crate::core::{Model, SBase};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
 
-/// A module with useful types that are not directly part of the SBML specification, but help
-/// us work with XML documents in a sane and safe way. In particular:
-///  - [XmlDocument] | A thread and memory safe reference to a [Document].
-///  - [XmlElement] | A thread and memory safe reference to an [Element].
-///  - [XmlWrapper] | A trait with utility functions for working with types
-///  derived from [XmlElement].
-///  - [xml::XmlDefault] | An extension of [XmlWrapper] which allows creation of "default"
-///  value for the derived type.
-///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
-///  accessing properties stored in XML attributes. Implementation can be generated using a derive
-///  macro.
-///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
-///  child tags. Implementation can be generated using a derive macro.
-///  - [xml::XmlList] | A generic implementation of [XmlWrapper] which represents
-///  a typed list of elements.
-///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
-///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
-///  is not known at compile time.
-pub mod xml;
-
+/// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
+/// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
+/// by the SBML core specification.
 pub mod core;
 
-pub mod constants;
+/// Defines [`XmlDocument`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
+/// [`XmlChild`][xml::XmlChild] and other utility types or traits that can be used to safely
+/// manipulate the underlying XML document.
+pub mod xml;
 
+/// **(internal)** An internal module which defines constant values relevant for SBML, such as
+/// namespace URLs or mappings assigning elements their allowed attributes.
+pub(crate) mod constants;
+
+/// **(test)** A helper module for executing the syntactic SBML test suite as part of the
+/// standard unit tests.
 #[cfg(test)]
 pub mod test_suite;
 
-/// The object that "wraps" an XML document in a SBML-specific API.
+/// The SBML container object
+/// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
 ///
-/// This is mostly just the place where you can specify what SBML version and
-/// what SBML extensions are being used. The actual content of the SBML model is
-/// then managed through the `SbmlModel` struct.
+/// ## 4.1 The SBML Container
+///
+/// <!-- A minor hack to position the UML figure nicely in the page. -->
+/// <style>
+/// img[alt=UML] {
+///     width: 80%;
+///     display: block;
+///     margin: 0 auto;
+///     margin-top: 1rem;
+///     margin-bottom: 1rem;
+/// }
+/// </style>
+///
+/// ![UML][sbml-container]
+///
+/// Following the XML declaration, the outermost portion of a model expressed in Level 3 consists
+/// of an object of class [`Sbml`]. This class contains three required attributes
+/// (*level*, *version* and *xmlns*), and an optional *model* element.
+///
+/// The [`Sbml`] class defines the structure and content of the `sbml` outermost element in an SBML
+/// file. The following is an abbreviated example of [`Sbml`] class object translated into XML
+/// form for an SBML Level 3 Version 2 Core document. Here, ellipses (“...”) are used to indicate
+/// content elided from this example:
+///
+/// ```xml
+/// <?xml version="1.0" encoding="UTF-8"?>
+///     <sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+///      ...
+///         <model ...> ... </model>
+///     </sbml>
+/// ```
+///
+/// The attribute `xmlns` declares the XML namespace used within the `sbml` element. The URI for
+/// SBML Level 3 Version 2 Core is `http://www.sbml.org/sbml/level3/version2/core`. All SBML Level
+/// 3 Version 2 Core elements and attributes must be placed in this namespace either by assigning
+/// the default namespace as shown in the example above, or using a tag prefix on every element.
+/// The `sbml` element may contain additional attributes, in particular, attributes to support the
+/// inclusion of SBML Level 3 packages; see Section 4.1.3. For purposes of checking conformance
+/// to the SBML Level 3 Core specification, only the elements and attributes in the SBML Level
+/// 3 Core XML namespace are considered.
+///
+/// ### 4.1.1 The `id` and `name` attributes
+/// Because SBML inherits from [`SBase`], it has optional `id`, `name`, `sboTerm` and `metaid`
+/// attributes. SBML Level 3 Version 2 Core does not define a purpose for these attributes;
+/// moreover, being outside the [`Model`] namespace, the `id` attribute is not subject to the
+/// uniqueness constraints of `SId` values inside [`Model`] objects.
+///
+/// ### 4.1.2 The `model` element
+/// The actual model contained within an SBML document is defined by an instance of the [`Model`]
+/// class element. The structure of this object and its use are described in Section 4.2.
+/// An SBML document may contain at most one model definition.
+///
+#[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
 pub struct Sbml {
     xml: XmlDocument,
     sbml_root: XmlElement,
 }
 
+/// The SBML-defined components of the [`Sbml`] container class.
+impl Sbml {
+    pub fn model(&self) -> OptionalChild<Model> {
+        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
+    }
+
+    pub fn level(&self) -> RequiredProperty<u32> {
+        RequiredProperty::new(&self.sbml_root, "level")
+    }
+
+    pub fn version(&self) -> RequiredProperty<u32> {
+        RequiredProperty::new(&self.sbml_root, "version")
+    }
+}
+
+/// Other methods for creating and manipulating [`Sbml`] container.
 impl Sbml {
     pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
         // Only accept documents that are using UTF-8.
@@ -108,18 +260,6 @@ impl Sbml {
             Ok(str) => Ok(str),
             Err(why) => Err(why.to_string()),
         }
-    }
-
-    pub fn model(&self) -> OptionalChild<Model> {
-        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
-    }
-
-    pub fn level(&self) -> RequiredProperty<u32> {
-        RequiredProperty::new(&self.sbml_root, "level")
-    }
-
-    pub fn version(&self) -> RequiredProperty<u32> {
-        RequiredProperty::new(&self.sbml_root, "version")
     }
 
     /// Perform a basic type checking procedure. If this procedure passes without issues,
