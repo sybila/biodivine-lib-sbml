@@ -65,7 +65,7 @@ fn main() {
     let compartment_id = compartments.get(0).id().get();
     let s = Species::new(model.document(), &species_id, &compartment_id);
     let species_name = "MySpecies".to_string();
-    s.name().set(Some(&species_name));
+    s.name().set_some(&species_name);
 
     // Then, add it to the current list of species.
     species.push(s);

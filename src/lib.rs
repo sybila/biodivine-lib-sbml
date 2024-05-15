@@ -309,12 +309,12 @@ mod tests {
         assert_eq!(
             level, 3,
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
-            level, "3"
+            level, 3
         );
         assert_eq!(
-            version, 1,
+            version, 2,
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
-            version, "1"
+            version, 2
         );
 
         let model = doc.model().get().unwrap();
@@ -366,7 +366,7 @@ mod tests {
         );
 
         // try overwriting the <id> property
-        property.set(Some(&"optional_model_id".to_string()));
+        property.set_some(&"optional_model_id".to_string());
         let property_val = property.get();
         assert_eq!(
             property_val,
@@ -553,10 +553,10 @@ mod tests {
         // set default model element
         sbml_doc.model().set(new_model);
         let model = sbml_doc.model().get().unwrap();
-        model.id().set(Some(&"model_id".to_string()));
-        model.name().set(Some(&"test model No. 1".to_string()));
-        model.sbo_term().set(Some(&"FE12309531 TEST".to_string()));
-        model.meta_id().set(Some(&"MT-TEST-MODEL-NO1".to_string()));
+        model.id().set_some(&"model_id".to_string());
+        model.name().set_some(&"test model No. 1".to_string());
+        model.sbo_term().set_some(&"FE12309531 TEST".to_string());
+        model.meta_id().set_some(&"MT-TEST-MODEL-NO1".to_string());
         model.notes().set(XmlElement::new_quantified(
             model.document(),
             "notes",
@@ -606,10 +606,10 @@ mod tests {
         let function_defs_list = function_defs.get().unwrap();
         function_defs_list
             .id()
-            .set(Some(&"FunDefsList-ID".to_string()));
+            .set_some(&"FunDefsList-ID".to_string());
         function_defs_list
             .name()
-            .set(Some(&"FunDefsList-NAME".to_string()));
+            .set_some(&"FunDefsList-NAME".to_string());
         function_defs_list.push(FunctionDefinition::default(model.document()));
         function_defs_list.push(FunctionDefinition::default(model.document()));
         function_defs_list.push(FunctionDefinition::default(model.document()));
@@ -617,13 +617,13 @@ mod tests {
         function_defs_list
             .get(0)
             .id()
-            .set(Some(&"function-def-1".to_string()));
+            .set_some(&"function-def-1".to_string());
         function_defs_list
             .get(1)
             .id()
-            .set(Some(&"function-def-2".to_string()));
+            .set_some(&"function-def-2".to_string());
         let fd_top = function_defs_list.top();
-        fd_top.id().set(Some(&"function-def-3".to_string()));
+        fd_top.id().set_some(&"function-def-3".to_string());
         fd_top.math().set(Math::default(model.document()));
     }
 
@@ -632,12 +632,10 @@ mod tests {
         unit_defs.ensure();
 
         let unit_defs_list = unit_defs.get().unwrap();
-        unit_defs_list
-            .id()
-            .set(Some(&"UnitDefsList-ID".to_string()));
+        unit_defs_list.id().set_some(&"UnitDefsList-ID".to_string());
         unit_defs_list
             .name()
-            .set(Some(&"UnitDefsList-NAME".to_string()));
+            .set_some(&"UnitDefsList-NAME".to_string());
         unit_defs_list.push(UnitDefinition::default(model.document()));
         unit_defs_list.push(UnitDefinition::default(model.document()));
         unit_defs_list.push(UnitDefinition::default(model.document()));
@@ -645,14 +643,14 @@ mod tests {
         unit_defs_list
             .get(0)
             .id()
-            .set(Some(&"unit-def-1".to_string()));
+            .set_some(&"unit-def-1".to_string());
         unit_defs_list
             .get(1)
             .id()
-            .set(Some(&"unit-def-2".to_string()));
+            .set_some(&"unit-def-2".to_string());
         let ud_top = unit_defs_list.top();
-        ud_top.id().set(Some(&"unit-def-3-length".to_string()));
-        ud_top.name().set(Some(&"unit-def-3-length".to_string()));
+        ud_top.id().set_some(&"unit-def-3-length".to_string());
+        ud_top.name().set_some(&"unit-def-3-length".to_string());
 
         // set default list of units for unit definition
         ud_top.units().ensure();
@@ -668,8 +666,8 @@ mod tests {
         compartments.ensure();
 
         let compartments = compartments.get().unwrap();
-        compartments.id().set(Some(&"CompsList-ID".to_string()));
-        compartments.name().set(Some(&"CompsList-NAME".to_string()));
+        compartments.id().set_some(&"CompsList-ID".to_string());
+        compartments.name().set_some(&"CompsList-NAME".to_string());
         compartments.push(Compartment::default(model.document()));
         compartments.push(Compartment::default(model.document()));
         compartments.push(Compartment::default(model.document()));
@@ -681,9 +679,9 @@ mod tests {
 
         let comp_top = compartments.top();
         comp_top.id().set(&"compartment-3".to_string());
-        comp_top.spatial_dimensions().set(Some(&3.0));
-        comp_top.size().set(Some(&1.0));
-        comp_top.units().set(Some(&"volume".to_string()));
+        comp_top.spatial_dimensions().set_some(&3.0);
+        comp_top.size().set_some(&1.0);
+        comp_top.units().set_some(&"volume".to_string());
         comp_top.constant().set(&true);
     }
 
@@ -692,8 +690,8 @@ mod tests {
         species.ensure();
 
         let species = species.get().unwrap();
-        species.id().set(Some(&"SpeciesList-ID".to_string()));
-        species.name().set(Some(&"SpeciesList-NAME".to_string()));
+        species.id().set_some(&"SpeciesList-ID".to_string());
+        species.name().set_some(&"SpeciesList-NAME".to_string());
         species.push(Species::new(
             model.document(),
             &String::from("species-1"),
@@ -711,17 +709,17 @@ mod tests {
         ));
 
         let species_top = species.top();
-        species_top.initial_amount().set(Some(&10.0));
-        species_top.initial_concentration().set(Some(&0.5));
+        species_top.initial_amount().set_some(&10.0);
+        species_top.initial_concentration().set_some(&0.5);
         species_top
             .substance_units()
-            .set(Some(&BaseUnit::Sievert.to_string()));
+            .set_some(&BaseUnit::Sievert.to_string());
         species_top.has_only_substance_units().set(&false);
         species_top.boundary_condition().set(&true);
         species_top.constant().set(&false);
         species_top
             .conversion_factor()
-            .set(Some(&"linear".to_string()));
+            .set_some(&"linear".to_string());
     }
 
     fn build_parameters(model: &Model) {
@@ -729,8 +727,8 @@ mod tests {
         parameters.ensure();
 
         let parameters = parameters.get().unwrap();
-        parameters.id().set(Some(&"ParamsList-ID".to_string()));
-        parameters.name().set(Some(&"ParamsList-NAME".to_string()));
+        parameters.id().set_some(&"ParamsList-ID".to_string());
+        parameters.name().set_some(&"ParamsList-NAME".to_string());
         parameters.push(Parameter::new(
             model.document(),
             &String::from("param-1"),
@@ -743,8 +741,8 @@ mod tests {
         ));
 
         let param_top = parameters.top();
-        param_top.value().set(Some(&15.0));
-        param_top.units().set(Some(&BaseUnit::Ampere.to_string()));
+        param_top.value().set_some(&15.0);
+        param_top.units().set_some(&BaseUnit::Ampere.to_string());
     }
 
     fn build_initial_assignments(model: &Model) {
@@ -754,10 +752,10 @@ mod tests {
         let assignments = assignments.get().unwrap();
         assignments
             .id()
-            .set(Some(&"InitialAssignmentsList-ID".to_string()));
+            .set_some(&"InitialAssignmentsList-ID".to_string());
         assignments
             .name()
-            .set(Some(&"InitialAssignmentsList-NAME".to_string()));
+            .set_some(&"InitialAssignmentsList-NAME".to_string());
         assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
         assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
 
@@ -770,23 +768,23 @@ mod tests {
         rules.ensure();
 
         let rules = rules.get().unwrap();
-        rules.id().set(Some(&"RulesList-ID".to_string()));
-        rules.name().set(Some(&"RulesList-NAME".to_string()));
+        rules.id().set_some(&"RulesList-ID".to_string());
+        rules.name().set_some(&"RulesList-NAME".to_string());
         rules.push(AlgebraicRule::default(model.document()).upcast());
         rules.push(AssignmentRule::new(model.document(), &String::from("z")).upcast());
         rules.push(RateRule::new(model.document(), &String::from("r")).upcast());
 
         let algebraic: AlgebraicRule = rules.get(0).downcast();
-        algebraic.id().set(Some(&"rule-1".to_string()));
-        algebraic.name().set(Some(&"algebraic".to_string()));
+        algebraic.id().set_some(&"rule-1".to_string());
+        algebraic.name().set_some(&"algebraic".to_string());
 
         let assignment: AssignmentRule = rules.get(1).downcast();
-        assignment.id().set(Some(&"rule-2".to_string()));
-        assignment.name().set(Some(&"assignment".to_string()));
+        assignment.id().set_some(&"rule-2".to_string());
+        assignment.name().set_some(&"assignment".to_string());
 
         let rate: RateRule = rules.get(2).downcast();
-        rate.id().set(Some(&"rule-3".to_string()));
-        rate.name().set(Some(&"rate".to_string()));
+        rate.id().set_some(&"rule-3".to_string());
+        rate.name().set_some(&"rate".to_string());
     }
 
     fn build_constraints(model: &Model) {
@@ -794,23 +792,21 @@ mod tests {
         constraints.ensure();
 
         let constraints = constraints.get().unwrap();
-        constraints
-            .id()
-            .set(Some(&"ConstraintsList-ID".to_string()));
+        constraints.id().set_some(&"ConstraintsList-ID".to_string());
         constraints
             .name()
-            .set(Some(&"ConstraintsList-NAME".to_string()));
+            .set_some(&"ConstraintsList-NAME".to_string());
         constraints.push(Constraint::default(model.document()));
         constraints.push(Constraint::default(model.document()));
 
         constraints
             .get(0)
             .id()
-            .set(Some(&"constraint-1".to_string()));
+            .set_some(&"constraint-1".to_string());
         constraints
             .get(1)
             .id()
-            .set(Some(&"constraint-2".to_string()));
+            .set_some(&"constraint-2".to_string());
 
         let constraint_top = constraints.top();
         constraint_top.message().set(XmlElement::new_quantified(
@@ -826,10 +822,8 @@ mod tests {
         reactions.ensure();
 
         let reactions = reactions.get().unwrap();
-        reactions.id().set(Some(&"ReactionsList-ID".to_string()));
-        reactions
-            .name()
-            .set(Some(&"ReactionsList-NAME".to_string()));
+        reactions.id().set_some(&"ReactionsList-ID".to_string());
+        reactions.name().set_some(&"ReactionsList-NAME".to_string());
         reactions.push(Reaction::new(
             model.document(),
             &String::from("reaction-1"),
@@ -839,36 +833,36 @@ mod tests {
         let reaction = reactions.top();
         reaction
             .compartment()
-            .set(Some(&"compartment-1".to_string()));
+            .set_some(&"compartment-1".to_string());
 
         let reactants = reaction.reactants();
         reactants.ensure();
         let reactants = reactants.get().unwrap();
-        reactants.id().set(Some(&"ReactantsList-ID".to_string()));
+        reactants.id().set_some(&"ReactantsList-ID".to_string());
         reactants.push(SpeciesReference::new(
             model.document(),
             &String::from("species-1"),
             true,
         ));
         let reactant = reactants.top();
-        reactant.stoichiometry().set(Some(&2.0));
+        reactant.stoichiometry().set_some(&2.0);
 
         let products = reaction.products();
         products.ensure();
         let products = products.get().unwrap();
-        products.id().set(Some(&"ProductsList-ID".to_string()));
+        products.id().set_some(&"ProductsList-ID".to_string());
         products.push(SpeciesReference::new(
             model.document(),
             &String::from("species-1"),
             true,
         ));
         let product = products.top();
-        product.stoichiometry().set(Some(&1.0));
+        product.stoichiometry().set_some(&1.0);
 
         let modifiers = reaction.modifiers();
         modifiers.ensure();
         let modifiers = modifiers.get().unwrap();
-        modifiers.id().set(Some(&"ModifiersList-ID".to_string()));
+        modifiers.id().set_some(&"ModifiersList-ID".to_string());
         modifiers.push(ModifierSpeciesReference::new(
             model.document(),
             &String::from("species-2"),
@@ -886,8 +880,8 @@ mod tests {
             &String::from("localParam-ID"),
         ));
         let param = local_params.top();
-        param.value().set(Some(&42.0));
-        param.units().set(Some(&"meter".to_string()));
+        param.value().set_some(&42.0);
+        param.units().set_some(&"meter".to_string());
     }
 
     fn build_events(model: &Model) {
@@ -895,7 +889,7 @@ mod tests {
         events.ensure();
 
         let events = events.get().unwrap();
-        events.id().set(Some(&"EventsList-ID".to_string()));
+        events.id().set_some(&"EventsList-ID".to_string());
         events.push(Event::default(model.document()));
         events.push(Event::default(model.document()));
 
@@ -923,7 +917,7 @@ mod tests {
         let event_assignments = event_assignments.get().unwrap();
         event_assignments
             .id()
-            .set(Some(&"EventAssignmentsList-ID".to_string()));
+            .set_some(&"EventAssignmentsList-ID".to_string());
         event_assignments.push(EventAssignment::new(model.document(), &String::from("evt")));
         let assignment = event_assignments.top();
         assignment.math().ensure();
@@ -939,7 +933,7 @@ mod tests {
         assert_eq!(id.name(), "id");
         assert_eq!(id.element().raw_element(), model.raw_element());
         assert_eq!(id.get().unwrap(), "model_id");
-        id.set(Some(&"new_model_id".to_string()));
+        id.set_some(&"new_model_id".to_string());
         assert_eq!(id.get().unwrap(), "new_model_id");
         id.clear();
         assert!(!id.is_set());
@@ -948,7 +942,7 @@ mod tests {
         assert!(!name.is_set());
         assert_eq!(name.name(), "name");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        name.set(Some(&"model_name".to_string()));
+        name.set_some(&"model_name".to_string());
         assert_eq!(name.get().unwrap(), "model_name");
         name.clear();
         assert!(!name.is_set());
@@ -961,7 +955,7 @@ mod tests {
             meta_id.get().unwrap(),
             "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d"
         );
-        meta_id.set(Some(&"new_meta_id_12345".to_string()));
+        meta_id.set_some(&"new_meta_id_12345".to_string());
         assert_eq!(meta_id.get().unwrap(), "new_meta_id_12345");
         meta_id.clear();
         assert!(!meta_id.is_set());
@@ -970,7 +964,7 @@ mod tests {
         assert!(!sbo_term.is_set());
         assert_eq!(sbo_term.name(), "sboTerm");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        sbo_term.set(Some(&"model_sbo_term".to_string()));
+        sbo_term.set_some(&"model_sbo_term".to_string());
         assert_eq!(sbo_term.get().unwrap(), "model_sbo_term");
         sbo_term.clear();
         assert!(!sbo_term.is_set());

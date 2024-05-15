@@ -14,7 +14,7 @@ use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 /// However, the aforementioned type safety is only checked when the properties
 /// or children of the element are actually read (or written). There is no explicit check
 /// for the validity of the XML structure at the time when [XmlWrapper] is created. In theory,
-/// any XML element *can* be interpreted as any [XmlWrapper] instance and it is then
+/// any XML element *can* be interpreted as any [XmlWrapper] instance, and it is then
 /// up to the [XmlWrapper] instance to generate errors if invalid properties are read or written.
 ///
 /// To convert [XmlWrapper] to [XmlElement], you can use `From`/`Into`. For the reverse conversion,
@@ -65,7 +65,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         // Error handling note: In general, lock access will fail only when some other part
         // of the program performed an incorrect unsafe action (e.g. double release of the
         // same lock guard). As such, it is generally ok to panic here, because at that point
-        // the whole document might be corrupted and we have no way to recover.
+        // the whole document might be corrupted, and we have no way to recover.
         self.xml_element()
             .document
             .read()
@@ -234,14 +234,15 @@ pub trait XmlWrapper: Into<XmlElement> {
     }
 
     /// Returns the vector of names of children referenced within this [XmlWrapper].
-    fn children_names(&self) -> Vec<&str> {
-        unimplemented!();
-        // let doc = self.read_doc();
-        // self.raw_element()
-        //     .children(doc.deref())
-        //     .iter()
-        //     .map(|node| node.as_element().unwrap().full_name(doc.deref())) // TODO: may outlive borrowed value `doc`. How to fix?
-        //     .collect()
+    ///
+    /// Note that these are "plain" names without namespace prefixes.
+    fn children_names(&self) -> Vec<String> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .children(doc.deref())
+            .iter()
+            .filter_map(|node| node.as_element().map(|it| it.name(doc.deref()).to_string()))
+            .collect()
     }
 
     /// Get a reference to a specific [RequiredDynamicProperty] of this XML element.
@@ -287,19 +288,19 @@ pub trait XmlWrapper: Into<XmlElement> {
     }
 
     /// Detach this [XmlWrapper] from its current parent while maintaining the necessary
-    /// namespace declarations that make the XML sub-tree valid.
+    /// namespace declarations that make the XML subtree valid.
     ///
     /// Specifically, this method will:
-    ///  - Scan the whole XML sub-tree for relevant namespace prefixes
-    ///    (i.e. those not declared in the sub-tree itself).
-    ///  - Copy the namespace declarations into the sub-tree root.
+    ///  - Scan the whole XML subtree for relevant namespace prefixes
+    ///    (i.e. those not declared in the subtree itself).
+    ///  - Copy the namespace declarations into the subtree root.
     ///  - Detach the element.
     ///  - Due to the copied declarations, all prefixes are still valid,
     ///    even in this detached state.
     ///
     /// Note that this also applies to the "default" empty namespace: if the empty namespace is
     /// used, the method will add `xmlns=""` to the detached tag in order to reset
-    /// the default namespace in the root of the detached sub-tree to the empty namespace.
+    /// the default namespace in the root of the detached subtree to the empty namespace.
     ///
     /// ### Errors
     ///
@@ -307,7 +308,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// document "container" element (which is, in theory, always detached).
     fn try_detach(&self) -> Result<(), String> {
         // Note that we can't use methods like `Self::name` because they would need to lock
-        // the document and we already have it locked.
+        // the document, and we already have it locked.
         let element = self.raw_element();
         let mut doc = self.write_doc();
         if element.parent(doc.deref()).is_none() {
@@ -339,21 +340,21 @@ pub trait XmlWrapper: Into<XmlElement> {
 
     /// Try to attach this [XmlWrapper] into the given `parent` [XmlWrapper] as a new child at
     /// the given `position`. If `position` is not given, the child is inserted as the
-    /// last element. The method adjusts namespace declarations to ensure the sub-tree is valid
+    /// last element. The method adjusts namespace declarations to ensure the subtree is valid
     /// in its new context.
     ///
     /// The method takes all namespaces which are declared directly on `self`, and tries
     /// to propagate them to the root element reachable from `parent` (i.e. either a document
-    /// root, or a root of a detached sub-tree where `parent` resides). Specifically:
+    /// root, or a root of a detached subtree where `parent` resides). Specifically:
     ///  - The declaration of a default namespace cannot be propagated. However, it can be removed
     ///    if the root declares the same default namespace.
     ///  - The prefixes which are already declared with matching namespace URLs are removed.
     ///  - The prefixes which are not declared anywhere on the path to root
     ///    can be propagated to root.
     ///  - Other namespaces cannot be propagated, because their prefix is already declared,
-    ///    but with another URL. Hence they stay declared only for the newly attached sub-tree.
+    ///    but with another URL. Hence, they stay declared only for the newly attached subtree.
     ///
-    /// Note that if the attached sub-tree uses an empty "default" namespace, then it will have
+    /// Note that if the attached subtree uses an empty "default" namespace, then it will have
     /// `xmlns=""` set.
     ///
     /// ### Errors
@@ -424,7 +425,7 @@ pub trait XmlWrapper: Into<XmlElement> {
             }
             if let Some(declared) = applicable_namespaces.get(&prefix) {
                 if *declared == namespace {
-                    // The prefix is already declared with the same URL. Hence we can remove
+                    // The prefix is already declared with the same URL. Hence, we can remove
                     // the declaration on the child element because it is redundant.
                     element
                         .mut_namespace_decls(doc.deref_mut())

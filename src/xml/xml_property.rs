@@ -110,10 +110,17 @@ pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     }
 
     /// Write the value of an optional XML property.
-    ///
-    /// TODO: I'm not sure whether `Option<&T>` or `&Option<T>` is better here. The time will tell.
     fn set(&self, value: Option<&T>) {
         match value.and_then(|it| it.set()) {
+            None => self.clear(),
+            Some(value) => self.set_raw(value),
+        }
+    }
+
+    /// An alternative to [OptionalXmlProperty::set] that accepts a value directly, without
+    /// wrapping it into `Option`.
+    fn set_some(&self, value: &T) {
+        match value.set() {
             None => self.clear(),
             Some(value) => self.set_raw(value),
         }
