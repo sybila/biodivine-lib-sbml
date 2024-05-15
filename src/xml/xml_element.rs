@@ -1,8 +1,8 @@
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
+use biodivine_xml_doc::Element;
 use std::ops::DerefMut;
 use std::sync::Arc;
-use xml_doc::Element;
 
 /// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [xml_doc::Document].
 ///

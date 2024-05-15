@@ -8,8 +8,8 @@ use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
     XmlWrapper,
 };
+use biodivine_xml_doc::{Document, Element};
 use std::ops::Deref;
-use xml_doc::{Document, Element};
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.

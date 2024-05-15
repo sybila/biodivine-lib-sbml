@@ -4,9 +4,9 @@ use crate::constants::element::{
 use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
 use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
 use crate::SbmlIssue;
+use biodivine_xml_doc::Element;
 use std::collections::HashMap;
 use std::ops::Deref;
-use xml_doc::Element;
 
 /// Denotes an element that possess a way to self-test against the most critical checks. This
 /// should be executed **before** the actual document validation. If the type check fails,

@@ -3,7 +3,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
-use xml_doc::{Document, Element, ReadOptions};
+use biodivine_xml_doc::{Document, Element, ReadOptions};
 
 use xml::{OptionalChild, RequiredProperty};
 
@@ -65,7 +65,7 @@ impl Sbml {
         let doc = match Document::parse_str_with_opts(file_contents, opts) {
             Ok(doc) => doc,
             Err(why) => {
-                return if matches!(why, xml_doc::Error::CannotDecode) {
+                return if matches!(why, biodivine_xml_doc::Error::CannotDecode) {
                     Err("SBML documents must use UTF-8 encoding.".to_string())
                 } else {
                     Err(why.to_string())

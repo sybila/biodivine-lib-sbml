@@ -16,7 +16,7 @@ phf = { version = "0.11.2", features = ["macros"] }
 strum = "0.26"
 strum_macros = "0.26"
 regex = "1.10.3"
-xml-doc = { git = "https://github.com/daemontus/xml-doc" }
+biodivine-xml-doc = "0.3.0"
 sbml-macros = { path = "sbml-macros" }
 
 [dev-dependencies]

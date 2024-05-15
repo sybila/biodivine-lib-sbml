@@ -2,10 +2,10 @@ use crate::xml::{
     OptionalDynamicChild, OptionalDynamicProperty, RequiredDynamicChild, RequiredDynamicProperty,
     XmlDocument, XmlElement, XmlPropertyType,
 };
+use biodivine_xml_doc::{Document, Element};
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
-use xml_doc::{Document, Element};
 
 /// [XmlWrapper] is a trait implemented by all types that can behave as an [XmlElement]
 /// (including [XmlElement] itself). In other words, instances of [XmlWrapper] provide
