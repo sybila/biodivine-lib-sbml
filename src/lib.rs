@@ -128,6 +128,8 @@ pub(crate) mod constants;
 #[cfg(test)]
 pub mod test_suite;
 
+pub mod dummy_extension;
+
 /// The SBML container object
 /// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
 ///
