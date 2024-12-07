@@ -1,11 +1,12 @@
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
+use biodivine_xml_doc::Element;
 use std::ops::DerefMut;
-use xml_doc::Element;
+use std::sync::Arc;
 
-/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [Document].
+/// An [XmlElement] maintains a single thread-safe reference to an [Element] of a [biodivine_xml_doc::Document].
 ///
-/// Internally, this is achieved through a reference counted [RwLock] (see [XmlDocument]).
+/// Internally, this is achieved through a reference counted [std::sync::RwLock] (see [XmlDocument]).
 ///
 /// Note that a lot of the useful functionality of [XmlElement] is actually implemented
 /// through the [XmlWrapper] trait. The main difference is that [XmlWrapper] can be also
@@ -15,6 +16,14 @@ pub struct XmlElement {
     pub(super) document: XmlDocument,
     pub(super) element: Element,
 }
+
+impl PartialEq for XmlElement {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.document, &other.document) && self.element == other.element
+    }
+}
+
+impl Eq for XmlElement {}
 
 impl XmlElement {
     /// Wrap an existing [Element] as [XmlElement] in the context of the given [XmlDocument].

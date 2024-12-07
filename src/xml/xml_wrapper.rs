@@ -2,9 +2,10 @@ use crate::xml::{
     OptionalDynamicChild, OptionalDynamicProperty, RequiredDynamicChild, RequiredDynamicProperty,
     XmlDocument, XmlElement, XmlPropertyType,
 };
+use biodivine_xml_doc::{Document, Element};
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
-use xml_doc::{Document, Element};
 
 /// [XmlWrapper] is a trait implemented by all types that can behave as an [XmlElement]
 /// (including [XmlElement] itself). In other words, instances of [XmlWrapper] provide
@@ -13,7 +14,7 @@ use xml_doc::{Document, Element};
 /// However, the aforementioned type safety is only checked when the properties
 /// or children of the element are actually read (or written). There is no explicit check
 /// for the validity of the XML structure at the time when [XmlWrapper] is created. In theory,
-/// any XML element *can* be interpreted as any [XmlWrapper] instance and it is then
+/// any XML element *can* be interpreted as any [XmlWrapper] instance, and it is then
 /// up to the [XmlWrapper] instance to generate errors if invalid properties are read or written.
 ///
 /// To convert [XmlWrapper] to [XmlElement], you can use `From`/`Into`. For the reverse conversion,
@@ -64,7 +65,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         // Error handling note: In general, lock access will fail only when some other part
         // of the program performed an incorrect unsafe action (e.g. double release of the
         // same lock guard). As such, it is generally ok to panic here, because at that point
-        // the whole document might be corrupted and we have no way to recover.
+        // the whole document might be corrupted, and we have no way to recover.
         self.xml_element()
             .document
             .read()
@@ -87,16 +88,26 @@ pub trait XmlWrapper: Into<XmlElement> {
     ///
     /// Note that for most implementations of [XmlWrapper], this value will be a compile time
     /// constant. However, this is not strictly required by [XmlWrapper], so there can be
-    /// implementations where this value changes depending on context. For example, [XmlList]
+    /// implementations where this value changes depending on context. For example, [crate::xml::XmlList]
     /// implements [XmlWrapper], but only determines its name at runtime.
     fn tag_name(&self) -> String {
         let doc = self.read_doc();
         self.raw_element().name(doc.deref()).to_string()
     }
 
+    fn prefix(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().prefix(doc.deref()).to_string()
+    }
+
+    fn full_name(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().full_name(doc.deref()).to_string()
+    }
+
     /// Returns the namespace URL of the XML tag referenced within this [XmlWrapper].
     ///
-    /// Same notes about value immutability as for [Self::name] apply.
+    /// Same notes about value immutability as for [Self::tag_name] apply.
     fn namespace_url(&self) -> String {
         let doc = self.read_doc();
         self.raw_element()
@@ -105,12 +116,141 @@ pub trait XmlWrapper: Into<XmlElement> {
             .to_string()
     }
 
-    /// Get a reference to a specific **required** [XmlProperty] of this XML element.
+    /// Returns the map of attributes as a collection of key-value pairs **<full_name:value>**
+    /// referenced within this [XmlWrapper].
+    ///
+    /// Note that full_name generally consists of namespace prefix and actual name in following format: **prefix:name**.
+    fn attributes(&self) -> HashMap<String, String> {
+        let doc = self.read_doc();
+        self.raw_element().attributes(doc.deref()).clone()
+    }
+
+    /// Returns true if this [XmlWrapper] instance has an attribute of the given name, ignoring
+    /// the namespace of the attribute.
+    fn has_attribute(&self, name: &str) -> bool {
+        let doc = self.read_doc();
+        let attributes = self.raw_element().attributes(doc.deref());
+        for full_name in attributes.keys() {
+            let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
+            if attr_name == name {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Return the raw value of the specified attribute, if it is defined. Ignores the namespace
+    /// of the attribute.
+    fn get_attribute(&self, name: &str) -> Option<String> {
+        let doc = self.read_doc();
+        let attributes = self.raw_element().attributes(doc.deref());
+        for (full_name, value) in attributes {
+            let (_prefix, attr_name) = Element::separate_prefix_name(full_name);
+            if attr_name == name {
+                return Some(value.clone());
+            }
+        }
+        None
+    }
+
+    /// Return the text content of this element and all its children.
+    fn text_content(&self) -> String {
+        let doc = self.read_doc();
+        self.raw_element().text_content(doc.deref())
+    }
+
+    /// Return the parent element of this [XmlWrapper] instance, if any.
+    fn parent(&self) -> Option<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .parent(doc.deref())
+            .map(|it| XmlElement::new_raw(self.document(), it))
+    }
+
+    /// Returns the vector of children referenced within this [XmlWrapper] as a collection
+    /// of [Element] objects. This method skips any child nodes that are not elements (such as
+    /// text or comments).
+    fn child_elements(&self) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .collect()
+    }
+
+    /// Get the `i-th` child element of this XML element. This operation ignores comments
+    /// or text content and only considers "true" child elements.
+    fn get_child_at(&self, index: usize) -> Option<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .children(doc.deref())
+            .iter()
+            .filter_map(|it| it.as_element())
+            .skip(index)
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .next()
+    }
+
+    /// Version of [Self::child_elements] with additional filtering function applied to the
+    /// output vector.
+    fn child_elements_filtered<P: FnMut(&XmlElement) -> bool>(
+        &self,
+        predicate: P,
+    ) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .filter(predicate)
+            .collect()
+    }
+
+    /// Version of [Self::child_elements] that recursively traverses all child nodes, not just
+    /// the immediate descendants.
+    fn recursive_child_elements(&self) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements_recursive(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .collect()
+    }
+
+    /// Version of [Self::recursive_child_elements] with additional filtering function applied
+    /// to the output vector.
+    fn recursive_child_elements_filtered<P: FnMut(&XmlElement) -> bool>(
+        &self,
+        predicate: P,
+    ) -> Vec<XmlElement> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .child_elements_recursive(doc.deref())
+            .into_iter()
+            .map(|it| XmlElement::new_raw(self.document(), it))
+            .filter(predicate)
+            .collect()
+    }
+
+    /// Returns the vector of names of children referenced within this [XmlWrapper].
+    ///
+    /// Note that these are "plain" names without namespace prefixes.
+    fn children_names(&self) -> Vec<String> {
+        let doc = self.read_doc();
+        self.raw_element()
+            .children(doc.deref())
+            .iter()
+            .filter_map(|node| node.as_element().map(|it| it.name(doc.deref()).to_string()))
+            .collect()
+    }
+
+    /// Get a reference to a specific [RequiredDynamicProperty] of this XML element.
     ///
     /// # Safety
     ///
     /// Note that individual [XmlWrapper] implementations should provide type safe access
-    /// to their known/required properties through specialised [XmlProperty] implementations
+    /// to their known/required properties through specialised [crate::xml::XmlProperty] implementations
     /// instead of relying on [RequiredDynamicProperty]. Using this method is to some extent
     /// equivalent to using [Self::unchecked_cast], because the validity of the requested
     /// property is not verified in any way.
@@ -118,14 +258,14 @@ pub trait XmlWrapper: Into<XmlElement> {
         RequiredDynamicProperty::new(self.xml_element(), name)
     }
 
-    /// Get a reference to a specific **optional** [XmlProperty] of this XML element.
+    /// Get a reference to a specific [OptionalDynamicProperty] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn optional_property<T: XmlPropertyType>(&self, name: &str) -> OptionalDynamicProperty<T> {
         OptionalDynamicProperty::new(self.xml_element(), name)
     }
 
-    /// Get a reference to a specific **optional** [XmlChild] of this XML element.
+    /// Get a reference to a specific [OptionalDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn optional_child<T: XmlWrapper>(
@@ -136,7 +276,7 @@ pub trait XmlWrapper: Into<XmlElement> {
         OptionalDynamicChild::new(self.xml_element(), name, namespace_url)
     }
 
-    /// Get a reference to a specific **required** [XmlChild] of this XML element.
+    /// Get a reference to a specific [RequiredDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
     fn required_child<T: XmlWrapper>(
@@ -148,19 +288,19 @@ pub trait XmlWrapper: Into<XmlElement> {
     }
 
     /// Detach this [XmlWrapper] from its current parent while maintaining the necessary
-    /// namespace declarations that make the XML sub-tree valid.
+    /// namespace declarations that make the XML subtree valid.
     ///
     /// Specifically, this method will:
-    ///  - Scan the whole XML sub-tree for relevant namespace prefixes
-    ///    (i.e. those not declared in the sub-tree itself).
-    ///  - Copy the namespace declarations into the sub-tree root.
+    ///  - Scan the whole XML subtree for relevant namespace prefixes
+    ///    (i.e. those not declared in the subtree itself).
+    ///  - Copy the namespace declarations into the subtree root.
     ///  - Detach the element.
     ///  - Due to the copied declarations, all prefixes are still valid,
     ///    even in this detached state.
     ///
     /// Note that this also applies to the "default" empty namespace: if the empty namespace is
     /// used, the method will add `xmlns=""` to the detached tag in order to reset
-    /// the default namespace in the root of the detached sub-tree to the empty namespace.
+    /// the default namespace in the root of the detached subtree to the empty namespace.
     ///
     /// ### Errors
     ///
@@ -168,7 +308,7 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// document "container" element (which is, in theory, always detached).
     fn try_detach(&self) -> Result<(), String> {
         // Note that we can't use methods like `Self::name` because they would need to lock
-        // the document and we already have it locked.
+        // the document, and we already have it locked.
         let element = self.raw_element();
         let mut doc = self.write_doc();
         if element.parent(doc.deref()).is_none() {
@@ -200,21 +340,21 @@ pub trait XmlWrapper: Into<XmlElement> {
 
     /// Try to attach this [XmlWrapper] into the given `parent` [XmlWrapper] as a new child at
     /// the given `position`. If `position` is not given, the child is inserted as the
-    /// last element. The method adjusts namespace declarations to ensure the sub-tree is valid
+    /// last element. The method adjusts namespace declarations to ensure the subtree is valid
     /// in its new context.
     ///
     /// The method takes all namespaces which are declared directly on `self`, and tries
     /// to propagate them to the root element reachable from `parent` (i.e. either a document
-    /// root, or a root of a detached sub-tree where `parent` resides). Specifically:
+    /// root, or a root of a detached subtree where `parent` resides). Specifically:
     ///  - The declaration of a default namespace cannot be propagated. However, it can be removed
     ///    if the root declares the same default namespace.
     ///  - The prefixes which are already declared with matching namespace URLs are removed.
     ///  - The prefixes which are not declared anywhere on the path to root
     ///    can be propagated to root.
     ///  - Other namespaces cannot be propagated, because their prefix is already declared,
-    ///    but with another URL. Hence they stay declared only for the newly attached sub-tree.
+    ///    but with another URL. Hence, they stay declared only for the newly attached subtree.
     ///
-    /// Note that if the attached sub-tree uses an empty "default" namespace, then it will have
+    /// Note that if the attached subtree uses an empty "default" namespace, then it will have
     /// `xmlns=""` set.
     ///
     /// ### Errors
@@ -285,7 +425,7 @@ pub trait XmlWrapper: Into<XmlElement> {
             }
             if let Some(declared) = applicable_namespaces.get(&prefix) {
                 if *declared == namespace {
-                    // The prefix is already declared with the same URL. Hence we can remove
+                    // The prefix is already declared with the same URL. Hence, we can remove
                     // the declaration on the child element because it is redundant.
                     element
                         .mut_namespace_decls(doc.deref_mut())

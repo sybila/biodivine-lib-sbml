@@ -1,65 +1,244 @@
+//!
+//! This crate provides a Rust interface for reading, editing, and validating Systems Biology
+//! Markup Language (SBML) files. Main features:
+//!
+//!  - Complete support for the SBML Level 3 Version 2 core specification.
+//!  - Validation of the *required* SBML conformance rules, including validation of proper namespace usage.
+//!  - Ability to (safely) edit invalid or partially corrupted files (e.g. to fix errors).
+//!  - Full access to the raw underlying XML document through the `xml-doc` interface.
+//!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
+//!  - Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
+//!
+//! For basic usage, explore the documentation of SBML objects declared in the [core]
+//! module. More advanced operations can be then performed using the XML abstraction layer
+//! described in module [xml].
+//!
+//! Note that primary documentation of the SBML objects is adapted from the SBML specification,
+//! including figures.
+//!
+//! ### Example
+//!
+//! ```rust
+//! use biodivine_lib_sbml::*;
+//! use biodivine_lib_sbml::core::*;
+//! use biodivine_lib_sbml::xml::*;
+//!
+//! let doc = Sbml::read_path("./test-inputs/model.sbml")
+//!     .expect("This document is not valid XML.");
+//!
+//! // First, we want to know if the document we
+//! // just read is valid SBML.//!
+//! let issues = doc.validate();
+//! if issues.len() > 0 {
+//!     // Note that these could be just warnings/notes. //!
+//!     // You can check `SbmlIssue::severity` of each item
+//!     // to detect fatal errors.
+//!     eprintln!("This document has issues:");
+//!     for issue in issues {
+//!         eprintln!("{:?}", issue);
+//!     }
+//! }
+//!
+//! let model = doc
+//!     .model()
+//!     .get()
+//!     // This is strange but allowed by the specification.
+//!     .expect("This document does not contain any model.");
+//!
+//! // Note that individual lists of model components
+//! // are also optional in the specification. Here,
+//! // an empty list is created if it does not exist.
+//! let species = model.species().get_or_create();
+//! let compartments = model.compartments().get_or_create();
+//! println!(
+//!     "This model has {} compartments and {} species.",
+//!     compartments.len(),
+//!     species.len(),
+//! );
+//!
+//! // We can use `DynamicProperty` and `DynamicChild` to access
+//! // items that are not in the SBML core specification.
+//! let qual_namespace = "http://www.sbml.org/sbml/level3/version1/qual/version1";
+//!
+//! // For example, here, we are reading the list of qualitative species defined
+//! // in the sbml-qual package as a "generic" list of `XmlElement` objects.
+//! let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
+//!     model.optional_child("listOfQualitativeSpecies", qual_namespace);
+//! println!(
+//!     "This model has {} qualitative species.",
+//!     qual_species.get_or_create().len(),
+//! );
+//!
+//! // We can also modify the model.
+//!
+//! // First, create a new instance of a `Species` object.
+//! let species_id = "sp-1".to_string();
+//! let compartment_id = compartments.get(0).id().get();
+//! let s = Species::new(model.document(), &species_id, &compartment_id);
+//! let species_name = "MySpecies".to_string();
+//! s.name().set_some(&species_name);
+//!
+//! // Then, add it to the current list of species.
+//! species.push(s);
+//! assert_eq!(species.get(0).name().get(), Some(species_name));
+//!
+//! // Finally, we can print the model back as XML:
+//! let xml_string = doc.to_xml_string()
+//!     .expect("Encoding error.");
+//!
+//! println!("{} ... ", &xml_string[..200]);
+//! ```
+//!
+
+use std::collections::HashSet;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
-use xml_doc::Document;
+use biodivine_xml_doc::{Document, Element, ReadOptions};
+use embed_doc_image::embed_doc_image;
 
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
-use crate::model::Model;
-use crate::xml::{XmlDocument, XmlElement};
+use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
+use crate::core::validation::{
+    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
+    apply_rule_10312, SbmlValidable,
+};
+use crate::core::{Model, SBase};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
 
+/// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
+/// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
+/// by the SBML core specification.
+pub mod core;
 pub mod sbml;
+
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
 ///  - [XmlDocument] | A thread and memory safe reference to a [Document].
 ///  - [XmlElement] | A thread and memory safe reference to an [xml_doc::Element].
-///  - [xml::XmlWrapper] | A trait with utility functions for working with types
+///  - [XmlWrapper] | A trait with utility functions for working with types
 ///  derived from [XmlElement].
-///  - [xml::XmlDefault] | An extension of [xml::XmlWrapper] which allows creation of "default"
+///  - [xml::XmlDefault] | An extension of [XmlWrapper] which allows creation of "default"
 ///  value for the derived type.
 ///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
 ///  accessing properties stored in XML attributes. Implementation can be generated using a derive
 ///  macro.
 ///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
 ///  child tags. Implementation can be generated using a derive macro.
-///  - [xml::XmlList] | A generic implementation of [xml::XmlWrapper] which represents
+///  - [xml::XmlList] | A generic implementation of [XmlWrapper] which represents
 ///  a typed list of elements.
 ///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
 ///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
 ///  is not known at compile time.
 pub mod xml;
 
-pub mod sbase;
+/// **(internal)** An internal module which defines constant values relevant for SBML, such as
+/// namespace URLs or mappings assigning elements their allowed attributes.
+pub(crate) mod constants;
 
-pub mod model;
+/// **(test)** A helper module for executing the syntactic SBML test suite as part of the
+/// standard unit tests.
+#[cfg(test)]
+pub mod test_suite;
 
-pub mod constants;
-
-/// Declares the [SbmlValidate] trait and should also contain other relevant
-/// algorithms/implementations for validation.
-pub mod validation;
-
-/// The object that "wraps" an XML document in a SBML-specific API.
+/// The SBML container object
+/// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
 ///
-/// This is mostly just the place where you can specify what SBML version and
-/// what SBML extensions are being used. The actual content of the SBML model is
-/// then managed through the `SbmlModel` struct.
+/// ## 4.1 The SBML Container
+///
+/// <!-- A minor hack to position the UML figure nicely in the page. -->
+/// <style>
+/// img[alt=UML] {
+///     width: 80%;
+///     display: block;
+///     margin: 0 auto;
+///     margin-top: 1rem;
+///     margin-bottom: 1rem;
+/// }
+/// </style>
+///
+/// ![UML][sbml-container]
+///
+/// Following the XML declaration, the outermost portion of a model expressed in Level 3 consists
+/// of an object of class [`Sbml`]. This class contains three required attributes
+/// (*level*, *version* and *xmlns*), and an optional *model* element.
+///
+/// The [`Sbml`] class defines the structure and content of the `sbml` outermost element in an SBML
+/// file. The following is an abbreviated example of [`Sbml`] class object translated into XML
+/// form for an SBML Level 3 Version 2 Core document. Here, ellipses (“...”) are used to indicate
+/// content elided from this example:
+///
+/// ```xml
+/// <?xml version="1.0" encoding="UTF-8"?>
+///     <sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+///      ...
+///         <model ...> ... </model>
+///     </sbml>
+/// ```
+///
+/// The attribute `xmlns` declares the XML namespace used within the `sbml` element. The URI for
+/// SBML Level 3 Version 2 Core is `http://www.sbml.org/sbml/level3/version2/core`. All SBML Level
+/// 3 Version 2 Core elements and attributes must be placed in this namespace either by assigning
+/// the default namespace as shown in the example above, or using a tag prefix on every element.
+/// The `sbml` element may contain additional attributes, in particular, attributes to support the
+/// inclusion of SBML Level 3 packages; see Section 4.1.3. For purposes of checking conformance
+/// to the SBML Level 3 Core specification, only the elements and attributes in the SBML Level
+/// 3 Core XML namespace are considered.
+///
+/// ### 4.1.1 The `id` and `name` attributes
+/// Because SBML inherits from [`SBase`], it has optional `id`, `name`, `sboTerm` and `metaid`
+/// attributes. SBML Level 3 Version 2 Core does not define a purpose for these attributes;
+/// moreover, being outside the [`Model`] namespace, the `id` attribute is not subject to the
+/// uniqueness constraints of `SId` values inside [`Model`] objects.
+///
+/// ### 4.1.2 The `model` element
+/// The actual model contained within an SBML document is defined by an instance of the [`Model`]
+/// class element. The structure of this object and its use are described in Section 4.2.
+/// An SBML document may contain at most one model definition.
+///
+#[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
 pub struct Sbml {
     xml: XmlDocument,
     sbml_root: XmlElement,
 }
 
+/// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
-    pub fn read_path(path: &str) -> Result<Sbml, String> {
-        let file_contents = match std::fs::read_to_string(path) {
-            Ok(file_contents) => file_contents,
-            Err(why) => return Err(why.to_string()),
+    pub fn model(&self) -> OptionalChild<Model> {
+        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
+    }
+
+    pub fn level(&self) -> RequiredProperty<u32> {
+        RequiredProperty::new(&self.sbml_root, "level")
+    }
+
+    pub fn version(&self) -> RequiredProperty<u32> {
+        RequiredProperty::new(&self.sbml_root, "version")
+    }
+}
+
+/// Other methods for creating and manipulating [`Sbml`] container.
+impl Sbml {
+    pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
+        // Only accept documents that are using UTF-8.
+        let opts = ReadOptions {
+            enforce_encoding: true,
+            encoding: Some("UTF-8".to_string()),
+            ..Default::default()
         };
-        let doc = match Document::from_str(file_contents.as_str()) {
+        let doc = match Document::parse_str_with_opts(file_contents, opts) {
             Ok(doc) => doc,
-            Err(why) => return Err(why.to_string()),
+            Err(why) => {
+                return if matches!(why, biodivine_xml_doc::Error::CannotDecode) {
+                    Err("SBML documents must use UTF-8 encoding.".to_string())
+                } else {
+                    Err(why.to_string())
+                }
+            }
         };
         let root = doc.root_element().unwrap();
         let xml_document = Arc::new(RwLock::new(doc));
@@ -67,6 +246,14 @@ impl Sbml {
             xml: xml_document.clone(),
             sbml_root: XmlElement::new_raw(xml_document, root),
         })
+    }
+
+    pub fn read_path(path: &str) -> Result<Sbml, String> {
+        let file_contents = match std::fs::read_to_string(path) {
+            Ok(file_contents) => file_contents,
+            Err(why) => return Err(why.to_string()),
+        };
+        Self::read_str(file_contents.as_str())
     }
 
     pub fn write_path(&self, path: &str) -> Result<(), String> {
@@ -91,20 +278,88 @@ impl Sbml {
         }
     }
 
-    pub fn model(&self) -> OptionalChild<Model> {
-        // TODO:
-        //  This is technically not entirely valid because we should check the namespace
-        //  of the model element as well, but it's good enough for a demo. Also, some of this
-        //  may need better error handling.
-        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
+    /// Perform a basic type checking procedure. If this procedure passes without issues,
+    /// the document is safe to work with. If some issues are found, working with the document
+    /// can cause the program to panic.
+    ///
+    /// Note that [Sbml::validate] internally also performs a type check before running the full
+    /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
+    /// with no issues.
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        let doc = self.xml.read().unwrap();
+        let element = self.sbml_root.raw_element();
+
+        // For the root SBMl element, there are a few extra conditions related to the rule 10102.
+        if doc.container().child_elements(doc.deref()).len() != 1 {
+            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
+            let message = "The document contains multiple root nodes. \
+                Only one root <sbml> object is allowed.";
+            issues.push(SbmlIssue::new_error("10102", &container, message));
+        }
+
+        let root_element = self.sbml_root.xml_element();
+        if root_element.tag_name() != "sbml" {
+            let message = format!("Invalid root element <{}> found.", root_element.tag_name());
+            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
+        }
+
+        internal_type_check(&self.sbml_root, issues);
+
+        if element.name(doc.deref()) == "sbml"
+            && !element.namespace_decls(doc.deref()).contains_key("")
+        {
+            issues.push(SbmlIssue::new_error(
+                "SANITY_CHECK",
+                &self.sbml_root,
+                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
+            ));
+        }
+
+        if let Some(model) = self.model().get() {
+            model.type_check(issues);
+        }
     }
 
-    pub fn level(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(&self.sbml_root, "level")
-    }
+    /// Validates the document against validation rules specified in the
+    /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
+    /// Eventual issues are returned in the vector. Empty vector represents a valid document.
+    /// ### Rule 10101
+    /// is already satisfied implicitly by the use of the package *xml-doc* as writing
+    /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
+    /// UTF-16, ISO 8859-1, GBK or EUC-KR. The specific error is currently covered
+    /// in [Self::read_str].
+    ///
+    /// ### Rule 10104
+    /// is already satisfied implicitly by the use of the package *xml-doc* as loading
+    /// a document without an error ensures that the document conforms to the basic
+    /// structural and syntactic constraints.
+    pub fn validate(&self) -> Vec<SbmlIssue> {
+        let mut issues: Vec<SbmlIssue> = vec![];
+        self.type_check(&mut issues);
 
-    pub fn version(&self) -> RequiredProperty<String> {
-        RequiredProperty::new(&self.sbml_root, "version")
+        if !issues.is_empty() {
+            return issues;
+        }
+
+        let mut identifiers: HashSet<String> = HashSet::new();
+        let mut meta_ids: HashSet<String> = HashSet::new();
+
+        let xml_element = self.xml_element();
+        let id = self.id();
+        let meta_id = self.meta_id();
+
+        apply_rule_10301(id.get(), xml_element, &mut issues, &mut identifiers);
+        apply_rule_10307(meta_id.get(), xml_element, &mut issues, &mut meta_ids);
+        apply_rule_10308(self.sbo_term().get(), xml_element, &mut issues);
+        apply_rule_10309(meta_id.get(), xml_element, &mut issues);
+        apply_rule_10310(id.get(), xml_element, &mut issues);
+        apply_rule_10312(self.name().get(), xml_element, &mut issues);
+
+        if let Some(model) = self.model().get() {
+            model.validate(&mut issues, &mut identifiers, &mut meta_ids);
+        }
+
+        issues
     }
 }
 
@@ -122,24 +377,84 @@ impl Default for Sbml {
     }
 }
 
+impl XmlWrapper for Sbml {
+    fn xml_element(&self) -> &XmlElement {
+        &self.sbml_root
+    }
+
+    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
+        Sbml {
+            xml: element.document(),
+            sbml_root: element.xml_element().clone(),
+        }
+    }
+}
+
+impl From<Sbml> for XmlElement {
+    fn from(value: Sbml) -> Self {
+        value.sbml_root
+    }
+}
+
+impl SBase for Sbml {}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SbmlIssue {
+    /// Refers to the "raw" XML element where the issue occurred.
+    pub element: Element,
+    pub severity: SbmlIssueSeverity,
+    pub rule: String,
+    pub message: String,
+}
+
+impl SbmlIssue {
+    /// A helper method to more easily create an [SbmlIssue] with [SbmlIssueSeverity::Error]
+    /// severity.
+    pub fn new_error<S: ToString, E: XmlWrapper>(rule: &str, element: &E, message: S) -> SbmlIssue {
+        SbmlIssue {
+            element: element.raw_element(),
+            severity: SbmlIssueSeverity::Error,
+            rule: rule.to_string(),
+            message: message.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub enum SbmlIssueSeverity {
+    /// An issue that makes the document impossible to read correctly (e.g. a function is
+    /// used but not declared).
+    Error,
+    /// An issue that suggests a possible error but does not necessarily make the document
+    /// invalid (e.g. a variable is declared but never used).
+    Warning,
+    /// A suggestion that would improve the document but does not represent a significant
+    /// issue (e.g. a property is included when it does not have to be, or unknown tags
+    /// or attributes are present in the document, e.g. due to the use of unofficial extensions).
+    Info,
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
-    use crate::model::{
-        BaseUnit, Compartment, Constraint, FunctionDefinition, Math, Model, SimpleSpeciesReference,
-        Unit, UnitDefinition,
+    use crate::core::RuleTypes::Assignment;
+    use crate::core::{
+        AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
+        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
+        Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes,
+        SBase, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit, UnitDefinition,
     };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
-        XmlProperty, XmlWrapper,
+        XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
-    use crate::{sbase::SBase, Sbml};
+    use crate::Sbml;
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
-    /// Additionally checks if `Model` retrieval returns correct child.
+    /// Additionally, checks if `Model` retrieval returns correct child.
     #[test]
     pub fn test_document() {
         let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
@@ -148,14 +463,14 @@ mod tests {
         let version = doc.version().get();
 
         assert_eq!(
-            level, "3",
+            level, 3,
             "Wrong level of SBML.\nActual: {}\nExpected: {}",
-            level, "3"
+            level, 3
         );
         assert_eq!(
-            version, "1",
+            version, 2,
             "Wrong version of SBML.\nActual: {}\nExpected: {}",
-            version, "1"
+            version, 2
         );
 
         let model = doc.model().get().unwrap();
@@ -207,7 +522,7 @@ mod tests {
         );
 
         // try overwriting the <id> property
-        property.set(Some(&"optional_model_id".to_string()));
+        property.set_some(&"optional_model_id".to_string());
         let property_val = property.get();
         assert_eq!(
             property_val,
@@ -365,7 +680,7 @@ mod tests {
         assert!(!content.is_empty());
         assert_eq!(content.len(), 1);
         let compartment1 = content.get(0);
-        assert_eq!(compartment1.constant().get(), true);
+        assert!(compartment1.constant().get());
         assert_eq!(compartment1.id().get(), "comp1");
         let compartment2: Compartment = Compartment::default(compartment1.document());
         compartment2.constant().set_raw("false".to_string());
@@ -394,10 +709,10 @@ mod tests {
         // set default model element
         sbml_doc.model().set(new_model);
         let model = sbml_doc.model().get().unwrap();
-        model.id().set(Some(&"model_id".to_string()));
-        model.name().set(Some(&"test model No. 1".to_string()));
-        model.sbo_term().set(Some(&"FE12309531 TEST".to_string()));
-        model.meta_id().set(Some(&"MT-TEST-MODEL-NO1".to_string()));
+        model.id().set_some(&"model_id".to_string());
+        model.name().set_some(&"test model No. 1".to_string());
+        model.sbo_term().set_some(&"FE12309531 TEST".to_string());
+        model.meta_id().set_some(&"MT-TEST-MODEL-NO1".to_string());
         model.notes().set(XmlElement::new_quantified(
             model.document(),
             "notes",
@@ -423,27 +738,34 @@ mod tests {
             "This is a SBML annotation element.",
         );
 
-        build_funtion_defs(&model);
+        build_function_defs(&model);
         build_unit_defs(&model);
         build_compartments(&model);
+        build_species(&model);
+        build_parameters(&model);
+        build_initial_assignments(&model);
+        build_rules(&model);
+        build_constraints(&model);
+        build_reactions(&model);
+        build_events(&model);
 
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
 
         // Clean up the test file.
-        // std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
+        std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
     }
 
-    fn build_funtion_defs(model: &Model) {
+    fn build_function_defs(model: &Model) {
         let function_defs = model.function_definitions();
         function_defs.ensure();
 
         let function_defs_list = function_defs.get().unwrap();
         function_defs_list
             .id()
-            .set(Some(&"FunDefsList-ID".to_string()));
+            .set_some(&"FunDefsList-ID".to_string());
         function_defs_list
             .name()
-            .set(Some(&"FunDefsList-NAME".to_string()));
+            .set_some(&"FunDefsList-NAME".to_string());
         function_defs_list.push(FunctionDefinition::default(model.document()));
         function_defs_list.push(FunctionDefinition::default(model.document()));
         function_defs_list.push(FunctionDefinition::default(model.document()));
@@ -451,13 +773,13 @@ mod tests {
         function_defs_list
             .get(0)
             .id()
-            .set(Some(&"function-def-1".to_string()));
+            .set_some(&"function-def-1".to_string());
         function_defs_list
             .get(1)
             .id()
-            .set(Some(&"function-def-2".to_string()));
+            .set_some(&"function-def-2".to_string());
         let fd_top = function_defs_list.top();
-        fd_top.id().set(Some(&"function-def-3".to_string()));
+        fd_top.id().set_some(&"function-def-3".to_string());
         fd_top.math().set(Math::default(model.document()));
     }
 
@@ -466,12 +788,10 @@ mod tests {
         unit_defs.ensure();
 
         let unit_defs_list = unit_defs.get().unwrap();
-        unit_defs_list
-            .id()
-            .set(Some(&"UnitDefsList-ID".to_string()));
+        unit_defs_list.id().set_some(&"UnitDefsList-ID".to_string());
         unit_defs_list
             .name()
-            .set(Some(&"UnitDefsList-NAME".to_string()));
+            .set_some(&"UnitDefsList-NAME".to_string());
         unit_defs_list.push(UnitDefinition::default(model.document()));
         unit_defs_list.push(UnitDefinition::default(model.document()));
         unit_defs_list.push(UnitDefinition::default(model.document()));
@@ -479,14 +799,14 @@ mod tests {
         unit_defs_list
             .get(0)
             .id()
-            .set(Some(&"unit-def-1".to_string()));
+            .set_some(&"unit-def-1".to_string());
         unit_defs_list
             .get(1)
             .id()
-            .set(Some(&"unit-def-2".to_string()));
+            .set_some(&"unit-def-2".to_string());
         let ud_top = unit_defs_list.top();
-        ud_top.id().set(Some(&"unit-def-3-length".to_string()));
-        ud_top.name().set(Some(&"unit-def-3-length".to_string()));
+        ud_top.id().set_some(&"unit-def-3-length".to_string());
+        ud_top.name().set_some(&"unit-def-3-length".to_string());
 
         // set default list of units for unit definition
         ud_top.units().ensure();
@@ -502,8 +822,8 @@ mod tests {
         compartments.ensure();
 
         let compartments = compartments.get().unwrap();
-        compartments.id().set(Some(&"CompsList-ID".to_string()));
-        compartments.name().set(Some(&"CompsList-NAME".to_string()));
+        compartments.id().set_some(&"CompsList-ID".to_string());
+        compartments.name().set_some(&"CompsList-NAME".to_string());
         compartments.push(Compartment::default(model.document()));
         compartments.push(Compartment::default(model.document()));
         compartments.push(Compartment::default(model.document()));
@@ -515,10 +835,248 @@ mod tests {
 
         let comp_top = compartments.top();
         comp_top.id().set(&"compartment-3".to_string());
-        comp_top.spatial_dimensions().set(Some(&3.0));
-        comp_top.size().set(Some(&1.0));
-        comp_top.units().set(Some(&"volume".to_string()));
+        comp_top.spatial_dimensions().set_some(&3.0);
+        comp_top.size().set_some(&1.0);
+        comp_top.units().set_some(&"volume".to_string());
         comp_top.constant().set(&true);
+    }
+
+    fn build_species(model: &Model) {
+        let species = model.species();
+        species.ensure();
+
+        let species = species.get().unwrap();
+        species.id().set_some(&"SpeciesList-ID".to_string());
+        species.name().set_some(&"SpeciesList-NAME".to_string());
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-1"),
+            &String::from("compartment-1"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-2"),
+            &String::from("compartment-2"),
+        ));
+        species.push(Species::new(
+            model.document(),
+            &String::from("species-3"),
+            &String::from("compartment-3"),
+        ));
+
+        let species_top = species.top();
+        species_top.initial_amount().set_some(&10.0);
+        species_top.initial_concentration().set_some(&0.5);
+        species_top
+            .substance_units()
+            .set_some(&BaseUnit::Sievert.to_string());
+        species_top.has_only_substance_units().set(&false);
+        species_top.boundary_condition().set(&true);
+        species_top.constant().set(&false);
+        species_top
+            .conversion_factor()
+            .set_some(&"linear".to_string());
+    }
+
+    fn build_parameters(model: &Model) {
+        let parameters = model.parameters();
+        parameters.ensure();
+
+        let parameters = parameters.get().unwrap();
+        parameters.id().set_some(&"ParamsList-ID".to_string());
+        parameters.name().set_some(&"ParamsList-NAME".to_string());
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-1"),
+            true,
+        ));
+        parameters.push(Parameter::new(
+            model.document(),
+            &String::from("param-2"),
+            true,
+        ));
+
+        let param_top = parameters.top();
+        param_top.value().set_some(&15.0);
+        param_top.units().set_some(&BaseUnit::Ampere.to_string());
+    }
+
+    fn build_initial_assignments(model: &Model) {
+        let assignments = model.initial_assignments();
+        assignments.ensure();
+
+        let assignments = assignments.get().unwrap();
+        assignments
+            .id()
+            .set_some(&"InitialAssignmentsList-ID".to_string());
+        assignments
+            .name()
+            .set_some(&"InitialAssignmentsList-NAME".to_string());
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
+        assignments.push(InitialAssignment::new(model.document(), &String::from("x")));
+
+        assignments.get(0).math().ensure();
+        assignments.get(1).math().ensure();
+    }
+
+    fn build_rules(model: &Model) {
+        let rules = model.rules();
+        rules.ensure();
+
+        let rules = rules.get().unwrap();
+        rules.id().set_some(&"RulesList-ID".to_string());
+        rules.name().set_some(&"RulesList-NAME".to_string());
+        rules.push(AlgebraicRule::default(model.document()).upcast());
+        rules.push(AssignmentRule::new(model.document(), &String::from("z")).upcast());
+        rules.push(RateRule::new(model.document(), &String::from("r")).upcast());
+
+        let algebraic: AlgebraicRule = rules.get(0).downcast();
+        algebraic.id().set_some(&"rule-1".to_string());
+        algebraic.name().set_some(&"algebraic".to_string());
+
+        let assignment: AssignmentRule = rules.get(1).downcast();
+        assignment.id().set_some(&"rule-2".to_string());
+        assignment.name().set_some(&"assignment".to_string());
+
+        let rate: RateRule = rules.get(2).downcast();
+        rate.id().set_some(&"rule-3".to_string());
+        rate.name().set_some(&"rate".to_string());
+    }
+
+    fn build_constraints(model: &Model) {
+        let constraints = model.constraints();
+        constraints.ensure();
+
+        let constraints = constraints.get().unwrap();
+        constraints.id().set_some(&"ConstraintsList-ID".to_string());
+        constraints
+            .name()
+            .set_some(&"ConstraintsList-NAME".to_string());
+        constraints.push(Constraint::default(model.document()));
+        constraints.push(Constraint::default(model.document()));
+
+        constraints
+            .get(0)
+            .id()
+            .set_some(&"constraint-1".to_string());
+        constraints
+            .get(1)
+            .id()
+            .set_some(&"constraint-2".to_string());
+
+        let constraint_top = constraints.top();
+        constraint_top.message().set(XmlElement::new_quantified(
+            model.document(),
+            "message",
+            NS_HTML,
+        ));
+        constraint_top.math().ensure();
+    }
+
+    fn build_reactions(model: &Model) {
+        let reactions = model.reactions();
+        reactions.ensure();
+
+        let reactions = reactions.get().unwrap();
+        reactions.id().set_some(&"ReactionsList-ID".to_string());
+        reactions.name().set_some(&"ReactionsList-NAME".to_string());
+        reactions.push(Reaction::new(
+            model.document(),
+            &String::from("reaction-1"),
+            true,
+        ));
+
+        let reaction = reactions.top();
+        reaction
+            .compartment()
+            .set_some(&"compartment-1".to_string());
+
+        let reactants = reaction.reactants();
+        reactants.ensure();
+        let reactants = reactants.get().unwrap();
+        reactants.id().set_some(&"ReactantsList-ID".to_string());
+        reactants.push(SpeciesReference::new(
+            model.document(),
+            &String::from("species-1"),
+            true,
+        ));
+        let reactant = reactants.top();
+        reactant.stoichiometry().set_some(&2.0);
+
+        let products = reaction.products();
+        products.ensure();
+        let products = products.get().unwrap();
+        products.id().set_some(&"ProductsList-ID".to_string());
+        products.push(SpeciesReference::new(
+            model.document(),
+            &String::from("species-1"),
+            true,
+        ));
+        let product = products.top();
+        product.stoichiometry().set_some(&1.0);
+
+        let modifiers = reaction.modifiers();
+        modifiers.ensure();
+        let modifiers = modifiers.get().unwrap();
+        modifiers.id().set_some(&"ModifiersList-ID".to_string());
+        modifiers.push(ModifierSpeciesReference::new(
+            model.document(),
+            &String::from("species-2"),
+        ));
+
+        let kinetic_law = reaction.kinetic_law();
+        kinetic_law.set(KineticLaw::default(model.document()));
+        kinetic_law.get().unwrap().math().ensure();
+        let kinetic_law = kinetic_law.get().unwrap();
+        let local_params = kinetic_law.local_parameters();
+        local_params.ensure();
+        let local_params = local_params.get().unwrap();
+        local_params.push(LocalParameter::new(
+            model.document(),
+            &String::from("localParam-ID"),
+        ));
+        let param = local_params.top();
+        param.value().set_some(&42.0);
+        param.units().set_some(&"meter".to_string());
+    }
+
+    fn build_events(model: &Model) {
+        let events = model.events();
+        events.ensure();
+
+        let events = events.get().unwrap();
+        events.id().set_some(&"EventsList-ID".to_string());
+        events.push(Event::default(model.document()));
+        events.push(Event::default(model.document()));
+
+        events.get(0).use_values_from_trigger_time().set(&true);
+        events.get(1).use_values_from_trigger_time().set(&false);
+
+        let event = events.top();
+
+        event.trigger().set(Trigger::default(model.document()));
+        let trigger = event.trigger().get().unwrap();
+        trigger.initial_value().set(&true);
+        trigger.persistent().set(&true);
+        trigger.math().ensure();
+
+        event.priority().set(Priority::default(model.document()));
+        let priority = event.priority().get().unwrap();
+        priority.math().ensure();
+
+        event.delay().set(Delay::default(model.document()));
+        let delay = event.delay().get().unwrap();
+        delay.math().ensure();
+
+        let event_assignments = event.event_assignments();
+        event_assignments.ensure();
+        let event_assignments = event_assignments.get().unwrap();
+        event_assignments
+            .id()
+            .set_some(&"EventAssignmentsList-ID".to_string());
+        event_assignments.push(EventAssignment::new(model.document(), &String::from("evt")));
+        let assignment = event_assignments.top();
+        assignment.math().ensure();
     }
 
     #[test]
@@ -531,7 +1089,7 @@ mod tests {
         assert_eq!(id.name(), "id");
         assert_eq!(id.element().raw_element(), model.raw_element());
         assert_eq!(id.get().unwrap(), "model_id");
-        id.set(Some(&"new_model_id".to_string()));
+        id.set_some(&"new_model_id".to_string());
         assert_eq!(id.get().unwrap(), "new_model_id");
         id.clear();
         assert!(!id.is_set());
@@ -540,7 +1098,7 @@ mod tests {
         assert!(!name.is_set());
         assert_eq!(name.name(), "name");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        name.set(Some(&"model_name".to_string()));
+        name.set_some(&"model_name".to_string());
         assert_eq!(name.get().unwrap(), "model_name");
         name.clear();
         assert!(!name.is_set());
@@ -553,7 +1111,7 @@ mod tests {
             meta_id.get().unwrap(),
             "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d"
         );
-        meta_id.set(Some(&"new_meta_id_12345".to_string()));
+        meta_id.set_some(&"new_meta_id_12345".to_string());
         assert_eq!(meta_id.get().unwrap(), "new_meta_id_12345");
         meta_id.clear();
         assert!(!meta_id.is_set());
@@ -562,7 +1120,7 @@ mod tests {
         assert!(!sbo_term.is_set());
         assert_eq!(sbo_term.name(), "sboTerm");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        sbo_term.set(Some(&"model_sbo_term".to_string()));
+        sbo_term.set_some(&"model_sbo_term".to_string());
         assert_eq!(sbo_term.get().unwrap(), "model_sbo_term");
         sbo_term.clear();
         assert!(!sbo_term.is_set());
@@ -741,16 +1299,25 @@ mod tests {
         assert!(!rules.is_empty());
         assert_eq!(rules.len(), 9);
 
-        // let rule = rules.get(0).downcast();
-        // let concrete_rule = match rule {
-        //     RuleEnum::Algebraic(rule) => rule,
-        //     RuleEnum::Assignment(rule) => rule,
-        //     RuleEnum::Rate(rule) => rule,
-        //     RuleEnum::Other(rule) => rule,
-        // };
+        match rules.get(0).cast() {
+            RuleTypes::Algebraic(_) => assert!(false),
+            Assignment(rule) => {
+                assert_eq!(rule.variable().get(), "SUMRecTAINF");
+                assert!(rule.math().is_set());
+            }
+            RuleTypes::Rate(_) => assert!(false),
+            RuleTypes::Other(_) => assert!(false),
+        };
 
-        // assert_eq!(rule., "SUMRecTAINF");
-        // assert!(rule.math().is_set());
+        match rules.top().cast() {
+            RuleTypes::Other(_) => assert!(false),
+            RuleTypes::Algebraic(_) => assert!(false),
+            Assignment(rule) => {
+                assert_eq!(rule.variable().get(), "SUMForFoam");
+                assert!(rule.math().is_set());
+            }
+            RuleTypes::Rate(_) => assert!(false),
+        }
     }
 
     #[test]

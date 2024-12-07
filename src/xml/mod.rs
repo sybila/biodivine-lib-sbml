@@ -1,5 +1,5 @@
+use biodivine_xml_doc::Document;
 use std::sync::{Arc, RwLock};
-use xml_doc::Document;
 
 /// Implementation of the [XmlElement] struct.
 mod xml_element;

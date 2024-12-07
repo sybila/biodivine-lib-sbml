@@ -5,9 +5,20 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+# When enabled, run the SBML syntactic test suite as part of unit tests.
+# This is mainly used for the purpose of code coverage computation.
+sbml_test_suite = []
+
 [dependencies]
 const_format = "0.2.31"
-macros = { path = "macros" }
-strum = "0.25.0"
-strum_macros = "0.25"
-xml-doc = { git = "https://github.com/daemontus/xml-doc" }
+phf = { version = "0.11.2", features = ["macros"] }
+strum = "0.26"
+strum_macros = "0.26"
+regex = "1.10.3"
+biodivine-xml-doc = "0.3.0"
+sbml-macros = { path = "sbml-macros" }
+embed-doc-image = "0.1.4"
+
+[dev-dependencies]
+sbml-test-suite = { path = "sbml-test-suite" }

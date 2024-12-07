@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="2" version="4">
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
     <model id="McAuley2012___Whole_body_Cholesterol_Metabolism" metaid="COPASI0"
            name="Davies2023 - Cholesterol Metabolism and Atherosclerosis Model">
         <notes>
@@ -9,7 +9,7 @@
                 </p>
             </body>
         </notes>
-        <annotation xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <annotation xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
                 <rdf:RDF xmlns:CopasiMT="http://www.copasi.org/RDF/MiriamTerms#"
                          xmlns:bqbiol="http://biomodels.net/biology-qualifiers/"
@@ -182,7 +182,7 @@
 
             </rdf:RDF>
         </annotation>
-        <listOfFunctionDefinitions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfFunctionDefinitions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <functionDefinition id="Rate_Law_for_Cholesterol_Absorption_1__1" metaid="COPASI114"
                                 name="Rate Law for Cholesterol Absorption_1 [1]">
                 <annotation>
@@ -2516,7 +2516,7 @@
                 </math>
             </functionDefinition>
         </listOfFunctionDefinitions>
-        <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <unitDefinition id="length" name="length">
                 <listOfUnits>
                     <unit exponent="1" kind="metre" multiplier="1" scale="0"/>
@@ -2543,7 +2543,7 @@
                 </listOfUnits>
             </unitDefinition>
         </listOfUnitDefinitions>
-        <listOfCompartments xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfCompartments xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <compartment constant="true" id="Intake" metaid="COPASI1" name="Intake" size="1" spatialDimensions="3">
                 <annotation>
                     <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
@@ -2705,7 +2705,7 @@
             </compartment>
             <compartment constant="true" id="Endothelium" name="Endothelium" size="1" spatialDimensions="3"/>
         </listOfCompartments>
-        <listOfSpecies xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfSpecies xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <species boundaryCondition="true" compartment="Intake" constant="true" id="species_1"
                      initialConcentration="1051" metaid="COPASI7" name="DC">
                 <annotation>
@@ -3844,7 +3844,7 @@
             <species boundaryCondition="false" compartment="Endothelium" constant="false" id="HDL"
                      initialConcentration="0" name="HDL"/>
         </listOfSpecies>
-        <listOfParameters xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfParameters xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <parameter constant="true" id="alfa7" name="alfa7" value="2.8067"/>
             <parameter constant="true" id="ActEndstim_a" name="ActEndstim_a" value="0"/>
             <parameter constant="true" id="ActEndstim_b" name="ActEndstim_b" value="3.51949"/>
@@ -3911,7 +3911,7 @@
             <parameter constant="true" id="MCblood" name="MCblood" value="1"/>
             <parameter constant="true" id="M" name="M" value="0.0155561"/>
         </listOfParameters>
-        <listOfRules xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfRules xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <assignmentRule variable="SUMRecTAINF">
                 <math xmlns="http://www.w3.org/1998/Math/MathML">
                     <apply>
@@ -4142,7 +4142,7 @@
                 </math>
             </assignmentRule>
         </listOfRules>
-        <listOfReactions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfReactions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <reaction id="reaction_1" metaid="COPASI41" name="Ingestion" reversible="false">
                 <annotation>
                     <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
@@ -4191,7 +4191,7 @@
                         </apply>
                     </math>
                     <listOfLocalParameters>
-                        <parameter id="k1" name="k1" value="1"/>
+                        <localParameter id="k1" name="k1" value="1"/>
                     </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
@@ -4249,11 +4249,11 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="ICSmax" name="ICSmax" value="100"/>
-                        <parameter id="ICt" name="ICt" value="3120"/>
-                        <parameter id="IS" name="IS" value="5"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="ICSmax" name="ICSmax" value="100"/>
+                        <localParameter id="ICt" name="ICt" value="3120"/>
+                        <localParameter id="IS" name="IS" value="5"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_3" metaid="COPASI43" name="Bile Salt Release" reversible="false">
@@ -4303,9 +4303,9 @@
                             <ci>species_4</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="6"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="6"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_4" metaid="COPASI44" name="Bile Salt Return" reversible="false">
@@ -4355,9 +4355,9 @@
                             <ci>species_5</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="4.29"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="4.29"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_5" metaid="COPASI45" name="Bile Salt Excretion" reversible="false">
@@ -4407,9 +4407,9 @@
                             <ci>species_5</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.856"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.856"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_6" metaid="COPASI46" name="Bile Salt Synthesis" reversible="false">
@@ -4466,9 +4466,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k5" name="k5" value="2.66"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k5" name="k5" value="2.66"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_7" metaid="COPASI47" name="Cholesterol Absorption" reversible="false">
@@ -4520,9 +4520,9 @@
                             <ci>species_5</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k6" name="k6" value="0.0005286"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k6" name="k6" value="0.0005286"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_8" metaid="COPASI48" name="Cholesterol Excretion" reversible="false">
@@ -4574,9 +4574,9 @@
                             <ci>species_5</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k7" name="k7" value="0.0005286"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k7" name="k7" value="0.0005286"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_9" metaid="COPASI49" name="Intestinal Nascent HDL Synthesis" reversible="false">
@@ -4626,9 +4626,9 @@
                             <ci>species_11</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k8" name="k8" value="0.0005"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k8" name="k8" value="0.0005"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_10" metaid="COPASI50" name="Billary Cholesterol Release" reversible="false">
@@ -4665,11 +4665,11 @@
                             <ci>species_7</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="BCRmax" name="BCRmax" value="2000"/>
-                        <parameter id="BCRt" name="BCRt" value="55326"/>
-                        <parameter id="BS" name="BS" value="5"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="BCRmax" name="BCRmax" value="2000"/>
+                        <localParameter id="BCRt" name="BCRt" value="55326"/>
+                        <localParameter id="BS" name="BS" value="5"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_11" metaid="COPASI51" name="Hepatic Cholesterol Synthesis" reversible="false">
@@ -4711,11 +4711,11 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="HCSmax" name="HCSmax" value="500"/>
-                        <parameter id="HCSt" name="HCSt" value="93925"/>
-                        <parameter id="HS" name="HS" value="5"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="HCSmax" name="HCSmax" value="500"/>
+                        <localParameter id="HCSt" name="HCSt" value="93925"/>
+                        <localParameter id="HS" name="HS" value="5"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_12" metaid="COPASI52" name="Hepatic Cholesterol Storage" reversible="false">
@@ -4757,9 +4757,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k9" name="k9" value="1"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k9" name="k9" value="1"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_13" metaid="COPASI53" name="Release of Stored Cholesterol" reversible="false">
@@ -4801,9 +4801,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k10" name="k10" value="5.998"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k10" name="k10" value="5.998"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_14" metaid="COPASI54" name="Hepatic Nascent HDL Synthesis" reversible="false">
@@ -4853,9 +4853,9 @@
                             <ci>species_11</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k11" name="k11" value="0.005"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k11" name="k11" value="0.005"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_15" metaid="COPASI55" name="VLDL Cholesterol Formation" reversible="false">
@@ -4890,9 +4890,9 @@
                             <ci>species_7</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.016"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.016"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_16" metaid="COPASI56" name="Hepatic LDLR Synthesis" reversible="false">
@@ -4934,9 +4934,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="khrs" name="khrs" value="100"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="khrs" name="khrs" value="100"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_17" metaid="COPASI57" name="Hepatic LDL Receptor Degradation" reversible="false">
@@ -4976,9 +4976,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.01"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.01"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_18" metaid="COPASI58" name="VLDL Cholesterol ReUptake" reversible="false">
@@ -5013,9 +5013,9 @@
                             <ci>species_17</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.0496"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.0496"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_19" metaid="COPASI59" name="IDL Cholesterol Formation" reversible="false">
@@ -5057,9 +5057,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k15" name="k15" value="0.43"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k15" name="k15" value="0.43"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_20" metaid="COPASI60" name="IDL Cholesterol ReUptake" reversible="false">
@@ -5094,9 +5094,9 @@
                             <ci>species_21</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.054"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.054"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_21" metaid="COPASI61" name="LDL Cholesterol Formation" reversible="false">
@@ -5138,9 +5138,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k17" name="k17" value="0.38"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k17" name="k17" value="0.38"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_22" metaid="COPASI62" name="Receptor Dependent Hepatic Uptake" reversible="false">
@@ -5177,9 +5177,9 @@
                             <ci>species_23</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k18" name="k18" value="0.068"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k18" name="k18" value="0.068"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_23" metaid="COPASI63" name="Receptor Independent Hepatic Uptake" reversible="false">
@@ -5214,9 +5214,9 @@
                             <ci>species_23</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.005"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.005"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_24" metaid="COPASI64" name="Receptor Dependent Peripheral Uptake" reversible="false">
@@ -5253,9 +5253,9 @@
                             <ci>species_25</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k20" name="k20" value="0.00675"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k20" name="k20" value="0.00675"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_25" metaid="COPASI65" name="Receptor Independent Peripheral Uptake"
@@ -5291,9 +5291,9 @@
                             <ci>species_23</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="5E-6"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="5E-6"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_26" metaid="COPASI66" name="Peripheral LDLR Synthesis" reversible="false">
@@ -5335,9 +5335,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="kprs" name="kprs" value="100"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="kprs" name="kprs" value="100"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_27" metaid="COPASI67" name="Peripheral LDL Receptor Degradation" reversible="false">
@@ -5377,9 +5377,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.01"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.01"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_28" metaid="COPASI68" name="Peripheral Cholesterol Storage" reversible="false">
@@ -5416,9 +5416,9 @@
                             <ci>species_14</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k23" name="k23" value="0.017386"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k23" name="k23" value="0.017386"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_29" metaid="COPASI69" name="Release of Stored Peripheral Cholesterol"
@@ -5456,9 +5456,9 @@
                             <ci>species_28</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k24" name="k24" value="0.1068"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k24" name="k24" value="0.1068"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_30" metaid="COPASI70" name="Peripheral Steroid Production" reversible="false">
@@ -5498,9 +5498,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k1" name="k1" value="0.0005"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k1" name="k1" value="0.0005"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_31" metaid="COPASI71" name="HDL Cholesterol Formation" reversible="false">
@@ -5540,9 +5540,9 @@
                             <ci>species_31</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k26" name="k26" value="1.5E-5"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k26" name="k26" value="1.5E-5"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_32" metaid="COPASI72" name="Peripheral Cholesterol Synthesis" reversible="false">
@@ -5584,11 +5584,11 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="PCSS" name="PCSS" value="5"/>
-                        <parameter id="PCSmax" name="PCSmax" value="500"/>
-                        <parameter id="PPCt" name="PPCt" value="80342"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="PCSS" name="PCSS" value="5"/>
+                        <localParameter id="PCSmax" name="PCSmax" value="500"/>
+                        <localParameter id="PPCt" name="PPCt" value="80342"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_33" metaid="COPASI73" name="CETP Mediated Transfer To VLDL" reversible="false">
@@ -5645,9 +5645,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k27" name="k27" value="0.01"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k27" name="k27" value="0.01"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_34" metaid="COPASI74" name="CETP Mediated TransferTo LDL" reversible="false">
@@ -5704,9 +5704,9 @@
                             </apply>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k28" name="k28" value="0.001"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k28" name="k28" value="0.001"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="reaction_35" metaid="COPASI75" name="Reverse Cholesterol Transport" reversible="false">
@@ -5758,9 +5758,9 @@
                             <ci>species_34</ci>
                         </apply>
                     </math>
-                    <listOfParameters>
-                        <parameter id="k29" name="k29" value="0.05"/>
-                    </listOfParameters>
+                    <listOfLocalParameters>
+                        <localParameter id="k29" name="k29" value="0.05"/>
+                    </listOfLocalParameters>
                 </kineticLaw>
             </reaction>
             <reaction id="Bcell_deg" name="Bcell_deg" reversible="false">

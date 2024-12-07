@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" layout:required="false" level="3" render:required="false"
-      version="1" xmlns:layout="http://www.sbml.org/sbml/level3/version1/layout/version1"
-      xmlns:render="http://www.sbml.org/sbml/level3/version1/render/version1">
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" layout:required="false" level="3" render:required="false"
+      version="2" xmlns:layout="http://www.sbml.org/sbml/level3/version2/layout/version1"
+      xmlns:render="http://www.sbml.org/sbml/level3/version2/render/version1">
     <model areaUnits="area" extentUnits="substance"
            id="Mukandavire2020___SEIR_model_of_early_COVID_19_transmission_in_South_Africa" lengthUnits="length"
            metaid="COPASI0" name="Mukandavire2020 - SEIR model of early COVID-19 transmission in South Africa"
@@ -26,7 +26,7 @@
                 </p>
             </body>
         </notes>
-        <annotation xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <annotation xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dcterms="http://purl.org/dc/terms/"
                      xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:vCard4="http://www.w3.org/2006/vcard/ns#"
                      xmlns:bqbiol="http://biomodels.net/biology-qualifiers/"
@@ -123,7 +123,7 @@
                 </rdf:RDF>
             </COPASI>
         </annotation>
-        <listOfFunctionDefinitions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfFunctionDefinitions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <functionDefinition id="Rate_Law_for_reaction" metaid="COPASI17" name="Rate Law for reaction">
                 <annotation>
                     <COPASI xmlns="http://www.copasi.org/static/sbml">
@@ -175,7 +175,7 @@
                 </math>
             </functionDefinition>
         </listOfFunctionDefinitions>
-        <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfUnitDefinitions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <unitDefinition id="length" name="length">
                 <listOfUnits>
                     <unit exponent="1" kind="metre" multiplier="1" scale="0"/>
@@ -202,7 +202,7 @@
                 </listOfUnits>
             </unitDefinition>
         </listOfUnitDefinitions>
-        <listOfCompartments xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfCompartments xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <compartment constant="true" id="South_Africa" metaid="COPASI1" name="South_Africa" size="1"
                          spatialDimensions="3" units="volume">
                 <annotation>
@@ -239,7 +239,7 @@
                 </annotation>
             </compartment>
         </listOfCompartments>
-        <listOfSpecies xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfSpecies xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <species boundaryCondition="false" compartment="South_Africa" constant="false" hasOnlySubstanceUnits="false"
                      id="Susceptible" initialConcentration="36196938" metaid="COPASI2" name="Susceptible"
                      substanceUnits="substance">
@@ -403,7 +403,7 @@
                 </annotation>
             </species>
         </listOfSpecies>
-        <listOfParameters xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfParameters xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <parameter constant="true" id="beta" metaid="COPASI6" name="beta" value="1.3">
                 <annotation>
                     <COPASI xmlns="http://www.copasi.org/static/sbml">
@@ -517,14 +517,14 @@
                 </annotation>
             </parameter>
         </listOfParameters>
-        <listOfInitialAssignments xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfInitialAssignments xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <initialAssignment symbol="Susceptible">
                 <math xmlns="http://www.w3.org/1998/Math/MathML">
                     <ci>N</ci>
                 </math>
             </initialAssignment>
         </listOfInitialAssignments>
-        <listOfRules xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfRules xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <assignmentRule variable="Cumulative_cases">
                 <math xmlns="http://www.w3.org/1998/Math/MathML">
                     <apply>
@@ -535,7 +535,7 @@
                 </math>
             </assignmentRule>
         </listOfRules>
-        <listOfReactions xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfReactions xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <reaction fast="false" id="Susceptible_to_Exposed" metaid="COPASI14" name="Susceptible_to_Exposed"
                       reversible="false">
                 <annotation>
@@ -706,7 +706,7 @@
                 </kineticLaw>
             </reaction>
         </listOfReactions>
-        <listOfEvents xmlns="http://www.sbml.org/sbml/level3/version1/core">
+        <listOfEvents xmlns="http://www.sbml.org/sbml/level3/version2/core">
             <event id="Lockdown" metaid="COPASI13" name="Lockdown" useValuesFromTriggerTime="false">
                 <annotation>
                     <COPASI xmlns="http://www.copasi.org/static/sbml">

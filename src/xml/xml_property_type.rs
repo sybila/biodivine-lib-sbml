@@ -6,9 +6,9 @@
 /// a value" portion of the process.
 ///
 ///  > Technically, this is almost the same as implementing the `TryFrom` and `Into` traits, but
-///  should give us a bit more flexibility and clarity regarding what conversions happen where
-///  and what error messages are produced. In particular, we can have custom error messages and
-///  conversion rules just for XML.
+/// > should give us a bit more flexibility and clarity regarding what conversions happen where
+/// > and what error messages are produced. In particular, we can have custom error messages and
+/// > conversion rules just for XML.
 ///
 /// ### Missing and optional values
 ///
@@ -37,9 +37,9 @@ pub trait XmlPropertyType: Sized {
     /// a [String] explaining the error.
     ///
     ///  > The error `String` should be a full sentence in English (or sentences). Ideally, it
-    ///  should also contain the current value of the XML attribute and an explanation why the
-    ///  conversion failed for this specific value. The message can use Markdown syntax for
-    ///  formatting (e.g. code/highlights, even paragraphs/headers if really necessary).
+    /// > should also contain the current value of the XML attribute and an explanation why the
+    /// > conversion failed for this specific value. The message can use Markdown syntax for
+    /// > formatting (e.g. code/highlights, even paragraphs/headers if really necessary).
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String>;
 
     /// Convert the value of `Self` into a [String], or `None` when the value should be

@@ -1,4 +1,5 @@
 name: build
+
 # This should ensure that the workflow won't run on `dev-*` branches, but will
 # otherwise execute on any other branch and any pull request (including from dev
 # branches).
@@ -14,7 +15,8 @@ env:
   # A fixed version used for testing, so that the builds don't
   # spontaneously break after a few years.
   # Make sure to update this from time to time.
-  RUST_VERSION: "1.69.0"
+  RUST_VERSION: "1.77.0"
+
 jobs:
   # Check formatting
   fmt:
@@ -23,7 +25,7 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -38,7 +40,7 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -52,12 +54,14 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/syntactic_tests.v3.4.0.zip
+      - run: unzip syntactic_tests.v3.4.0.zip
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
-      - run: cargo test --all-features
+      - run: cargo test --all-features --release
 
   # Check code style
   clippy:
@@ -67,12 +71,36 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
       - run: cargo clippy --all-features
+
+  # Run SBML test suite
+  sbml-test-suite:
+    needs: check
+    name: SBML Test Suite
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v4
+      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/syntactic_tests.v3.4.0.zip
+      - run: unzip syntactic_tests.v3.4.0.zip
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+      - run: cargo run --release --example test-suite-syntactic -- `cat validated-rules.txt`
+      - run: zip test-results.zip ./test_suite_error.txt ./test_suite_info.txt ./test_suite_warning.txt
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: ./test-results.zip
 
   # Compute code coverage
   codecov:
@@ -80,7 +108,10 @@ jobs:
     name: Code coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      # Should allow tarpaulin to also measure coverage for the SBML test suite.
+      - run: wget https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/syntactic_tests.v3.4.0.zip
+      - run: unzip syntactic_tests.v3.4.0.zip
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -88,13 +119,13 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-tarpaulin
-      - run: cargo tarpaulin --verbose --lib --examples --all-features --out xml
+      - run: cargo tarpaulin --verbose --lib --examples --release --all-features --out xml
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
           path: cobertura.xml

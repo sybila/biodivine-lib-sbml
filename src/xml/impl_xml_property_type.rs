@@ -2,10 +2,7 @@
 //      Check that escaping rules are obeyed for a "generic" string type (see specification
 //      section 3.1.1). I believe these should be handled by `xml-doc` already, but we should
 //      have a test case for this.
-
-use std::str::FromStr;
-
-use crate::{model::BaseUnit, xml::XmlPropertyType};
+use crate::xml::XmlPropertyType;
 
 /// A "trivial" conversion between an XML attribute and a `String`.
 ///
@@ -35,7 +32,7 @@ impl XmlPropertyType for bool {
             Some("1") | Some("true") => Ok(Some(true)),
             Some("0") | Some("false") => Ok(Some(false)),
             Some(value) => Err(format!(
-                "Value `{value}` does not represent a valid `bool`."
+                "Value '{value}' does not represent a valid 'bool'."
             )),
             None => Ok(None),
         }
@@ -60,7 +57,27 @@ impl XmlPropertyType for i32 {
             match value.parse::<i32>() {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid signed integer ({}).",
+                    "Value '{value}' does not represent a valid signed integer ({}).",
+                    e
+                )),
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl XmlPropertyType for u32 {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        if let Some(value) = value {
+            match value.parse::<u32>() {
+                Ok(x) => Ok(Some(x)),
+                Err(e) => Err(format!(
+                    "Value '{value}' does not represent a valid unsigned integer ({}).",
                     e
                 )),
             }
@@ -114,31 +131,7 @@ impl XmlPropertyType for f64 {
             Some(value) => match value.parse::<f64>() {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid floating point number ({}).",
-                    e
-                )),
-            },
-            None => Err("Value missing".to_string()),
-        }
-    }
-
-    fn set(&self) -> Option<String> {
-        Some(format!("{}", self))
-    }
-}
-
-/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
-/// interpreted as an error.
-///
-/// ## Specification
-///  - Section 4.4.2
-impl XmlPropertyType for BaseUnit {
-    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
-        match value {
-            Some(value) => match BaseUnit::from_str(value) {
-                Ok(unit) => Ok(Some(unit)),
-                Err(e) => Err(format!(
-                    "Value `{value}` does not represent a valid base unit ({})",
+                    "Value '{value}' does not represent a valid floating point number ({}).",
                     e
                 )),
             },
