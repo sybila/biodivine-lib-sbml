@@ -48,7 +48,7 @@ impl Math {
     /// - **10217** - "The MathML formulas in the following elements must yield numeric values (that is, MathML real, integer
     ///   or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
     ///   AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
-    /// 
+    ///
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
