@@ -99,7 +99,7 @@ impl<T: XmlWrapper> RequiredChild<'_, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for DynamicChild<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for DynamicChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.parent
     }
@@ -113,7 +113,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for DynamicChild<'a, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for Child<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for Child<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.parent
     }
@@ -127,7 +127,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for Child<'a, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for OptionalDynamicChild<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for OptionalDynamicChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.0.parent
     }
@@ -141,7 +141,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalDynamicChild<'a, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for RequiredDynamicChild<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for RequiredDynamicChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.0.parent
     }
@@ -155,7 +155,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for RequiredDynamicChild<'a, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for OptionalChild<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for OptionalChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.0.parent
     }
@@ -169,7 +169,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalChild<'a, T> {
     }
 }
 
-impl<'a, T: XmlWrapper> XmlChild<T> for RequiredChild<'a, T> {
+impl<T: XmlWrapper> XmlChild<T> for RequiredChild<'_, T> {
     fn parent(&self) -> &XmlElement {
         self.0.parent
     }

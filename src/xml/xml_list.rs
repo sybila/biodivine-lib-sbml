@@ -209,7 +209,7 @@ pub struct XmlListIterator<'a, T: XmlWrapper> {
     index: usize,
 }
 
-impl<'a, T: XmlWrapper> Iterator for XmlListIterator<'a, T> {
+impl<T: XmlWrapper> Iterator for XmlListIterator<'_, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -664,7 +664,7 @@ mod tests {
         assert!(!content.is_empty());
         assert_eq!(content.len(), 1);
         let compartment1 = content.get(0);
-        assert_eq!(compartment1.constant().get(), true);
+        assert!(compartment1.constant().get());
         assert_eq!(compartment1.id().get(), "comp1");
         let compartment2: Compartment = Compartment::default(compartment1.document());
         compartment2.constant().set_raw("false".to_string());

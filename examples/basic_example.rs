@@ -18,7 +18,7 @@ fn main() {
     // First, we want to know if the document we
     // just read is valid SBML.
     let issues = doc.validate();
-    if issues.len() > 0 {
+    if !issues.is_empty() {
         // Note that these could be just warnings/notes.
         // You can check `SbmlIssue::severity` of each item
         // to detect fatal errors.
