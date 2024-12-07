@@ -8,7 +8,7 @@ mod model;
 mod parameter;
 mod reaction;
 mod rule;
-mod sbase;
+pub(crate) mod sbase;
 mod species;
 mod unit;
 mod unit_definition;

@@ -1,9 +1,9 @@
-use crate::model::Model;
-use crate::sbase::SbmlUtils;
-use crate::sbml::qual::transition::Transition;
-use crate::sbml::qual::QualitativeSpecies;
+use crate::core::sbase::SbmlUtils;
+use crate::core::Model;
+use crate::qual::transition::Transition;
+use crate::qual::QualitativeSpecies;
 use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement, XmlList, XmlWrapper};
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 
 // TODO:
 //  We need to figure out how to properly "cast" the qual model. In particular, it would

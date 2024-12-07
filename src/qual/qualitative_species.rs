@@ -1,6 +1,6 @@
-use crate::sbase::SbmlUtils;
-use crate::xml::{OptionalProperty, RequiredProperty, XmlElement, XmlWrapper};
-use macros::{SBase, XmlWrapper};
+use crate::core::sbase::SbmlUtils;
+use crate::xml::{OptionalProperty, RequiredProperty, XmlElement};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct QualitativeSpecies(XmlElement);

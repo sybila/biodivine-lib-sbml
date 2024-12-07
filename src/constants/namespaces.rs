@@ -22,6 +22,9 @@ pub const URL_EMPTY: &str = "";
 pub const NS_SBML_CORE: Namespace = ("", URL_SBML_CORE);
 
 /// The "qual" SBML namespace. Default prefix for this namespace is `qual`.
+// TODO: The namespace will be used once we can better support attributes with namespaces.
+//       Until then, it's here for documentation purposes.
+#[allow(unused)]
 pub const NS_SBML_QUAL: Namespace = ("qual", URL_SBML_QUAL);
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.

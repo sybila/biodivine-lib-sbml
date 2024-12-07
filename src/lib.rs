@@ -113,32 +113,32 @@ use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement,
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
 /// by the SBML core specification.
 pub mod core;
-pub mod sbml;
 
 /// A module with useful types that are not directly part of the SBML specification, but help
 /// us work with XML documents in a sane and safe way. In particular:
 ///  - [XmlDocument] | A thread and memory safe reference to a [Document].
 ///  - [XmlElement] | A thread and memory safe reference to an [xml_doc::Element].
 ///  - [XmlWrapper] | A trait with utility functions for working with types
-///  derived from [XmlElement].
+///    derived from [XmlElement].
 ///  - [xml::XmlDefault] | An extension of [XmlWrapper] which allows creation of "default"
-///  value for the derived type.
+///    value for the derived type.
 ///  - [xml::XmlProperty] and [xml::XmlPropertyType] | Traits providing an abstraction for
-///  accessing properties stored in XML attributes. Implementation can be generated using a derive
-///  macro.
+///    accessing properties stored in XML attributes. Implementation can be generated using a derive
+///    macro.
 ///  - [xml::XmlChild] and [xml::XmlChildDefault] | Trait abstraction for accessing singleton
-///  child tags. Implementation can be generated using a derive macro.
+///    child tags. Implementation can be generated using a derive macro.
 ///  - [xml::XmlList] | A generic implementation of [XmlWrapper] which represents
-///  a typed list of elements.
+///    a typed list of elements.
 ///  - [xml::DynamicChild] and [xml::DynamicProperty] | Generic implementations of
-///  [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
-///  is not known at compile time.
+///    [xml::XmlProperty] and [xml::XmlChild] that can be used when the name of the property/child
+///    is not known at compile time.
 pub mod xml;
 
 /// **(internal)** An internal module which defines constant values relevant for SBML, such as
 /// namespace URLs or mappings assigning elements their allowed attributes.
 pub(crate) mod constants;
 
+pub mod qual;
 /// **(test)** A helper module for executing the syntactic SBML test suite as part of the
 /// standard unit tests.
 #[cfg(test)]

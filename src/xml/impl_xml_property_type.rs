@@ -18,7 +18,7 @@ impl XmlPropertyType for String {
     }
 }
 
-/// A "trivial conversion between an XML attribute and a `bool`.
+/// A "trivial" conversion between an XML attribute and a `bool`.
 ///
 /// Note that (per specification), both `0/1` and `true/false` are allowed here. However, when
 /// writing, `true/false` notation is preferred. This ensures that the output is compatible with
@@ -58,26 +58,6 @@ impl XmlPropertyType for i32 {
                 Ok(x) => Ok(Some(x)),
                 Err(e) => Err(format!(
                     "Value '{value}' does not represent a valid signed integer ({}).",
-                    e
-                )),
-            }
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn set(&self) -> Option<String> {
-        Some(format!("{}", self))
-    }
-}
-
-impl XmlPropertyType for u32 {
-    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
-        if let Some(value) = value {
-            match value.parse::<u32>() {
-                Ok(x) => Ok(Some(x)),
-                Err(e) => Err(format!(
-                    "Value '{value}' does not represent a valid unsigned integer ({}).",
                     e
                 )),
             }

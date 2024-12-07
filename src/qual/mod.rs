@@ -9,7 +9,7 @@ pub use transition::{DefaultTerm, FunctionTerm, Input, ListOfFunctionTerms, Outp
 
 #[cfg(test)]
 mod tests {
-    use crate::sbml::qual::QualModel;
+    use crate::qual::QualModel;
     use crate::xml::OptionalXmlChild;
     use crate::Sbml;
 

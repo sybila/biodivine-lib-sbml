@@ -1,10 +1,10 @@
-use crate::sbase::SbmlUtils;
-use crate::sbml::qual::types::{Sign, TransitionInputEffect, TransitionOutputEffect};
+use crate::core::sbase::SbmlUtils;
+use crate::qual::types::{Sign, TransitionInputEffect, TransitionOutputEffect};
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredChild, RequiredProperty, XmlElement, XmlList,
     XmlWrapper,
 };
-use macros::{SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 use std::ops::Deref;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
