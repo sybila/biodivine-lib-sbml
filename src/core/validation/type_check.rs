@@ -51,7 +51,7 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Check that all required attributes are present.
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
-            if !attributes.contains_key(&req_attr.to_string()) {
+            if !attributes.contains_key(*req_attr) {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
                 );
@@ -252,7 +252,7 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
     }
 
     for name in *unique_children {
-        if let Some(count) = counts.get(&name.to_string()) {
+        if let Some(count) = counts.get(*name) {
             if *count > 1 {
                 let message = format!(
                     "Multiple instances of child <{}> found in element <{}>.",

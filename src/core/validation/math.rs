@@ -35,19 +35,20 @@ impl Math {
     /// ### Ignored rules as of SBML Level 3 Version 1 Core:
     /// - **10209** - "The arguments of the MathML logical operators and, not, or, and xor must evaluate to Boolean values."
     /// - **10210** - "The arguments to the following MathML constructs must evaluate to numeric values (more specifically, they
-    /// must evaluate to MathML real, integer, rational, or "e-notation" numbers, or the time, delay, avogadro, csymbol elements): `abs`,
-    /// `arccosh`, `arccos`, `arccoth`, `arccot`, `arccsch`, `arccsc`, `arcsech`, `arcsec`, `arcsinh`, `arcsin`, `arctanh`, `arctan`, `ceiling`,
-    /// `cosh`, `cos`, `coth`, `cot`, `csch`, `csc`, `divide`, `exp`, `factorial`, `floor`, `ln`, `log`, `minus`, `plus`, `power`, `root`,
-    /// `sech`, `sec`, `sinh`, `sin`, `tanh`, `tan`, and `times`."
+    ///   must evaluate to MathML real, integer, rational, or "e-notation" numbers, or the time, delay, avogadro, csymbol elements): `abs`,
+    ///   `arccosh`, `arccos`, `arccoth`, `arccot`, `arccsch`, `arccsc`, `arcsech`, `arcsec`, `arcsinh`, `arcsin`, `arctanh`, `arctan`, `ceiling`,
+    ///   `cosh`, `cos`, `coth`, `cot`, `csch`, `csc`, `divide`, `exp`, `factorial`, `floor`, `ln`, `log`, `minus`, `plus`, `power`, `root`,
+    ///   `sech`, `sec`, `sinh`, `sin`, `tanh`, `tan`, and `times`."
     /// - **10211** - "The values of all arguments to MathML eq and neq operators must evaluate to the same type, either all
-    /// Boolean or all numeric."
+    ///   Boolean or all numeric."
     /// - **10212** - "The types of the values within MathML piecewise operators should all be consistent; i.e., the set of expressions
-    /// that make up the first arguments of the piece and otherwise operators within the same piecewise operator should all return
-    /// values of the same type."
+    ///   that make up the first arguments of the piece and otherwise operators within the same piecewise operator should all return
+    ///   values of the same type."
     /// - **10213** - "The second argument of a MathML piece operator must evaluate to a Boolean value."
     /// - **10217** - "The MathML formulas in the following elements must yield numeric values (that is, MathML real, integer
-    /// or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
-    /// AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
+    ///   or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
+    ///   AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
+    /// 
     pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
