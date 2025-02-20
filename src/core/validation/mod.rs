@@ -123,19 +123,19 @@ fn matches_pattern(value: &Option<String>, pattern: &Regex) -> bool {
 }
 
 /// Check that a given value conforms to the **SId** syntax.
-fn matches_sid_pattern(value: &Option<String>) -> bool {
+pub(crate) fn matches_sid_pattern(value: &Option<String>) -> bool {
     let pattern = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*$").unwrap();
     matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **SBOTerm** syntax.
-fn matches_sboterm_pattern(value: &Option<String>) -> bool {
+pub(crate) fn matches_sboterm_pattern(value: &Option<String>) -> bool {
     let pattern = Regex::new(r"^SBO:\d{7}$").unwrap();
     matches_pattern(value, &pattern)
 }
 
 /// Checks that a given value conforms to the **XML 1.0 ID** syntax.
-fn matches_xml_id_pattern(value: &Option<String>) -> bool {
+pub(crate) fn matches_xml_id_pattern(value: &Option<String>) -> bool {
     let pattern = formatcp!(
         "^[{0}_:][{0}{1}.\\-_:{2}{3}]*$",
         xml_definitions::build_letter_group(),

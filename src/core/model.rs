@@ -3,16 +3,13 @@ use std::ops::Deref;
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
-use crate::core::sbase::SbmlUtils;
+use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
     FunctionDefinition, InitialAssignment, Parameter, Reaction, Rule, SBase, Species,
     UnitDefinition,
 };
-use crate::xml::{
-    OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
-    XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype, XmlWrapper,
-};
+use crate::xml::{OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSupertype, XmlWrapper};
 
 /// The SBML model object
 /// (Section 4.2; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -314,7 +311,7 @@ impl Model {
 
     /// Returns a vector of [FunctionDefinition] identifiers (attribute **id**). Function definitions
     /// without IDs are not included in the output.
-    pub(crate) fn function_definition_identifiers(&self) -> Vec<String> {
+    pub(crate) fn function_definition_identifiers(&self) -> Vec<SId> {
         if let Some(function_definitions) = self.function_definitions().get() {
             function_definitions
                 .iter()
@@ -337,7 +334,7 @@ impl Model {
         let expected = Some(id.to_string());
         let function = definitions
             .iter()
-            .find(|function| function.id().get() == expected)?;
+            .find(|function| function.id().get().unwrap().set() == expected)?;
 
         // And this function has its `math` element with a `lambda` child element specified.
         let doc = self.read_doc();
@@ -355,7 +352,7 @@ impl Model {
 
     /// Returns a vector of [UnitDefinition] identifiers (attribute **id**). Unit definitions
     /// without IDs are not included in the output.
-    pub(crate) fn unit_definition_identifiers(&self) -> Vec<String> {
+    pub(crate) fn unit_definition_identifiers(&self) -> Vec<SId> {
         if let Some(unit_definitions) = self.unit_definitions().get() {
             unit_definitions
                 .iter()
@@ -419,8 +416,8 @@ impl Model {
 
     /// Returns a vector of [SpeciesReference] identifiers (attribute **id**). Unit definitions
     /// without IDs are not included in the output.
-    pub(crate) fn species_reference_identifiers(&self) -> Vec<String> {
-        let mut identifiers: Vec<String> = vec![];
+    pub(crate) fn species_reference_identifiers(&self) -> Vec<SId> {
+        let mut identifiers: Vec<SId> = vec![];
         // If the list of reactions is present...
         if let Some(reactions) = self.reactions().get() {
             for reaction in reactions.as_vec() {

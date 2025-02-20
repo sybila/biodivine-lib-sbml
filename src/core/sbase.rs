@@ -10,11 +10,132 @@ use crate::xml::{
 };
 use biodivine_xml_doc::{Document, Element};
 use std::ops::Deref;
+use crate::core::validation::{matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern};
+
+pub struct SId(String);
+
+impl From<SId> for String {
+    fn from(value: SId) -> Self {
+        value.0
+    }
+}
+
+impl TryFrom<String> for SId {
+    type Error = String;    // This could just be a String with the description of the error.
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        // Here, we need to validate that value is a valid SBML ID according to rules in the specification.
+
+        if matches_sid_pattern(&Some(value.clone())) {
+            Ok(Self(value))
+        } else {
+            Err(format!(
+                "ID '{value}' does not represent a valid SId."))
+        }
+    }
+}
+
+impl XmlPropertyType for SId {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        // value.map(|value| {
+        //     SbmlId::try_from(value.to_string())
+        // }).transpose()
+        match value {
+            Some(value) => {
+                match SId::try_from(value.to_string()) {
+                    Ok(id) => Ok(Some(id)),
+                    Err(_) => Ok(None),
+                }
+            },
+            None => Ok(None),
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(self.0.clone())
+    }
+}
+
+pub struct MetaId(String);
+
+impl From<MetaId> for String {
+    fn from(value: MetaId) -> Self {
+        value.0
+    }
+}
+impl TryFrom<String> for MetaId {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if matches_xml_id_pattern(&Some(value.clone())){
+            Ok(Self(value))
+        } else {
+            Err(format!("MetaId {value} does not represent a valid Meta ID (XML ID)."))
+        }
+    }
+}
+
+impl XmlPropertyType for MetaId {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        match value {
+            Some(value) => {
+                match MetaId::try_from(value.to_string()) {
+                    Ok(meta_id) => Ok(Some(meta_id)),
+                    Err(_) => Ok(None),
+                }
+            },
+            None => Ok(None),
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(self.0.clone())
+    }
+}
+
+pub struct SboTerm(String);
+
+impl From<SboTerm> for String {
+    fn from(value: SboTerm) -> Self {
+        value.0
+    }
+}
+
+impl TryFrom<String> for SboTerm {
+    type Error = String;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if matches_sboterm_pattern(&Some(value.clone())) {
+            Ok(Self(value))
+        } else {
+            Err(format!("SboTerm '{value}' does not represent a valid SboTerm."))
+        }
+    }
+}
+
+impl XmlPropertyType for SboTerm {
+    fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
+        match value {
+            Some(value) => {
+                match SboTerm::try_from(value.to_string()) {
+                    Ok(sbo_term) => Ok(Some(sbo_term)),
+                    Err(_) => Ok(None),
+                }
+            },
+            None => Ok(None),
+        }
+    }
+
+    fn set(&self) -> Option<String> {
+        Some(self.0.clone())
+    }
+}
+
+
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
-    fn id(&self) -> OptionalProperty<String> {
+    fn id(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("id")
     }
 
