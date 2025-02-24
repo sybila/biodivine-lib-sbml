@@ -12,6 +12,7 @@ use biodivine_xml_doc::{Document, Element};
 use std::ops::Deref;
 use crate::core::validation::{matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern};
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SId(String);
 
 impl From<SId> for String {
@@ -56,6 +57,7 @@ impl XmlPropertyType for SId {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MetaId(String);
 
 impl From<MetaId> for String {
@@ -93,6 +95,7 @@ impl XmlPropertyType for MetaId {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SboTerm(String);
 
 impl From<SboTerm> for String {
