@@ -27,7 +27,10 @@ pub use reaction::{
     SpeciesReference,
 };
 pub use rule::{AbstractRule, AlgebraicRule, AssignmentRule, RateRule, Rule, RuleTypes};
+pub use sbase::MetaId;
 pub use sbase::SBase;
+pub use sbase::SId;
+pub use sbase::SboTerm;
 pub use species::Species;
 pub use unit::{BaseUnit, Unit};
 pub use unit_definition::UnitDefinition;
