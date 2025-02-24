@@ -367,8 +367,8 @@ impl Model {
     }
 
     /// Returns a vector of [LocalParameter] identifiers (attribute **id**).
-    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
-        let mut identifiers: Vec<String> = Vec::new();
+    pub(crate) fn local_parameter_identifiers(&self) -> Vec<SId> {
+        let mut identifiers: Vec<SId> = Vec::new();
 
         let Some(reactions) = self.reactions().get() else {
             return identifiers;
@@ -388,7 +388,7 @@ impl Model {
     }
 
     /// Returns a vector of [Species] identifiers (attribute **id**).
-    pub(crate) fn species_identifiers(&self) -> Vec<String> {
+    pub(crate) fn species_identifiers(&self) -> Vec<SId> {
         if let Some(species) = self.species().get() {
             species.iter().map(|species| species.id().get()).collect()
         } else {
@@ -397,7 +397,7 @@ impl Model {
     }
 
     /// Returns a vector of [Compartment] identifiers (attribute **id**).
-    pub(crate) fn compartment_identifiers(&self) -> Vec<String> {
+    pub(crate) fn compartment_identifiers(&self) -> Vec<SId> {
         if let Some(compartment) = self.compartments().get() {
             compartment
                 .iter()
@@ -409,7 +409,7 @@ impl Model {
     }
 
     /// Returns a vector of [Parameter] identifiers (attribute **id**).
-    pub(crate) fn parameter_identifiers(&self) -> Vec<String> {
+    pub(crate) fn parameter_identifiers(&self) -> Vec<SId> {
         if let Some(parameters) = self.parameters().get() {
             parameters.iter().map(|param| param.id().get()).collect()
         } else {
@@ -436,25 +436,25 @@ impl Model {
     }
 
     /// Returns a vector of [FunctionDefinition] identifiers (attribute **id**).
-    pub(crate) fn reaction_identifiers(&self) -> Vec<String> {
+    pub(crate) fn reaction_identifiers(&self) -> Vec<SId> {
         if let Some(reactions) = self.reactions().get() {
             reactions
                 .iter()
                 .map(|reaction| reaction.id().get())
-                .collect::<Vec<String>>()
+                .collect::<Vec<SId>>()
         } else {
             Vec::new()
         }
     }
 
     /// Returns a vector of all *variables* appearing in all [AssignmentRule] objects.
-    pub(crate) fn assignment_rule_variables(&self) -> Vec<String> {
+    pub(crate) fn assignment_rule_variables(&self) -> Vec<SId> {
         if let Some(rules) = self.rules().get() {
             rules
                 .iter()
                 .filter_map(|rule| rule.try_downcast::<AssignmentRule>())
                 .map(|assignment_rule| assignment_rule.variable().get())
-                .collect::<Vec<String>>()
+                .collect::<Vec<SId>>()
         } else {
             Vec::new()
         }
@@ -466,7 +466,7 @@ impl Model {
     /// Does not include instances when **ci** is used as an argument of the `rateOf` symbol, since
     /// this technically does not count as a "variable" (i.e. the expression determines the
     /// rate of the symbol, not the value of the symbol).  
-    pub(crate) fn algebraic_rule_ci_variables(&self) -> Vec<String> {
+    pub(crate) fn algebraic_rule_ci_variables(&self) -> Vec<SId> {
         if let Some(rules) = self.rules().get() {
             rules
                 .iter()
@@ -496,48 +496,54 @@ impl Model {
                             }
                         })
                         .map(|ci| ci.text_content())
-                        .collect::<Vec<String>>()
+                        .map(|text| {
+                            // TODO: This should be a validation step (ci elements can only use SId compliant identifiers)
+                            // SBML Core Specification, Section 3.4.3
+                            SId::try_from(text)
+                                .expect("The contents of <ci> must be an SBML identifier.")
+                        })
+                        .collect::<Vec<SId>>()
                 })
-                .collect::<Vec<String>>()
+                .collect::<Vec<SId>>()
         } else {
             Vec::new()
         }
     }
 
     pub(crate) fn is_rateof_target_constant(&self, target: &str) -> bool {
-        if let Some(compartment) = self
-            .compartments()
-            .get()
-            .and_then(|list| list.iter().find(|c| c.id().get() == target))
-        {
+        fn find_target<T: SBase>(target: &str, object: &XmlList<T>) -> Option<T> {
+            for x in object.iter() {
+                if let Some(value) = object.id().get() {
+                    if value.as_str() == target {
+                        return Some(x);
+                    }
+                }
+            }
+            None
+        }
+
+        let compartments = self.compartments().get();
+        let parameters = self.parameters().get();
+        let species = self.species().get();
+
+        if let Some(compartment) = compartments.and_then(|list| find_target(target, &list)) {
             return compartment.constant().get();
         }
-        if let Some(parameter) = self
-            .parameters()
-            .get()
-            .and_then(|list| list.iter().find(|p| p.id().get() == target))
-        {
+        if let Some(parameter) = parameters.and_then(|list| find_target(target, &list)) {
             return parameter.constant().get();
         }
-        if let Some(species) = self
-            .species()
-            .get()
-            .and_then(|list| list.iter().find(|s| s.id().get() == target))
-        {
+        if let Some(species) = species.and_then(|list| find_target(target, &list)) {
             return species.constant().get();
         }
+
         if let Some(reactions) = self.reactions().get() {
             for reaction in reactions.iter() {
-                if let Some(species_ref) = reaction.reactants().get().and_then(|list| {
-                    list.iter()
-                        .find(|r| r.id().get().is_some_and(|id| id == target))
-                }) {
+                let species_ref = reaction.reactants().get();
+                let products = reaction.products().get();
+                if let Some(species_ref) = species_ref.and_then(|list| find_target(target, &list)) {
                     return species_ref.constant().get();
                 }
-                if let Some(species_ref) = reaction.products().get().and_then(|list| {
-                    list.iter()
-                        .find(|p| p.id().get().is_some_and(|id| id == target))
-                }) {
+                if let Some(species_ref) = products.and_then(|list| find_target(target, &list)) {
                     return species_ref.constant().get();
                 }
             }
@@ -548,7 +554,9 @@ impl Model {
     /// Finds a species with the given *id*. If not found, returns `None`.
     pub(crate) fn find_species(&self, id: &str) -> Option<Species> {
         if let Some(species) = self.species().get() {
-            species.iter().find(|species| species.id().get() == id)
+            species
+                .iter()
+                .find(|species| species.id().get().as_str() == id)
         } else {
             None
         }
@@ -559,7 +567,7 @@ impl Model {
         if let Some(compartments) = self.compartments().get() {
             compartments
                 .iter()
-                .find(|compartment| compartment.id().get() == id)
+                .find(|compartment| compartment.id().get().as_str() == id)
         } else {
             None
         }

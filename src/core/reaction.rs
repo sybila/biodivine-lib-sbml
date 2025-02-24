@@ -114,7 +114,7 @@ impl KineticLaw {
         self.optional_sbml_child("listOfLocalParameters")
     }
 
-    pub(crate) fn local_parameter_identifiers(&self) -> Vec<String> {
+    pub(crate) fn local_parameter_identifiers(&self) -> Vec<SId> {
         if let Some(local_parameters) = self.local_parameters().get() {
             local_parameters
                 .iter()
