@@ -306,8 +306,10 @@ impl Math {
             for child in children_of_interest {
                 // This unwrap must succeed because we enforced that ci is the first child.
                 let value = child.get_child_at(0).unwrap().text_content();
-                // TODO: This conversion might fail and we need to deal with that.
-                let value_id = SId::try_from(value).unwrap();
+                // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+                let Ok(value_id) = SId::try_from(value) else {
+                    continue;
+                };
 
                 if !identifiers.contains(&value_id) {
                     let message = format!(
@@ -362,8 +364,10 @@ impl Math {
 
             for ci in ci_elements {
                 let value = ci.text_content();
-                // TODO: This conversion might fail and we need to deal with that.
-                let value_id = SId::try_from(value).unwrap();
+                // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+                let Ok(value_id) = SId::try_from(value) else {
+                    continue;
+                };
 
                 if !identifiers.contains(&value_id) {
                     let message = format!(
@@ -391,20 +395,23 @@ impl Math {
             None => Vec::new(),
         };
 
+        // TODO: Should be check that all bvar elements contain a valid sid? (as a separate rule?)
         let b_variables = self
             .recursive_child_elements()
             .into_iter()
             .filter(|child| child.tag_name() == "bvar")
             .filter_map(|bvar| bvar.get_child_at(0).map(|it| it.text_content()))
-            .map(|it| SId::try_from(it).unwrap()) // TODO: Is this check valid?
+            .filter_map(|it| SId::try_from(it).ok())
             .collect::<Vec<SId>>();
 
         let ci_elements = self.recursive_child_elements_filtered(|child| child.tag_name() == "ci");
 
         for ci in ci_elements {
             let value = ci.text_content();
-            // TODO: This conversion might fail and we need to deal with that.
-            let value_id = SId::try_from(value).unwrap();
+            // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+            let Ok(value_id) = SId::try_from(value) else {
+                continue;
+            };
             if !b_variables.contains(&value_id)
                 && all_local_param_ids.contains(&value_id)
                 && !scoped_local_param_ids.contains(&value_id)
@@ -501,8 +508,10 @@ impl Math {
             let arg_count = children.len() - 1;
             let func_identifiers = model.function_definition_identifiers();
             let id = function_call.text_content();
-            // TODO: This conversion might fail and we need to deal with that.
-            let id = SId::try_from(id).unwrap();
+            // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+            let Ok(id) = SId::try_from(id) else {
+                continue;
+            };
 
             if func_identifiers.contains(&id) {
                 // Only check argument count if the function is actually declared.
@@ -556,8 +565,10 @@ impl Math {
         for cn in cn_elements {
             // We can unwrap because we selected only elements where `units` attribute is set.
             let value = cn.get_attribute("units").unwrap();
-            // TODO: This conversion might fail and we need to deal with that.
-            let value_id = SId::try_from(value).unwrap();
+            // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+            let Ok(value_id) = SId::try_from(value) else {
+                continue;
+            };
 
             if !unit_identifiers.contains(&value_id)
                 && BaseUnit::from_str(value_id.as_str()).is_err()
@@ -639,8 +650,10 @@ impl Math {
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
             let value = ci.text_content();
-            // TODO: This conversion might fail and we need to deal with that.
-            let value_id = SId::try_from(value).unwrap();
+            // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
+            let Ok(value_id) = SId::try_from(value) else {
+                continue;
+            };
             let is_target_constant = model.is_rateof_target_constant(value_id.as_str());
 
             if assignment_rule_variables.contains(&value_id) {
@@ -746,9 +759,10 @@ impl Math {
         });
 
         for ci in ci_elements {
+            // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
             let value = ci
                 .get_attribute("units")
-                .map(|it| SId::try_from(it).unwrap()); // TODO: Deal with this error.
+                .and_then(|it| SId::try_from(it).ok());
             apply_rule_10313(ci.tag_name().as_str(), value, self.xml_element(), issues);
         }
     }
