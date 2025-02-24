@@ -3,7 +3,7 @@ use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10312, apply_rule_10401, apply_rule_10402, SbmlValidable,
 };
-use crate::core::{Constraint, SBase};
+use crate::core::{Constraint, SBase, SId};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -12,7 +12,7 @@ impl SbmlValidable for Constraint {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();

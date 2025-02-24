@@ -3,7 +3,7 @@ use crate::core::validation::{
     apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310, apply_rule_10311,
     apply_rule_10312, apply_rule_10401, apply_rule_10402, validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{SBase, UnitDefinition};
+use crate::core::{SBase, SId, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -12,7 +12,7 @@ impl SbmlValidable for UnitDefinition {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -51,7 +51,7 @@ impl UnitDefinition {
         list_of_unit_definitions: &XmlList<UnitDefinition>,
         issues: &mut Vec<SbmlIssue>,
     ) {
-        let mut identifiers: HashSet<String> = HashSet::new();
+        let mut identifiers: HashSet<SId> = HashSet::new();
 
         for unit_definition in list_of_unit_definitions.iter() {
             let Some(id) = unit_definition.id().get() else {

@@ -4,7 +4,7 @@ use crate::core::validation::{
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
     SbmlValidable,
 };
-use crate::core::{Parameter, SBase};
+use crate::core::{Parameter, SBase, SId};
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlProperty, XmlWrapper,
 };
@@ -15,7 +15,7 @@ impl SbmlValidable for Parameter {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();

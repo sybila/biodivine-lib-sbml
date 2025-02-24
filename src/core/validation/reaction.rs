@@ -5,7 +5,7 @@ use crate::core::validation::{
     validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{
-    KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SpeciesReference,
+    KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SBase, SId, SpeciesReference,
 };
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlWrapper,
@@ -17,7 +17,7 @@ impl SbmlValidable for Reaction {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -73,7 +73,7 @@ impl SbmlValidable for SpeciesReference {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -100,7 +100,7 @@ impl SbmlValidable for ModifierSpeciesReference {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -127,7 +127,7 @@ impl SbmlValidable for KineticLaw {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -195,7 +195,7 @@ impl SbmlValidable for LocalParameter {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        _identifiers: &mut HashSet<String>,
+        _identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();

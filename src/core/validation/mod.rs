@@ -1,9 +1,11 @@
-use std::collections::HashSet;
-
 use const_format::formatcp;
 use regex::Regex;
+use std::collections::HashSet;
+use std::fmt::Display;
+use std::hash::Hash;
 
 use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
+use crate::core::sbase::SId;
 use crate::core::{BaseUnit, Model, SBase};
 use crate::xml::OptionalXmlProperty;
 use crate::xml::XmlElement;
@@ -48,7 +50,7 @@ pub(crate) trait SbmlValidable: XmlWrapper {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     );
 }
@@ -93,13 +95,13 @@ pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'stat
 /// Checks that a given identifier is unique in the given set of identifiers. If the identifier
 /// is unique, it is included in the given set of identifiers, otherwise error is logged in the
 /// vector of issues.
-fn check_identifier_uniqueness(
+fn check_identifier_uniqueness<ID: Eq + Hash + Display>(
     rule: &str,
     attr_name: &str,
-    identifier: Option<String>,
+    identifier: Option<ID>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
-    identifiers: &mut HashSet<String>,
+    identifiers: &mut HashSet<ID>,
 ) {
     if let Some(identifier) = identifier {
         if identifiers.contains(&identifier) {
@@ -187,10 +189,10 @@ fn matches_xml_string_pattern(value: &Option<String>) -> bool {
 /// [Trigger](event::Trigger), and [Unit](unit::Unit), plus the *id* attribute values of any SBML Level 3 package
 /// element defined to be in the *SId* namespace of the [Model](Model).
 pub(crate) fn apply_rule_10301(
-    id: Option<String>,
+    id: Option<SId>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
-    identifiers: &mut HashSet<String>,
+    identifiers: &mut HashSet<SId>,
 ) {
     check_identifier_uniqueness("10301", "id", id, xml_element, issues, identifiers);
 }

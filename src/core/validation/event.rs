@@ -3,7 +3,7 @@ use crate::core::validation::{
     apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
     apply_rule_10312, apply_rule_10401, apply_rule_10402, validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, Trigger};
+use crate::core::{Delay, Event, EventAssignment, Model, Priority, SBase, SId, Trigger};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -12,7 +12,7 @@ impl SbmlValidable for Event {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -118,7 +118,7 @@ impl SbmlValidable for Trigger {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -145,7 +145,7 @@ impl SbmlValidable for Priority {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -172,7 +172,7 @@ impl SbmlValidable for Delay {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
@@ -199,7 +199,7 @@ impl SbmlValidable for EventAssignment {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();

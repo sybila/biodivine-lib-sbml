@@ -4,7 +4,7 @@ use crate::core::validation::{
     apply_rule_10311, apply_rule_10312, apply_rule_10313, apply_rule_10401, apply_rule_10402,
     validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{AbstractRule, Model, SBase, UnitDefinition};
+use crate::core::{AbstractRule, Model, SBase, SId, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -13,7 +13,7 @@ impl SbmlValidable for Model {
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
-        identifiers: &mut HashSet<String>,
+        identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<String>,
     ) {
         let xml_element = self.xml_element();
