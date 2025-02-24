@@ -4,13 +4,15 @@
 //      types that are "string like", e.g. meta id and sboTerm.
 
 use crate::constants::namespaces::{NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
+use crate::core::validation::{
+    matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
+};
 use crate::xml::{
     OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
     XmlWrapper,
 };
 use biodivine_xml_doc::{Document, Element};
 use std::ops::Deref;
-use crate::core::validation::{matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern};
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SId(String);
@@ -22,7 +24,7 @@ impl From<SId> for String {
 }
 
 impl TryFrom<String> for SId {
-    type Error = String;    // This could just be a String with the description of the error.
+    type Error = String; // This could just be a String with the description of the error.
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         // Here, we need to validate that value is a valid SBML ID according to rules in the specification.
@@ -30,8 +32,7 @@ impl TryFrom<String> for SId {
         if matches_sid_pattern(&Some(value.clone())) {
             Ok(Self(value))
         } else {
-            Err(format!(
-                "ID '{value}' does not represent a valid SId."))
+            Err(format!("ID '{value}' does not represent a valid SId."))
         }
     }
 }
@@ -42,11 +43,9 @@ impl XmlPropertyType for SId {
         //     SbmlId::try_from(value.to_string())
         // }).transpose()
         match value {
-            Some(value) => {
-                match SId::try_from(value.to_string()) {
-                    Ok(id) => Ok(Some(id)),
-                    Err(_) => Ok(None),
-                }
+            Some(value) => match SId::try_from(value.to_string()) {
+                Ok(id) => Ok(Some(id)),
+                Err(_) => Ok(None),
             },
             None => Ok(None),
         }
@@ -69,10 +68,12 @@ impl TryFrom<String> for MetaId {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        if matches_xml_id_pattern(&Some(value.clone())){
+        if matches_xml_id_pattern(&Some(value.clone())) {
             Ok(Self(value))
         } else {
-            Err(format!("MetaId {value} does not represent a valid Meta ID (XML ID)."))
+            Err(format!(
+                "MetaId {value} does not represent a valid Meta ID (XML ID)."
+            ))
         }
     }
 }
@@ -80,11 +81,9 @@ impl TryFrom<String> for MetaId {
 impl XmlPropertyType for MetaId {
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
-            Some(value) => {
-                match MetaId::try_from(value.to_string()) {
-                    Ok(meta_id) => Ok(Some(meta_id)),
-                    Err(_) => Ok(None),
-                }
+            Some(value) => match MetaId::try_from(value.to_string()) {
+                Ok(meta_id) => Ok(Some(meta_id)),
+                Err(_) => Ok(None),
             },
             None => Ok(None),
         }
@@ -110,7 +109,9 @@ impl TryFrom<String> for SboTerm {
         if matches_sboterm_pattern(&Some(value.clone())) {
             Ok(Self(value))
         } else {
-            Err(format!("SboTerm '{value}' does not represent a valid SboTerm."))
+            Err(format!(
+                "SboTerm '{value}' does not represent a valid SboTerm."
+            ))
         }
     }
 }
@@ -118,11 +119,9 @@ impl TryFrom<String> for SboTerm {
 impl XmlPropertyType for SboTerm {
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
-            Some(value) => {
-                match SboTerm::try_from(value.to_string()) {
-                    Ok(sbo_term) => Ok(Some(sbo_term)),
-                    Err(_) => Ok(None),
-                }
+            Some(value) => match SboTerm::try_from(value.to_string()) {
+                Ok(sbo_term) => Ok(Some(sbo_term)),
+                Err(_) => Ok(None),
             },
             None => Ok(None),
         }
@@ -132,8 +131,6 @@ impl XmlPropertyType for SboTerm {
         Some(self.0.clone())
     }
 }
-
-
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
