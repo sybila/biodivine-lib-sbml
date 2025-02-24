@@ -12,10 +12,24 @@ use crate::xml::{
     XmlWrapper,
 };
 use biodivine_xml_doc::{Document, Element};
+use std::fmt::Display;
 use std::ops::Deref;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SId(String);
+
+impl SId {
+    /// Utility method to access the underlying string slice.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for SId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl From<SId> for String {
     fn from(value: SId) -> Self {
@@ -28,12 +42,24 @@ impl TryFrom<String> for SId {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         // Here, we need to validate that value is a valid SBML ID according to rules in the specification.
-
+        // TODO:
+        //      `matches_sid_pattern` is not a very good API, because we need to copy the
+        //      string value here, but that's unfortunately a past mistake that's not important
+        //      right now.
         if matches_sid_pattern(&Some(value.clone())) {
             Ok(Self(value))
         } else {
             Err(format!("ID '{value}' does not represent a valid SId."))
         }
+    }
+}
+
+impl TryFrom<&str> for SId {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let value = value.to_string();
+        SId::try_from(value)
     }
 }
 
@@ -58,6 +84,19 @@ impl XmlPropertyType for SId {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MetaId(String);
+
+impl MetaId {
+    /// Utility method to access the underlying string slice.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for MetaId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl From<MetaId> for String {
     fn from(value: MetaId) -> Self {
@@ -96,6 +135,19 @@ impl XmlPropertyType for MetaId {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SboTerm(String);
+
+impl SboTerm {
+    /// Utility method to access the underlying string slice.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for SboTerm {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl From<SboTerm> for String {
     fn from(value: SboTerm) -> Self {
