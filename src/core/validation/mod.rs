@@ -6,8 +6,8 @@ use std::hash::Hash;
 
 use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
 use crate::core::sbase::SId;
-use crate::core::{BaseUnit, Model, SBase};
-use crate::xml::OptionalXmlProperty;
+use crate::core::validation::sbase::validate_sbase;
+use crate::core::{BaseUnit, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
 use crate::xml::XmlWrapper;
@@ -60,21 +60,12 @@ pub(crate) trait SbmlValidable: XmlWrapper {
 pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
-    identifiers: &mut HashSet<String>,
+    identifiers: &mut HashSet<SId>,
     meta_ids: &mut HashSet<String>,
 ) {
+    validate_sbase(list, issues, identifiers, meta_ids);
+
     let allowed = get_allowed_children(list.xml_element());
-    let xml_element = list.xml_element();
-    let id = list.id();
-    let meta_id = list.meta_id();
-
-    apply_rule_10301(id.get(), xml_element, issues, identifiers);
-    apply_rule_10307(meta_id.get(), xml_element, issues, meta_ids);
-    apply_rule_10308(list.sbo_term().get(), xml_element, issues);
-    apply_rule_10309(meta_id.get(), xml_element, issues);
-    apply_rule_10310(id.get(), xml_element, issues);
-    apply_rule_10312(list.name().get(), xml_element, issues);
-
     for object in list.as_vec() {
         if allowed.contains(&object.tag_name().as_str()) {
             object.validate(issues, identifiers, meta_ids);
@@ -205,7 +196,7 @@ pub(crate) fn apply_rule_10311(
 // `steradian`, `tesla`, `volt`, `watt`, or `weber`.
 pub(crate) fn apply_rule_10313(
     attr_name: &str,
-    unit_ref: Option<String>,
+    unit_ref: Option<SId>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {

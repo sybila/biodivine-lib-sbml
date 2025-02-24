@@ -101,13 +101,11 @@ use embed_doc_image::embed_doc_image;
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
+use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
-use crate::core::validation::{
-    apply_rule_10301, apply_rule_10307, apply_rule_10308, apply_rule_10309, apply_rule_10310,
-    apply_rule_10312, SbmlValidable,
-};
-use crate::core::{Model, SBase};
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlDocument, XmlElement, XmlWrapper};
+use crate::core::validation::SbmlValidable;
+use crate::core::{Model, SBase, SId};
+use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
@@ -325,19 +323,10 @@ impl Sbml {
             return issues;
         }
 
-        let mut identifiers: HashSet<String> = HashSet::new();
+        let mut identifiers: HashSet<SId> = HashSet::new();
         let mut meta_ids: HashSet<String> = HashSet::new();
 
-        let xml_element = self.xml_element();
-        let id = self.id();
-        let meta_id = self.meta_id();
-
-        apply_rule_10301(id.get(), xml_element, &mut issues, &mut identifiers);
-        apply_rule_10307(meta_id.get(), xml_element, &mut issues, &mut meta_ids);
-        apply_rule_10308(self.sbo_term().get(), xml_element, &mut issues);
-        apply_rule_10309(meta_id.get(), xml_element, &mut issues);
-        apply_rule_10310(id.get(), xml_element, &mut issues);
-        apply_rule_10312(self.name().get(), xml_element, &mut issues);
+        validate_sbase(self, &mut issues, &mut identifiers, &mut meta_ids);
 
         if let Some(model) = self.model().get() {
             model.validate(&mut issues, &mut identifiers, &mut meta_ids);
