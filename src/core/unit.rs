@@ -1,4 +1,5 @@
 use crate::core::sbase::SbmlUtils;
+use crate::core::SId;
 use crate::xml::{
     RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
@@ -109,6 +110,13 @@ pub enum BaseUnit {
     Watt,
     #[strum(serialize = "weber")]
     Weber,
+}
+
+impl From<BaseUnit> for SId {
+    fn from(value: BaseUnit) -> Self {
+        // This should never fail because we know the strings used as units.
+        SId::try_from(value.to_string()).unwrap()
+    }
 }
 
 /// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
