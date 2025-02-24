@@ -232,31 +232,31 @@ impl XmlDefault for Model {
 
 /// The SBML-defined components of the [`Model`] class.
 impl Model {
-    pub fn substance_units(&self) -> OptionalProperty<String> {
+    pub fn substance_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
-    pub fn time_units(&self) -> OptionalProperty<String> {
+    pub fn time_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("timeUnits")
     }
 
-    pub fn volume_units(&self) -> OptionalProperty<String> {
+    pub fn volume_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("volumeUnits")
     }
 
-    pub fn area_units(&self) -> OptionalProperty<String> {
+    pub fn area_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("areaUnits")
     }
 
-    pub fn length_units(&self) -> OptionalProperty<String> {
+    pub fn length_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("lengthUnits")
     }
 
-    pub fn extent_units(&self) -> OptionalProperty<String> {
+    pub fn extent_units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("extentUnits")
     }
 
-    pub fn conversion_factor(&self) -> OptionalProperty<String> {
+    pub fn conversion_factor(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("conversionFactor")
     }
 

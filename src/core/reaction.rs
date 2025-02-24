@@ -1,5 +1,5 @@
 use crate::core::sbase::SbmlUtils;
-use crate::core::{Math, SBase};
+use crate::core::{Math, SBase, SId};
 use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, RequiredProperty, RequiredXmlProperty,
     XmlDefault, XmlDocument, XmlElement, XmlList,
@@ -10,14 +10,14 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Reaction(XmlElement);
 
 impl Reaction {
-    pub fn new(document: XmlDocument, id: &String, reversible: bool) -> Self {
+    pub fn new(document: XmlDocument, id: &SId, reversible: bool) -> Self {
         let obj = Reaction::new_empty(document, "reaction");
         obj.id().set(id);
         obj.reversible().set(&reversible);
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<String> {
+    pub fn id(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("id")
     }
 
@@ -25,7 +25,7 @@ impl Reaction {
         self.required_sbml_property("reversible")
     }
 
-    pub fn compartment(&self) -> OptionalProperty<String> {
+    pub fn compartment(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("compartment")
     }
 
@@ -47,7 +47,7 @@ impl Reaction {
 }
 
 pub trait SimpleSpeciesReference: SBase {
-    fn species(&self) -> RequiredProperty<String> {
+    fn species(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("species")
     }
 }
@@ -58,7 +58,7 @@ pub struct SpeciesReference(XmlElement);
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
-    pub fn new(document: XmlDocument, species: &String, constant: bool) -> Self {
+    pub fn new(document: XmlDocument, species: &SId, constant: bool) -> Self {
         let obj = SpeciesReference::new_empty(document, "speciesReference");
         obj.species().set(species);
         obj.constant().set(&constant);
@@ -80,7 +80,7 @@ pub struct ModifierSpeciesReference(XmlElement);
 impl SimpleSpeciesReference for ModifierSpeciesReference {}
 
 impl ModifierSpeciesReference {
-    pub fn new(document: XmlDocument, species: &String) -> Self {
+    pub fn new(document: XmlDocument, species: &SId) -> Self {
         let obj = ModifierSpeciesReference::new_empty(document, "modifierSpeciesReference");
         obj.species().set(species);
         obj
@@ -130,13 +130,13 @@ impl KineticLaw {
 pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {
-    pub fn new(document: XmlDocument, id: &String) -> Self {
+    pub fn new(document: XmlDocument, id: &SId) -> Self {
         let obj = LocalParameter::new_empty(document, "localParameter");
         obj.id().set(id);
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<String> {
+    pub fn id(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("id")
     }
 
@@ -144,7 +144,7 @@ impl LocalParameter {
         self.optional_sbml_property("value")
     }
 
-    pub fn units(&self) -> OptionalProperty<String> {
+    pub fn units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("units")
     }
 }
