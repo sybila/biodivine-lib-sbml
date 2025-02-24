@@ -5,7 +5,7 @@ use crate::constants::element::{
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
-use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model};
+use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model, SId};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
 
@@ -306,10 +306,12 @@ impl Math {
             for child in children_of_interest {
                 // This unwrap must succeed because we enforced that ci is the first child.
                 let value = child.get_child_at(0).unwrap().text_content();
+                // TODO: This conversion might fail and we need to deal with that.
+                let value_id = SId::try_from(value).unwrap();
 
-                if !identifiers.contains(&value) {
+                if !identifiers.contains(&value_id) {
                     let message = format!(
-                        "Function '{value}' not defined. \
+                        "Function '{value_id}' not defined. \
                             Function referred by <ci> must be defined in <functionDefinition> object \
                             with relevant identifier (id)."
                     );
@@ -360,10 +362,12 @@ impl Math {
 
             for ci in ci_elements {
                 let value = ci.text_content();
+                // TODO: This conversion might fail and we need to deal with that.
+                let value_id = SId::try_from(value).unwrap();
 
-                if !identifiers.contains(&value) {
+                if !identifiers.contains(&value_id) {
                     let message = format!(
-                        "Invalid identifier value '{value}' in <ci>. Identifier not found."
+                        "Invalid identifier value '{value_id}' in <ci>. Identifier not found."
                     );
                     issues.push(SbmlIssue::new_error("10215", &ci, message));
                 }
@@ -392,17 +396,20 @@ impl Math {
             .into_iter()
             .filter(|child| child.tag_name() == "bvar")
             .filter_map(|bvar| bvar.get_child_at(0).map(|it| it.text_content()))
-            .collect::<Vec<String>>();
+            .map(|it| SId::try_from(it).unwrap()) // TODO: Is this check valid?
+            .collect::<Vec<SId>>();
 
         let ci_elements = self.recursive_child_elements_filtered(|child| child.tag_name() == "ci");
 
         for ci in ci_elements {
             let value = ci.text_content();
-            if !b_variables.contains(&value)
-                && all_local_param_ids.contains(&value)
-                && !scoped_local_param_ids.contains(&value)
+            // TODO: This conversion might fail and we need to deal with that.
+            let value_id = SId::try_from(value).unwrap();
+            if !b_variables.contains(&value_id)
+                && all_local_param_ids.contains(&value_id)
+                && !scoped_local_param_ids.contains(&value_id)
             {
-                let message = format!("A <localParameter> identifier '{value}' found out of scope of its <KineticLaw>");
+                let message = format!("A <localParameter> identifier '{value_id}' found out of scope of its <KineticLaw>");
                 issues.push(SbmlIssue::new_error("10216", &ci, message));
             }
         }
@@ -494,10 +501,12 @@ impl Math {
             let arg_count = children.len() - 1;
             let func_identifiers = model.function_definition_identifiers();
             let id = function_call.text_content();
+            // TODO: This conversion might fail and we need to deal with that.
+            let id = SId::try_from(id).unwrap();
 
             if func_identifiers.contains(&id) {
                 // Only check argument count if the function is actually declared.
-                if let Some(expected_args) = model.function_definition_arguments(&id) {
+                if let Some(expected_args) = model.function_definition_arguments(id.as_str()) {
                     if arg_count != expected_args {
                         let message = format!(
                             "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
@@ -547,10 +556,14 @@ impl Math {
         for cn in cn_elements {
             // We can unwrap because we selected only elements where `units` attribute is set.
             let value = cn.get_attribute("units").unwrap();
+            // TODO: This conversion might fail and we need to deal with that.
+            let value_id = SId::try_from(value).unwrap();
 
-            if !unit_identifiers.contains(&value) && BaseUnit::from_str(&value).is_err() {
+            if !unit_identifiers.contains(&value_id)
+                && BaseUnit::from_str(value_id.as_str()).is_err()
+            {
                 let message = format!(
-                    "Invalid unit identifier '{value}' found. \
+                    "Invalid unit identifier '{value_id}' found. \
                         Only identifiers of <unitDefinition> objects and base units can be used in <cn>."
                 );
                 issues.push(SbmlIssue::new_error("10221", &cn, message));
@@ -626,17 +639,19 @@ impl Math {
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
             let value = ci.text_content();
-            let is_target_constant = model.is_rateof_target_constant(value.as_str());
+            // TODO: This conversion might fail and we need to deal with that.
+            let value_id = SId::try_from(value).unwrap();
+            let is_target_constant = model.is_rateof_target_constant(value_id.as_str());
 
-            if assignment_rule_variables.contains(&value) {
+            if assignment_rule_variables.contains(&value_id) {
                 let message = format!(
-                    "The value of target ('{value}') of rateOf <csymbol> \
+                    "The value of target ('{value_id}') of rateOf <csymbol> \
                 found as a variable of <assignmentRule>."
                 );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
-            } else if !is_target_constant && algebraic_rule_parameters.contains(&value) {
+            } else if !is_target_constant && algebraic_rule_parameters.contains(&value_id) {
                 let message = format!(
-                    "The value of target ('{value}') of rateOf <csymbol> \
+                    "The value of target ('{value_id}') of rateOf <csymbol> \
                 determined by an <algebraicRule>."
                 );
                 issues.push(SbmlIssue::new_error("10224", &ci, message));
@@ -731,7 +746,9 @@ impl Math {
         });
 
         for ci in ci_elements {
-            let value = ci.get_attribute("units");
+            let value = ci
+                .get_attribute("units")
+                .map(|it| SId::try_from(it).unwrap()); // TODO: Deal with this error.
             apply_rule_10313(ci.tag_name().as_str(), value, self.xml_element(), issues);
         }
     }
