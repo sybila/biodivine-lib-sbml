@@ -72,7 +72,7 @@
 //! // We can also modify the model.
 //!
 //! // First, create a new instance of a `Species` object.
-//! let species_id = "sp-1".to_string();
+//! let species_id = SId::try_from("sp-1").unwrap();
 //! let compartment_id = compartments.get(0).id().get();
 //! let s = Species::new(model.document(), &species_id, &compartment_id);
 //! let species_name = "MySpecies".to_string();
