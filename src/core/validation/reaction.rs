@@ -3,9 +3,7 @@ use crate::core::validation::type_check::{internal_type_check, type_check_of_lis
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{
-    KineticLaw, LocalParameter, ModifierSpeciesReference, Reaction, SId, SpeciesReference,
-};
+use crate::core::{KineticLaw, LocalParameter, MetaId, ModifierSpeciesReference, Reaction, SId, SpeciesReference};
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlWrapper,
 };
@@ -17,7 +15,7 @@ impl SbmlValidable for Reaction {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(list_of_reactants) = self.reactants().get() {
@@ -59,7 +57,7 @@ impl SbmlValidable for SpeciesReference {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
     }
@@ -72,7 +70,7 @@ impl SbmlValidable for ModifierSpeciesReference {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
     }
@@ -85,7 +83,7 @@ impl SbmlValidable for KineticLaw {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
 
@@ -140,7 +138,7 @@ impl SbmlValidable for LocalParameter {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         let xml_element = self.xml_element();

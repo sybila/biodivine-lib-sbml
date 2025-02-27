@@ -117,6 +117,15 @@ impl TryFrom<String> for MetaId {
     }
 }
 
+impl TryFrom<&str> for MetaId {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let value = value.to_string();
+        MetaId::try_from(value)
+    }
+}
+
 impl XmlPropertyType for MetaId {
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
@@ -168,6 +177,16 @@ impl TryFrom<String> for SboTerm {
     }
 }
 
+impl TryFrom<&str> for SboTerm {
+    type Error = String;
+    
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let value = value.to_string();
+        
+        SboTerm::try_from(value)
+    }
+}
+
 impl XmlPropertyType for SboTerm {
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
@@ -195,11 +214,11 @@ pub trait SBase: XmlWrapper {
         self.optional_sbml_property("name")
     }
 
-    fn meta_id(&self) -> OptionalProperty<String> {
+    fn meta_id(&self) -> OptionalProperty<MetaId> {
         self.optional_sbml_property("metaid")
     }
 
-    fn sbo_term(&self) -> OptionalProperty<String> {
+    fn sbo_term(&self) -> OptionalProperty<SboTerm> {
         self.optional_sbml_property("sboTerm")
     }
 

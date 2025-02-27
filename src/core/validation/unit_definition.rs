@@ -1,7 +1,7 @@
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{apply_rule_10311, validate_list_of_objects, SbmlValidable};
-use crate::core::{SBase, SId, UnitDefinition};
+use crate::core::{MetaId, SBase, SId, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -11,7 +11,7 @@ impl SbmlValidable for UnitDefinition {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         let xml_element = self.xml_element();

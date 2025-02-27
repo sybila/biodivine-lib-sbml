@@ -2,7 +2,7 @@ use crate::core::validation::{
     check_identifier_uniqueness, matches_sboterm_pattern, matches_sid_pattern,
     matches_xml_id_pattern, matches_xml_string_pattern,
 };
-use crate::core::{SBase, SId};
+use crate::core::{MetaId, SBase, SId};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -12,7 +12,7 @@ pub(crate) fn validate_sbase<T: SBase>(
     object: &T,
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<SId>,
-    meta_ids: &mut HashSet<String>,
+    meta_ids: &mut HashSet<MetaId>,
 ) {
     let xml_element = object.xml_element();
     let id = object.id();
@@ -72,10 +72,10 @@ pub(crate) fn apply_rule_10301(
 /// ### Rule 10307
 /// Every *metaid* attribute value must be unique across the set of all *metaid* values in a model.
 pub(crate) fn apply_rule_10307(
-    meta_id: Option<String>,
+    meta_id: Option<MetaId>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
-    meta_ids: &mut HashSet<String>,
+    meta_ids: &mut HashSet<MetaId>,
 ) {
     check_identifier_uniqueness("10307", "meta_id", meta_id, xml_element, issues, meta_ids);
 }

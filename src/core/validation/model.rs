@@ -3,7 +3,7 @@ use crate::core::validation::type_check::{internal_type_check, type_check_of_lis
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{AbstractRule, Model, SId, UnitDefinition};
+use crate::core::{AbstractRule, MetaId, Model, SId, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -13,7 +13,7 @@ impl SbmlValidable for Model {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         let xml_element = self.xml_element();

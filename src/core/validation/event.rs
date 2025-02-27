@@ -1,7 +1,7 @@
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
-use crate::core::{Delay, Event, EventAssignment, Model, Priority, SId, Trigger};
+use crate::core::{Delay, Event, EventAssignment, MetaId, Model, Priority, SId, Trigger};
 use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlList, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -11,7 +11,7 @@ impl SbmlValidable for Event {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
 
@@ -107,7 +107,7 @@ impl SbmlValidable for Trigger {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
@@ -123,7 +123,7 @@ impl SbmlValidable for Priority {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
@@ -139,7 +139,7 @@ impl SbmlValidable for Delay {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
@@ -155,7 +155,7 @@ impl SbmlValidable for EventAssignment {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {

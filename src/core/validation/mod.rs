@@ -7,7 +7,7 @@ use std::hash::Hash;
 use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
 use crate::core::sbase::SId;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::{BaseUnit, Model};
+use crate::core::{BaseUnit, MetaId, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
 use crate::xml::XmlWrapper;
@@ -52,7 +52,7 @@ pub(crate) trait SbmlValidable: XmlWrapper {
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
-        meta_ids: &mut HashSet<String>,
+        meta_ids: &mut HashSet<MetaId>,
     );
 }
 
@@ -61,7 +61,7 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<SId>,
-    meta_ids: &mut HashSet<String>,
+    meta_ids: &mut HashSet<MetaId>,
 ) {
     validate_sbase(list, issues, identifiers, meta_ids);
 

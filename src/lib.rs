@@ -104,7 +104,7 @@ use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
-use crate::core::{Model, SBase, SId};
+use crate::core::{MetaId, Model, SBase, SId};
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -324,7 +324,7 @@ impl Sbml {
         }
 
         let mut identifiers: HashSet<SId> = HashSet::new();
-        let mut meta_ids: HashSet<String> = HashSet::new();
+        let mut meta_ids: HashSet<MetaId> = HashSet::new();
 
         validate_sbase(self, &mut issues, &mut identifiers, &mut meta_ids);
 
@@ -413,13 +413,7 @@ mod tests {
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::core::RuleTypes::Assignment;
-    use crate::core::{
-        AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
-        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
-        Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes,
-        SBase, SId, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit,
-        UnitDefinition,
-    };
+    use crate::core::{AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event, EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math, MetaId, Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit, UnitDefinition};
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
@@ -430,6 +424,10 @@ mod tests {
     /// Utility method to create [SId] objects used during testing (we assume the ID is valid).
     pub fn sid(value: &str) -> SId {
         SId::try_from(value).unwrap()
+    }
+    
+    pub fn mid(value: &str) -> MetaId {
+        MetaId::try_from(value).unwrap()
     }
 
     /// Checks `SbmlDocument`'s properties such as `version` and `level`.
@@ -694,8 +692,8 @@ mod tests {
         let model = sbml_doc.model().get().unwrap();
         model.id().set_some(&sid("model_id"));
         model.name().set_some(&"test model No. 1".to_string());
-        model.sbo_term().set_some(&"FE12309531 TEST".to_string());
-        model.meta_id().set_some(&"MT-TEST-MODEL-NO1".to_string());
+        model.sbo_term().set_some(&SboTerm::try_from("FE12309531 TEST").unwrap());
+        model.meta_id().set_some(&mid("MT-TEST-MODEL-NO1"));
         model.notes().set(XmlElement::new_quantified(
             model.document(),
             "notes",
@@ -1056,11 +1054,11 @@ mod tests {
         assert_eq!(meta_id.name(), "metaid");
         assert_eq!(meta_id.element().raw_element(), model.raw_element());
         assert_eq!(
-            meta_id.get().unwrap(),
+            meta_id.get().unwrap().as_str(),
             "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d"
         );
-        meta_id.set_some(&"new_meta_id_12345".to_string());
-        assert_eq!(meta_id.get().unwrap(), "new_meta_id_12345");
+        meta_id.set_some(&mid("new_meta_id_12345"));
+        assert_eq!(meta_id.get().unwrap().as_str(), "new_meta_id_12345");
         meta_id.clear();
         assert!(!meta_id.is_set());
 
@@ -1068,8 +1066,8 @@ mod tests {
         assert!(!sbo_term.is_set());
         assert_eq!(sbo_term.name(), "sboTerm");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        sbo_term.set_some(&"model_sbo_term".to_string());
-        assert_eq!(sbo_term.get().unwrap(), "model_sbo_term");
+        sbo_term.set_some(&SboTerm::try_from("model_sbo_term").unwrap());
+        assert_eq!(sbo_term.get().unwrap().as_str(), "model_sbo_term");
         sbo_term.clear();
         assert!(!sbo_term.is_set());
 
@@ -1283,7 +1281,7 @@ mod tests {
 
         let reaction = reactions.get(0);
         assert_eq!(reaction.id().get().as_str(), "reaction_1");
-        assert_eq!(reaction.meta_id().get().unwrap(), "COPASI41");
+        assert_eq!(reaction.meta_id().get().unwrap().as_str(), "COPASI41");
         assert_eq!(reaction.name().get().unwrap(), "Ingestion");
         assert!(!reaction.reversible().get());
         assert!(reaction.annotation().is_set());
@@ -1368,7 +1366,7 @@ mod tests {
 
         let event = events.top();
         assert_eq!(event.id().get().unwrap().as_str(), "Lockdown");
-        assert_eq!(event.meta_id().get().unwrap(), "COPASI13");
+        assert_eq!(event.meta_id().get().unwrap().as_str(), "COPASI13");
         assert_eq!(event.name().get().unwrap(), "Lockdown");
         assert!(!event.priority().is_set());
         assert!(!event.delay().is_set());
