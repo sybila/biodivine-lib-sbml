@@ -3,7 +3,9 @@ use crate::core::validation::type_check::{internal_type_check, type_check_of_lis
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
-use crate::core::{KineticLaw, LocalParameter, MetaId, ModifierSpeciesReference, Reaction, SId, SpeciesReference};
+use crate::core::{
+    KineticLaw, LocalParameter, MetaId, ModifierSpeciesReference, Reaction, SId, SpeciesReference,
+};
 use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlWrapper,
 };

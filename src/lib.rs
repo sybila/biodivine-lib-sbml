@@ -413,7 +413,13 @@ mod tests {
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::core::RuleTypes::Assignment;
-    use crate::core::{AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event, EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math, MetaId, Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit, UnitDefinition};
+    use crate::core::{
+        AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
+        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
+        MetaId, Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule,
+        RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger,
+        Unit, UnitDefinition,
+    };
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
@@ -425,7 +431,7 @@ mod tests {
     pub fn sid(value: &str) -> SId {
         SId::try_from(value).unwrap()
     }
-    
+
     pub fn mid(value: &str) -> MetaId {
         MetaId::try_from(value).unwrap()
     }
@@ -692,7 +698,9 @@ mod tests {
         let model = sbml_doc.model().get().unwrap();
         model.id().set_some(&sid("model_id"));
         model.name().set_some(&"test model No. 1".to_string());
-        model.sbo_term().set_some(&SboTerm::try_from("FE12309531 TEST").unwrap());
+        model
+            .sbo_term()
+            .set_some(&SboTerm::try_from("SBO:0003204").unwrap());
         model.meta_id().set_some(&mid("MT-TEST-MODEL-NO1"));
         model.notes().set(XmlElement::new_quantified(
             model.document(),
@@ -1066,8 +1074,8 @@ mod tests {
         assert!(!sbo_term.is_set());
         assert_eq!(sbo_term.name(), "sboTerm");
         assert_eq!(name.element().raw_element(), model.raw_element());
-        sbo_term.set_some(&SboTerm::try_from("model_sbo_term").unwrap());
-        assert_eq!(sbo_term.get().unwrap().as_str(), "model_sbo_term");
+        sbo_term.set_some(&SboTerm::try_from("SBO:0000014").unwrap());
+        assert_eq!(sbo_term.get().unwrap().as_str(), "SBO:0000014");
         sbo_term.clear();
         assert!(!sbo_term.is_set());
 

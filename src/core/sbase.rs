@@ -179,10 +179,10 @@ impl TryFrom<String> for SboTerm {
 
 impl TryFrom<&str> for SboTerm {
     type Error = String;
-    
+
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let value = value.to_string();
-        
+
         SboTerm::try_from(value)
     }
 }
