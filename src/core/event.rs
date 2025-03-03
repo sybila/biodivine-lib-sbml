@@ -1,5 +1,5 @@
 use crate::core::sbase::SbmlUtils;
-use crate::core::Math;
+use crate::core::{Math, SId};
 use crate::xml::{
     OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
     XmlList,
@@ -108,13 +108,13 @@ impl Delay {
 pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
-    pub fn new(document: XmlDocument, variable: &String) -> Self {
+    pub fn new(document: XmlDocument, variable: &SId) -> Self {
         let obj = EventAssignment::new_empty(document, "eventAssignment");
         obj.variable().set(variable);
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<String> {
+    pub fn variable(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("variable")
     }
 

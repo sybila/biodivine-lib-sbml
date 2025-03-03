@@ -1,4 +1,4 @@
-use biodivine_lib_sbml::core::{SBase, Species};
+use biodivine_lib_sbml::core::{SBase, SId, Species};
 use biodivine_lib_sbml::xml::{
     OptionalDynamicChild, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
     XmlChildDefault, XmlElement, XmlList, XmlWrapper,
@@ -61,7 +61,7 @@ fn main() {
     // We can also modify the model.
 
     // First, create a new instance of a `Species` object.
-    let species_id = "sp-1".to_string();
+    let species_id = SId::try_from("sp_1").unwrap();
     let compartment_id = compartments.get(0).id().get();
     let s = Species::new(model.document(), &species_id, &compartment_id);
     let species_name = "MySpecies".to_string();

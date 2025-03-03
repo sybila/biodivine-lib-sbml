@@ -1,5 +1,5 @@
 use crate::core::sbase::SbmlUtils;
-use crate::core::{Math, SBase};
+use crate::core::{Math, SBase, SId};
 use crate::xml::{
     OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
     XmlNamedSubtype, XmlSupertype,
@@ -74,13 +74,13 @@ impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
 }
 
 impl AssignmentRule {
-    pub fn new(document: XmlDocument, variable: &String) -> Self {
+    pub fn new(document: XmlDocument, variable: &SId) -> Self {
         let obj = AssignmentRule::new_empty(document, "assignmentRule");
         obj.variable().set(variable);
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<String> {
+    pub fn variable(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("variable")
     }
 }
@@ -97,13 +97,13 @@ impl XmlNamedSubtype<AbstractRule> for RateRule {
 }
 
 impl RateRule {
-    pub fn new(document: XmlDocument, variable: &String) -> Self {
+    pub fn new(document: XmlDocument, variable: &SId) -> Self {
         let obj = RateRule::new_empty(document, "rateRule");
         obj.variable().set(variable);
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<String> {
+    pub fn variable(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("variable")
     }
 }

@@ -1,4 +1,5 @@
 use crate::core::sbase::SbmlUtils;
+use crate::core::SId;
 use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
 };
@@ -21,7 +22,7 @@ impl Compartment {
         cmp
     }
 
-    pub fn id(&self) -> RequiredProperty<String> {
+    pub fn id(&self) -> RequiredProperty<SId> {
         self.required_sbml_property("id")
     }
 
@@ -34,7 +35,7 @@ impl Compartment {
     }
 
     /// TODO: implement units lookup in model according to documentation
-    pub fn units(&self) -> OptionalProperty<String> {
+    pub fn units(&self) -> OptionalProperty<SId> {
         self.optional_sbml_property("units")
     }
 
