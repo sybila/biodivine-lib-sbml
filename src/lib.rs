@@ -112,6 +112,8 @@ use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 /// by the SBML core specification.
 pub mod core;
 
+pub mod layout;
+
 /// Defines [`XmlDocument`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
 /// [`XmlChild`][xml::XmlChild] and other utility types or traits that can be used to safely
 /// manipulate the underlying XML document.
