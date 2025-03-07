@@ -8,8 +8,8 @@ use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredProperty, XmlDocument, XmlElement, XmlPropertyType,
-    XmlWrapper,
+    OptionalChild, OptionalProperty, RequiredChild, RequiredProperty, XmlDocument, XmlElement,
+    XmlPropertyType, XmlWrapper,
 };
 use biodivine_xml_doc::{Document, Element};
 use std::fmt::Display;
@@ -277,6 +277,10 @@ pub(crate) trait SbmlUtils: SBase {
     #[inline(always)]
     fn optional_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
         OptionalChild::new(self.xml_element(), name, URL_SBML_CORE)
+    }
+
+    fn required_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> RequiredChild<T> {
+        RequiredChild::new(self.xml_element(), name, URL_SBML_CORE)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the MathML namespace.
