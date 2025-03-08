@@ -1,8 +1,6 @@
 use std::ops::Deref;
 
-use embed_doc_image::embed_doc_image;
-use sbml_macros::{SBase, XmlWrapper};
-
+use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
@@ -13,6 +11,8 @@ use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
     XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSupertype, XmlWrapper,
 };
+use embed_doc_image::embed_doc_image;
+use sbml_macros::{SBase, XmlWrapper};
 
 /// The SBML model object
 /// (Section 4.2; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -298,6 +298,10 @@ impl Model {
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
+    }
+
+    pub fn layouts(&self) -> OptionalChild<XmlList<XmlElement>> {
+        self.optional_extension_child("listOfLayouts", NS_LAYOUT, false)
     }
 }
 

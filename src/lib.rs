@@ -100,7 +100,7 @@ use embed_doc_image::embed_doc_image;
 
 use xml::{OptionalChild, RequiredProperty};
 
-use crate::constants::namespaces::URL_SBML_CORE;
+use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
@@ -207,6 +207,21 @@ impl Sbml {
 
 /// Other methods for creating and manipulating [`Sbml`] container.
 impl Sbml {
+    /// Try to create a new instance of [`Sbml`] for the given instance of an [`XmlWrapper`]
+    /// (transitive) child element.
+    ///
+    /// This method can fail (return `None`) when the element is not a member of a valid SBML
+    /// document (i.e. the root is not an `sbml` tag).
+    ///
+    pub fn try_for_child<T: XmlWrapper>(child: &T) -> Option<Sbml> {
+        let root = child.xml_element().document_root();
+        if root.tag_name().as_str() == "sbml" {
+            unsafe { Some(Self::unchecked_cast(root)) }
+        } else {
+            None
+        }
+    }
+
     pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
         // Only accept documents that are using UTF-8.
         let opts = ReadOptions {
@@ -335,6 +350,29 @@ impl Sbml {
         }
 
         issues
+    }
+
+    /// Ensure that the
+    pub fn ensure_package(&self, namespace: Namespace, required: bool) {
+        let mut doc = self.xml.write().unwrap();
+        let e = self.sbml_root.raw_element();
+        if let Some(url) = e.namespace_for_prefix(&doc, namespace.0) {
+            assert_eq!(
+                url, namespace.1,
+                "Prefix {} is already used by namespace {}.",
+                namespace.0, url
+            );
+        } else {
+            // The prefix is not declared yet.
+            e.set_namespace_decl(&mut doc, namespace.0, namespace.1);
+        }
+
+        // Set the "required" attribute, using the appropriate prefix.
+        e.set_attribute(
+            &mut doc,
+            format!("{}:required", namespace.0).as_str(),
+            format!("{}", required),
+        );
     }
 }
 
@@ -1450,5 +1488,24 @@ mod tests {
             .raw_element()
             .text_content(model.clone().read_doc().deref())
             .starts_with("Warning:"));
+    }
+
+    #[test]
+    pub fn test_package_manipulation() {
+        let doc = Sbml::read_path("test-inputs/apoptosis_stable.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        assert_eq!(layouts.len(), 1);
+        println!("Read {} layouts", layouts.len());
+        let layout = layouts.get(0);
+        println!("Inside layout: {}", layout.child_elements().len());
+    }
+
+    #[test]
+    pub fn test_package_created() {
+        let doc = Sbml::default();
+        let model = doc.model().get_or_create();
+        let layouts = model.layouts().get_or_create();
+        println!("{}", doc.to_xml_string().unwrap());
     }
 }
