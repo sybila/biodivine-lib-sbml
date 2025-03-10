@@ -1,10 +1,10 @@
+use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
-use crate::constants::namespaces::NS_LAYOUT;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Dimensions(XmlElement);

@@ -1,12 +1,12 @@
+use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    RequiredChild, RequiredProperty, RequiredXmlChild, RequiredXmlProperty,
-    XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype, XmlWrapper,
+    RequiredChild, RequiredProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
+    XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
-use crate::constants::namespaces::NS_LAYOUT;
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
 pub struct Curve(XmlElement);
