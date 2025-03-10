@@ -297,14 +297,34 @@ pub(crate) trait SbmlUtils: SBase {
     }
 
     #[inline(always)]
-    fn optional_extension_child<T: XmlWrapper>(
+    fn optional_package_child<T: XmlWrapper>(
         &self,
         name: &'static str,
         extension: Namespace,
         required: bool,
     ) -> OptionalChild<T> {
+        // TODO:
+        //  This should probably create the package declaration only when the element is
+        //  written, and check that the package declaration is present if the element is read.
+        //  However, for that, we will need to derive a new sub-type from `XmlChild`... -_-
+
+        // TODO 2:
+        //  SBML packages are always either required or not required. I.e. the required flag
+        //  can be part of the namespace "object" and we don't need to set it dynamically
+        //  based on which document elements are accessed.
         self.ensure_package(extension, required);
         OptionalChild::new(self.xml_element(), name, extension.1)
+    }
+
+    #[inline(always)]
+    fn required_package_child<T: XmlWrapper>(
+        &self,
+        name: &'static str,
+        extension: Namespace,
+        required: bool,
+    ) -> RequiredChild<T> {
+        self.ensure_package(extension, required);
+        RequiredChild::new(self.xml_element(), name, extension.1)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the MathML namespace.
@@ -327,6 +347,15 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
     ) -> RequiredProperty<T> {
         // TODO: At the moment, properties ignore namespaces.
+
+        // See also:
+        // The convention for SBML packages is to allow attributes to be defined either with no namespace prefix, or
+        // to be defined with that package’s namespace as a prefix, for any new element defined by that package. When
+        // a package extends an existing SBML element to have a new attribute, the convention is to require that this
+        // attribute be prefixed with that package’s namespace. Previously-released SBML packages did not make this
+        // explicit, but are assumed to follow this convention. As these packages undergo updates in the future, these
+        // rules will be made explicit.
+
         RequiredProperty::new(self.xml_element(), name)
     }
 
@@ -345,6 +374,26 @@ pub(crate) trait SbmlUtils: SBase {
     fn ensure_package(&self, namespace: Namespace, required: bool) {
         let sbml = self.sbml_root();
         sbml.ensure_package(namespace, required);
+    }
+
+    // TODO: This does nothing special and uses the "core" namespace
+    fn optional_package_property<T: XmlPropertyType>(
+        &self,
+        name: &'static str,
+        _extension: Namespace,
+        _tag_is_extension: bool,
+    ) -> OptionalProperty<T> {
+        OptionalProperty::new(self.xml_element(), name)
+    }
+
+    // TODO: This does nothing special and uses the "core" namespace
+    fn required_package_property<T: XmlPropertyType>(
+        &self,
+        name: &'static str,
+        _extension: Namespace,
+        _tag_is_extension: bool,
+    ) -> RequiredProperty<T> {
+        RequiredProperty::new(self.xml_element(), name)
     }
 }
 

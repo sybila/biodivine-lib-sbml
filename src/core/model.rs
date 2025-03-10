@@ -7,6 +7,7 @@ use crate::core::{
     FunctionDefinition, InitialAssignment, Parameter, Reaction, Rule, SBase, Species,
     UnitDefinition,
 };
+use crate::layout::Layout;
 use crate::xml::{
     OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
     XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSupertype, XmlWrapper,
@@ -300,8 +301,8 @@ impl Model {
         self.optional_sbml_child("listOfEvents")
     }
 
-    pub fn layouts(&self) -> OptionalChild<XmlList<XmlElement>> {
-        self.optional_extension_child("listOfLayouts", NS_LAYOUT, false)
+    pub fn layouts(&self) -> OptionalChild<XmlList<Layout>> {
+        self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
 }
 

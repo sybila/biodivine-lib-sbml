@@ -354,6 +354,7 @@ impl Sbml {
 
     /// Ensure that the
     pub fn ensure_package(&self, namespace: Namespace, required: bool) {
+        // TODO: Prefixes can be arbitrary. We can't enforce a specific prefix for a package.
         let mut doc = self.xml.write().unwrap();
         let e = self.sbml_root.raw_element();
         if let Some(url) = e.namespace_for_prefix(&doc, namespace.0) {
@@ -460,6 +461,7 @@ mod tests {
         RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger,
         Unit, UnitDefinition,
     };
+    use crate::layout::GeneralGlyph;
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
         RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
@@ -1498,14 +1500,22 @@ mod tests {
         assert_eq!(layouts.len(), 1);
         println!("Read {} layouts", layouts.len());
         let layout = layouts.get(0);
-        println!("Inside layout: {}", layout.child_elements().len());
+        println!("{} {:?}", layout.id().get(), layout.name().get());
+        let dimensions = layout.dimensions().get();
+        println!("{} {}", dimensions.width().get(), dimensions.height().get());
+        let additional_objects = layout.additional_graph_obj().get().unwrap();
+        println!("Inside layout: {}", additional_objects.len());
+        let obj = additional_objects.get(0);
+        let obj = GeneralGlyph::try_cast_from_super(&obj).unwrap();
+        assert_eq!(obj.reference().get().unwrap().as_str(), "csa2");
     }
 
     #[test]
     pub fn test_package_created() {
         let doc = Sbml::default();
         let model = doc.model().get_or_create();
-        let layouts = model.layouts().get_or_create();
+        let _ = model.layouts().get_or_create();
+        // TODO: Actually test that package is created...
         println!("{}", doc.to_xml_string().unwrap());
     }
 }

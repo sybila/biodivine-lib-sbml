@@ -3,6 +3,7 @@ mod curve;
 mod dimensions;
 mod point;
 
+use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{MetaId, SId};
 use crate::layout::bounding_box::BoundingBox;
@@ -34,23 +35,23 @@ impl Layout {
         self.optional_sbml_property("name")
     }
     pub fn dimensions(&self) -> RequiredChild<Dimensions> {
-        self.required_sbml_child("dimensions")
+        self.required_package_child("dimensions", NS_LAYOUT, false)
     }
     //can contain only GraphicalObject or GeneralGlyph
     pub fn additional_graph_obj(&self) -> OptionalChild<XmlList<GraphicalObject>> {
-        self.optional_sbml_child("additionalGraphObjects")
+        self.optional_package_child("listOfAdditionalGraphicalObjects", NS_LAYOUT, false)
     }
     pub fn compartment_glyphs(&self) -> OptionalChild<XmlList<CompartmentGlyph>> {
-        self.optional_sbml_child("compartmentGlyphs")
+        self.optional_package_child("listOfCompartmentGlyphs", NS_LAYOUT, false)
     }
     pub fn species_glyph(&self) -> OptionalChild<XmlList<SpeciesGlyph>> {
-        self.optional_sbml_child("speciesGlyph")
+        self.optional_package_child("listOfSpeciesGlyphs", NS_LAYOUT, false)
     }
     pub fn reaction_glyph(&self) -> OptionalChild<XmlList<ReactionGlyph>> {
-        self.optional_sbml_child("reactionGlyph")
+        self.optional_package_child("listOfReactionGlyphs", NS_LAYOUT, false)
     }
     pub fn text_glyphs(&self) -> OptionalChild<XmlList<TextGlyph>> {
-        self.optional_sbml_child("textGlyphs")
+        self.optional_package_child("listOfTextGlyphs", NS_LAYOUT, false)
     }
 }
 
