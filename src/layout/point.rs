@@ -4,6 +4,7 @@ use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
+use crate::constants::namespaces::NS_LAYOUT;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Point(XmlElement);
@@ -17,18 +18,18 @@ impl Point {
     }
 
     pub fn id(&self) -> OptionalProperty<SId> {
-        self.optional_sbml_property("id")
+        self.optional_package_property("id", NS_LAYOUT, false)
     }
 
     pub fn x(&self) -> RequiredProperty<f64> {
-        self.required_sbml_property("x")
+        self.required_package_property("x", NS_LAYOUT, false)
     }
 
     pub fn y(&self) -> RequiredProperty<f64> {
-        self.required_sbml_property("y")
+        self.required_package_property("y", NS_LAYOUT, false)
     }
 
     pub fn z(&self) -> OptionalProperty<f64> {
-        self.optional_sbml_property("z")
+        self.optional_package_property("z", NS_LAYOUT, false)
     }
 }

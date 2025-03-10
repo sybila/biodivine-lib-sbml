@@ -1,11 +1,21 @@
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    RequiredChild, RequiredDynamicChild, RequiredProperty, RequiredXmlChild, RequiredXmlProperty,
+    RequiredChild, RequiredProperty, RequiredXmlChild, RequiredXmlProperty,
     XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
+use crate::constants::namespaces::NS_LAYOUT;
+
+#[derive(Debug, Clone, XmlWrapper, SBase)]
+pub struct Curve(XmlElement);
+
+impl Curve {
+    pub fn curve_segments(&self) -> RequiredChild<XmlList<LineSegment>> {
+        self.required_package_child("ListOfCurveSegments", NS_LAYOUT, false)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum XsiType {
@@ -59,15 +69,6 @@ impl XmlPropertyType for XsiType {
 }
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
-pub struct Curve(XmlElement);
-
-impl Curve {
-    pub fn curve_segments(&self) -> RequiredChild<XmlList<LineSegment>> {
-        self.required_sbml_child("curveSegments")
-    }
-}
-
-#[derive(Debug, Clone, XmlWrapper, SBase)]
 pub struct LineSegment(XmlElement);
 
 impl XmlSupertype for LineSegment {}
@@ -83,15 +84,15 @@ impl LineSegment {
     }
 
     pub fn xsi_type(&self) -> RequiredProperty<XsiType> {
-        self.required_sbml_property("xsiType")
+        self.required_package_property("xsiType", NS_LAYOUT, false)
     }
 
-    pub fn start(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("start", "")
+    pub fn start(&self) -> RequiredChild<Point> {
+        self.required_package_child("start", NS_LAYOUT, false)
     }
 
-    pub fn end(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("end", "")
+    pub fn end(&self) -> RequiredChild<Point> {
+        self.required_package_child("end", NS_LAYOUT, false)
     }
 }
 
@@ -122,18 +123,18 @@ impl CubicBezier {
         cub
     }
     pub fn xsi_type(&self) -> RequiredProperty<XsiType> {
-        self.required_sbml_property("xsiType")
+        self.required_package_property("xsiType", NS_LAYOUT, false)
     }
-    pub fn start(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("start", "")
+    pub fn start(&self) -> RequiredChild<Point> {
+        self.required_package_child("start", NS_LAYOUT, false)
     }
-    pub fn end(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("end", "")
+    pub fn end(&self) -> RequiredChild<Point> {
+        self.required_package_child("end", NS_LAYOUT, false)
     }
-    pub fn base_point1(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("basePoint1", "")
+    pub fn base_point1(&self) -> RequiredChild<Point> {
+        self.required_package_child("basePoint1", NS_LAYOUT, false)
     }
-    pub fn base_point2(&self) -> RequiredDynamicChild<Point> {
-        self.required_child("basePoint2", "")
+    pub fn base_point2(&self) -> RequiredChild<Point> {
+        self.required_package_child("basePoint2", NS_LAYOUT, false)
     }
 }

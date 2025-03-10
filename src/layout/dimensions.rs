@@ -4,6 +4,7 @@ use crate::xml::{
     OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
+use crate::constants::namespaces::NS_LAYOUT;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Dimensions(XmlElement);
@@ -17,15 +18,15 @@ impl Dimensions {
     }
 
     pub fn id(&self) -> OptionalProperty<SId> {
-        self.optional_sbml_property("id")
+        self.optional_package_property("id", NS_LAYOUT, false)
     }
     pub fn width(&self) -> RequiredProperty<f64> {
-        self.required_sbml_property("width")
+        self.required_package_property("width", NS_LAYOUT, false)
     }
     pub fn height(&self) -> RequiredProperty<f64> {
-        self.required_sbml_property("height")
+        self.required_package_property("height", NS_LAYOUT, false)
     }
     pub fn depth(&self) -> OptionalProperty<f64> {
-        self.optional_sbml_property("depth")
+        self.optional_package_property("depth", NS_LAYOUT, false)
     }
 }
