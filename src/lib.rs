@@ -97,14 +97,15 @@ use std::sync::{Arc, RwLock};
 
 use biodivine_xml_doc::{Document, Element, ReadOptions};
 use embed_doc_image::embed_doc_image;
-
+use pyo3::prelude::{PyModule, PyModuleMethods};
+use pyo3::{pymodule, Bound, PyResult, Python};
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::URL_SBML_CORE;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
-use crate::core::{MetaId, Model, SBase, SId};
+use crate::core::{MetaId, Model, SBase, SId, Unit};
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -125,6 +126,12 @@ pub(crate) mod constants;
 /// standard unit tests.
 #[cfg(test)]
 pub mod test_suite;
+
+#[pymodule]
+fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add_class::<Unit>()?;
+    Ok(())
+}
 
 /// The SBML container object
 /// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).

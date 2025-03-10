@@ -3,6 +3,10 @@ name = "biodivine-lib-sbml"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "biodivine_lib_sbml"
+crate-type = ["cdylib", "rlib"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
@@ -11,6 +15,7 @@ edition = "2021"
 sbml_test_suite = []
 
 [dependencies]
+pyo3 = { version = "0.24.0", features = ["abi3-py37", "extension-module", "py-clone"] }
 const_format = "0.2.31"
 phf = { version = "0.11.2", features = ["macros"] }
 strum = "0.26"
@@ -22,3 +27,6 @@ embed-doc-image = "0.1.4"
 
 [dev-dependencies]
 sbml-test-suite = { path = "sbml-test-suite" }
+
+[build-dependencies]
+pyo3-build-config = "0.24.0"

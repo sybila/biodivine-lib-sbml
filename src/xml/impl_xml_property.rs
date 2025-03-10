@@ -1,8 +1,7 @@
+use super::xml_property::OptionalXmlProperty;
 use crate::xml::xml_property::RequiredXmlProperty;
 use crate::xml::{XmlElement, XmlProperty, XmlPropertyType};
 use std::marker::PhantomData;
-
-use super::xml_property::OptionalXmlProperty;
 
 /// [DynamicProperty] is an implementation of [XmlProperty] that uses an attribute name given
 /// at runtime. It is less efficient (and idiomatic) than using a special type for

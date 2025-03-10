@@ -3,13 +3,23 @@ use crate::core::SId;
 use crate::xml::{
     RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
+use pyo3::{pyclass, pymethods};
 use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 /// Unit representation
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[pyclass]
 pub struct Unit(XmlElement);
+
+#[pymethods]
+impl Unit {
+    #[staticmethod]
+    pub fn test() {
+        println!("Hello world");
+    }
+}
 
 impl Unit {
     pub fn kind(&self) -> RequiredProperty<BaseUnit> {
