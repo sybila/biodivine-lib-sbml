@@ -453,6 +453,7 @@ mod tests {
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
+    use crate::core::sbase::SbmlUtils;
     use crate::core::RuleTypes::Assignment;
     use crate::core::{
         AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
@@ -1517,5 +1518,19 @@ mod tests {
         let _ = model.layouts().get_or_create();
         // TODO: Actually test that package is created...
         println!("{}", doc.to_xml_string().unwrap());
+    }
+
+    #[test]
+    pub fn test_element_search() {
+        let doc = Sbml::read_path("test-inputs/apoptosis_stable.sbml").unwrap();
+
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        let layout = layouts.get(0);
+
+        let csa_object = layout.find_element_by_sid(&sid("csa2"));
+        assert!(csa_object.is_some());
+        let csa_glyph = layout.find_by_sid::<GeneralGlyph>(&sid("csa2_glyph"));
+        assert!(csa_glyph.is_some());
     }
 }

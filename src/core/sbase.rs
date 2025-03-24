@@ -395,6 +395,56 @@ pub(crate) trait SbmlUtils: SBase {
     ) -> RequiredProperty<T> {
         RequiredProperty::new(self.xml_element(), name)
     }
+
+    fn find_by_sid<E: SBase>(&self, id: &SId) -> Option<E> {
+        let e = self.find_element_by_sid(id)?;
+        // TODO: This should check that the conversion can succeed?
+        unsafe { Some(E::unchecked_cast(e)) }
+    }
+
+    fn find_element_by_sid(&self, id: &SId) -> Option<XmlElement> {
+        let doc = self.document();
+        let doc = doc.read().unwrap();
+
+        let root = doc.root_element()?;
+
+        for child in root.child_elements_recursive(&doc) {
+            for (name, value) in child.attributes(&doc) {
+                let (_namespace, attr_name) = Element::separate_prefix_name(name.as_str());
+                // TODO: Can we check if the namespace corresponds to an SBML extension? Probably not...
+                if attr_name == "id" && id.as_str() == value.as_str() {
+                    return Some(XmlElement::new_raw(self.document(), child));
+                }
+            }
+        }
+
+        None
+    }
+
+    fn find_by_meta_id<E: SBase>(&self, id: &MetaId) -> Option<E> {
+        let e = self.find_element_by_meta_id(id)?;
+        // TODO: This should check that the conversion can succeed?
+        unsafe { Some(E::unchecked_cast(e)) }
+    }
+
+    fn find_element_by_meta_id(&self, id: &MetaId) -> Option<XmlElement> {
+        let doc = self.document();
+        let doc = doc.read().unwrap();
+
+        let root = doc.root_element()?;
+
+        for child in root.child_elements_recursive(&doc) {
+            for (name, value) in child.attributes(&doc) {
+                let (_namespace, attr_name) = Element::separate_prefix_name(name.as_str());
+                // TODO: Can we check if the namespace corresponds to an SBML extension? Probably not...
+                if attr_name == "metaid" && id.as_str() == value.as_str() {
+                    return Some(XmlElement::new_raw(self.document(), child));
+                }
+            }
+        }
+
+        None
+    }
 }
 
 /// [crate::sbase::SbmlUtils] is implemented for all types that implement [crate::sbase::SBase].
