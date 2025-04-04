@@ -149,12 +149,12 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "dimensions" => &["width", "height"]
 };
 
-pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map!{
+pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "layout" => &["dimensions"],
-    "listOfCompartmentGlyphs" => &["compartmentGlyph"], 
-    "listOfSpeciesGlyphs" => &["speciesGlyph"], 
-    "listOfReactionGlyphs" => &["reactionGlyph"], 
-    "listOfTextGlyphs" => &["textGlyph"], 
+    "listOfCompartmentGlyphs" => &["compartmentGlyph"],
+    "listOfSpeciesGlyphs" => &["speciesGlyph"],
+    "listOfReactionGlyphs" => &["reactionGlyph"],
+    "listOfTextGlyphs" => &["textGlyph"],
     "listOfAdditionalGraphicalObjects" => &["graphicalObject"],
     "graphicalObject" => &["boundingBox"],
     "compartmentGlyph" => &["boundingBox"],

@@ -450,11 +450,11 @@ pub enum SbmlIssueSeverity {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
     use crate::core::sbase::SbmlUtils;
+    use crate::core::validation::SbmlValidable;
     use crate::core::RuleTypes::Assignment;
     use crate::core::{
         AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
@@ -463,7 +463,6 @@ mod tests {
         RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger,
         Unit, UnitDefinition,
     };
-    use crate::core::validation::SbmlValidable;
     use crate::layout::GeneralGlyph;
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -1504,8 +1503,22 @@ mod tests {
         println!("Read {} layouts", layouts.len());
         let mut issues = Vec::new();
         println!("{}", layouts.get(0).id().get());
-        println!("{}", layouts.get(0).additional_graph_obj().get().unwrap().get(0).id().get());
-        layouts.get(0).validate(&mut issues, &mut Default::default(), &mut Default::default());
+        println!(
+            "{}",
+            layouts
+                .get(0)
+                .additional_graph_obj()
+                .get()
+                .unwrap()
+                .get(0)
+                .id()
+                .get()
+        );
+        layouts.get(0).validate(
+            &mut issues,
+            &mut Default::default(),
+            &mut Default::default(),
+        );
         println!("Issues: {:?}", issues);
         let layout = layouts.get(0);
         println!("{} {:?}", layout.id().get(), layout.name().get());
