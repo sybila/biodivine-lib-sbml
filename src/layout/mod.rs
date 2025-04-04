@@ -2,6 +2,7 @@ mod bounding_box;
 mod curve;
 mod dimensions;
 mod point;
+mod validation;
 
 use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
@@ -44,10 +45,10 @@ impl Layout {
     pub fn compartment_glyphs(&self) -> OptionalChild<XmlList<CompartmentGlyph>> {
         self.optional_package_child("listOfCompartmentGlyphs", NS_LAYOUT, false)
     }
-    pub fn species_glyph(&self) -> OptionalChild<XmlList<SpeciesGlyph>> {
+    pub fn species_glyphs(&self) -> OptionalChild<XmlList<SpeciesGlyph>> {
         self.optional_package_child("listOfSpeciesGlyphs", NS_LAYOUT, false)
     }
-    pub fn reaction_glyph(&self) -> OptionalChild<XmlList<ReactionGlyph>> {
+    pub fn reaction_glyphs(&self) -> OptionalChild<XmlList<ReactionGlyph>> {
         self.optional_package_child("listOfReactionGlyphs", NS_LAYOUT, false)
     }
     pub fn text_glyphs(&self) -> OptionalChild<XmlList<TextGlyph>> {
@@ -73,7 +74,7 @@ impl GraphicalObject {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
@@ -101,14 +102,14 @@ impl CompartmentGlyph {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn compartment(&self) -> OptionalProperty<SId> {
-        self.optional_package_property("id", NS_LAYOUT, false)
+        self.optional_package_property("compartment", NS_LAYOUT, false)
     }
     pub fn order(&self) -> OptionalProperty<f64> {
         self.optional_package_property("order", NS_LAYOUT, false)
@@ -136,7 +137,7 @@ impl SpeciesGlyph {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
@@ -174,7 +175,7 @@ impl ReactionGlyph {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
@@ -203,7 +204,7 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {
 impl SpeciesReferenceGlyph {
     pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox, glyph: SId) -> Self {
         let srg = SpeciesReferenceGlyph::new_empty(document, "speciesRefGlyph");
-        srg.glyph().set(&glyph);
+        srg.species_glyph().set(&glyph);
         srg.id().set(&id);
         srg.bounding_box().set(bounding_box);
         srg
@@ -213,17 +214,17 @@ impl SpeciesReferenceGlyph {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
     }
 
-    pub fn glyph(&self) -> RequiredProperty<SId> {
-        self.required_package_property("glyph", NS_LAYOUT, false)
+    pub fn species_glyph(&self) -> RequiredProperty<SId> {
+        self.required_package_property("speciesGlyph", NS_LAYOUT, false)
     }
-    pub fn reference(&self) -> OptionalProperty<SId> {
-        self.optional_package_property("reference", NS_LAYOUT, false)
+    pub fn species_reference(&self) -> OptionalProperty<SId> {
+        self.optional_package_property("speciesReference", NS_LAYOUT, false)
     }
     pub fn curve(&self) -> OptionalChild<Curve> {
         self.optional_package_child("curve", NS_LAYOUT, false)
@@ -317,14 +318,14 @@ impl GeneralGlyph {
         self.required_sbml_property("id")
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn reference(&self) -> OptionalProperty<SId> {
-        self.optional_package_property("reference", NS_LAYOUT, false)
+        self.optional_package_property("layout:reference", NS_LAYOUT, false)
     }
     pub fn sub_glyphs(&self) -> OptionalChild<XmlList<GraphicalObject>> {
         self.optional_package_child("listOfSubGlyphs", NS_LAYOUT, false)
@@ -359,7 +360,7 @@ impl ReferenceGlyph {
         self.required_package_property("id", NS_LAYOUT, false)
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)
@@ -400,7 +401,7 @@ impl TextGlyph {
         self.required_sbml_property("id")
     }
     pub fn meta_id_ref(&self) -> OptionalProperty<MetaId> {
-        self.optional_package_property("metaIdRef", NS_LAYOUT, false)
+        self.optional_package_property("metaidRef", NS_LAYOUT, false)
     }
     pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
         self.required_package_child("boundingBox", NS_LAYOUT, false)

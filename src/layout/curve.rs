@@ -7,13 +7,21 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
+use crate::core::SId;
+use crate::layout::dimensions::Dimensions;
+use crate::layout::Layout;
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
 pub struct Curve(XmlElement);
 
 impl Curve {
+    pub fn new(document: XmlDocument, segments: XmlList<LineSegment>) -> Self {
+        let curve = Curve::new_empty(document, "curve");
+        curve.curve_segments().set(segments);
+        curve
+    }
     pub fn curve_segments(&self) -> RequiredChild<XmlList<LineSegment>> {
-        self.required_package_child("ListOfCurveSegments", NS_LAYOUT, false)
+        self.required_package_child("listOfCurveSegments", NS_LAYOUT, false)
     }
 }
 
