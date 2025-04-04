@@ -7,9 +7,6 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
-use crate::core::SId;
-use crate::layout::dimensions::Dimensions;
-use crate::layout::Layout;
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
 pub struct Curve(XmlElement);

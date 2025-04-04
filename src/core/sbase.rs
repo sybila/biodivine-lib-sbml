@@ -292,10 +292,6 @@ pub(crate) trait SbmlUtils: SBase {
         OptionalChild::new(self.xml_element(), name, URL_SBML_CORE)
     }
 
-    fn required_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> RequiredChild<T> {
-        RequiredChild::new(self.xml_element(), name, URL_SBML_CORE)
-    }
-
     #[inline(always)]
     fn optional_package_child<T: XmlWrapper>(
         &self,

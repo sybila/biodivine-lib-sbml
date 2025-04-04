@@ -3,7 +3,7 @@
 //! Markup Language (SBML) files. Main features:
 //!
 //!  - Complete support for the SBML Level 3 Version 2 core specification.
-//!  - Validation of the *required* SBML conformance rules, including validation of proper namespace usage.
+//!  - validation of the *required* SBML conformance rules, including validation of proper namespace usage.
 //!  - Ability to (safely) edit invalid or partially corrupted files (e.g. to fix errors).
 //!  - Full access to the raw underlying XML document through the `xml-doc` interface.
 //!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
@@ -450,6 +450,7 @@ pub enum SbmlIssueSeverity {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
     use std::ops::{Deref, DerefMut};
 
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
@@ -462,6 +463,7 @@ mod tests {
         RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger,
         Unit, UnitDefinition,
     };
+    use crate::core::validation::SbmlValidable;
     use crate::layout::GeneralGlyph;
     use crate::xml::{
         OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
@@ -1500,6 +1502,11 @@ mod tests {
         let layouts = model.layouts().get().unwrap();
         assert_eq!(layouts.len(), 1);
         println!("Read {} layouts", layouts.len());
+        let mut issues = Vec::new();
+        println!("{}", layouts.get(0).id().get());
+        println!("{}", layouts.get(0).additional_graph_obj().get().unwrap().get(0).id().get());
+        layouts.get(0).validate(&mut issues, &mut Default::default(), &mut Default::default());
+        println!("Issues: {:?}", issues);
         let layout = layouts.get(0);
         println!("{} {:?}", layout.id().get(), layout.name().get());
         let dimensions = layout.dimensions().get();
