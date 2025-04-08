@@ -8,8 +8,8 @@ use crate::layout::{
     SpeciesGlyph, SpeciesReferenceGlyph, TextGlyph,
 };
 use crate::xml::{
-    OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, RequiredXmlProperty,
-    XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
+    OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
+    RequiredXmlChild, RequiredXmlProperty, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -428,7 +428,7 @@ pub fn apply_rule_20808<T: SBase>(id: Option<SId>, element: &T, issues: &mut Vec
 /// have to refer to the same specific element of model.
 pub fn apply_rule_20509<T: SBase>(
     element: &Option<T>,
-    metaid_ref: OptionalProperty<MetaId>,
+    metaid_ref: OptionalSbmlProperty<MetaId>,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
@@ -473,8 +473,8 @@ pub fn apply_rule_20809<T: SBase>(
 /// Covers the basic rules same for all the [glyph] elements.
 ///
 pub fn apply_glyph_rules<T: SBase>(
-    metaid_ref: &OptionalProperty<MetaId>,
-    sid_ref: &OptionalProperty<SId>,
+    metaid_ref: &OptionalSbmlProperty<MetaId>,
+    sid_ref: &OptionalSbmlProperty<SId>,
     element: &T,
     issues: &mut Vec<SbmlIssue>,
 ) {

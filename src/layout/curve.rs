@@ -2,8 +2,8 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    RequiredChild, RequiredProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
-    XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype, XmlWrapper,
+    RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
+    XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
@@ -88,8 +88,8 @@ impl LineSegment {
         line
     }
 
-    pub fn xsi_type(&self) -> RequiredProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, false)
+    pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
+        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
     }
 
     pub fn start(&self) -> RequiredChild<Point> {
@@ -127,8 +127,8 @@ impl CubicBezier {
         cub.base_point2().set(base_point2);
         cub
     }
-    pub fn xsi_type(&self) -> RequiredProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, false)
+    pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
+        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
     }
     pub fn start(&self) -> RequiredChild<Point> {
         self.required_package_child("start", NS_LAYOUT, false)

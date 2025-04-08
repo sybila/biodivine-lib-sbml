@@ -2,7 +2,8 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument,
+    XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -17,19 +18,19 @@ impl Point {
         obj
     }
 
-    pub fn id(&self) -> OptionalProperty<SId> {
-        self.optional_package_property("id", NS_LAYOUT, false)
+    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+        self.optional_package_property("id", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn x(&self) -> RequiredProperty<f64> {
-        self.required_package_property("x", NS_LAYOUT, false)
+    pub fn x(&self) -> RequiredSbmlProperty<f64> {
+        self.required_package_property("x", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn y(&self) -> RequiredProperty<f64> {
-        self.required_package_property("y", NS_LAYOUT, false)
+    pub fn y(&self) -> RequiredSbmlProperty<f64> {
+        self.required_package_property("y", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn z(&self) -> OptionalProperty<f64> {
-        self.optional_package_property("z", NS_LAYOUT, false)
+    pub fn z(&self) -> OptionalSbmlProperty<f64> {
+        self.optional_package_property("z", NS_LAYOUT, NS_LAYOUT)
     }
 }
