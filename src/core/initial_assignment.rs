@@ -1,8 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
 use crate::xml::{
-    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument,
-    XmlElement,
+    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 

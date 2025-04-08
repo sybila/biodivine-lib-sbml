@@ -11,9 +11,9 @@ use crate::layout::bounding_box::BoundingBox;
 use crate::layout::curve::Curve;
 use crate::layout::dimensions::Dimensions;
 use crate::xml::{
-    OptionalChild, OptionalSbmlProperty, RequiredChild,
-    RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument, XmlElement, XmlList,
-    XmlNamedSubtype, XmlPropertyType, XmlSupertype,
+    OptionalChild, OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, RequiredXmlChild,
+    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType,
+    XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;

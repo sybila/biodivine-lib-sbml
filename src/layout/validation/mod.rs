@@ -8,8 +8,8 @@ use crate::layout::{
     SpeciesGlyph, SpeciesReferenceGlyph, TextGlyph,
 };
 use crate::xml::{
-    OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
-    RequiredXmlChild, RequiredXmlProperty, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
+    OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild,
+    RequiredXmlProperty, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
 use std::collections::HashSet;

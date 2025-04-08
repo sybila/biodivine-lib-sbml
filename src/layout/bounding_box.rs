@@ -3,10 +3,7 @@ use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::layout::dimensions::Dimensions;
 use crate::layout::point::Point;
-use crate::xml::{
-    OptionalSbmlProperty, RequiredChild, RequiredXmlChild, XmlDocument,
-    XmlElement,
-};
+use crate::xml::{OptionalSbmlProperty, RequiredChild, RequiredXmlChild, XmlDocument, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]

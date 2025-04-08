@@ -1,8 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument,
-    XmlElement, XmlPropertyType,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
