@@ -91,7 +91,7 @@
 //!
 
 use std::collections::HashSet;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
@@ -214,7 +214,12 @@ impl Sbml {
     /// document (i.e. the root is not an `sbml` tag).
     ///
     pub fn try_for_child<T: XmlWrapper>(child: &T) -> Option<Sbml> {
-        let root = child.xml_element().document_root();
+        Self::try_for_child_element(child.xml_element())
+    }
+
+    /// Same as [Self::try_for_child], but uses the raw [XmlElement], which is a bit more flexible.
+    pub fn try_for_child_element(child: &XmlElement) -> Option<Sbml> {
+        let root = child.document_root();
         if root.tag_name().as_str() == "sbml" {
             unsafe { Some(Self::unchecked_cast(root)) }
         } else {
@@ -352,28 +357,75 @@ impl Sbml {
         issues
     }
 
-    /// Ensure that the
-    pub fn ensure_package(&self, namespace: Namespace, required: bool) {
-        // TODO: Prefixes can be arbitrary. We can't enforce a specific prefix for a package.
+    /// Ensure that SBML package specified by the given `Namespace` exists.
+    ///
+    /// If the package already exists, its prefix is returned. If it does not exist, it is created
+    /// with the default prefix.
+    ///
+    /// Normally, the method should not fail, but this is reserved for future changes in the API
+    /// where further checking might be present.
+    pub fn ensure_sbml_package(
+        &self,
+        package: Namespace,
+        required: bool,
+    ) -> Result<String, String> {
         let mut doc = self.xml.write().unwrap();
         let e = self.sbml_root.raw_element();
-        if let Some(url) = e.namespace_for_prefix(&doc, namespace.0) {
-            assert_eq!(
-                url, namespace.1,
-                "Prefix {} is already used by namespace {}.",
-                namespace.0, url
-            );
+        let namespace_declarations = e.namespace_decls(doc.deref());
+
+        // Find if the namespace already exists. If not, create it.
+        let current_prefix = namespace_declarations
+            .iter()
+            .find(|(_prefix, url)| *url == package.1)
+            .map(|(prefix, _url)| prefix.to_string())
+            .unwrap_or_else(|| {
+                // The package is not declared. We have to create it with the default prefix.
+                e.set_namespace_decl(doc.deref_mut(), package.0, package.1);
+                package.0.to_string()
+            });
+
+        // Find if the required attribute already exists, if not create it. Also make sure that
+        // its value is not "lower" than the given `required` value.
+        let required_name = format!("{}:required", current_prefix);
+        let required_attribute = e.attribute(doc.deref(), required_name.as_str());
+        if required_attribute == Some("true") {
+            // If the package is already required, we can't make it "more required".
+            Ok(current_prefix)
         } else {
-            // The prefix is not declared yet.
-            e.set_namespace_decl(&mut doc, namespace.0, namespace.1);
+            let value = if required { "true" } else { "false" };
+            e.set_attribute(doc.deref_mut(), required_name, value);
+            Ok(current_prefix)
+        }
+    }
+
+    /// Retrieve a namespace prefix which is used with the given `package_url`, if such prefix
+    /// exists.
+    ///
+    /// The function can return an error if the prefix does not exist, or when the corresponding
+    /// `required` attribute is not specified (i.e. it is not a valid SBML package).
+    pub fn find_sbml_package(&self, package: Namespace) -> Result<String, String> {
+        let doc = self.xml.read().unwrap();
+        let e = self.sbml_root.raw_element();
+        let namespace_declarations = e.namespace_decls(doc.deref());
+        let Some((prefix, _url)) = namespace_declarations
+            .iter()
+            .find(|(_prefix, url)| *url == package.1)
+        else {
+            return Err(format!(
+                "Namespace for SBML package {} does not exist.",
+                package.1
+            ));
+        };
+
+        let required_name = format!("{}:required", prefix);
+        let required_attribute = e.attribute(doc.deref(), required_name.as_str());
+        if required_attribute.is_none() {
+            return Err(format!(
+                "Namespace of SBML package {} does not have a `required` attribute on the `<sbml>` element.", package.1
+            ));
         }
 
-        // Set the "required" attribute, using the appropriate prefix.
-        e.set_attribute(
-            &mut doc,
-            format!("{}:required", namespace.0).as_str(),
-            format!("{}", required),
-        );
+        Ok(prefix.clone())
     }
 }
 
@@ -452,7 +504,9 @@ pub enum SbmlIssueSeverity {
 mod tests {
     use std::ops::{Deref, DerefMut};
 
-    use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE};
+    use crate::constants::namespaces::{
+        NS_EMPTY, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE,
+    };
     use crate::core::sbase::SbmlUtils;
     use crate::core::validation::SbmlValidable;
     use crate::core::RuleTypes::Assignment;
@@ -514,7 +568,11 @@ mod tests {
         let property = model.id();
 
         assert!(property.is_set(), "Id is not set but it should be.");
-        assert_eq!(property.name(), "id", "Wrong name of the <id> property.");
+        assert_eq!(
+            property.simple_name(),
+            "id",
+            "Wrong name of the <id> property."
+        );
         assert_eq!(
             property.element().raw_element(),
             model.raw_element(),
@@ -532,7 +590,7 @@ mod tests {
             "Wrong value of the <id> property."
         );
         // try clearing the <id> property
-        property.clear();
+        property.clear().unwrap();
         assert!(
             !property.is_set(),
             "The <id> property should be unset (cleared)."
@@ -560,7 +618,7 @@ mod tests {
         );
 
         let raw_model_id = sid("raw_model_id");
-        property.set_raw("raw_model_id".to_string());
+        property.set_raw("raw_model_id".to_string()).unwrap();
         let property_val = property.get();
         assert_eq!(
             property_val,
@@ -584,7 +642,7 @@ mod tests {
             "Required property shouldn't be set at this point."
         );
         assert_eq!(
-            property.name(),
+            property.simple_name(),
             "required_property",
             "Wrong name of the required property."
         );
@@ -608,13 +666,13 @@ mod tests {
             "Wrong value of the required property."
         );
         // try to clear the property
-        property.clear();
+        property.clear().unwrap();
         assert!(
             !property.is_set(),
             "Property shouldn't be set at this point."
         );
         // and write a new value to the property
-        property.set_raw("new_req_value".to_string());
+        property.set_raw("new_req_value".to_string()).unwrap();
         let property_val = property.get();
         assert_eq!(
             property_val, "new_req_value",
@@ -714,8 +772,11 @@ mod tests {
         assert!(compartment1.constant().get());
         assert_eq!(compartment1.id().get().as_str(), "comp1");
         let compartment2: Compartment = Compartment::default(compartment1.document());
-        compartment2.constant().set_raw("false".to_string());
-        compartment2.id().set_raw("comp2".to_string());
+        compartment2
+            .constant()
+            .set_raw("false".to_string())
+            .unwrap();
+        compartment2.id().set_raw("comp2".to_string()).unwrap();
         content.insert(1, compartment2.clone());
         assert_eq!(content.len(), 2);
         assert_eq!(content.get(0).raw_element(), compartment1.raw_element());
@@ -1084,26 +1145,26 @@ mod tests {
 
         let id = model.id();
         assert!(id.is_set());
-        assert_eq!(id.name(), "id");
+        assert_eq!(id.simple_name(), "id");
         assert_eq!(id.element().raw_element(), model.raw_element());
         assert_eq!(id.get().unwrap().as_str(), "model_id");
         id.set_some(&sid("new_model_id"));
         assert_eq!(id.get().unwrap().as_str(), "new_model_id");
-        id.clear();
+        id.clear().unwrap();
         assert!(!id.is_set());
 
         let name = model.name();
         assert!(!name.is_set());
-        assert_eq!(name.name(), "name");
+        assert_eq!(name.simple_name(), "name");
         assert_eq!(name.element().raw_element(), model.raw_element());
         name.set_some(&"model_name".to_string());
         assert_eq!(name.get().unwrap(), "model_name");
-        name.clear();
+        name.clear().unwrap();
         assert!(!name.is_set());
 
         let meta_id = model.meta_id();
         assert!(meta_id.is_set());
-        assert_eq!(meta_id.name(), "metaid");
+        assert_eq!(meta_id.simple_name(), "metaid");
         assert_eq!(meta_id.element().raw_element(), model.raw_element());
         assert_eq!(
             meta_id.get().unwrap().as_str(),
@@ -1111,16 +1172,16 @@ mod tests {
         );
         meta_id.set_some(&mid("new_meta_id_12345"));
         assert_eq!(meta_id.get().unwrap().as_str(), "new_meta_id_12345");
-        meta_id.clear();
+        meta_id.clear().unwrap();
         assert!(!meta_id.is_set());
 
         let sbo_term = model.sbo_term();
         assert!(!sbo_term.is_set());
-        assert_eq!(sbo_term.name(), "sboTerm");
+        assert_eq!(sbo_term.simple_name(), "sboTerm");
         assert_eq!(name.element().raw_element(), model.raw_element());
         sbo_term.set_some(&SboTerm::try_from("SBO:0000014").unwrap());
         assert_eq!(sbo_term.get().unwrap().as_str(), "SBO:0000014");
-        sbo_term.clear();
+        sbo_term.clear().unwrap();
         assert!(!sbo_term.is_set());
 
         let notes = model.notes();
@@ -1536,8 +1597,10 @@ mod tests {
         let doc = Sbml::default();
         let model = doc.model().get_or_create();
         let _ = model.layouts().get_or_create();
-        // TODO: Actually test that package is created...
-        println!("{}", doc.to_xml_string().unwrap());
+        assert_eq!(
+            doc.find_sbml_package(NS_LAYOUT).unwrap().as_str(),
+            NS_LAYOUT.0
+        );
     }
 
     #[test]

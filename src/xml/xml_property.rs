@@ -22,8 +22,34 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// Returns a reference to the underlying [XmlElement].
     fn element(&self) -> &XmlElement;
 
-    /// Returns the name of the underlying XML attribute.
-    fn name(&self) -> &str;
+    /// Returns the **fully quantified** name of the underlying XML attribute, including
+    /// namespace prefix if relevant. Can return an error at runtime if there is some problem
+    /// with the construction of the quantified name (e.g. the namespace is not declared, or
+    /// not declared correctly).
+    ///
+    /// This name can (and probably should be) computed dynamically at runtime for properties
+    /// that belong to a specific non-default namespace, as the prefix can change depending
+    /// on the position of the property in the document.
+    ///
+    /// If `write_doc` is set to `true`, it indicates to the method that it can try to
+    /// ensure necessary conditions for the quantified name to be valid (e.g. create a namespace
+    /// declaration). The exact conditions as to when this is valid can vary depending on the
+    /// implementation. In general, methods that only read the document should not allow
+    /// any modification. Meanwhile, methods that write values to the document can set this to
+    /// true in order to indicate that "fixing" the document into a consistent state is allowed.
+    ///
+    /// The default implementation for this method simply returns [XmlProperty::simple_name]
+    /// (i.e. it assumes the attribute is in the default empty namespace). Please override this
+    /// in cases where the property can depend on XML namespaces.
+    fn quantified_name(&self, _write_doc: bool) -> Result<String, String> {
+        Ok(self.simple_name().to_string())
+    }
+
+    /// Returns the **simple** name of the underlying XML attribute, i.e. excluding any
+    /// namespace prefix or similar.
+    ///
+    /// This name should be associated with the property and be effectively constant.
+    fn simple_name(&self) -> &str;
 
     /// Returns `true` if the underlying XML attribute has a known, set value.
     ///
@@ -32,10 +58,16 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// if the attribute is missing, or give an error if the value is invalid.
     fn is_set(&self) -> bool {
         let element = self.element();
-        let name = self.name();
+        let Ok(name) = self.quantified_name(false) else {
+            // If the quantified name can't be built, the property has no value.
+            return false;
+        };
         // As opposed to `self.read_raw().is_some()`, this does not need to copy the attribute.
         let doc = element.read_doc();
-        element.raw_element().attribute(doc.deref(), name).is_some()
+        element
+            .raw_element()
+            .attribute(doc.deref(), name.as_str())
+            .is_some()
     }
 
     /// Read the value of this [XmlProperty], or a `String` error if the underlying value
@@ -46,9 +78,9 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     ///  > value conversion.
     fn get_checked(&self) -> Result<Option<T>, String> {
         let element = self.element();
-        let name = self.name();
+        let name = self.quantified_name(false)?;
         let doc = element.read_doc();
-        let value = element.raw_element().attribute(doc.deref(), name);
+        let value = element.raw_element().attribute(doc.deref(), name.as_str());
         XmlPropertyType::try_get(value)
     }
 
@@ -56,11 +88,14 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// is not set.
     fn get_raw(&self) -> Option<String> {
         let element = self.element();
-        let name = self.name();
+        let Ok(name) = self.quantified_name(false) else {
+            // If the quantified name can't be built, the property has no value.
+            return None;
+        };
         let doc = element.read_doc();
         element
             .raw_element()
-            .attribute(doc.deref(), name)
+            .attribute(doc.deref(), name.as_str())
             .map(|it| it.to_string())
     }
 
@@ -70,14 +105,15 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     ///
     /// This function can make the underlying property *invalid* if a missing attribute
     /// does not map to any valid property value.
-    fn clear(&self) {
+    fn clear(&self) -> Result<(), String> {
         let element = self.element();
-        let name = self.name();
+        let name = self.quantified_name(true)?;
         let mut doc = element.write_doc();
         element
             .raw_element()
             .mut_attributes(doc.deref_mut())
-            .remove(name);
+            .remove(name.as_str());
+        Ok(())
     }
 
     /// Write a raw `value` into this [XmlProperty].
@@ -85,13 +121,14 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// # Document validity
     ///
     /// Obviously, this function can be used to set the property to a completely invalid value.
-    fn set_raw(&self, value: String) {
+    fn set_raw(&self, value: String) -> Result<(), String> {
         let element = self.element();
-        let name = self.name();
+        let name = self.quantified_name(true)?;
         let mut doc = element.write_doc();
         element
             .raw_element()
             .set_attribute(doc.deref_mut(), name, value);
+        Ok(())
     }
 }
 
@@ -104,26 +141,41 @@ pub trait OptionalXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// Panics if the [XmlProperty::get_checked] produces an error.
     fn get(&self) -> Option<T> {
         match self.get_checked() {
-            Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
+            Err(error) => panic!(
+                "Invalid value for attribute `{}`: {}",
+                self.simple_name(),
+                error
+            ),
             Ok(value) => value,
         }
     }
 
     /// Write the value of an optional XML property.
+    ///
+    /// # Panics
+    ///
+    /// Panics if [XmlProperty::set_raw] produces an error (typically due to namespace issues).
     fn set(&self, value: Option<&T>) {
         match value.and_then(|it| it.set()) {
             None => self.clear(),
             Some(value) => self.set_raw(value),
         }
+        .unwrap()
     }
 
     /// An alternative to [OptionalXmlProperty::set] that accepts a value directly, without
     /// wrapping it into `Option`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the [XmlProperty::clear] or [XmlProperty::set_raw] method produces an error
+    /// (typically due to namespace issues).
     fn set_some(&self, value: &T) {
         match value.set() {
             None => self.clear(),
             Some(value) => self.set_raw(value),
         }
+        .unwrap()
     }
 }
 
@@ -140,9 +192,13 @@ pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// Panics if the [XmlProperty::get_checked] method produces an error or a `None` value.
     fn get(&self) -> T {
         match self.get_checked() {
-            Err(error) => panic!("Invalid value for attribute `{}`: {}", self.name(), error),
+            Err(error) => panic!(
+                "Invalid value for attribute `{}`: {}",
+                self.simple_name(),
+                error
+            ),
             Ok(None) => {
-                panic!("Missing value for attribute `{}`.", self.name())
+                panic!("Missing value for attribute `{}`.", self.simple_name())
             }
             Ok(Some(value)) => value,
         }
@@ -153,10 +209,16 @@ pub trait RequiredXmlProperty<T: XmlPropertyType>: XmlProperty<T> {
     /// Note that the method can actually erase the XML attribute if the written value represents
     /// the "default" value for this type, and it can be correctly represented by
     /// a missing attribute.
+    ///
+    /// # Panics
+    ///
+    /// Panics if [XmlProperty::set_raw] or [XmlProperty::clear] method produces an error,
+    /// typically due to namespace issues.
     fn set(&self, value: &T) {
         match value.set() {
             None => self.clear(),
             Some(value) => self.set_raw(value),
-        };
+        }
+        .unwrap();
     }
 }

@@ -35,6 +35,13 @@ mod impl_xml_property_type;
 /// hierarchies of [XmlWrapper] types.
 mod xml_inheritance;
 
+/// Defines SBML properties which adhere to SBML package prefix resolution rules, which are
+/// somewhat more specific than normal XML namespaces.
+mod impl_sbml_property;
+
+pub use crate::xml::impl_sbml_property::{
+    OptionalSbmlProperty, RequiredSbmlProperty, SbmlProperty,
+};
 pub use crate::xml::impl_xml_child::{
     Child, DynamicChild, OptionalChild, OptionalDynamicChild, RequiredChild, RequiredDynamicChild,
 };
