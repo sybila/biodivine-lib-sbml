@@ -18,12 +18,17 @@ impl SbmlValidable for Species {
         let sbstnc_units = self.substance_units();
 
         apply_rule_10311(
-            sbstnc_units.name(),
+            sbstnc_units.simple_name(),
             sbstnc_units.get_raw(),
             xml_element,
             issues,
         );
-        apply_rule_10313(sbstnc_units.name(), sbstnc_units.get(), xml_element, issues);
+        apply_rule_10313(
+            sbstnc_units.simple_name(),
+            sbstnc_units.get(),
+            xml_element,
+            issues,
+        );
     }
 }
 

@@ -1,6 +1,9 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
-use crate::xml::{OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement};
+use crate::xml::{
+    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument,
+    XmlElement,
+};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -13,7 +16,7 @@ impl InitialAssignment {
         obj
     }
 
-    pub fn symbol(&self) -> RequiredProperty<SId> {
+    pub fn symbol(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("symbol")
     }
 

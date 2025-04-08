@@ -8,8 +8,8 @@ use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
 use crate::xml::{
-    OptionalChild, OptionalProperty, RequiredChild, RequiredProperty, XmlDocument, XmlElement,
-    XmlPropertyType, XmlWrapper,
+    OptionalChild, OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, XmlDocument,
+    XmlElement, XmlPropertyType, XmlWrapper,
 };
 use crate::Sbml;
 use biodivine_xml_doc::{Document, Element};
@@ -207,19 +207,19 @@ impl XmlPropertyType for SboTerm {
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
-    fn id(&self) -> OptionalProperty<SId> {
+    fn id(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("id")
     }
 
-    fn name(&self) -> OptionalProperty<String> {
+    fn name(&self) -> OptionalSbmlProperty<String> {
         self.optional_sbml_property("name")
     }
 
-    fn meta_id(&self) -> OptionalProperty<MetaId> {
+    fn meta_id(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_sbml_property("metaid")
     }
 
-    fn sbo_term(&self) -> OptionalProperty<SboTerm> {
+    fn sbo_term(&self) -> OptionalSbmlProperty<SboTerm> {
         self.optional_sbml_property("sboTerm")
     }
 
@@ -341,18 +341,8 @@ pub(crate) trait SbmlUtils: SBase {
     fn required_sbml_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-    ) -> RequiredProperty<T> {
-        // TODO: At the moment, properties ignore namespaces.
-
-        // See also:
-        // The convention for SBML packages is to allow attributes to be defined either with no namespace prefix, or
-        // to be defined with that package’s namespace as a prefix, for any new element defined by that package. When
-        // a package extends an existing SBML element to have a new attribute, the convention is to require that this
-        // attribute be prefixed with that package’s namespace. Previously-released SBML packages did not make this
-        // explicit, but are assumed to follow this convention. As these packages undergo updates in the future, these
-        // rules will be made explicit.
-
-        RequiredProperty::new(self.xml_element(), name)
+    ) -> RequiredSbmlProperty<T> {
+        RequiredSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
     }
 
     /// Create an instance of a [OptionalProperty] with the given `name` which adheres to
@@ -361,35 +351,32 @@ pub(crate) trait SbmlUtils: SBase {
     fn optional_sbml_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-    ) -> OptionalProperty<T> {
-        // TODO: At the moment, properties ignore namespaces.
-        OptionalProperty::new(self.xml_element(), name)
+    ) -> OptionalSbmlProperty<T> {
+        OptionalSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
     }
 
     /// Ensures the root `<sbml>` tag correctly declares a package namespace.
     fn ensure_package(&self, namespace: Namespace, required: bool) {
         let sbml = self.sbml_root();
-        sbml.ensure_package(namespace, required);
+        sbml.ensure_sbml_package(namespace, required).unwrap();
     }
 
-    // TODO: This does nothing special and uses the "core" namespace
     fn optional_package_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-        _extension: Namespace,
-        _tag_is_extension: bool,
-    ) -> OptionalProperty<T> {
-        OptionalProperty::new(self.xml_element(), name)
+        property_package: Namespace,
+        element_package: Namespace,
+    ) -> OptionalSbmlProperty<T> {
+        OptionalSbmlProperty::new(self.xml_element(), name, property_package, element_package)
     }
 
-    // TODO: This does nothing special and uses the "core" namespace
     fn required_package_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-        _extension: Namespace,
-        _tag_is_extension: bool,
-    ) -> RequiredProperty<T> {
-        RequiredProperty::new(self.xml_element(), name)
+        property_package: Namespace,
+        element_package: Namespace,
+    ) -> RequiredSbmlProperty<T> {
+        RequiredSbmlProperty::new(self.xml_element(), name, property_package, element_package)
     }
 
     fn find_by_sid<E: SBase>(&self, id: &SId) -> Option<E> {

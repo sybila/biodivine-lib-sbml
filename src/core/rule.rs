@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
-    OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
-    XmlNamedSubtype, XmlSupertype,
+    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault,
+    XmlDocument, XmlElement, XmlNamedSubtype, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -80,7 +80,7 @@ impl AssignmentRule {
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("variable")
     }
 }
@@ -103,7 +103,7 @@ impl RateRule {
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("variable")
     }
 }

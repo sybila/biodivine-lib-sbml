@@ -1,7 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    OptionalSbmlProperty, RequiredSbmlProperty,
+    RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -17,19 +18,19 @@ impl Parameter {
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn value(&self) -> OptionalProperty<f64> {
+    pub fn value(&self) -> OptionalSbmlProperty<f64> {
         self.optional_sbml_property("value")
     }
 
-    pub fn units(&self) -> OptionalProperty<SId> {
+    pub fn units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("units")
     }
 
-    pub fn constant(&self) -> RequiredProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("constant")
     }
 }

@@ -9,8 +9,9 @@ use crate::core::{
 };
 use crate::layout::Layout;
 use crate::xml::{
-    OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
-    XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSupertype, XmlWrapper,
+    OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
+    RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
+    XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
@@ -233,31 +234,31 @@ impl XmlDefault for Model {
 
 /// The SBML-defined components of the [`Model`] class.
 impl Model {
-    pub fn substance_units(&self) -> OptionalProperty<SId> {
+    pub fn substance_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
-    pub fn time_units(&self) -> OptionalProperty<SId> {
+    pub fn time_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("timeUnits")
     }
 
-    pub fn volume_units(&self) -> OptionalProperty<SId> {
+    pub fn volume_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("volumeUnits")
     }
 
-    pub fn area_units(&self) -> OptionalProperty<SId> {
+    pub fn area_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("areaUnits")
     }
 
-    pub fn length_units(&self) -> OptionalProperty<SId> {
+    pub fn length_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("lengthUnits")
     }
 
-    pub fn extent_units(&self) -> OptionalProperty<SId> {
+    pub fn extent_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("extentUnits")
     }
 
-    pub fn conversion_factor(&self) -> OptionalProperty<SId> {
+    pub fn conversion_factor(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("conversionFactor")
     }
 

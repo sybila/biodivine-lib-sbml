@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
-    OptionalChild, OptionalProperty, OptionalXmlChild, RequiredProperty, RequiredXmlProperty,
-    XmlDefault, XmlDocument, XmlElement, XmlList,
+    OptionalChild, OptionalSbmlProperty, OptionalXmlChild,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -17,15 +17,15 @@ impl Reaction {
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn reversible(&self) -> RequiredProperty<bool> {
+    pub fn reversible(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("reversible")
     }
 
-    pub fn compartment(&self) -> OptionalProperty<SId> {
+    pub fn compartment(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("compartment")
     }
 
@@ -47,7 +47,7 @@ impl Reaction {
 }
 
 pub trait SimpleSpeciesReference: SBase {
-    fn species(&self) -> RequiredProperty<SId> {
+    fn species(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("species")
     }
 }
@@ -65,11 +65,11 @@ impl SpeciesReference {
         obj
     }
 
-    pub fn stoichiometry(&self) -> OptionalProperty<f64> {
+    pub fn stoichiometry(&self) -> OptionalSbmlProperty<f64> {
         self.optional_sbml_property("stoichiometry")
     }
 
-    pub fn constant(&self) -> RequiredProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("constant")
     }
 }
@@ -136,15 +136,15 @@ impl LocalParameter {
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn value(&self) -> OptionalProperty<f64> {
+    pub fn value(&self) -> OptionalSbmlProperty<f64> {
         self.optional_sbml_property("value")
     }
 
-    pub fn units(&self) -> OptionalProperty<SId> {
+    pub fn units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("units")
     }
 }

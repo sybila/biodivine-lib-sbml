@@ -103,27 +103,37 @@ impl Model {
         let extent_units = self.extent_units();
 
         apply_rule_10311(
-            sbstnc_units.name(),
+            sbstnc_units.simple_name(),
             sbstnc_units.get_raw(),
             xml_element,
             issues,
         );
         apply_rule_10311(
-            volume_units.name(),
+            volume_units.simple_name(),
             volume_units.get_raw(),
             xml_element,
             issues,
         );
-        apply_rule_10311(area_units.name(), area_units.get_raw(), xml_element, issues);
         apply_rule_10311(
-            length_units.name(),
+            area_units.simple_name(),
+            area_units.get_raw(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10311(
+            length_units.simple_name(),
             length_units.get_raw(),
             xml_element,
             issues,
         );
-        apply_rule_10311(time_units.name(), time_units.get_raw(), xml_element, issues);
         apply_rule_10311(
-            extent_units.name(),
+            time_units.simple_name(),
+            time_units.get_raw(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10311(
+            extent_units.simple_name(),
             extent_units.get_raw(),
             xml_element,
             issues,
@@ -137,11 +147,41 @@ impl Model {
         let time_units = self.time_units();
         let extent_units = self.extent_units();
 
-        apply_rule_10313(sbstnc_units.name(), sbstnc_units.get(), xml_element, issues);
-        apply_rule_10313(volume_units.name(), volume_units.get(), xml_element, issues);
-        apply_rule_10313(area_units.name(), area_units.get(), xml_element, issues);
-        apply_rule_10313(length_units.name(), length_units.get(), xml_element, issues);
-        apply_rule_10313(time_units.name(), time_units.get(), xml_element, issues);
-        apply_rule_10313(extent_units.name(), extent_units.get(), xml_element, issues);
+        apply_rule_10313(
+            sbstnc_units.simple_name(),
+            sbstnc_units.get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10313(
+            volume_units.simple_name(),
+            volume_units.get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10313(
+            area_units.simple_name(),
+            area_units.get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10313(
+            length_units.simple_name(),
+            length_units.get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10313(
+            time_units.simple_name(),
+            time_units.get(),
+            xml_element,
+            issues,
+        );
+        apply_rule_10313(
+            extent_units.simple_name(),
+            extent_units.get(),
+            xml_element,
+            issues,
+        );
     }
 }

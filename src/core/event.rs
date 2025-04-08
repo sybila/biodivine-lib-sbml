@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
 use crate::xml::{
-    OptionalChild, RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
-    XmlList,
+    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault,
+    XmlDocument, XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -23,7 +23,7 @@ impl Event {
         obj
     }
 
-    pub fn use_values_from_trigger_time(&self) -> RequiredProperty<bool> {
+    pub fn use_values_from_trigger_time(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("useValuesFromTriggerTime")
     }
 
@@ -61,11 +61,11 @@ impl Trigger {
         obj
     }
 
-    pub fn initial_value(&self) -> RequiredProperty<bool> {
+    pub fn initial_value(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("initialValue")
     }
 
-    pub fn persistent(&self) -> RequiredProperty<bool> {
+    pub fn persistent(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("persistent")
     }
 
@@ -114,7 +114,7 @@ impl EventAssignment {
         obj
     }
 
-    pub fn variable(&self) -> RequiredProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("variable")
     }
 
