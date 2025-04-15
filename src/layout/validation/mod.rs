@@ -19,6 +19,9 @@ mod curve;
 mod dimensions;
 mod point;
 
+#[cfg(test)]
+mod tests;
+
 impl SbmlValidable for Layout {
     fn validate(
         &self,

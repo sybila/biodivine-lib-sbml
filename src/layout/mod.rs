@@ -417,3 +417,24 @@ impl TextGlyph {
         self.optional_package_property("originOfText", NS_LAYOUT, NS_LAYOUT)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::tests::sid;
+    use crate::xml::{OptionalXmlChild, RequiredXmlProperty};
+    use crate::Sbml;
+
+    #[test]
+    fn layout_example() {
+        let doc = Sbml::read_path("test-inputs/apoptosis_stable.sbml").unwrap();
+        assert!(doc.validate().is_empty());
+
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        let one_layout = layouts.get(0);
+
+        assert_eq!(one_layout.id().get(), sid("layout1"));
+
+        // TODO: Continue example...
+    }
+}
