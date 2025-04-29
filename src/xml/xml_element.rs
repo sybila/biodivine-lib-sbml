@@ -51,6 +51,30 @@ impl XmlElement {
         };
         XmlElement::new_raw(document, element)
     }
+
+    /// Traverse the element tree towards the root element and return it.
+    ///
+    /// Note that if the element is detached, this will only reach the root of the detached
+    /// group of elements.
+    pub fn reachable_root(&self) -> XmlElement {
+        let doc = self.document.read().unwrap();
+        let mut element = self.element;
+        while let Some(parent) = element.parent(&doc) {
+            element = parent;
+        }
+        XmlElement::new_raw(self.document.clone(), element)
+    }
+
+    /// Returns the (first) root element of the associated [`XmlDocument`], even if this
+    /// element itself is detached.
+    ///
+    /// This method can panic if the document root does not exist (e.g. the document is empty
+    /// and only contains detached elements).
+    pub fn document_root(&self) -> XmlElement {
+        let doc = self.document.read().unwrap();
+        let root = doc.root_element().unwrap();
+        XmlElement::new_raw(self.document.clone(), root)
+    }
 }
 
 /// Every [XmlElement] trivially implements [XmlWrapper] as well.

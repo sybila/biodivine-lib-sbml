@@ -1,11 +1,12 @@
 use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
+    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
+    UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
 use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 
 /// Denotes an element that possess a way to self-test against the most critical checks. This
@@ -44,7 +45,8 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
 
     // Checks that:
     //  - Only allowed attributes are present.
-    //  - Only allowed children are present (right now, there are no required children).
+    //  - Only allowed children are present.
+    //  - All required children are present.
     //  - Each allowed child is present at most once.
     apply_rule_10102_and_derivatives(xml_element, issues);
 
@@ -154,6 +156,7 @@ fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<S
 
     validate_allowed_attributes(xml_element, &attributes, issues);
     validate_allowed_children(xml_element, issues);
+    validate_required_children(xml_element, issues);
     validate_unique_children(xml_element, issues);
 }
 
@@ -229,6 +232,31 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
                     tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
                 issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
             }
+        }
+    }
+}
+
+pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let element_name = xml_element.tag_name();
+    let Some(required_children) = REQUIRED_CHILDREN.get(element_name.as_str()) else {
+        return;
+    };
+
+    let mut child_tag_names = HashSet::new();
+    for child in xml_element.child_elements() {
+        let child_name = child.tag_name();
+        child_tag_names.insert(child_name);
+    }
+
+    for required in required_children.iter() {
+        if !child_tag_names.contains(*required) {
+            let message = format!(
+                "Missing required child <{}> of the element <{}>.",
+                required, element_name
+            );
+            // TODO: Check if these rule IDs are ok.
+            let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
         }
     }
 }
@@ -321,6 +349,7 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
 
 /// Similar to [tag_to_attribute_rule_id], resolves a tag name into a rule ID which specifies
 /// what child elements are allowed for that particular element.
+/// TODO: Add elements from packages...
 fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
     match tag_name {
         "listOfFunctionDefinitions" => Some("20206"),
@@ -338,6 +367,7 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "listOfModifiers" => Some("21105"),
         "listOfEventAssignments" => Some("21223"),
         "listOfLocalParameters" => Some("21128"),
+        "boundingBox" => Some("21303"),
         _ => None,
     }
 }

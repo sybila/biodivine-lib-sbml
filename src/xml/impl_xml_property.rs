@@ -7,6 +7,8 @@ use std::marker::PhantomData;
 /// at runtime. It is less efficient (and idiomatic) than using a special type for
 /// individual properties, but it is useful if the attribute name is dynamic or otherwise
 /// not known at compile time.
+///
+/// **This property is always in the default namespace.**
 pub struct DynamicProperty<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: String,
@@ -15,6 +17,8 @@ pub struct DynamicProperty<'a, T: XmlPropertyType> {
 
 /// [Property] is an implementation of [XmlProperty] that uses an attribute name known
 /// at compile time. As such, it is faster than [DynamicProperty], but less flexible.
+///
+/// **This property is always in the default namespace.**
 pub struct Property<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: &'static str,
@@ -81,7 +85,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for DynamicProperty<'_, T> {
         self.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.name.as_str()
     }
 }
@@ -91,7 +95,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for Property<'_, T> {
         self.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.name
     }
 }
@@ -101,7 +105,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for OptionalDynamicProperty<'_, T> {
         self.0.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.0.name.as_str()
     }
 }
@@ -111,7 +115,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for RequiredDynamicProperty<'_, T> {
         self.0.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.0.name.as_str()
     }
 }
@@ -121,7 +125,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for OptionalProperty<'_, T> {
         self.0.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.0.name
     }
 }
@@ -131,7 +135,7 @@ impl<T: XmlPropertyType> XmlProperty<T> for RequiredProperty<'_, T> {
         self.0.element
     }
 
-    fn name(&self) -> &str {
+    fn simple_name(&self) -> &str {
         self.0.name
     }
 }
