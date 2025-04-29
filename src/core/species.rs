@@ -1,13 +1,13 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
-};
+use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement, XmlSupertype};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual specie definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Species(XmlElement);
+
+impl XmlSupertype for Species {}
 
 impl Species {
     pub fn new(document: XmlDocument, id: &SId, compartment: &SId) -> Self {
