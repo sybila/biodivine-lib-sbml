@@ -1,6 +1,9 @@
 use crate::xml::py::{PythonXmlChild, PythonXmlChildConverter};
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use pyo3::{pyclass, pyfunction, pymethods, IntoPyObjectExt, PyObject, PyResult, Python};
+use pyo3::{
+    pyclass, pyfunction, pymethods, Bound, IntoPy, IntoPyObject, IntoPyObjectExt, Py, PyErr,
+    PyObject, PyResult, Python,
+};
 use pyo3_stub_gen::{PyStubType, TypeInfo};
 use pyo3_stub_gen_derive::gen_stub_pyfunction;
 
@@ -10,9 +13,23 @@ pub struct XmlListPy {
     converter: Box<dyn PythonXmlChildConverter + Send + Sync>,
 }
 
+// TODO:
+//  This is trying to add support for "generic-like" types, but it is not working.
+//  The reason is that the type info is not separated for declaration site and "usage" site.
+//  Ideally, supporting generic types should just be implemented inside TypeInfo.
+
+impl Clone for XmlListPy {
+    fn clone(&self) -> Self {
+        XmlListPy {
+            generic_list: self.generic_list.clone(),
+            converter: self.converter.clone_self(),
+        }
+    }
+}
+
 impl PyStubType for XmlListPy {
     fn type_output() -> TypeInfo {
-        TypeInfo::unqualified("TestingCustomTypes | NotTestingCustomTypes")
+        TypeInfo::unqualified("XmlListPy[T]")
     }
 }
 
@@ -22,8 +39,28 @@ impl PyStubType for XmlListPy {
 // signature dynamically.
 #[gen_stub_pyfunction]
 #[pyfunction]
-pub fn test_function(_py: Python) -> PyResult<XmlListPy> {
+pub fn test_function<'py>(_py: Python<'py>, list: Bound<'py, XmlListPy>) -> PyResult<ListWrapper> {
     unimplemented!();
+}
+
+pub struct ListWrapper(XmlListPy);
+
+impl<'py> IntoPyObject<'py> for ListWrapper {
+    type Target = XmlListPy;
+    type Output = pyo3::Bound<'py, XmlListPy>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let p = Py::new(py, self.0)?;
+        Ok(p.bind(py).clone())
+    }
+}
+
+impl PyStubType for ListWrapper {
+    fn type_output() -> TypeInfo {
+        let t = format!("{}[XmlElement]", XmlListPy::type_output());
+        TypeInfo::unqualified(t.as_str())
+    }
 }
 
 impl<C: XmlWrapper + PythonXmlChild> PythonXmlChild for XmlList<C> {
