@@ -118,3 +118,65 @@ fn generate_python_property(ttype: String) -> String {
     "#
     )
 }
+
+#[proc_macro_derive(PythonXmlChild)]
+pub fn derive_python_xml_child(item: TokenStream) -> TokenStream {
+    let ast: syn::DeriveInput = syn::parse(item).unwrap();
+    let ttype = ast.ident.to_string();
+    let result = generate_python_xml_child(ttype);
+    result.parse().unwrap()
+}
+
+fn generate_python_xml_child(ttype: String) -> String {
+    format!(
+        r#"
+        impl crate::xml::py::PythonXmlChild for {ttype} {{
+            fn converter<T: crate::xml::XmlWrapper>(
+                child: crate::xml::Child<T>,
+            ) -> Box<dyn crate::xml::py::PythonXmlChildConverter + Send + Sync> {{
+                struct Internal {{
+                    tag_name: &'static str,
+                    namespace_url: &'static str,
+                }}
+
+                impl crate::xml::py::PythonXmlChildConverter for Internal {{
+                    fn try_into_typed_child(
+                        &self,
+                        value: crate::xml::XmlElement,
+                        py: pyo3::Python,
+                    ) -> pyo3::PyResult<pyo3::PyObject> {{
+                        use pyo3::conversion::IntoPyObjectExt;
+                        if value.tag_name() != self.tag_name {{
+                            return crate::xml::py::throw_type_error(format!(
+                                "Expected tag `{{}}`, got `{{}}`.",
+                                self.tag_name,
+                                value.tag_name()
+                            ));
+                        }}
+                        if value.namespace_url() != self.namespace_url {{
+                            return crate::xml::py::throw_type_error(format!(
+                                "Expected namespace `{{}}`, got `{{}}`.",
+                                self.namespace_url,
+                                value.namespace_url()
+                            ));
+                        }}
+                        let s: {ttype} = unsafe {{ crate::xml::XmlWrapper::unchecked_cast(value) }};
+                        s.into_py_any(py)
+                    }}
+
+                    fn try_from_typed_child(&self, value: pyo3::PyObject, py: pyo3::Python) -> pyo3::PyResult<crate::xml::XmlElement> {{
+                        let s = value.extract::<{ttype}>(py)?;
+                        Ok(s.xml_element().clone())
+                    }}
+                }}
+
+                Box::new(Internal {{
+                    tag_name: child.name,
+                    namespace_url: child.namespace_url,
+                }})
+            }}
+        }}
+
+    "#
+    )
+}

@@ -4,7 +4,9 @@ import biodivine_lib_sbml as sbml
 def test_basic():
     file = sbml.Sbml.read_path("./test-inputs/model.sbml")
     print(file)
-    model = file.model()
+    model_child = file.model()
+    print(model_child)
+    model = model_child.get()
     print(model)
     id = model.id()
     print("Initial id:", id.get())

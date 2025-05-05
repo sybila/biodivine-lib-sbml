@@ -107,8 +107,8 @@ use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{BaseUnit, MetaId, Model, SBase, SId, SboTerm, Unit};
 use crate::layout::Role;
-use crate::xml::py::runtime_error;
 use crate::xml::py::SbmlPropertyPy;
+use crate::xml::py::{runtime_error, XmlChildPy};
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -134,6 +134,9 @@ pub mod test_suite;
 
 #[pymodule]
 fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add_class::<XmlElement>()?;
+    module.add_class::<SbmlPropertyPy>()?;
+    module.add_class::<XmlChildPy>()?;
     module.add_class::<Unit>()?;
     module.add_class::<Sbml>()?;
     module.add_class::<Model>()?;
@@ -142,7 +145,6 @@ fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()>
     module.add_class::<SboTerm>()?;
     module.add_class::<BaseUnit>()?;
     module.add_class::<Role>()?;
-    module.add_class::<SbmlPropertyPy>()?;
     Ok(())
 }
 
@@ -218,8 +220,8 @@ impl Sbml {
     }
 
     #[pyo3(name = "model")]
-    pub fn model_py(&self) -> Option<Model> {
-        self.model().get()
+    pub fn model_py(&self) -> XmlChildPy {
+        XmlChildPy::new_optional(self.model())
     }
 }
 

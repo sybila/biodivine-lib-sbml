@@ -1,6 +1,7 @@
 use crate::xml::XmlDocument;
 use crate::xml::XmlWrapper;
 use biodivine_xml_doc::Element;
+use pyo3::pyclass;
 use std::ops::DerefMut;
 use std::sync::Arc;
 
@@ -12,6 +13,7 @@ use std::sync::Arc;
 /// through the [XmlWrapper] trait. The main difference is that [XmlWrapper] can be also
 /// implemented for other types derived from [XmlElement].
 #[derive(Clone, Debug)]
+#[pyclass]
 pub struct XmlElement {
     pub(super) document: XmlDocument,
     pub(super) element: Element,

@@ -16,9 +16,9 @@ pub struct DynamicChild<'a, T: XmlWrapper> {
 /// [Child] is an implementation of [XmlChild] that uses a tag name that is known
 /// at compile time. As such, it is faster than [DynamicChild], but less flexible.
 pub struct Child<'a, T: XmlWrapper> {
-    parent: &'a XmlElement,
-    name: &'static str,
-    namespace_url: &'static str,
+    pub(crate) parent: &'a XmlElement,
+    pub(crate) name: &'static str,
+    pub(crate) namespace_url: &'static str,
     _marker: PhantomData<T>,
 }
 
@@ -28,9 +28,9 @@ pub struct OptionalDynamicChild<'a, T: XmlWrapper>(DynamicChild<'a, T>);
 pub struct RequiredDynamicChild<'a, T: XmlWrapper>(DynamicChild<'a, T>);
 
 /// An [OptionalXmlChild] extension of a [Child].
-pub struct OptionalChild<'a, T: XmlWrapper>(Child<'a, T>);
+pub struct OptionalChild<'a, T: XmlWrapper>(pub(crate) Child<'a, T>);
 /// A [RequiredXmlChild] extension of a [Child].
-pub struct RequiredChild<'a, T: XmlWrapper>(Child<'a, T>);
+pub struct RequiredChild<'a, T: XmlWrapper>(pub(crate) Child<'a, T>);
 
 impl<T: XmlWrapper> DynamicChild<'_, T> {
     /// Create a new instance of a [DynamicChild] for the given `element` and `name`.

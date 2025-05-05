@@ -16,7 +16,7 @@ use crate::xml::{
 };
 use embed_doc_image::embed_doc_image;
 use pyo3::{pyclass, pymethods};
-use sbml_macros::{SBase, XmlWrapper};
+use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
 
 /// The SBML model object
 /// (Section 4.2; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -225,7 +225,7 @@ use sbml_macros::{SBase, XmlWrapper};
 /// requirement that at least one SBML Level 3 Core element always be present.
 ///
 #[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
-#[derive(Clone, Debug, XmlWrapper, SBase)]
+#[derive(Clone, Debug, XmlWrapper, SBase, PythonXmlChild)]
 #[pyclass]
 pub struct Model(XmlElement);
 
