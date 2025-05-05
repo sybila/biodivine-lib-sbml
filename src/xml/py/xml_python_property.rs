@@ -8,7 +8,9 @@ use crate::xml::{
     XmlPropertyType,
 };
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python};
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass]
 pub struct SbmlPropertyPy {
     // XML element for which the property is relevant.
@@ -63,6 +65,7 @@ impl SbmlPropertyPy {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl SbmlPropertyPy {
     /// See [XmlProperty::quantified_name].

@@ -4,8 +4,10 @@ use crate::xml::{
     Child, OptionalChild, OptionalXmlChild, RequiredChild, XmlChild, XmlElement, XmlWrapper,
 };
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python};
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 #[pyclass]
+#[gen_stub_pyclass]
 pub struct XmlChildPy {
     parent: XmlElement,
     name: &'static str,
@@ -44,6 +46,7 @@ impl XmlChildPy {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl XmlChildPy {
     /// See [XmlChild::parent].

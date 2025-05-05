@@ -98,7 +98,9 @@ use std::sync::{Arc, RwLock};
 use biodivine_xml_doc::{Document, Element, ReadOptions};
 use embed_doc_image::embed_doc_image;
 use pyo3::prelude::{PyModule, PyModuleMethods};
-use pyo3::{pyclass, pymethods, pymodule, Bound, PyResult, Python};
+use pyo3::{pyclass, pymethods, pymodule, wrap_pyfunction, Bound, PyResult, Python};
+use pyo3_stub_gen::define_stub_info_gatherer;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
@@ -147,8 +149,12 @@ fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()>
     module.add_class::<BaseUnit>()?;
     module.add_class::<Role>()?;
     module.add_class::<Parameter>()?;
+    module.add_function(wrap_pyfunction!(crate::xml::py::test_function, module)?)?;
     Ok(())
 }
+
+// Define a function to gather stub information.
+define_stub_info_gatherer!(stub_info);
 
 /// The SBML container object
 /// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -207,12 +213,14 @@ fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()>
 ///
 #[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
+#[gen_stub_pyclass]
 #[pyclass]
 pub struct Sbml {
     xml: XmlDocument,
     sbml_root: XmlElement,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Sbml {
     #[staticmethod]

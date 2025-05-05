@@ -1,11 +1,29 @@
 use crate::xml::py::{PythonXmlChild, PythonXmlChildConverter};
 use crate::xml::{XmlElement, XmlList, XmlWrapper};
-use pyo3::{pyclass, pymethods, IntoPyObjectExt, PyObject, PyResult, Python};
+use pyo3::{pyclass, pyfunction, pymethods, IntoPyObjectExt, PyObject, PyResult, Python};
+use pyo3_stub_gen::{PyStubType, TypeInfo};
+use pyo3_stub_gen_derive::gen_stub_pyfunction;
 
 #[pyclass]
 pub struct XmlListPy {
     generic_list: XmlList<XmlElement>,
     converter: Box<dyn PythonXmlChildConverter + Send + Sync>,
+}
+
+impl PyStubType for XmlListPy {
+    fn type_output() -> TypeInfo {
+        TypeInfo::unqualified("TestingCustomTypes | NotTestingCustomTypes")
+    }
+}
+
+// Note: The custom type works, but only if it is used in some other signature. It is not
+// included on its own. Also, note that the only way to have a custom type is using a
+// static trait, so there is no way for us to nicely incorporate the type name into the
+// signature dynamically.
+#[gen_stub_pyfunction]
+#[pyfunction]
+pub fn test_function(_py: Python) -> PyResult<XmlListPy> {
+    unimplemented!();
 }
 
 impl<C: XmlWrapper + PythonXmlChild> PythonXmlChild for XmlList<C> {

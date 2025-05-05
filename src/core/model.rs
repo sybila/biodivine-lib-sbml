@@ -16,6 +16,7 @@ use crate::xml::{
 };
 use embed_doc_image::embed_doc_image;
 use pyo3::{pyclass, pymethods};
+use pyo3_stub_gen_derive::gen_stub_pyclass;
 use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
 
 /// The SBML model object
@@ -227,6 +228,7 @@ use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
 #[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
 #[derive(Clone, Debug, XmlWrapper, SBase, PythonXmlChild)]
 #[pyclass]
+#[gen_stub_pyclass]
 pub struct Model(XmlElement);
 
 impl XmlDefault for Model {

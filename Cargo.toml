@@ -15,7 +15,7 @@ crate-type = ["cdylib", "rlib"]
 sbml_test_suite = []
 
 [dependencies]
-pyo3 = { version = "0.24.0", features = ["abi3-py37", "extension-module", "py-clone"] }
+pyo3 = { version = "0.24.0" }
 const_format = "0.2.31"
 phf = { version = "0.11.2", features = ["macros"] }
 strum = "0.26"
@@ -24,6 +24,9 @@ regex = "1.10.3"
 biodivine-xml-doc = "0.3.1"
 sbml-macros = { path = "sbml-macros" }
 embed-doc-image = "0.1.4"
+pyo3-stub-gen = "0.8.2"
+pyo3-stub-gen-derive = "0.8.2"
+env_logger = "0.11.8"
 
 [dev-dependencies]
 sbml-test-suite = { path = "sbml-test-suite" }
