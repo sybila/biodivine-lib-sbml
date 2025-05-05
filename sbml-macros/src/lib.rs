@@ -131,13 +131,9 @@ fn generate_python_xml_child(ttype: String) -> String {
     format!(
         r#"
         impl crate::xml::py::PythonXmlChild for {ttype} {{
-            fn converter<T: crate::xml::XmlWrapper>(
-                child: crate::xml::Child<T>,
-            ) -> Box<dyn crate::xml::py::PythonXmlChildConverter + Send + Sync> {{
-                struct Internal {{
-                    tag_name: &'static str,
-                    namespace_url: &'static str,
-                }}
+            fn converter_unsafe() -> Box<dyn crate::xml::py::PythonXmlChildConverter + Send + Sync> {{
+                #[derive(Clone)]
+                struct Internal;
 
                 impl crate::xml::py::PythonXmlChildConverter for Internal {{
                     fn try_into_typed_child(
@@ -146,34 +142,22 @@ fn generate_python_xml_child(ttype: String) -> String {
                         py: pyo3::Python,
                     ) -> pyo3::PyResult<pyo3::PyObject> {{
                         use pyo3::conversion::IntoPyObjectExt;
-                        if value.tag_name() != self.tag_name {{
-                            return crate::xml::py::throw_type_error(format!(
-                                "Expected tag `{{}}`, got `{{}}`.",
-                                self.tag_name,
-                                value.tag_name()
-                            ));
-                        }}
-                        if value.namespace_url() != self.namespace_url {{
-                            return crate::xml::py::throw_type_error(format!(
-                                "Expected namespace `{{}}`, got `{{}}`.",
-                                self.namespace_url,
-                                value.namespace_url()
-                            ));
-                        }}
                         let s: {ttype} = unsafe {{ crate::xml::XmlWrapper::unchecked_cast(value) }};
                         s.into_py_any(py)
                     }}
 
                     fn try_from_typed_child(&self, value: pyo3::PyObject, py: pyo3::Python) -> pyo3::PyResult<crate::xml::XmlElement> {{
+                        use crate::xml::XmlWrapper;
                         let s = value.extract::<{ttype}>(py)?;
                         Ok(s.xml_element().clone())
                     }}
+
+                    fn clone_self(&self) -> Box<dyn crate::xml::py::PythonXmlChildConverter + Send + Sync> {{
+                        Box::new(self.clone())
+                    }}
                 }}
 
-                Box::new(Internal {{
-                    tag_name: child.name,
-                    namespace_url: child.namespace_url,
-                }})
+                Box::new(Internal)
             }}
         }}
 

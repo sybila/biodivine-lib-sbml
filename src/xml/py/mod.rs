@@ -1,5 +1,6 @@
 mod xml_python_child;
 mod xml_python_child_converter;
+mod xml_python_list;
 mod xml_python_property;
 mod xml_python_property_converter;
 
@@ -8,6 +9,7 @@ use pyo3::{PyErr, PyErrArguments, PyResult};
 
 pub use xml_python_child::*;
 pub use xml_python_child_converter::*;
+pub use xml_python_list::*;
 pub use xml_python_property::*;
 pub use xml_python_property_converter::*;
 

@@ -8,7 +8,7 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
-use crate::xml::py::SbmlPropertyPy;
+use crate::xml::py::{SbmlPropertyPy, XmlChildPy};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
@@ -245,6 +245,11 @@ impl Model {
     #[pyo3(name = "substance_units")]
     pub fn substance_units_py(&self) -> SbmlPropertyPy {
         SbmlPropertyPy::new_optional(self.substance_units())
+    }
+
+    #[pyo3(name = "parameters")]
+    pub fn parameters_py(&self) -> XmlChildPy {
+        XmlChildPy::new_optional(self.parameters())
     }
 }
 

@@ -1,6 +1,8 @@
 use crate::xml::py::throw_type_error;
 use crate::xml::py::{PythonXmlChild, PythonXmlChildConverter};
-use crate::xml::{Child, OptionalChild, OptionalXmlChild, XmlChild, XmlElement, XmlWrapper};
+use crate::xml::{
+    Child, OptionalChild, OptionalXmlChild, RequiredChild, XmlChild, XmlElement, XmlWrapper,
+};
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python};
 
 #[pyclass]
@@ -19,7 +21,17 @@ impl XmlChildPy {
             name: child.0.name,
             namespace_url: child.0.namespace_url,
             is_required: false,
-            converter: T::converter(child.0),
+            converter: T::converter_unsafe(),
+        }
+    }
+
+    pub fn new_required<T: XmlWrapper + PythonXmlChild>(child: RequiredChild<T>) -> XmlChildPy {
+        XmlChildPy {
+            parent: child.0.parent.clone(),
+            name: child.0.name,
+            namespace_url: child.0.namespace_url,
+            is_required: true,
+            converter: T::converter_unsafe(),
         }
     }
 
