@@ -68,3 +68,53 @@ pub fn derive_sbase(item: TokenStream) -> TokenStream {
     );
     result.parse().unwrap()
 }
+
+/// Adds a "default" implementation for PythonPropertyType, assuming the type implements
+/// all necessary Python conversion traits.
+#[proc_macro_derive(PythonPropertyType)]
+pub fn derive_python_property(item: TokenStream) -> TokenStream {
+    let ast: syn::DeriveInput = syn::parse(item).unwrap();
+    let ttype = ast.ident.to_string();
+    let result = generate_python_property(ttype);
+    result.parse().unwrap()
+}
+
+#[proc_macro]
+pub fn make_python_property(item: TokenStream) -> TokenStream {
+    let ttype = item.to_string();
+    let result = generate_python_property(ttype);
+    result.parse().unwrap()
+}
+
+fn generate_python_property(ttype: String) -> String {
+    format!(
+        r#"
+        impl crate::xml::py::PythonPropertyType for {ttype} {{
+            fn converter() -> Box<dyn crate::xml::py::PythonPropertyConverter + Send + Sync> {{
+                struct Internal;
+                impl crate::xml::py::PythonPropertyConverter for Internal {{
+                    fn try_from_string(&self, value: String, py: pyo3::Python) -> pyo3::PyResult<pyo3::PyObject> {{
+                        use crate::xml::XmlPropertyType;
+                        use pyo3::conversion::IntoPyObjectExt;
+                        let input = Some(value.as_str());
+                        let value: Option<{ttype}> = {ttype}::try_get(input)
+                            .map_err(crate::xml::py::runtime_error)?;
+                        match value {{
+                            Some(value) => value.into_py_any(py),
+                            None => Ok(py.None()),
+                        }}
+                    }}
+
+                    fn try_into_string(&self, value: pyo3::PyObject, py: pyo3::Python) -> pyo3::PyResult<String> {{
+                        use crate::xml::XmlPropertyType;
+                        let value = value.extract::<{ttype}>(py)?;
+                        Ok(value.set().unwrap())
+                    }}
+                }}
+                Box::new(Internal {{}})
+            }}
+        }}
+
+    "#
+    )
+}

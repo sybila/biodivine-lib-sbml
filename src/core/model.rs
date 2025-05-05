@@ -8,12 +8,14 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
+use crate::xml::py::SbmlPropertyPy;
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
     XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
+use pyo3::{pyclass, pymethods};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The SBML model object
@@ -224,11 +226,25 @@ use sbml_macros::{SBase, XmlWrapper};
 ///
 #[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[pyclass]
 pub struct Model(XmlElement);
 
 impl XmlDefault for Model {
     fn default(document: XmlDocument) -> Self {
         Model::new_empty(document, "model")
+    }
+}
+
+#[pymethods]
+impl Model {
+    #[pyo3(name = "id")]
+    pub fn id_py(&self) -> SbmlPropertyPy {
+        SbmlPropertyPy::new_optional(self.id())
+    }
+
+    #[pyo3(name = "substance_units")]
+    pub fn substance_units_py(&self) -> SbmlPropertyPy {
+        SbmlPropertyPy::new_optional(self.substance_units())
     }
 }
 

@@ -98,14 +98,17 @@ use std::sync::{Arc, RwLock};
 use biodivine_xml_doc::{Document, Element, ReadOptions};
 use embed_doc_image::embed_doc_image;
 use pyo3::prelude::{PyModule, PyModuleMethods};
-use pyo3::{pymodule, Bound, PyResult, Python};
+use pyo3::{pyclass, pymethods, pymodule, Bound, PyResult, Python};
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
-use crate::core::{MetaId, Model, SBase, SId, Unit};
+use crate::core::{BaseUnit, MetaId, Model, SBase, SId, SboTerm, Unit};
+use crate::layout::Role;
+use crate::xml::py::runtime_error;
+use crate::xml::py::SbmlPropertyPy;
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -132,6 +135,14 @@ pub mod test_suite;
 #[pymodule]
 fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Unit>()?;
+    module.add_class::<Sbml>()?;
+    module.add_class::<Model>()?;
+    module.add_class::<SId>()?;
+    module.add_class::<MetaId>()?;
+    module.add_class::<SboTerm>()?;
+    module.add_class::<BaseUnit>()?;
+    module.add_class::<Role>()?;
+    module.add_class::<SbmlPropertyPy>()?;
     Ok(())
 }
 
@@ -192,9 +203,24 @@ fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()>
 ///
 #[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
+#[pyclass]
 pub struct Sbml {
     xml: XmlDocument,
     sbml_root: XmlElement,
+}
+
+#[pymethods]
+impl Sbml {
+    #[staticmethod]
+    #[pyo3(name = "read_path")]
+    pub fn read_path_py(path: &str) -> PyResult<Sbml> {
+        Sbml::read_path(path).map_err(runtime_error)
+    }
+
+    #[pyo3(name = "model")]
+    pub fn model_py(&self) -> Option<Model> {
+        self.model().get()
+    }
 }
 
 /// The SBML-defined components of the [`Sbml`] container class.

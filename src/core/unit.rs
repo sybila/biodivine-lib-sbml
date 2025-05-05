@@ -4,7 +4,7 @@ use crate::xml::{
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
 use pyo3::{pyclass, pymethods};
-use sbml_macros::{SBase, XmlWrapper};
+use sbml_macros::{PythonPropertyType, SBase, XmlWrapper};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
@@ -52,7 +52,8 @@ impl XmlDefault for Unit {
 }
 
 /// Set of pre-defined base units that are allowed for unit definition
-#[derive(Debug, Display, EnumString, PartialEq)]
+#[derive(Clone, Debug, Display, EnumString, PartialEq, PythonPropertyType)]
+#[pyclass]
 pub enum BaseUnit {
     #[strum(serialize = "ampere")]
     Ampere,

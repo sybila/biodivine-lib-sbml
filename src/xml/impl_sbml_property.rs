@@ -22,17 +22,17 @@ use std::ops::Deref;
 ///       namespace prefix is preferred, as it appears to have better backwards compatibility
 ///       (this last part is not officially in the SBML specification).
 pub struct SbmlProperty<'a, T: XmlPropertyType> {
-    element: &'a XmlElement,
-    name: &'static str,
-    property_namespace: Namespace,
-    element_namespace: Namespace,
+    pub(crate) element: &'a XmlElement,
+    pub(crate) name: &'static str,
+    pub(crate) property_namespace: Namespace,
+    pub(crate) element_namespace: Namespace,
     _marker: PhantomData<T>,
 }
 
 /// A variant of [SbmlProperty] where the value of the property can be `None` (i.e. unset).
-pub struct OptionalSbmlProperty<'a, T: XmlPropertyType>(SbmlProperty<'a, T>);
+pub struct OptionalSbmlProperty<'a, T: XmlPropertyType>(pub(crate) SbmlProperty<'a, T>);
 /// A variant of [SbmlProperty] where it is invalid for the value of the property to be missing.
-pub struct RequiredSbmlProperty<'a, T: XmlPropertyType>(SbmlProperty<'a, T>);
+pub struct RequiredSbmlProperty<'a, T: XmlPropertyType>(pub(crate) SbmlProperty<'a, T>);
 
 impl<'a, T: XmlPropertyType> SbmlProperty<'a, T> {
     /// Create a new instance of a [SbmlProperty] for the given `element`, `name` and `package_url`.

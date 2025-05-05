@@ -5,7 +5,8 @@ use crate::xml::{
     RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
     XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype,
 };
-use sbml_macros::{SBase, XmlWrapper};
+use pyo3::pyclass;
+use sbml_macros::{PythonPropertyType, SBase, XmlWrapper};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
@@ -22,7 +23,8 @@ impl Curve {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PythonPropertyType)]
+#[pyclass]
 pub enum XsiType {
     CubicBezier,
     LineSegment,
