@@ -97,18 +97,13 @@ use std::sync::{Arc, RwLock};
 
 use biodivine_xml_doc::{Document, Element, ReadOptions};
 use embed_doc_image::embed_doc_image;
-use pyo3::prelude::{PyModule, PyModuleMethods};
-use pyo3::{pyclass, pymethods, pymodule, Bound, PyResult, Python};
 use xml::{OptionalChild, RequiredProperty};
 
 use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
-use crate::core::{BaseUnit, MetaId, Model, Parameter, SBase, SId, SboTerm, Unit};
-use crate::layout::Role;
-use crate::xml::py::{runtime_error, XmlChildPy};
-use crate::xml::py::{SbmlPropertyPy, XmlListPy};
+use crate::core::{MetaId, Model, SBase, SId};
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -127,28 +122,13 @@ pub mod xml;
 /// namespace URLs or mappings assigning elements their allowed attributes.
 pub(crate) mod constants;
 
+#[cfg(feature = "python")]
+pub mod lib_py;
+
 /// **(test)** A helper module for executing the syntactic SBML test suite as part of the
 /// standard unit tests.
 #[cfg(test)]
 pub mod test_suite;
-
-#[pymodule]
-fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()> {
-    module.add_class::<XmlElement>()?;
-    module.add_class::<SbmlPropertyPy>()?;
-    module.add_class::<XmlChildPy>()?;
-    module.add_class::<XmlListPy>()?;
-    module.add_class::<Unit>()?;
-    module.add_class::<Sbml>()?;
-    module.add_class::<Model>()?;
-    module.add_class::<SId>()?;
-    module.add_class::<MetaId>()?;
-    module.add_class::<SboTerm>()?;
-    module.add_class::<BaseUnit>()?;
-    module.add_class::<Role>()?;
-    module.add_class::<Parameter>()?;
-    Ok(())
-}
 
 /// The SBML container object
 /// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -207,24 +187,10 @@ fn biodivine_lib_sbml(_py: Python, module: &Bound<'_, PyModule>) -> PyResult<()>
 ///
 #[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
-#[pyclass]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
 pub struct Sbml {
     xml: XmlDocument,
     sbml_root: XmlElement,
-}
-
-#[pymethods]
-impl Sbml {
-    #[staticmethod]
-    #[pyo3(name = "read_path")]
-    pub fn read_path_py(path: &str) -> PyResult<Sbml> {
-        Sbml::read_path(path).map_err(runtime_error)
-    }
-
-    #[pyo3(name = "model")]
-    pub fn model_py(&self) -> XmlChildPy {
-        XmlChildPy::new_optional(self.model())
-    }
 }
 
 /// The SBML-defined components of the [`Sbml`] container class.

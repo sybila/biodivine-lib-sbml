@@ -15,8 +15,7 @@ use crate::xml::{
     RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType,
     XmlSupertype,
 };
-use pyo3::pyclass;
-use sbml_macros::{PythonPropertyType, SBase, XmlWrapper};
+use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -235,8 +234,7 @@ impl SpeciesReferenceGlyph {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PythonPropertyType)]
-#[pyclass]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Role {
     Substrate,
     Product,

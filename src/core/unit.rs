@@ -3,23 +3,15 @@ use crate::core::SId;
 use crate::xml::{
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
-use pyo3::{pyclass, pymethods};
-use sbml_macros::{PythonPropertyType, SBase, XmlWrapper};
+#[cfg(feature = "python")]
+use sbml_macros::PythonPropertyType;
+use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 /// Unit representation
 #[derive(Clone, Debug, XmlWrapper, SBase)]
-#[pyclass]
 pub struct Unit(XmlElement);
-
-#[pymethods]
-impl Unit {
-    #[staticmethod]
-    pub fn test() {
-        println!("Hello world");
-    }
-}
 
 impl Unit {
     pub fn kind(&self) -> RequiredSbmlProperty<BaseUnit> {
@@ -52,8 +44,9 @@ impl XmlDefault for Unit {
 }
 
 /// Set of pre-defined base units that are allowed for unit definition
-#[derive(Clone, Debug, Display, EnumString, PartialEq, PythonPropertyType)]
-#[pyclass]
+#[derive(Clone, Debug, Display, EnumString, PartialEq)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonPropertyType))]
 pub enum BaseUnit {
     #[strum(serialize = "ampere")]
     Ampere,

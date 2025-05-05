@@ -7,38 +7,26 @@ use crate::constants::namespaces::{Namespace, NS_SBML_CORE, URL_HTML, URL_MATHML
 use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
-use crate::xml::py::runtime_error;
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, XmlDocument,
     XmlElement, XmlPropertyType, XmlWrapper,
 };
 use crate::Sbml;
 use biodivine_xml_doc::{Document, Element};
-use pyo3::{pyclass, pymethods, PyResult};
+#[cfg(feature = "python")]
 use sbml_macros::PythonPropertyType;
 use std::fmt::Display;
 use std::ops::Deref;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, PythonPropertyType)]
-#[pyclass]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonPropertyType))]
 pub struct SId(String);
 
 impl SId {
     /// Utility method to access the underlying string slice.
     pub fn as_str(&self) -> &str {
         self.0.as_str()
-    }
-}
-
-#[pymethods]
-impl SId {
-    #[new]
-    fn new(value: &str) -> PyResult<Self> {
-        Self::try_from(value.to_string()).map_err(runtime_error)
-    }
-
-    fn __str__(&self) -> PyResult<String> {
-        Ok(format!("SId({})", self.0))
     }
 }
 
@@ -99,8 +87,9 @@ impl XmlPropertyType for SId {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, PythonPropertyType)]
-#[pyclass]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonPropertyType))]
 pub struct MetaId(String);
 
 impl MetaId {
@@ -160,8 +149,9 @@ impl XmlPropertyType for MetaId {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, PythonPropertyType)]
-#[pyclass]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonPropertyType))]
 pub struct SboTerm(String);
 
 impl SboTerm {

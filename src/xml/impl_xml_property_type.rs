@@ -3,14 +3,6 @@
 //      section 3.1.1). I believe these should be handled by `xml-doc` already, but we should
 //      have a test case for this.
 use crate::xml::XmlPropertyType;
-use sbml_macros::make_python_property;
-
-// Implementations of Python property converters for native types:
-make_python_property!(String);
-make_python_property!(bool);
-make_python_property!(i32);
-make_python_property!(u32);
-make_python_property!(f64);
 
 /// A "trivial" conversion between an XML attribute and a `String`.
 ///

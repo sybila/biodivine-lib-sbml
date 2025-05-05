@@ -8,15 +8,15 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
-use crate::xml::py::{SbmlPropertyPy, XmlChildPy};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
     XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
-use pyo3::{pyclass, pymethods};
-use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
+#[cfg(feature = "python")]
+use sbml_macros::PythonXmlChild;
+use sbml_macros::{SBase, XmlWrapper};
 
 /// The SBML model object
 /// (Section 4.2; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -225,31 +225,14 @@ use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
 /// requirement that at least one SBML Level 3 Core element always be present.
 ///
 #[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
-#[derive(Clone, Debug, XmlWrapper, SBase, PythonXmlChild)]
-#[pyclass]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonXmlChild))]
 pub struct Model(XmlElement);
 
 impl XmlDefault for Model {
     fn default(document: XmlDocument) -> Self {
         Model::new_empty(document, "model")
-    }
-}
-
-#[pymethods]
-impl Model {
-    #[pyo3(name = "id")]
-    pub fn id_py(&self) -> SbmlPropertyPy {
-        SbmlPropertyPy::new_optional(self.id())
-    }
-
-    #[pyo3(name = "substance_units")]
-    pub fn substance_units_py(&self) -> SbmlPropertyPy {
-        SbmlPropertyPy::new_optional(self.substance_units())
-    }
-
-    #[pyo3(name = "parameters")]
-    pub fn parameters_py(&self) -> XmlChildPy {
-        XmlChildPy::new_optional(self.parameters())
     }
 }
 

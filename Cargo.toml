@@ -10,12 +10,14 @@ crate-type = ["cdylib", "rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+default = ["python"]
 # When enabled, run the SBML syntactic test suite as part of unit tests.
 # This is mainly used for the purpose of code coverage computation.
 sbml_test_suite = []
+python = ["dep:pyo3"]
 
 [dependencies]
-pyo3 = { version = "0.24.0", features = ["abi3-py37", "extension-module", "py-clone"] }
+pyo3 = { version = "0.24.0", features = ["abi3-py37", "extension-module", "py-clone"], optional = true }
 const_format = "0.2.31"
 phf = { version = "0.11.2", features = ["macros"] }
 strum = "0.26"

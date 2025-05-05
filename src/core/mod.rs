@@ -5,10 +5,18 @@ mod function_definition;
 mod initial_assignment;
 mod math;
 mod model;
+#[cfg(feature = "python")]
+mod model_py;
+
 mod parameter;
+#[cfg(feature = "python")]
+mod parameter_py;
 mod reaction;
 mod rule;
 pub(crate) mod sbase;
+#[cfg(feature = "python")]
+mod sbase_py;
+
 mod species;
 mod unit;
 mod unit_definition;

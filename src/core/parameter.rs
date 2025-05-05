@@ -1,24 +1,17 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::py::SbmlPropertyPy;
 use crate::xml::{
     OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
-use pyo3::{pyclass, pymethods};
-use sbml_macros::{PythonXmlChild, SBase, XmlWrapper};
+#[cfg(feature = "python")]
+use sbml_macros::PythonXmlChild;
+use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual parameter definition
-#[derive(Clone, Debug, XmlWrapper, SBase, PythonXmlChild)]
-#[pyclass]
+#[derive(Clone, Debug, XmlWrapper, SBase)]
+#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[cfg_attr(feature = "python", derive(PythonXmlChild))]
 pub struct Parameter(XmlElement);
-
-#[pymethods]
-impl Parameter {
-    #[pyo3(name = "id")]
-    pub fn id_py(&self) -> SbmlPropertyPy {
-        SbmlPropertyPy::new_required(self.id())
-    }
-}
 
 impl Parameter {
     pub fn new(document: XmlDocument, id: &SId, constant: bool) -> Self {

@@ -39,6 +39,7 @@ mod xml_inheritance;
 /// somewhat more specific than normal XML namespaces.
 mod impl_sbml_property;
 
+#[cfg(feature = "python")]
 pub mod py;
 
 pub use crate::xml::impl_sbml_property::{
