@@ -3,7 +3,10 @@ use crate::constants::element::{
     REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
-use crate::xml::{SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
+use crate::xml::{
+    OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    XmlWrapper,
+};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
@@ -70,13 +73,18 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Typecheck all relevant attributes.
     for attr in attributes {
         let attr_name = attr.0.as_str();
+        let (_prefix, name) = Element::separate_prefix_name(attr_name);
         let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
             break;
         };
 
         // t => (attribute name, attribute value)
         for (attr_id, attr_type) in types {
-            if &attr_name == attr_id {
+            let (_prefix, name2) = Element::separate_prefix_name(attr_name);
+            // TODO:
+            //  This ignores namespace prefixes as simply assumes that if we find the
+            //  right name, it is the specified attribute.
+            if name == name2 {
                 match *attr_type {
                     "positive_int" => type_check_of_property::<u32>(attr_id, xml_element, issues),
                     "int" => type_check_of_property::<i32>(attr_id, xml_element, issues),
@@ -127,7 +135,7 @@ fn type_check_of_property<T: XmlPropertyType>(
 ) {
     let (prefix, name) = Element::separate_prefix_name(attribute_name);
     let namespace = namespace_for_prefix(prefix);
-    let property = SbmlProperty::<T>::new(xml_element, name, namespace, namespace);
+    let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
     if let Some(err) = property.get_checked().err() {
         // TODO:
         //  This also maps to a lot of concrete rule IDs based on the tag/attribute and

@@ -92,7 +92,7 @@ impl XmlPropertyType for u32 {
 }
 
 /// A "trivial" conversion between an XML attribute and a `f64` floating-point number (`double`
-/// type in the SBML specification). Missing attribute value is interpreted as an error.
+/// type in the SBML specification).
 ///
 /// ## Specification
 ///  - Section 3.1.5
@@ -106,7 +106,7 @@ impl XmlPropertyType for f64 {
                     e
                 )),
             },
-            None => Err("Value missing".to_string()),
+            None => Ok(None),
         }
     }
 
