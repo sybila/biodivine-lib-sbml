@@ -1,9 +1,9 @@
 use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
-    UNIQUE_CHILDREN,
+    namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
+    REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
-use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
+use crate::xml::{SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
@@ -53,7 +53,10 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Check that all required attributes are present.
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
-            if !attributes.contains_key(*req_attr) {
+            let (prefix, name) = Element::separate_prefix_name(req_attr);
+            let namespace = namespace_for_prefix(prefix);
+            let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
+            if !property.is_set() {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
                 );
@@ -72,13 +75,13 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
         };
 
         // t => (attribute name, attribute value)
-        for t in types {
-            if &attr_name == t.0 {
-                match *t.1 {
-                    "positive_int" => type_check_of_property::<u32>(attr_name, xml_element, issues),
-                    "int" => type_check_of_property::<i32>(attr_name, xml_element, issues),
-                    "double" => type_check_of_property::<f64>(attr_name, xml_element, issues),
-                    "boolean" => type_check_of_property::<bool>(attr_name, xml_element, issues),
+        for (attr_id, attr_type) in types {
+            if &attr_name == attr_id {
+                match *attr_type {
+                    "positive_int" => type_check_of_property::<u32>(attr_id, xml_element, issues),
+                    "int" => type_check_of_property::<i32>(attr_id, xml_element, issues),
+                    "double" => type_check_of_property::<f64>(attr_id, xml_element, issues),
+                    "boolean" => type_check_of_property::<bool>(attr_id, xml_element, issues),
                     _ => (),
                 }
             };
@@ -118,19 +121,20 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
 /// Performs a type check of a value of a specific attribute.
 /// If check fails, error is logged in *issues*.
 fn type_check_of_property<T: XmlPropertyType>(
-    attribute_name: &str,
+    attribute_name: &'static str,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
-    if property.is_err() {
+    let (prefix, name) = Element::separate_prefix_name(attribute_name);
+    let namespace = namespace_for_prefix(prefix);
+    let property = SbmlProperty::<T>::new(xml_element, name, namespace, namespace);
+    if let Some(err) = property.get_checked().err() {
         // TODO:
         //  This also maps to a lot of concrete rule IDs based on the tag/attribute and
         //  will need a separate method to resolve.
         let message = format!(
             "Sanity check failed: {0} On the attribute [{1}].",
-            property.err().unwrap(),
-            attribute_name
+            err, attribute_name
         );
         issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
     }
@@ -343,7 +347,7 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "trigger" => Some("21226"),
         "delay" => Some("21227"),
         "priority" => Some("21232"),
-        
+
         "dimensions" => Some("layout-21703"),
         "curve" => Some("layout-21402"),
         "boundingBox" => Some("layout-21302"),

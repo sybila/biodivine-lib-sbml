@@ -1,3 +1,4 @@
+use crate::constants::namespaces::{Namespace, NS_LAYOUT, NS_SBML_CORE};
 use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
@@ -73,13 +74,13 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "textGlyph" => extended_sbase_attributes!("metaidRef", "graphicalObject", "text", "originText"),
     "speciesReferenceGlyph" => extended_sbase_attributes!("speciesGlyph", "metaidRef", "speciesReference", "role"),
     "referenceGlyph" => extended_sbase_attributes!("glyph", "metaidRef", "reference", "role"),
-    "position" => extended_sbase_attributes!("layout:z", "layout:x", "layout:y"),
+    "position" => extended_sbase_attributes!("z", "x", "y"),
     "boundingBox" => ALLOWED_SBASE_ATTRIBUTES,
     "curve" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfCurveSegments" => ALLOWED_SBASE_ATTRIBUTES,
     "lineSegment" => ALLOWED_SBASE_ATTRIBUTES,
     "cubicBezier" => ALLOWED_SBASE_ATTRIBUTES,
-    "dimensions" => extended_sbase_attributes!("layout:width", "layout:depth", "layout:height"),
+    "dimensions" => extended_sbase_attributes!("width", "depth", "height"),
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
@@ -94,10 +95,24 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "localParameter" => phf_map! { "value" => "double"},
     "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
     "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
-    
-    "position" => phf_map! { "x" => "double", "y" => "double", "z" => "double" },
-    "dimensions" => phf_map! { "width" => "double", "height" => "double", "depth" => "double" },
+
+    "position" => phf_map! { "layout:x" => "double", "layout:y" => "double", "layout:z" => "double" },
+    "dimensions" => phf_map! { "layout:width" => "double", "layout:height" => "double", "layout:depth" => "double" },
 };
+
+pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
+    "" => NS_SBML_CORE,
+    "layout" => NS_LAYOUT,
+};
+
+/// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
+/// packages can use different namespace prefixes as well.
+pub fn namespace_for_prefix(prefix: &str) -> Namespace {
+    KNOWN_DEFAULT_PREFIX
+        .get(prefix)
+        .expect("Default prefix not found")
+        .clone()
+}
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => &["level", "version"],
@@ -142,14 +157,14 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     //layout package
     "layout" => &["layout:id"],
     "listOfLayouts" => &[],
-    "graphicalObject" => &["id"],
-    "compartmentGlyph" => &["id"],
-    "speciesGlyph" => &["id"],
-    "reactionGlyph" => &["id"],
-    "generalGlyph" => &["id"],
-    "textGlyph" => &["id"],
-    "speciesReferenceGlyph" => &["id", "speciesGlyph"],
-    "referenceGlyph" => &["id", "glyph"],
+    "graphicalObject" => &["layout:id"],
+    "compartmentGlyph" => &["layout:id"],
+    "speciesGlyph" => &["layout:id"],
+    "reactionGlyph" => &["layout:id"],
+    "generalGlyph" => &["layout:id"],
+    "textGlyph" => &["layout:id"],
+    "speciesReferenceGlyph" => &["layout:id", "layout:speciesGlyph"],
+    "referenceGlyph" => &["layout:id", "layout:glyph"],
     "position" => &["layout:x", "layout:y"],
     "dimensions" => &["layout:width", "layout:height"]
 };
