@@ -1,11 +1,11 @@
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::CanTypeCheck;
+use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{MetaId, SId};
 use crate::layout::curve::CubicBezier;
 use crate::layout::curve::XsiType;
 use crate::layout::curve::{Curve, LineSegment};
-use crate::xml::{RequiredXmlChild, RequiredXmlProperty, XmlSubtype};
+use crate::xml::{RequiredXmlChild, RequiredXmlProperty, XmlSubtype, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -17,11 +17,17 @@ impl SbmlValidable for Curve {
         meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
-        validate_list_of_objects(&self.curve_segments().get(), issues, identifiers, meta_ids)
+        if let curve_segments = self.curve_segments().get(){
+            validate_list_of_objects(&curve_segments, issues, identifiers, meta_ids)
+        }
     }
 }
 
-impl CanTypeCheck for Curve {}
+impl CanTypeCheck for Curve {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        type_check_of_list(&self.curve_segments().get(), issues)
+    }
+}
 
 impl SbmlValidable for LineSegment {
     fn validate(
@@ -39,12 +45,18 @@ impl SbmlValidable for LineSegment {
             segment.validate(issues, identifiers, meta_ids);
         } else if self.xsi_type().get() != XsiType::LineSegment {
             let message = "Attribute [xsi:type] has to be of value LineSegment";
-            issues.push(SbmlIssue::new_error("", self, message));
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
         }
     }
 }
 
-impl CanTypeCheck for LineSegment {}
+impl CanTypeCheck for LineSegment {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
+        self.start().get().type_check(issues);
+        self.end().get().type_check(issues);
+    }
+}
 
 impl SbmlValidable for CubicBezier {
     fn validate(
@@ -64,9 +76,21 @@ impl SbmlValidable for CubicBezier {
 
         if self.xsi_type().get() != XsiType::CubicBezier {
             let message = "Attribute [xsi:type] has to be of value CubicBezier";
-            issues.push(SbmlIssue::new_error("", self, message));
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
         }
     }
 }
 
-impl CanTypeCheck for CubicBezier {}
+impl CanTypeCheck for CubicBezier {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        internal_type_check(self.xml_element(), issues);
+        self.start().get().type_check(issues);
+        self.end().get().type_check(issues);
+        self.base_point1()
+            .get()
+            .type_check(issues);
+        self.base_point2()
+            .get()
+            .type_check(issues);
+    }
+}

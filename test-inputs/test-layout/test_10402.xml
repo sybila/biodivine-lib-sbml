@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core"
+      xmlns:layout="http://www.sbml.org/sbml/level3/version1/layout/version1"
+      xmlns:render="http://www.sbml.org/sbml/level3/version2/render/version1"
+      level="3" version="2" layout:required="false">
+    <model metaid="e0ddafe5-68a8-46fd-9e3f-e0145ffffebe" name="Corbat2021 - Apoptotic Reaction Model.models">
+        <listOfCompartments>
+            <compartment id="default" constant="true" size="1" spatialDimensions="3"/>
+        </listOfCompartments>
+        <listOfSpecies>
+            <species id="__s0" name="L" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s1" name="R" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s2" name="flip" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s3" name="C8" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s4" name="BAR" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s5" name="Apaf" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s6" name="C3" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+            <species id="__s7" name="C6" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+        </listOfSpecies>
+        <listOfReactions>
+            <reaction id="r0" name="bind_L_R_to_LR" reversible="true">
+                <listOfReactants>
+                    <speciesReference species="__s0" constant="true"/>
+                    <speciesReference species="__s1" constant="true"/>
+                </listOfReactants>
+                <listOfProducts>
+                    <speciesReference species="__s7" constant="true"/>
+                </listOfProducts>
+            </reaction>
+            <reaction id="r1" name="convert_LR_to_DISC" reversible="false">
+                <listOfReactants>
+                    <speciesReference species="__s3" constant="true"/>
+                </listOfReactants>
+                <listOfProducts>
+                    <speciesReference species="__s4" constant="true"/>
+                </listOfProducts>
+            </reaction>
+            <reaction id="r2" name="bind_DISC_C8pro_to_DISCC8pro" reversible="true">
+                <listOfReactants>
+                    <speciesReference species="__s3" constant="true"/>
+                    <speciesReference species="__s5" constant="true"/>
+                </listOfReactants>
+                <listOfProducts>
+                    <speciesReference species="__s6" constant="true"/>
+                </listOfProducts>
+            </reaction>
+        </listOfReactions>
+        <layout:listOfLayouts>
+            <layout:layout layout:id="layout1">
+                <layout:dimensions layout:width="800" layout:height="600"/>
+                <layout:listOfCompartmentGlyphs>
+                    <layout:compartmentGlyph layout:id="cg0" layout:compartment="default">
+                        <layout:boundingBox>
+                            <layout:position layout:x="10" layout:y="10"/>
+                            <layout:dimensions layout:width="780" layout:height="580"/>
+                        </layout:boundingBox>
+                    </layout:compartmentGlyph>
+                </layout:listOfCompartmentGlyphs>
+                <layout:listOfSpeciesGlyphs>
+                    <layout:speciesGlyph layout:id="sg0" layout:species="__s0">
+                        <layout:boundingBox><layout:position layout:x="50" layout:y="50"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg1" layout:species="__s1">
+                        <layout:boundingBox><layout:position layout:x="120" layout:y="50"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg2" layout:species="__s2">
+                        <layout:boundingBox><layout:position layout:x="50" layout:y="120"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg3" layout:species="__s3">
+                        <layout:boundingBox><layout:position layout:x="120" layout:y="120"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg4" layout:species="__s4">
+                        <layout:boundingBox><layout:position layout:x="200" layout:y="50"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg5" layout:species="__s5">
+                        <layout:boundingBox><layout:position layout:x="200" layout:y="120"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg6" layout:species="__s6">
+                        <layout:boundingBox><layout:position layout:x="300" layout:y="90"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                    <layout:speciesGlyph layout:id="sg7" layout:species="__s7">
+                        <layout:boundingBox><layout:position layout:x="180" layout:y="90"/><layout:dimensions layout:width="40" layout:height="20"/></layout:boundingBox>
+                    </layout:speciesGlyph>
+                </layout:listOfSpeciesGlyphs>
+                <layout:listOfReactionGlyphs>
+                    <layout:reactionGlyph layout:id="rg0" layout:reaction="r0">
+                        <layout:boundingBox><layout:position layout:x="100" layout:y="80"/><layout:dimensions layout:width="60" layout:height="20"/></layout:boundingBox>
+                        <layout:listOfSpeciesReferenceGlyphs>
+                            <layout:speciesReferenceGlyph layout:id="srg0" layout:speciesGlyph="sg0" layout:speciesReference="__s0" layout:role="substrate"/>
+                            <layout:speciesReferenceGlyph layout:id="srg1" layout:speciesGlyph="sg1" layout:speciesReference="__s1" layout:role="substrate"/>
+                            <layout:speciesReferenceGlyph layout:id="srg2" layout:speciesGlyph="sg7" layout:speciesReference="__s7" layout:role="product"/>
+                        </layout:listOfSpeciesReferenceGlyphs>
+                        <layout:curve>
+                            <layout:listOfCurveSegments>
+                                <curveSegment xsi:type="CubicBezier">
+                                    <layout:start x="170" y="130"/>
+                                    <layout:end x="170" y="180"/>
+                                </curveSegment>
+                            </layout:listOfCurveSegments>
+                        </layout:curve>
+                    </layout:reactionGlyph>
+                    <layout:reactionGlyph layout:id="rg1" layout:reaction="r1">
+                        <layout:boundingBox><layout:position layout:x="160" layout:y="70"/><layout:dimensions layout:width="60" layout:height="20"/></layout:boundingBox>
+                        <layout:listOfSpeciesReferenceGlyphs>
+                            <layout:speciesReferenceGlyph layout:id="srg3" layout:speciesGlyph="sg3" layout:speciesReference="__s3" layout:role="substrate"/>
+                            <layout:speciesReferenceGlyph layout:id="srg4" layout:speciesGlyph="sg4" layout:speciesReference="__s4" layout:role="product"/>
+                        </layout:listOfSpeciesReferenceGlyphs>
+                        <layout:curve>
+                            <layout:listOfCurveSegments>
+                                <curveSegment xsi:type="LineSegment">
+                                    <start x="45" y="200"/>
+                                    <end x="165" y="120"/>
+                                    <basePoint1 x="0" y="200"/>
+                                    <basePoint2 x="0" y="120"/>
+                                </curveSegment>
+                            </layout:listOfCurveSegments>
+                        </layout:curve>
+                    </layout:reactionGlyph>
+                    <layout:reactionGlyph layout:id="rg2" layout:reaction="r2">
+                        <layout:boundingBox><layout:position layout:x="220" layout:y="100"/><layout:dimensions layout:width="60" layout:height="20"/></layout:boundingBox>
+                        <layout:listOfSpeciesReferenceGlyphs>
+                            <layout:speciesReferenceGlyph layout:id="srg5" layout:speciesGlyph="sg3" layout:speciesReference="__s3" layout:role="substrate"/>
+                            <layout:speciesReferenceGlyph layout:id="srg6" layout:speciesGlyph="sg5" layout:speciesReference="__s5" layout:role="substrate"/>
+                            <layout:speciesReferenceGlyph layout:id="srg7" layout:speciesGlyph="sg6" layout:speciesReference="__s6" layout:role="product"/>
+                        </layout:listOfSpeciesReferenceGlyphs>
+                    </layout:reactionGlyph>
+                </layout:listOfReactionGlyphs>
+                <layout:listOfTextGlyphs>
+                    <layout:textGlyph layout:id="tg0" layout:graphicalObject="sg0" layout:text="L"/>
+                    <layout:textGlyph layout:id="tg1" layout:graphicalObject="sg1" layout:text="R"/>
+                    <layout:textGlyph layout:id="tg2" layout:graphicalObject="sg2" layout:text="flip"/>
+                    <layout:textGlyph layout:id="tg3" layout:graphicalObject="sg3" layout:text="C8"/>
+                    <layout:textGlyph layout:id="tg4" layout:graphicalObject="sg4" layout:text="BAR"/>
+                    <layout:textGlyph layout:id="tg5" layout:graphicalObject="sg5" layout:text="Apaf"/>
+                    <layout:textGlyph layout:id="tg6" layout:graphicalObject="sg6" layout:text="C3"/>
+                    <layout:textGlyph layout:id="tg7" layout:graphicalObject="sg7" layout:text="C6"/>
+                </layout:listOfTextGlyphs>
+                <layout:listOfAdditionalGraphicalObjects>
+                    <layout:generalGlyph layout:id="gg0" layout:reference="sg0">
+                        <layout:boundingBox>
+                            <layout:position layout:x="50" layout:y="150"/>
+                            <layout:dimensions layout:width="200" layout:height="100"/>
+                        </layout:boundingBox>
+                        <layout:listOfReferenceGlyphs>
+                            <layout:referenceGlyph layout:reference="sg0" layout:role="referenceForSignalingRegion"/>
+                        </layout:listOfReferenceGlyphs>
+                    </layout:generalGlyph>
+                </layout:listOfAdditionalGraphicalObjects>
+            </layout:layout>
+        </layout:listOfLayouts>
+    </model>
+</sbml>

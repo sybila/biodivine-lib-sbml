@@ -80,7 +80,7 @@ impl XmlSupertype for LineSegment {}
 
 impl LineSegment {
     pub fn new(document: XmlDocument, start: Point, end: Point) -> Self {
-        let line = LineSegment::new_empty(document, "lineSegment");
+        let line = LineSegment::new_empty(document, "curveSegment");
 
         line.xsi_type().set(&XsiType::LineSegment);
         line.start().set(start);
@@ -89,7 +89,7 @@ impl LineSegment {
     }
 
     pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
+        self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
 
     pub fn start(&self) -> RequiredChild<Point> {
@@ -128,7 +128,7 @@ impl CubicBezier {
         cub
     }
     pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
+        self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
     pub fn start(&self) -> RequiredChild<Point> {
         self.required_package_child("start", NS_LAYOUT, false)

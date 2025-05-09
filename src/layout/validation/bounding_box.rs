@@ -25,9 +25,16 @@ impl SbmlValidable for BoundingBox {
 
         if self.position().get().z().is_set() && !self.dimensions().get().depth().is_set() {
             let message = "If [z] attribute of [position] is not specified the [depth] attribute of [dimensions] must also not be specified!";
-            issues.push(SbmlIssue::new_error("21305", self, message))
+            issues.push(SbmlIssue::new_error("layout:21305", self, message))
         }
     }
 }
 
-impl CanTypeCheck for BoundingBox {}
+impl CanTypeCheck for BoundingBox {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        let point = self.position().get();
+        point.type_check(issues);
+        let dimensions = self.dimensions().get();
+        dimensions.type_check(issues);
+    }
+}

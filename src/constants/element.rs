@@ -56,6 +56,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_attributes!("variable"),
     //layout package
     "layout" => ALLOWED_SBASE_ATTRIBUTES,
+    "listOfLayouts" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfCompartmentGlyphs" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfSpeciesGlyphs" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfReactionGlyphs" => ALLOWED_SBASE_ATTRIBUTES,
@@ -72,13 +73,13 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "textGlyph" => extended_sbase_attributes!("metaidRef", "graphicalObject", "text", "originText"),
     "speciesReferenceGlyph" => extended_sbase_attributes!("speciesGlyph", "metaidRef", "speciesReference", "role"),
     "referenceGlyph" => extended_sbase_attributes!("glyph", "metaidRef", "reference", "role"),
-    "point" => extended_sbase_attributes!("z", "x", "y"),
+    "position" => extended_sbase_attributes!("layout:z", "layout:x", "layout:y"),
     "boundingBox" => ALLOWED_SBASE_ATTRIBUTES,
     "curve" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfCurveSegments" => ALLOWED_SBASE_ATTRIBUTES,
     "lineSegment" => ALLOWED_SBASE_ATTRIBUTES,
     "cubicBezier" => ALLOWED_SBASE_ATTRIBUTES,
-    "dimensions" => extended_sbase_attributes!("width", "depth", "height"),
+    "dimensions" => extended_sbase_attributes!("layout:width", "layout:depth", "layout:height"),
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
@@ -93,6 +94,9 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "localParameter" => phf_map! { "value" => "double"},
     "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
     "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
+    
+    "position" => phf_map! { "x" => "double", "y" => "double", "z" => "double" },
+    "dimensions" => phf_map! { "width" => "double", "height" => "double", "depth" => "double" },
 };
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
@@ -136,7 +140,8 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "listOfEventAssignments" => &[],
     "eventAssignment" => &["variable"],
     //layout package
-    "layout" => &["id"],
+    "layout" => &["layout:id"],
+    "listOfLayouts" => &[],
     "graphicalObject" => &["id"],
     "compartmentGlyph" => &["id"],
     "speciesGlyph" => &["id"],
@@ -145,8 +150,8 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "textGlyph" => &["id"],
     "speciesReferenceGlyph" => &["id", "speciesGlyph"],
     "referenceGlyph" => &["id", "glyph"],
-    "point" => &["x", "y"],
-    "dimensions" => &["width", "height"]
+    "position" => &["layout:x", "layout:y"],
+    "dimensions" => &["layout:width", "layout:height"]
 };
 
 pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -157,8 +162,6 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfTextGlyphs" => &["textGlyph"],
     "listOfAdditionalGraphicalObjects" => &["graphicalObject"],
     "graphicalObject" => &["boundingBox"],
-    "compartmentGlyph" => &["boundingBox"],
-    "speciesGlyph" => &["boundingBox"],
     "reactionGlyph" => &["boundingBox", "curve", "listOfSpeciesReferenceGlyphs"],
     "listOfSpeciesReferenceGlyphs" => &["speciesReferenceGlyph", "boundingBox"],
     "listOfReferenceGlyphs" => &["referenceGlyph"],
@@ -215,6 +218,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_children!("math"),
     //layout package
     "layout" => extended_sbase_children!("listOfCompartmentGlyphs", "listOfSpeciesGlyphs", "listOfReactionGlyphs", "listOfTextGlyphs", "listOfAdditionalGraphicalObjects", "dimension"),
+    "listOfLayouts" => extended_sbase_children!("layout"),
     "listOfCompartmentGlyphs" => extended_sbase_children!("compartmentGlyph"),
     "listOfSpeciesGlyphs" => extended_sbase_children!("speciesGlyph"),
     "listOfReactionGlyphs" => extended_sbase_children!("reactionGlyph"),
@@ -231,10 +235,10 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "speciesReferenceGlyph" => extended_sbase_children!("curve", "boundingBox"),
     "referenceGlyph" => extended_sbase_children!("boundingBox"),
     "listOfSubGlyphs" => extended_sbase_children!("graphicalObject"),
-    "point" => ALLOWED_SBASE_CHILDREN,
+    "position" => ALLOWED_SBASE_CHILDREN,
     "boundingBox" => extended_sbase_children!("point", "dimensions"),
     "curve" => extended_sbase_children!("listOfCurveSegments"),
-    "listOfCurveSegments" => extended_sbase_children!("lineSegment", "cubicBezier"),
+    "listOfCurveSegments" => extended_sbase_children!("lineSegment", "cubicBezier", "curveSegment"),
     "lineSegment" => extended_sbase_children!("start", "end"),
     "cubicBezier" => extended_sbase_children!("start", "basePoint1", "basePoint2", "end"),
     "dimensions" => ALLOWED_SBASE_CHILDREN,
@@ -286,6 +290,7 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "eventAssignment" => extended_sbase_children!("math"),
     //layout package
     "layout" => extended_sbase_children!("dimensions", "listOfCompartmentGlyphs", "listOfSpeciesGlyphs", "listOfReactionGlyphs", "listOfTextGlyphs", "listOfAdditionalGraphicalObjects"),
+    "listOfLayouts" => extended_sbase_children!(),
     "listOfCompartmentGlyphs" => ALLOWED_SBASE_CHILDREN,
     "listOfSpeciesGlyphs" => ALLOWED_SBASE_CHILDREN,
     "listOfReactionGlyphs" => ALLOWED_SBASE_CHILDREN,
@@ -302,7 +307,7 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfSpeciesReferenceGlyphs" => ALLOWED_SBASE_CHILDREN,
     "listOfReferenceGlyphs" => ALLOWED_SBASE_CHILDREN,
     "listOfSubGlyphs" => ALLOWED_SBASE_CHILDREN,
-    "point" => ALLOWED_SBASE_CHILDREN,
+    "position" => ALLOWED_SBASE_CHILDREN,
     "boundingBox" => extended_sbase_children!("point", "dimensions"),
     "curve" => extended_sbase_children!("listOfCurveSegments"),
     "lineSegment" => extended_sbase_children!("start", "end"),
