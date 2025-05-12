@@ -24,15 +24,15 @@ pub fn basic_test() {
     let r1: FbcReaction = reactions.get(0).try_downcast().unwrap();
     let r2: FbcReaction = reactions.get(1).try_downcast().unwrap();
     
-    let gene_product_ref1 = r1.gene_product_association().get().unwrap().gene_product_ref().get().unwrap(); 
+    let gene_product_ref1 = r1.gene_product_association().get().unwrap().gene_product_ref().get().unwrap();
     let and2 = r2.gene_product_association().get().unwrap().and().get().unwrap();
    
-    assert_eq!(gene_product_ref1.geneProduct().get(), SId::try_from("g1").unwrap());
+    assert_eq!(gene_product_ref1.gene_product().get(), SId::try_from("g1").unwrap());
     
     let gene_product2_1: GeneProductRef = and2.get(0).try_downcast().unwrap();
     let gene_product2_2: GeneProductRef = and2.get(1).try_downcast().unwrap();
     
-    assert_eq!(gene_product2_1.geneProduct().get(), SId::try_from("g1").unwrap());
-    assert_eq!(gene_product2_2.geneProduct().get(), SId::try_from("g4").unwrap());
+    assert_eq!(gene_product2_1.gene_product().get(), SId::try_from("g1").unwrap());
+    assert_eq!(gene_product2_2.gene_product().get(), SId::try_from("g4").unwrap());
     
 }
