@@ -3,7 +3,7 @@ use crate::constants::namespaces::NS_FBC;
 use crate::constraint::association::{Association, GeneProductRef};
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::{OptionalChild, OptionalSbmlProperty, RequiredChild, XmlElement, XmlList};
+use crate::xml::{OptionalChild, OptionalSbmlProperty, XmlElement, XmlList};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct GeneProductAssociation(XmlElement);
@@ -21,7 +21,7 @@ impl GeneProductAssociation {
     pub fn and(&self) -> OptionalChild<XmlList<Association>> {
         self.optional_package_child("and", NS_FBC, false)
     }
-    pub fn geneProductRef(&self) -> OptionalChild<GeneProductRef> {
+    pub fn gene_product_ref(&self) -> OptionalChild<GeneProductRef> {
         self.optional_package_child("geneProductRef", NS_FBC, false)
     }
 }

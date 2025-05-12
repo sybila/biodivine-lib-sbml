@@ -1,6 +1,6 @@
 use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
-use crate::core::{SBase, SId, SpeciesReference};
+use crate::core::SId;
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument,
     XmlElement, XmlList, XmlNamedSubtype, XmlSupertype,

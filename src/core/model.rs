@@ -307,7 +307,7 @@ impl Model {
         self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
     
-    pub fn geneProducts(&self) -> OptionalChild<XmlList<GeneProduct>> {
+    pub fn gene_products(&self) -> OptionalChild<XmlList<GeneProduct>> {
         self.optional_package_child("listOfGeneProducts", NS_LAYOUT, false)
     }
     

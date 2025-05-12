@@ -2,7 +2,7 @@ use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::{OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement};
+use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct GeneProduct(XmlElement);
@@ -24,7 +24,7 @@ impl GeneProduct {
     pub fn label(&self) -> RequiredSbmlProperty<String>{
         self.required_package_property("label", NS_FBC, NS_FBC)
     }
-    pub fn associatedSpecies(&self) -> OptionalSbmlProperty<SId>{
+    pub fn associated_species(&self) -> OptionalSbmlProperty<SId>{
         self.optional_package_property("associatedSpecies", NS_FBC, NS_FBC)
     }
 }

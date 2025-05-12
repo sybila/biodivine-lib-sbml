@@ -1,21 +1,20 @@
 use std::fmt::Display;
 use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
-use crate::constraint::gene_product::GeneProduct;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement, XmlPropertyType};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FbcType {
-    maximize,
-    minimize,
+    Maximize,
+    Minimize,
 }
 
 impl Display for FbcType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let xsi = match self {
-            FbcType::maximize => "maximize",
-            FbcType::minimize => "minimize",
+            FbcType::Maximize => "maximize",
+            FbcType::Minimize => "minimize",
         };
 
         write!(f, "{}", xsi)
@@ -33,8 +32,8 @@ impl TryFrom<String> for FbcType {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.as_str() {
-            "maximize" => Ok(FbcType::maximize),
-            "minimize" => Ok(FbcType::minimize),
+            "maximize" => Ok(FbcType::Maximize),
+            "minimize" => Ok(FbcType::Minimize),
             _ => Err(format!("FbcType '{value}' is not valid.")),
         }
     }

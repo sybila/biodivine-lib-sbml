@@ -1,7 +1,5 @@
 use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
-use crate::constraint::Objective;
-use crate::constraint::objective::FbcType;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement};
