@@ -24,7 +24,7 @@ impl XmlNamedSubtype<Association> for GeneProductRef {
 impl GeneProductRef {
     pub fn new(document: XmlDocument, gene_product: SId) -> Self {
         let obj = GeneProductRef::new_empty(document, "geneProductRef");
-        obj.geneProduct().set(&gene_product);
+        obj.gene_product().set(&gene_product);
         obj
     }
     pub fn id(&self) -> OptionalSbmlProperty<SId> {
@@ -33,7 +33,7 @@ impl GeneProductRef {
     pub fn name(&self) -> OptionalSbmlProperty<String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
-    pub fn geneProduct(&self) -> RequiredSbmlProperty<SId> {
+    pub fn gene_product(&self) -> RequiredSbmlProperty<SId> {
         self.required_package_property("geneProduct", NS_FBC, NS_FBC)
     }
 }
