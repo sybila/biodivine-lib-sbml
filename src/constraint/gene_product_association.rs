@@ -1,9 +1,9 @@
-use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
 use crate::constraint::association::{Association, GeneProductRef};
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{OptionalChild, OptionalSbmlProperty, XmlElement, XmlList};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct GeneProductAssociation(XmlElement);

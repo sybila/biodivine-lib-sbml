@@ -1,8 +1,8 @@
-use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
-use crate::core::Species;
 use crate::core::sbase::SbmlUtils;
+use crate::core::Species;
 use crate::xml::{OptionalSbmlProperty, XmlElement, XmlNamedSubtype};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct FbcSpecies(XmlElement);

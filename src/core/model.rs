@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
-use crate::constants::namespaces::{NS_LAYOUT, NS_FBC};
+use crate::constants::namespaces::{NS_FBC, NS_LAYOUT};
+use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
@@ -8,7 +9,6 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
-use crate::constraint::{GeneProduct, Objective};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
@@ -306,11 +306,11 @@ impl Model {
     pub fn layouts(&self) -> OptionalChild<XmlList<Layout>> {
         self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
-    
+
     pub fn gene_products(&self) -> OptionalChild<XmlList<GeneProduct>> {
         self.optional_package_child("listOfGeneProducts", NS_LAYOUT, false)
     }
-    
+
     pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
         self.optional_package_child("listOfFluxObjectives", NS_FBC, false)
     }

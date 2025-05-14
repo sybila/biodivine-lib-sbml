@@ -1,9 +1,13 @@
-use std::fmt::Display;
-use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
+use crate::constraint::flux_objective::FluxObjective;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement, XmlPropertyType};
+use crate::xml::{
+    OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument,
+    XmlElement, XmlList, XmlPropertyType,
+};
+use sbml_macros::{SBase, XmlWrapper};
+use std::fmt::Display;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FbcType {
     Maximize,
@@ -72,5 +76,9 @@ impl Objective {
     }
     pub fn bound_type(&self) -> RequiredSbmlProperty<FbcType> {
         self.required_package_property("type", NS_FBC, NS_FBC)
+    }
+
+    pub fn flux_objectives(&self) -> RequiredChild<XmlList<FluxObjective>> {
+        self.required_package_child("listOfFluxObjectives", NS_FBC, false)
     }
 }

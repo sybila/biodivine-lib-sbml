@@ -26,7 +26,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "listOfCompartments" => ALLOWED_SBASE_ATTRIBUTES,
     "compartment" => extended_sbase_attributes!("spatialDimensions", "size", "units", "constant"),
     "listOfSpecies" => ALLOWED_SBASE_ATTRIBUTES,
-    "species" => extended_sbase_attributes!("compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor"),
+    "species" => extended_sbase_attributes!("compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor", "charge", "chemicalFormula"),
     "listOfParameters" => ALLOWED_SBASE_ATTRIBUTES,
     "parameter" => extended_sbase_attributes!("value", "units", "constant"),
     "listOfInitialAssignments" => ALLOWED_SBASE_ATTRIBUTES,
@@ -38,7 +38,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "listOfConstraints" => ALLOWED_SBASE_ATTRIBUTES,
     "constraint" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfReactions" => ALLOWED_SBASE_ATTRIBUTES,
-    "reaction" => extended_sbase_attributes!("reversible", "compartment"),
+    "reaction" => extended_sbase_attributes!("reversible", "compartment", "lowerFluxBound", "upperFluxBound"),
     "listOfReactants" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfProducts" => ALLOWED_SBASE_ATTRIBUTES,
     "speciesReference" => extended_sbase_attributes!("species", "stoichiometry", "constant"),
@@ -79,6 +79,17 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "lineSegment" => ALLOWED_SBASE_ATTRIBUTES,
     "cubicBezier" => ALLOWED_SBASE_ATTRIBUTES,
     "dimensions" => extended_sbase_attributes!("width", "depth", "height"),
+
+    "listOfObjectives" => extended_sbase_attributes!("activeObjective"),
+    "listOfGeneProducts" => ALLOWED_SBASE_ATTRIBUTES,
+    "objective" => extended_sbase_attributes!("id", "type", "name"),
+    "listOfFluxObjectives" => ALLOWED_SBASE_ATTRIBUTES,
+    "fluxObjective" => extended_sbase_attributes!("reaction", "coefficient"),
+    "geneProductAssociation" => extended_sbase_attributes!("id", "name"),
+    "geneProductRef" => extended_sbase_attributes!("id", "geneProduct"),
+    "and" => ALLOWED_SBASE_ATTRIBUTES,
+    "or" => ALLOWED_SBASE_ATTRIBUTES,
+    "geneProduct" => extended_sbase_attributes!("id", "label", "name", "associatedSpecies"),
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
@@ -86,13 +97,19 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "sbml" => phf_map! { "level" => "positive_int", "version" => "positive_int"},
     "unit" => phf_map! { "exponent" => "double", "scale" => "int", "multiplier" => "double"},
     "compartment" => phf_map! { "spatialDimensions" => "double", "size" => "double", "constant" => "boolean"},
-    "species" => phf_map! { "initialAmount" => "double", "initialConcentration" => "double", "hasOnlySubstanceUnits" => "boolean", "boundaryCondition" => "boolean", "constant" => "boolean"},
+    "species" => phf_map! { "initialAmount" => "double", "initialConcentration" => "double", "hasOnlySubstanceUnits" => "boolean", "boundaryCondition" => "boolean", "constant" => "boolean", "charge" => "int"},
     "parameter" => phf_map! { "value" => "double", "constant" => "boolean"},
-    "reaction" => phf_map! { "reversible" => "boolean"},
+    "reaction" => phf_map! { "reversible" => "boolean", "lowerFluxBound" => "sid", "upperFluxBound" => "sid"},
     "speciesReference" => phf_map! { "stoichiometry" => "double", "constant" => "boolean"},
     "localParameter" => phf_map! { "value" => "double"},
     "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
     "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
+    "objective" => phf_map! { "type" => "fbc_type", "id" => "SId" },
+    "fluxObjective" => phf_map! { "reaction" => "sid", "coefficient" => "double" },
+    "geneProductAssociation" => phf_map! {"id" => "sid"},
+    "geneProductRef" => phf_map! {"id" => "sid", "geneProduct" => "sid"},
+    "geneProduct" => phf_map!("id" => "sid", "geneProduct" => "sid"),
+
 };
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
@@ -146,7 +163,12 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "speciesReferenceGlyph" => &["id", "speciesGlyph"],
     "referenceGlyph" => &["id", "glyph"],
     "point" => &["x", "y"],
-    "dimensions" => &["width", "height"]
+    "dimensions" => &["width", "height"],
+    //fbc package
+    "objective" => &["id", "type"],
+    "fluxObjective" => &["reaction", "coefficient"],
+    "geneProductRef" => &["geneProduct"],
+    "geneProduct" => &["id", "label"],
 };
 
 pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -171,6 +193,9 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfCurveSegments" => &["lineSegment"],
     "lineSegment" => &["start", "end"],
     "cubicBezier" => &["start", "basePoint1", "basePoint2", "end"],
+    //fbc package
+    "listOfObjectives" => &["objective"],
+    "objective" => &["listOfFluxObjectives"],
 };
 
 pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -197,7 +222,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfConstraints" => extended_sbase_children!("constraint"),
     "constraint" => extended_sbase_children!("math", "message"),
     "listOfReactions" => extended_sbase_children!("reaction"),
-    "reaction" => extended_sbase_children!("listOfReactants", "listOfProducts", "listOfModifiers", "kineticLaw"),
+    "reaction" => extended_sbase_children!("listOfReactants", "listOfProducts", "listOfModifiers", "kineticLaw", "geneProductAssociation"),
     "listOfReactants" => extended_sbase_children!("speciesReference"),
     "listOfProducts" => extended_sbase_children!("speciesReference"),
     "speciesReference" => ALLOWED_SBASE_CHILDREN,
@@ -238,6 +263,18 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "lineSegment" => extended_sbase_children!("start", "end"),
     "cubicBezier" => extended_sbase_children!("start", "basePoint1", "basePoint2", "end"),
     "dimensions" => ALLOWED_SBASE_CHILDREN,
+    //fbc package
+    "objective" => extended_sbase_children!("listOfFluxObjectives"),
+    "listOfFluxObjectives" => extended_sbase_children!("fluxObjective"),
+    "listOfObjectives" => ALLOWED_SBASE_CHILDREN,
+    "listOfGeneProducts" => ALLOWED_SBASE_ATTRIBUTES,
+    "fluxObjective" => ALLOWED_SBASE_CHILDREN,
+    "geneProductAssociation" => extended_sbase_children!("geneProductRef", "and", "or"),
+    "geneProductRef" => ALLOWED_SBASE_CHILDREN,
+    "and" => ALLOWED_SBASE_CHILDREN,
+    "or" => ALLOWED_SBASE_CHILDREN,
+    "geneProduct" => ALLOWED_SBASE_CHILDREN,
+
 };
 
 /// This lists the (optional) child elements that must be unique in each SBML Core element.
@@ -268,7 +305,7 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfConstraints" => extended_sbase_children!(),
     "constraint" => extended_sbase_children!("math", "message"),
     "listOfReactions" => extended_sbase_children!(),
-    "reaction" => extended_sbase_children!("listOfReactants", "listOfProducts", "listOfModifiers", "kineticLaw"),
+    "reaction" => extended_sbase_children!("listOfReactants", "listOfProducts", "listOfModifiers", "kineticLaw", "geneProductAssociation"),
     "listOfReactants" => extended_sbase_children!(),
     "listOfProducts" => extended_sbase_children!(),
     "speciesReference" => extended_sbase_children!(),
@@ -308,6 +345,10 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "lineSegment" => extended_sbase_children!("start", "end"),
     "cubicBezier" => extended_sbase_children!("start", "basePoint1", "basePoint2", "end"),
     "dimensions" => ALLOWED_SBASE_CHILDREN,
+    //fbc package
+    "objective" => extended_sbase_children!("listOfFluxObjectives"),
+    "listOfFluxObjects" => ALLOWED_SBASE_CHILDREN,
+    "geneProductAssociation" => extended_sbase_children!("geneProductRef", "and", "or"),
 };
 
 // There are no required children in SBML core level 3 version 1

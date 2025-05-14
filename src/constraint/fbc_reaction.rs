@@ -1,9 +1,9 @@
-use sbml_macros::{SBase, XmlWrapper};
 use crate::constants::namespaces::NS_FBC;
 use crate::constraint::gene_product_association::GeneProductAssociation;
-use crate::core::{Reaction, SId};
 use crate::core::sbase::SbmlUtils;
+use crate::core::{Reaction, SId};
 use crate::xml::{OptionalChild, OptionalSbmlProperty, XmlElement, XmlNamedSubtype};
+use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct FbcReaction(XmlElement);

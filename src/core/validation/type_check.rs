@@ -3,6 +3,8 @@ use crate::constants::element::{
     UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
+use crate::constraint::FbcType;
+use crate::core::SId;
 use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
@@ -79,6 +81,8 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
                     "int" => type_check_of_property::<i32>(attr_name, xml_element, issues),
                     "double" => type_check_of_property::<f64>(attr_name, xml_element, issues),
                     "boolean" => type_check_of_property::<bool>(attr_name, xml_element, issues),
+                    "fbc_type" => type_check_of_property::<FbcType>(attr_name, xml_element, issues),
+                    "sid" => type_check_of_property::<SId>(attr_name, xml_element, issues),
                     _ => (),
                 }
             };
@@ -321,6 +325,7 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "compartment" => Some("20517"),
         "species" => match attr_name {
             "compartment" => Some("20614"),
+            "chemicalFormula" | "charge" => Some("fbc-20301"),
             _ => Some("20623"),
         },
         "parameter" => Some("20706"),
@@ -329,7 +334,10 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "rateRule" => Some("20909"),
         "algebraicRule" => Some("20910"),
         "constraint" => Some("21009"),
-        "reaction" => Some("21110"),
+        "reaction" => match attr_name {
+            "lowerFluxBound" | "upperFluxBound" => Some("fbc-20703"),
+            _ => Some("21110"),
+        },
         "speciesReference" => Some("21116"),
         "modifierSpeciesReference" => Some("21117"),
         "listOfLocalParameters" => Some("21129"),
@@ -343,6 +351,13 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "trigger" => Some("21226"),
         "delay" => Some("21227"),
         "priority" => Some("21232"),
+        //fbc package
+        "objective" => Some("fbc-20503"),
+        "geneProductAssociation" => Some("fbc-2803"),
+        "fluxObjective" => Some("fbc-20603"),
+        "geneProductRef" => Some("fbc-20903"),
+        "geneProduct" => Some("fbc-21203"),
+
         _ => None,
     }
 }
@@ -368,6 +383,10 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "listOfEventAssignments" => Some("21223"),
         "listOfLocalParameters" => Some("21128"),
         "boundingBox" => Some("21303"),
+
+        //fbc  package
+        "listOfFluxObjectives" => Some("fbc-20508"),
+        "geneProductAssociation" => Some("fbc-20805"),
         _ => None,
     }
 }
@@ -395,7 +414,7 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("initialAssignment", "math") => Some("20804"),
         ("assignmentRule", "math") | ("rateRule", "math") | ("algebraicRule", "math") => {
             Some("20907")
-        }
+        },
         ("constraint", "math") => Some("21007"),
         ("constraint", "message") => Some("21008"),
         // Same as `model` above, there is a lot of unique children to enumerate...

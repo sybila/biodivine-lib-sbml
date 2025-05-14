@@ -1,6 +1,9 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::xml::{OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement, XmlSupertype};
+use crate::xml::{
+    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    XmlSupertype,
+};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual specie definition
