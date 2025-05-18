@@ -155,11 +155,7 @@ impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {
 }
 
 impl ReactionGlyph {
-    pub fn new(
-        document: XmlDocument,
-        id: SId,
-        list: XmlList<SpeciesReferenceGlyph>,
-    ) -> Self {
+    pub fn new(document: XmlDocument, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
         let glyph = ReactionGlyph::new_empty(document, "reactionGlyph");
         glyph.id().set(&id);
         glyph.species_reference_glyphs().set(list);
@@ -414,24 +410,35 @@ mod test {
     use crate::layout::curve::XsiType;
     use crate::layout::Role;
     use crate::tests::sid;
-    use crate::xml::{OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, RequiredXmlProperty};
+    use crate::xml::{
+        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, RequiredXmlProperty,
+    };
     use crate::Sbml;
 
     #[test]
     fn layout_example() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
-        assert!(doc.validate().is_empty());
+        let issues = doc.validate();
+        assert!(issues.is_empty());
 
         let model = doc.model().get().unwrap();
         let layouts = model.layouts().get().unwrap();
         let one_layout = layouts.get(0);
 
         assert_eq!(one_layout.id().get(), sid("layout1"));
-        assert_eq!(one_layout.dimensions().get().width().get(), f64::from(600));
-        assert_eq!(one_layout.additional_graph_obj().get().unwrap().get(0).id().get(), sid("gg0"));
-
+        assert_eq!(one_layout.dimensions().get().height().get(), f64::from(600));
+        assert_eq!(
+            one_layout
+                .additional_graph_obj()
+                .get()
+                .unwrap()
+                .get(0)
+                .id()
+                .get(),
+            sid("gg0")
+        );
     }
-    
+
     #[test]
     fn compartment_glyph() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
@@ -440,12 +447,22 @@ mod test {
         let model = doc.model().get().unwrap();
         let layouts = model.layouts().get().unwrap();
         let comp_glyph = layouts.get(0).compartment_glyphs().get().unwrap().get(0);
-        
+
         assert_eq!(comp_glyph.id().get(), sid("cg0"));
         assert_eq!(comp_glyph.compartment().get().unwrap(), sid("default"));
-        assert_eq!(comp_glyph.bounding_box().get().unwrap().id().get().unwrap(), sid("bb"));
+        assert_eq!(
+            comp_glyph
+                .bounding_box()
+                .get()
+                .unwrap()
+                .position()
+                .get()
+                .x()
+                .get(),
+            f64::from(10)
+        );
     }
-    
+
     #[test]
     fn reaction_glyphs() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
@@ -454,20 +471,24 @@ mod test {
         let model = doc.model().get().unwrap();
         let layouts = model.layouts().get().unwrap();
         let reactions = layouts.get(0).reaction_glyphs().get().unwrap();
-        
+
         assert_eq!(reactions.get(0).id().get(), sid("rg0"));
         let sp_references = reactions.get(0).species_reference_glyphs().get();
-        
+
         assert_eq!(reactions.get(2).id().get(), sid("rg2"));
         assert_eq!(reactions.get(1).reaction().get().unwrap(), sid("r1"));
         assert_eq!(sp_references.get(0).role().get().unwrap(), Role::Substrate);
-        
+
         let curve1 = reactions.get(0).curve().get().unwrap();
         let curve2 = reactions.get(1).curve().get().unwrap();
-        
-        assert_eq!(curve1.curve_segments().get().get(0).start().get().x().get(), f64::from(170));
-        assert_eq!(curve2.curve_segments().get().get(0).xsi_type().get(), XsiType::CubicBezier);
+
+        assert_eq!(
+            curve1.curve_segments().get().get(0).start().get().x().get(),
+            f64::from(170)
+        );
+        assert_eq!(
+            curve2.curve_segments().get().get(0).xsi_type().get(),
+            XsiType::CubicBezier
+        );
     }
 }
-
-

@@ -25,7 +25,7 @@ impl SbmlValidable for BoundingBox {
 
         if self.position().get().z().is_set() && !self.dimensions().get().depth().is_set() {
             let message = "If [z] attribute of [position] is not specified the [depth] attribute of [dimensions] must also not be specified!";
-            issues.push(SbmlIssue::new_error("layout:21305", self, message))
+            issues.push(SbmlIssue::new_error("layout-21305", self, message))
         }
     }
 }

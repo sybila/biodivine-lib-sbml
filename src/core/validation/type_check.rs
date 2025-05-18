@@ -2,7 +2,7 @@ use crate::constants::element::{
     namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
     REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
-use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_LAYOUT, URL_SBML_CORE};
 use crate::xml::{
     OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
@@ -232,9 +232,7 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
             issues.push(SbmlIssue::new_error("10201", xml_element, message));
-        } else if child_namespace == URL_SBML_CORE {
-            // All other children are expected to be in the SBML Core namespace. Anything else
-            // that is not in the core namespace is skipped.
+        } else if child_namespace == URL_SBML_CORE || child_namespace == URL_PACKAGE_LAYOUT {
             if !allowed_children.contains(&child_name.as_str()) {
                 let message = format!(
                     "An unknown child <{}> of the element <{}> found.",
@@ -283,7 +281,10 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
         let child_namespace = child.namespace_url();
-        if child_namespace == URL_SBML_CORE || child_namespace == URL_MATHML {
+        if child_namespace == URL_SBML_CORE
+            || child_namespace == URL_MATHML
+            || child_namespace == URL_PACKAGE_LAYOUT
+        {
             // Right now, we are only testing core and math elements.
             let entry = counts.entry(child_name);
             let count = entry.or_insert(0usize);

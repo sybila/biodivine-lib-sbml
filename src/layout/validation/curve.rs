@@ -5,7 +5,7 @@ use crate::core::{MetaId, SId};
 use crate::layout::curve::CubicBezier;
 use crate::layout::curve::XsiType;
 use crate::layout::curve::{Curve, LineSegment};
-use crate::xml::{RequiredXmlChild, RequiredXmlProperty, XmlSubtype, XmlWrapper};
+use crate::xml::{OptionalXmlChild, RequiredXmlChild, RequiredXmlProperty, XmlSubtype, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -17,9 +17,7 @@ impl SbmlValidable for Curve {
         meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
-        if let curve_segments = self.curve_segments().get(){
-            validate_list_of_objects(&curve_segments, issues, identifiers, meta_ids)
-        }
+        validate_list_of_objects(&self.curve_segments().get(), issues, identifiers, meta_ids);
     }
 }
 
@@ -52,7 +50,24 @@ impl SbmlValidable for LineSegment {
 
 impl CanTypeCheck for LineSegment {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        internal_type_check(self.xml_element(), issues);
+        let element = self.xml_element();
+
+        if let Some(segment) = CubicBezier::try_cast_from_super(self) {
+            segment.type_check(issues);
+            return;
+        }
+
+        if self.base_point1().is_set() {
+            let message =
+                "Sanity check failed: unknown child element [basePoint1] on <curveSegment>";
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+        } else if self.base_point2().is_set() {
+            let message =
+                "Sanity check failed: unknown child element [basePoint2] on <curveSegment>";
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+        }
+
+        internal_type_check(element, issues);
         self.start().get().type_check(issues);
         self.end().get().type_check(issues);
     }
@@ -67,12 +82,23 @@ impl SbmlValidable for CubicBezier {
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
 
-        self.base_point1()
-            .get()
-            .validate(issues, identifiers, meta_ids);
-        self.base_point2()
-            .get()
-            .validate(issues, identifiers, meta_ids);
+        if !self.base_point1().is_set() {
+            let message =
+                "Sanity check failed: missing required child element [basePoint1] on <curveSegment>";
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+        } else if !self.base_point2().is_set() {
+            let message = "Sanity check failed: missing required child element [basePoint2] on <curveSegment>";
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+        } else {
+            self.base_point1()
+                .get()
+                .unwrap()
+                .validate(issues, identifiers, meta_ids);
+            self.base_point2()
+                .get()
+                .unwrap()
+                .validate(issues, identifiers, meta_ids);
+        }
 
         if self.xsi_type().get() != XsiType::CubicBezier {
             let message = "Attribute [xsi:type] has to be of value CubicBezier";
@@ -84,13 +110,17 @@ impl SbmlValidable for CubicBezier {
 impl CanTypeCheck for CubicBezier {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
         internal_type_check(self.xml_element(), issues);
+
+        if !self.base_point1().is_set() || !self.base_point2().is_set() {
+            let message =
+                "Missing elements of [basePoint1] or [basePoint2] on element [curveSegment]";
+            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+        } else {
+            self.base_point1().get().unwrap().type_check(issues);
+            self.base_point2().get().unwrap().type_check(issues);
+        }
+
         self.start().get().type_check(issues);
         self.end().get().type_check(issues);
-        self.base_point1()
-            .get()
-            .type_check(issues);
-        self.base_point2()
-            .get()
-            .type_check(issues);
     }
 }

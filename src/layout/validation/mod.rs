@@ -104,20 +104,22 @@ impl SbmlValidable for CompartmentGlyph {
 
         apply_glyph_rules(&metaid_ref, &compartment, self, issues);
 
-        if self.meta_id_ref().is_set() && self.compartment().is_set() {
+        if self.compartment().is_set() {
             let element = self.find_by_sid::<Compartment>(&compartment.get().unwrap());
 
-            if element.is_none() {
+            if element.is_none() || element.clone().unwrap().full_name() != "compartment" {
                 let message =
                     "Attribute [compartment] does not refer to an existing Compartment element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20508",
+                    "layout-20508",
                     self.xml_element(),
                     message,
                 ));
             }
 
-            apply_rule_20509(&element, metaid_ref, self.xml_element(), issues);
+            if self.meta_id_ref().is_set() {
+                apply_rule_20509(&element, metaid_ref, self.xml_element(), issues);
+            }
         }
     }
 }
@@ -150,7 +152,7 @@ impl SbmlValidable for SpeciesGlyph {
                 .unwrap()
                 .validate(issues, identifiers, meta_ids);
         }
-        
+
         apply_glyph_rules(&metaid_ref, &species, self, issues);
 
         if self.species().is_set() {
@@ -159,7 +161,7 @@ impl SbmlValidable for SpeciesGlyph {
             if element.is_none() {
                 let message = "Attribute [species] does not refer to an existing Species element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20508",
+                    "layout-20608",
                     self.xml_element(),
                     message,
                 ));
@@ -210,11 +212,11 @@ impl SbmlValidable for ReactionGlyph {
         if self.reaction().is_set() {
             let element = self.find_by_sid::<Reaction>(&reaction.get().unwrap());
 
-            if element.is_none() {
+            if element.is_none() || element.clone().unwrap().full_name() != "reaction" {
                 let message =
                     "Attribute [reaction] does not refer to an existing Reaction element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20508",
+                    "layout-20708",
                     self.xml_element(),
                     message,
                 ));
@@ -279,10 +281,10 @@ impl SbmlValidable for SpeciesReferenceGlyph {
         if self.species_reference().is_set() {
             let element = self.find_by_sid::<SpeciesReference>(&species_ref.get().unwrap());
 
-            if element.is_none() {
+            if element.is_none() || element.clone().unwrap().full_name() != "speciesReference" {
                 let message = "Attribute [speciesReference] does not refer to an existing SpeciesReference element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20508",
+                    "layout-21008",
                     self.xml_element(),
                     message,
                 ));
@@ -292,14 +294,12 @@ impl SbmlValidable for SpeciesReferenceGlyph {
                 apply_rule_20509(&element, metaid_ref, self.xml_element(), issues);
             }
         }
-        if self
-            .find_by_sid::<SpeciesGlyph>(&species_glyph.get())
-            .is_none()
-        {
+        let element = self.find_by_sid::<SpeciesGlyph>(&species_glyph.get());
+        if element.is_none() || element.clone().unwrap().full_name() != "layout:speciesGlyph" {
             let message =
                 "Attribute [speciesGlyph] does not refer to an existing SpeciesGlyph element!";
             issues.push(SbmlIssue::new_error(
-                "layout:20508",
+                "layout-21011",
                 self.xml_element(),
                 message,
             ));
@@ -428,7 +428,7 @@ impl SbmlValidable for ReferenceGlyph {
             let message =
                 "Attribute [glyph] does not refer to an existing GraphicalObject element!";
             issues.push(SbmlIssue::new_error(
-                "layout:20508",
+                "layout-20508",
                 self.xml_element(),
                 message,
             ));
@@ -469,7 +469,7 @@ impl SbmlValidable for TextGlyph {
                 .unwrap()
                 .validate(issues, identifiers, meta_ids);
         }
-        
+
         apply_glyph_rules(&metaid_ref, &origin_of_text, self, issues);
         apply_rule_20808(origin_of_text.get(), self, issues);
 
@@ -479,7 +479,7 @@ impl SbmlValidable for TextGlyph {
             if element.is_none() {
                 let message = "Attribute [graphicalObject] does not refer to an existing element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20911",
+                    "layout-20911",
                     self.xml_element(),
                     message,
                 ));
@@ -583,7 +583,7 @@ pub fn apply_rule_20406<T: SBase>(
             Some(_) => (),
             None => {
                 let message = "Attribute [MetaidRef] does not refer to an existing element!";
-                issues.push(SbmlIssue::new_error("layout:20406", xml_element, message));
+                issues.push(SbmlIssue::new_error("layout-20406", xml_element, message));
             }
         }
     }
@@ -599,7 +599,7 @@ pub fn apply_rule_20808<T: SBase>(id: Option<SId>, element: &T, issues: &mut Vec
                 let message =
                     "Attribute containing SId reference does not refer to an existing element!";
                 issues.push(SbmlIssue::new_error(
-                    "layout:20808",
+                    "layout-20808",
                     element.xml_element(),
                     message,
                 ));
@@ -609,7 +609,7 @@ pub fn apply_rule_20808<T: SBase>(id: Option<SId>, element: &T, issues: &mut Vec
 }
 
 /// ### Rule 20509
-/// Both attributes [metaidRef] and attribute holding the SId reference
+/// Both attributes [metaidRef] and attribute holding the metaid reference
 /// have to refer to the same specific element of model.
 pub fn apply_rule_20509<T: SBase>(
     element: &Option<T>,
@@ -624,12 +624,11 @@ pub fn apply_rule_20509<T: SBase>(
             return;
         }
     }
-
     let message = format!(
         "Attribute [metaidRef] and [{0}] does not refer to the same element!",
         xml_element.full_name()
     );
-    issues.push(SbmlIssue::new_error("layout:20509", xml_element, message))
+    issues.push(SbmlIssue::new_error("layout-20509", xml_element, message))
 }
 
 /// ### Rule 20809
@@ -648,7 +647,7 @@ pub fn apply_rule_20809<T: SBase>(
         let message = "Attribute [metaidRef] and [compartment] does not refer to the same element!";
 
         issues.push(SbmlIssue::new_error(
-            "layout:20809",
+            "layout-20809",
             element.xml_element(),
             message,
         ))

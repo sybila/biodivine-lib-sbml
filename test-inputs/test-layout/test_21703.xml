@@ -50,7 +50,7 @@
                 <layout:listOfCompartmentGlyphs>
                     <layout:compartmentGlyph layout:id="comp1" layout:compartment="default">
                         <layout:boundingBox>
-                            <layout:position layout:id="10" layout:y="10"/>
+                            <layout:position layout:id="10" layout:x="10" layout:y="10"/>
                             <layout:dimensions layout:height="580"/>
                         </layout:boundingBox>
                     </layout:compartmentGlyph>
