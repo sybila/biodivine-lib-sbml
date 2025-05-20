@@ -381,7 +381,8 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "fluxObjective" => Some("fbc-20603"),
         "geneProductRef" => Some("fbc-20903"),
         "geneProduct" => Some("fbc-21203"),
-
+        //qual package
+        "qualitativeSpecies" => Some("qual-20303"),
         _ => None,
     }
 }
