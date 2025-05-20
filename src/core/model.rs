@@ -11,8 +11,8 @@ use crate::core::{
 use crate::layout::Layout;
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
-    RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
-    XmlSupertype, XmlWrapper,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
+    XmlPropertyType, XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
@@ -263,6 +263,10 @@ impl Model {
         self.optional_sbml_property("conversionFactor")
     }
 
+    pub fn strict(&self) -> RequiredSbmlProperty<bool> {
+        self.required_package_property("strict", NS_FBC, NS_FBC)
+    }
+
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
     }
@@ -308,11 +312,11 @@ impl Model {
     }
 
     pub fn gene_products(&self) -> OptionalChild<XmlList<GeneProduct>> {
-        self.optional_package_child("listOfGeneProducts", NS_LAYOUT, false)
+        self.optional_package_child("listOfGeneProducts", NS_FBC, false)
     }
 
     pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
-        self.optional_package_child("listOfFluxObjectives", NS_FBC, false)
+        self.optional_package_child("listOfObjectives", NS_FBC, false)
     }
 }
 

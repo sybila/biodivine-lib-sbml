@@ -1,3 +1,4 @@
+use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_SBML_CORE};
 use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
@@ -16,7 +17,7 @@ pub const ALLOWED_SBASE_CHILDREN: &[&str] = extended_sbase_children!();
 
 pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_attributes!("xmlns", "level", "version"),
-    "model"=> extended_sbase_attributes!("substanceUnits", "timeUnits", "volumeUnits", "areaUnits", "lengthUnits", "extentUnits", "conversionFactor"),
+    "model"=> extended_sbase_attributes!("substanceUnits", "timeUnits", "volumeUnits", "areaUnits", "lengthUnits", "extentUnits", "conversionFactor", "fbc:strict"),
     "listOfFunctionDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
     "functionDefinition" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfUnitDefinitions" => ALLOWED_SBASE_ATTRIBUTES,
@@ -26,7 +27,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "listOfCompartments" => ALLOWED_SBASE_ATTRIBUTES,
     "compartment" => extended_sbase_attributes!("spatialDimensions", "size", "units", "constant"),
     "listOfSpecies" => ALLOWED_SBASE_ATTRIBUTES,
-    "species" => extended_sbase_attributes!("compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor", "charge", "chemicalFormula"),
+    "species" => extended_sbase_attributes!("compartment", "initialAmount", "initialConcentration", "substanceUnits", "hasOnlySubstanceUnits", "boundaryCondition", "constant", "conversionFactor", "fbc:charge", "fbc:chemicalFormula"),
     "listOfParameters" => ALLOWED_SBASE_ATTRIBUTES,
     "parameter" => extended_sbase_attributes!("value", "units", "constant"),
     "listOfInitialAssignments" => ALLOWED_SBASE_ATTRIBUTES,
@@ -38,7 +39,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "listOfConstraints" => ALLOWED_SBASE_ATTRIBUTES,
     "constraint" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfReactions" => ALLOWED_SBASE_ATTRIBUTES,
-    "reaction" => extended_sbase_attributes!("reversible", "compartment", "lowerFluxBound", "upperFluxBound"),
+    "reaction" => extended_sbase_attributes!("reversible", "compartment", "fbc:lowerFluxBound", "fbc:upperFluxBound"),
     "listOfReactants" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfProducts" => ALLOWED_SBASE_ATTRIBUTES,
     "speciesReference" => extended_sbase_attributes!("species", "stoichiometry", "constant"),
@@ -54,7 +55,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "delay" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfEventAssignments" => ALLOWED_SBASE_ATTRIBUTES,
     "eventAssignment" => extended_sbase_attributes!("variable"),
-    //layout package
+    // layout package
     "layout" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfCompartmentGlyphs" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfSpeciesGlyphs" => ALLOWED_SBASE_ATTRIBUTES,
@@ -79,22 +80,23 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "lineSegment" => ALLOWED_SBASE_ATTRIBUTES,
     "cubicBezier" => ALLOWED_SBASE_ATTRIBUTES,
     "dimensions" => extended_sbase_attributes!("width", "depth", "height"),
-
-    "listOfObjectives" => extended_sbase_attributes!("activeObjective"),
+    // fbc package
+    "listOfObjectives" => extended_sbase_attributes!("fbc:activeObjective"),
     "listOfGeneProducts" => ALLOWED_SBASE_ATTRIBUTES,
-    "objective" => extended_sbase_attributes!("id", "type", "name"),
+    "objective" => extended_sbase_attributes!("fbc:id", "fbc:type", "fbc:name"),
     "listOfFluxObjectives" => ALLOWED_SBASE_ATTRIBUTES,
-    "fluxObjective" => extended_sbase_attributes!("reaction", "coefficient"),
-    "geneProductAssociation" => extended_sbase_attributes!("id", "name"),
-    "geneProductRef" => extended_sbase_attributes!("id", "geneProduct"),
+    "fluxObjective" => extended_sbase_attributes!("fbc:reaction", "fbc:coefficient"),
+    "geneProductAssociation" => extended_sbase_attributes!("fbc:id", "fbc:name"),
+    "geneProductRef" => extended_sbase_attributes!("fbc:id", "fbc:geneProduct"),
     "and" => ALLOWED_SBASE_ATTRIBUTES,
     "or" => ALLOWED_SBASE_ATTRIBUTES,
-    "geneProduct" => extended_sbase_attributes!("id", "label", "name", "associatedSpecies"),
+    "geneProduct" => extended_sbase_attributes!("fbc:id", "fbc:label", "fbc:name", "fbc:associatedSpecies"),
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
 pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "sbml" => phf_map! { "level" => "positive_int", "version" => "positive_int"},
+    "model" => phf_map! { "fbc:strict" => "boolean" },
     "unit" => phf_map! { "exponent" => "double", "scale" => "int", "multiplier" => "double"},
     "compartment" => phf_map! { "spatialDimensions" => "double", "size" => "double", "constant" => "boolean"},
     "species" => phf_map! { "initialAmount" => "double", "initialConcentration" => "double", "hasOnlySubstanceUnits" => "boolean", "boundaryCondition" => "boolean", "constant" => "boolean", "charge" => "int"},
@@ -104,17 +106,33 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "localParameter" => phf_map! { "value" => "double"},
     "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
     "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
-    "objective" => phf_map! { "type" => "fbc_type", "id" => "SId" },
-    "fluxObjective" => phf_map! { "reaction" => "sid", "coefficient" => "double" },
-    "geneProductAssociation" => phf_map! {"id" => "sid"},
-    "geneProductRef" => phf_map! {"id" => "sid", "geneProduct" => "sid"},
-    "geneProduct" => phf_map!("id" => "sid", "geneProduct" => "sid"),
+    "objective" => phf_map! { "fbc:id" => "sid", "fbc:type" => "fbc_type" },
+    "listOfObjectives" => phf_map! { "fbc:activeObjective" => "sid" },
+    "fluxObjective" => phf_map! { "fbc:reaction" => "sid", "fbc:coefficient" => "double" },
+    "geneProductAssociation" => phf_map! {"fbc:id" => "sid"},
+    "geneProductRef" => phf_map! {"fbc:id" => "sid", "fbc:geneProduct" => "sid"},
+    "geneProduct" => phf_map!("fbc:id" => "sid", "fbc:geneProduct" => "sid"),
 
 };
 
+pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
+    "" => NS_SBML_CORE,
+    "layout" => NS_LAYOUT,
+    "fbc" => NS_FBC,
+};
+
+/// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
+/// packages can use different namespace prefixes as well.
+pub fn namespace_for_prefix(prefix: &str) -> Namespace {
+    KNOWN_DEFAULT_PREFIX
+        .get(prefix)
+        .expect("Default prefix not found")
+        .clone()
+}
+
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => &["level", "version"],
-    "model" => &[],
+    "model" => &["fbc:strict"],
     "listOfFunctionDefinitions" => &[],
     "functionDefinition" => &["id"],
     "listOfUnitDefinitions" => &[],
@@ -165,10 +183,10 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "point" => &["x", "y"],
     "dimensions" => &["width", "height"],
     //fbc package
-    "objective" => &["id", "type"],
-    "fluxObjective" => &["reaction", "coefficient"],
-    "geneProductRef" => &["geneProduct"],
-    "geneProduct" => &["id", "label"],
+    "objective" => &["fbc:id", "fbc:type"],
+    "fluxObjective" => &["fbc:reaction", "fbc:coefficient"],
+    "geneProductRef" => &["fbc:geneProduct"],
+    "geneProduct" => &["fbc:id", "fbc:label"],
 };
 
 pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -195,12 +213,13 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "cubicBezier" => &["start", "basePoint1", "basePoint2", "end"],
     //fbc package
     "listOfObjectives" => &["objective"],
+    "listOfGeneProducts" => &["geneProduct"],
     "objective" => &["listOfFluxObjectives"],
 };
 
 pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
-    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),
+    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfGeneProducts", "listOfObjectives"),
     "listOfFunctionDefinitions" => extended_sbase_children!("functionDefinition"),
     "functionDefinition" => extended_sbase_children!("math"),
     "listOfUnitDefinitions" => extended_sbase_children!("unitDefinition"),
@@ -266,13 +285,13 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     //fbc package
     "objective" => extended_sbase_children!("listOfFluxObjectives"),
     "listOfFluxObjectives" => extended_sbase_children!("fluxObjective"),
-    "listOfObjectives" => ALLOWED_SBASE_CHILDREN,
-    "listOfGeneProducts" => ALLOWED_SBASE_ATTRIBUTES,
+    "listOfObjectives" => extended_sbase_children!("objective"),
+    "listOfGeneProducts" => extended_sbase_children!("geneProduct"),
     "fluxObjective" => ALLOWED_SBASE_CHILDREN,
     "geneProductAssociation" => extended_sbase_children!("geneProductRef", "and", "or"),
     "geneProductRef" => ALLOWED_SBASE_CHILDREN,
-    "and" => ALLOWED_SBASE_CHILDREN,
-    "or" => ALLOWED_SBASE_CHILDREN,
+    "and" => extended_sbase_children!("and", "or", "geneProductRef"),
+    "or" => extended_sbase_children!("and", "or", "geneProductRef"),
     "geneProduct" => ALLOWED_SBASE_CHILDREN,
 
 };
@@ -347,8 +366,15 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "dimensions" => ALLOWED_SBASE_CHILDREN,
     //fbc package
     "objective" => extended_sbase_children!("listOfFluxObjectives"),
-    "listOfFluxObjects" => ALLOWED_SBASE_CHILDREN,
+    "listOfObjectives" => extended_sbase_children!("listOfObjectives"),
+    "listOfFluxObjectives" => ALLOWED_SBASE_CHILDREN,
     "geneProductAssociation" => extended_sbase_children!("geneProductRef", "and", "or"),
+    "geneProductRef" => ALLOWED_SBASE_CHILDREN,
+    "and" => ALLOWED_SBASE_CHILDREN,
+    "or" => ALLOWED_SBASE_CHILDREN,
+    "geneProduct" => ALLOWED_SBASE_CHILDREN,
+    "listOfGeneProducts" => ALLOWED_SBASE_CHILDREN,
+    "fluxObjective" => ALLOWED_SBASE_CHILDREN,
 };
 
 // There are no required children in SBML core level 3 version 1

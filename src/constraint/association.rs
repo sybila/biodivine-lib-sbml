@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, RequiredXmlProperty,
+    OptionalChild, OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, RequiredXmlProperty,
     XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -48,8 +48,8 @@ impl XmlNamedSubtype<Association> for And {
 }
 
 impl And {
-    pub fn and(&self) -> RequiredChild<XmlList<Association>> {
-        self.required_package_child("and", NS_FBC, false)
+    pub fn and(&self) -> OptionalChild<XmlList<Association>> {
+        self.optional_package_child("and", NS_FBC, false)
     }
 }
 

@@ -8,18 +8,20 @@ mod objective;
 mod validation;
 
 use crate::constraint::association::GeneProductRef;
-use crate::constraint::fbc_reaction::FbcReaction;
-use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlSupertype};
 use crate::Sbml;
+pub use fbc_reaction::FbcReaction;
+pub use fbc_species::FbcSpecies;
 pub use gene_product::GeneProduct;
 pub use objective::FbcType;
 pub use objective::Objective;
 
 #[test]
 pub fn basic_test() {
-    let doc = Sbml::read_path("test-inputs/fbc_tests/example_fbc.xml");
+    let doc = Sbml::read_path("test-inputs/test-fbc/example_fbc.xml");
+    assert!(doc.clone().unwrap().validate().is_empty());
+
     let reactions = doc
         .unwrap()
         .model()

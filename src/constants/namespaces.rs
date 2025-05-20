@@ -23,7 +23,7 @@ pub const NS_SBML_CORE: Namespace = ("", URL_SBML_CORE);
 
 pub const NS_LAYOUT: Namespace = ("layout", URL_PACKAGE_LAYOUT);
 
-pub const NS_FBC: Namespace = ("", URL_PACKAGE_FBC);
+pub const NS_FBC: Namespace = ("fbc", URL_PACKAGE_FBC);
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.
 #[cfg(test)]

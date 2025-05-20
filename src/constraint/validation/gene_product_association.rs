@@ -51,11 +51,21 @@ impl CanTypeCheck for GeneProductAssociation {
         }
 
         if let Some(and) = self.and().get() {
-            type_check_of_list(&and, issues)
+            if and.len() < 2 {
+                let message = "And object must have at least two concrete Association objects.";
+                issues.push(SbmlIssue::new_error("fbc-21003", self, message))
+            } else {
+                type_check_of_list(&and, issues)
+            }
         }
 
         if let Some(or) = self.or().get() {
-            type_check_of_list(&or, issues)
+            if or.len() < 2 {
+                let message = "And object must have at least two concrete Association objects.";
+                issues.push(SbmlIssue::new_error("fbc-21103", self, message))
+            } else {
+                type_check_of_list(&or, issues)
+            }
         }
     }
 }

@@ -291,15 +291,18 @@ impl Sbml {
     /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
     /// with no issues.
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        let doc = self.xml.read().unwrap();
-        let element = self.sbml_root.raw_element();
+        {
+            // Only hold document lock while necessary, because referenced methods may need to
+            // update the document as well.
+            let doc = self.xml.read().unwrap();
 
-        // For the root SBMl element, there are a few extra conditions related to the rule 10102.
-        if doc.container().child_elements(doc.deref()).len() != 1 {
-            let container = XmlElement::new_raw(self.xml.clone(), doc.container());
-            let message = "The document contains multiple root nodes. \
+            // For the root SBMl element, there are a few extra conditions related to the rule 10102.
+            if doc.container().child_elements(doc.deref()).len() != 1 {
+                let container = XmlElement::new_raw(self.xml.clone(), doc.container());
+                let message = "The document contains multiple root nodes. \
                 Only one root <sbml> object is allowed.";
-            issues.push(SbmlIssue::new_error("10102", &container, message));
+                issues.push(SbmlIssue::new_error("10102", &container, message));
+            }
         }
 
         let root_element = self.sbml_root.xml_element();
@@ -310,14 +313,20 @@ impl Sbml {
 
         internal_type_check(&self.sbml_root, issues);
 
-        if element.name(doc.deref()) == "sbml"
-            && !element.namespace_decls(doc.deref()).contains_key("")
         {
-            issues.push(SbmlIssue::new_error(
-                "SANITY_CHECK",
-                &self.sbml_root,
-                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
-            ));
+            // See above regarding locks...
+            let doc = self.xml.read().unwrap();
+            let element = self.sbml_root.raw_element();
+
+            if element.name(doc.deref()) == "sbml"
+                && !element.namespace_decls(doc.deref()).contains_key("")
+            {
+                issues.push(SbmlIssue::new_error(
+                    "SANITY_CHECK",
+                    &self.sbml_root,
+                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
+                ));
+            }
         }
 
         if let Some(model) = self.model().get() {

@@ -1,11 +1,14 @@
 use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
-    UNIQUE_CHILDREN,
+    namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
+    REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
-use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_FBC, URL_SBML_CORE};
 use crate::constraint::FbcType;
 use crate::core::SId;
-use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
+use crate::xml::{
+    OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    XmlWrapper,
+};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
@@ -55,7 +58,10 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Check that all required attributes are present.
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
-            if !attributes.contains_key(*req_attr) {
+            let (prefix, name) = Element::separate_prefix_name(req_attr);
+            let namespace = namespace_for_prefix(prefix);
+            let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
+            if !property.is_set() {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
                 );
@@ -69,20 +75,25 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Typecheck all relevant attributes.
     for attr in attributes {
         let attr_name = attr.0.as_str();
+        let (_prefix, name) = Element::separate_prefix_name(attr_name);
         let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
             break;
         };
 
         // t => (attribute name, attribute value)
-        for t in types {
-            if &attr_name == t.0 {
-                match *t.1 {
-                    "positive_int" => type_check_of_property::<u32>(attr_name, xml_element, issues),
-                    "int" => type_check_of_property::<i32>(attr_name, xml_element, issues),
-                    "double" => type_check_of_property::<f64>(attr_name, xml_element, issues),
-                    "boolean" => type_check_of_property::<bool>(attr_name, xml_element, issues),
-                    "fbc_type" => type_check_of_property::<FbcType>(attr_name, xml_element, issues),
-                    "sid" => type_check_of_property::<SId>(attr_name, xml_element, issues),
+        for (attr_id, attr_type) in types {
+            let (_prefix, name2) = Element::separate_prefix_name(attr_name);
+            // TODO:
+            //  This ignores namespace prefixes as simply assumes that if we find the
+            //  right name, it is the specified attribute.
+            if name == name2 {
+                match *attr_type {
+                    "positive_int" => type_check_of_property::<u32>(attr_id, xml_element, issues),
+                    "int" => type_check_of_property::<i32>(attr_id, xml_element, issues),
+                    "double" => type_check_of_property::<f64>(attr_id, xml_element, issues),
+                    "boolean" => type_check_of_property::<bool>(attr_id, xml_element, issues),
+                    "sid" => type_check_of_property::<SId>(attr_id, xml_element, issues),
+                    "fbc_type" => type_check_of_property::<FbcType>(attr_id, xml_element, issues),
                     _ => (),
                 }
             };
@@ -122,19 +133,20 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
 /// Performs a type check of a value of a specific attribute.
 /// If check fails, error is logged in *issues*.
 fn type_check_of_property<T: XmlPropertyType>(
-    attribute_name: &str,
+    attribute_name: &'static str,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
-    if property.is_err() {
+    let (prefix, name) = Element::separate_prefix_name(attribute_name);
+    let namespace = namespace_for_prefix(prefix);
+    let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
+    if let Some(err) = property.get_checked().err() {
         // TODO:
         //  This also maps to a lot of concrete rule IDs based on the tag/attribute and
         //  will need a separate method to resolve.
         let message = format!(
             "Sanity check failed: {0} On the attribute [{1}].",
-            property.err().unwrap(),
-            attribute_name
+            err, attribute_name
         );
         issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
     }
@@ -224,7 +236,7 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
             issues.push(SbmlIssue::new_error("10201", xml_element, message));
-        } else if child_namespace == URL_SBML_CORE {
+        } else if child_namespace == URL_SBML_CORE || child_namespace == URL_PACKAGE_FBC {
             // All other children are expected to be in the SBML Core namespace. Anything else
             // that is not in the core namespace is skipped.
             if !allowed_children.contains(&child_name.as_str()) {
@@ -414,7 +426,7 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("initialAssignment", "math") => Some("20804"),
         ("assignmentRule", "math") | ("rateRule", "math") | ("algebraicRule", "math") => {
             Some("20907")
-        },
+        }
         ("constraint", "math") => Some("21007"),
         ("constraint", "message") => Some("21008"),
         // Same as `model` above, there is a lot of unique children to enumerate...

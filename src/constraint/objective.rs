@@ -38,7 +38,7 @@ impl TryFrom<String> for FbcType {
         match value.as_str() {
             "maximize" => Ok(FbcType::Maximize),
             "minimize" => Ok(FbcType::Minimize),
-            _ => Err(format!("FbcType '{value}' is not valid.")),
+            _ => Err(format!("FbcType '{value}' is not valid value.")),
         }
     }
 }
@@ -47,7 +47,7 @@ impl XmlPropertyType for FbcType {
     fn try_get(value: Option<&str>) -> Result<Option<Self>, String> {
         match value {
             Some(value) => match FbcType::try_from(value.to_string()) {
-                Ok(xsi) => Ok(Some(xsi)),
+                Ok(fbc) => Ok(Some(fbc)),
                 Err(_) => Err(format!("FbcType '{value}' is not valid.")),
             },
             None => Ok(None),
