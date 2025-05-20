@@ -3,7 +3,10 @@ use crate::core::sbase::SbmlUtils;
 use crate::qual::qual_input::QualInput;
 use crate::qual::qual_output::QualOutput;
 use crate::qual::terms::AbstractTerm;
-use crate::xml::{OptionalChild, OptionalXmlChild, RequiredChild, RequiredXmlChild, XmlDocument, XmlElement, XmlList};
+use crate::xml::{
+    OptionalChild, OptionalXmlChild, RequiredChild, RequiredXmlChild, XmlDocument, XmlElement,
+    XmlList,
+};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -28,16 +31,15 @@ impl Transition {
     }
 }
 
-
 pub fn get_outputs_from_transition(transition: Transition) -> Vec<QualOutput> {
     let mut lst = Vec::new();
 
-    if !transition.outputs().is_set(){
-        return lst
+    if !transition.outputs().is_set() {
+        return lst;
     }
 
-    for output in transition.outputs() {
-        lst.push(output);
+    for i in 0..transition.outputs().get().unwrap().len() {
+        lst.push(transition.outputs().get().unwrap().get(i));
     }
 
     lst

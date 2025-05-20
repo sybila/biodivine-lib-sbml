@@ -36,11 +36,11 @@ impl QualitativeSpecies {
         self.required_package_property("constant", NS_QUAL, NS_QUAL)
     }
 
-    pub fn initialLevel(&self) -> OptionalSbmlProperty<u32> {
+    pub fn initial_level(&self) -> OptionalSbmlProperty<u32> {
         self.optional_package_property("initialLevel", NS_QUAL, NS_QUAL)
     }
 
-    pub fn maxLevel(&self) -> OptionalSbmlProperty<u32> {
+    pub fn max_level(&self) -> OptionalSbmlProperty<u32> {
         self.optional_package_property("maxLevel", NS_QUAL, NS_QUAL)
     }
 }

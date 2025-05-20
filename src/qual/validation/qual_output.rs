@@ -1,12 +1,12 @@
+use crate::core::sbase::SbmlUtils;
+use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
 use crate::qual::{QualOutput, QualitativeSpecies, TransitionOutputEffect};
+use crate::xml::{RequiredXmlProperty, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
-use crate::core::sbase::SbmlUtils;
-use crate::core::validation::sbase::validate_sbase;
-use crate::xml::{RequiredXmlProperty, XmlProperty, XmlWrapper};
 
 impl SbmlValidable for QualOutput {
     fn validate(
@@ -18,8 +18,12 @@ impl SbmlValidable for QualOutput {
         validate_sbase(self, issues, identifiers, meta_ids);
         apply_rule_qual_20607_and_20608(self, issues, self.qualitative_species().get());
 
-        if self.transition_effect().get() == TransitionOutputEffect::Production && !self.output_level().is_set() {
-            let message = "TransitionEffect attribute is set to 'production' but the outputLevel is not set.".to_string();
+        if self.transition_effect().get() == TransitionOutputEffect::Production
+            && !self.output_level().is_set()
+        {
+            let message =
+                "TransitionEffect attribute is set to 'production' but the outputLevel is not set."
+                    .to_string();
             issues.push(SbmlIssue::new_error("qual-20609", self, message))
         }
     }
@@ -39,8 +43,9 @@ fn apply_rule_qual_20607_and_20608(
         issues.push(SbmlIssue::new_error("qual-20607", element, message));
     }
 
-    if qual_species.unwrap().constant() {
-        let message = "The value of constant of qualitativeSpecies element has to be se to false!".to_string();
+    if qual_species.unwrap().constant().get() {
+        let message = "The value of constant of qualitativeSpecies element has to be se to false!"
+            .to_string();
         issues.push(SbmlIssue::new_error("qual-20608", element, message));
     }
 }

@@ -107,13 +107,13 @@ use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
 use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
+pub mod constraint;
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
 /// by the SBML core specification.
 pub mod core;
-pub mod qual;
-pub mod constraint;
 pub mod layout;
+pub mod qual;
 
 /// Defines [`XmlDocument`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
 /// [`XmlChild`][xml::XmlChild] and other utility types or traits that can be used to safely

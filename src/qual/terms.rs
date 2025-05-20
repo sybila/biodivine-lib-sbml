@@ -26,11 +26,11 @@ impl XmlNamedSubtype<AbstractTerm> for DefaultTerm {
 impl DefaultTerm {
     pub fn new(document: XmlDocument, result_level: u32) -> DefaultTerm {
         let obj = DefaultTerm::new_empty(document, "defaultTerm");
-        obj.resultLevel().set(&result_level);
+        obj.result_level().set(&result_level);
         obj
     }
 
-    pub fn resultLevel(&self) -> RequiredSbmlProperty<u32> {
+    pub fn result_level(&self) -> RequiredSbmlProperty<u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 }
@@ -47,11 +47,11 @@ impl XmlNamedSubtype<AbstractRule> for FunctionTerm {
 impl FunctionTerm {
     pub fn new(document: XmlDocument, result_level: u32, math: Math) -> FunctionTerm {
         let obj = FunctionTerm::new_empty(document, "functionTerm");
-        obj.resultLevel().set(&result_level);
+        obj.result_level().set(&result_level);
         obj.math().set(math);
         obj
     }
-    pub fn resultLevel(&self) -> RequiredSbmlProperty<u32> {
+    pub fn result_level(&self) -> RequiredSbmlProperty<u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 

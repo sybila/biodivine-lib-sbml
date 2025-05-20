@@ -2,12 +2,11 @@ use crate::core::sbase::SbmlUtils;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
-use crate::core::{Compartment, MetaId, SId};
+use crate::core::{MetaId, SId};
 use crate::qual::qual_input::QualInput;
 use crate::qual::{QualitativeSpecies, TransitionInputEffect};
 use crate::xml::{RequiredXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
-use biodivine_xml_doc::Element;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualInput {

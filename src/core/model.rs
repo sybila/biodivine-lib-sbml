@@ -608,8 +608,10 @@ impl Model {
             return lst;
         }
 
-        for transition in self.transitions() {
-            lst.extend(get_outputs_from_transition(transition))
+        for i in 0..self.transitions().get().unwrap().len() {
+            lst.extend(get_outputs_from_transition(
+                self.transitions().get().unwrap().get(i),
+            ))
         }
 
         lst

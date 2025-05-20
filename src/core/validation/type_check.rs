@@ -10,7 +10,7 @@ use crate::xml::{
     OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
 };
-use crate::SbmlIssue;
+use crate::{Sbml, SbmlIssue};
 use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
@@ -62,6 +62,15 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
             let (prefix, name) = Element::separate_prefix_name(req_attr);
             let namespace = namespace_for_prefix(prefix);
             let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
+
+            let package_declaration = Sbml::try_for_child(xml_element)
+                .unwrap()
+                .find_sbml_package(namespace);
+            if package_declaration.is_err() {
+                // This package is not declared, hence it's required attributes are not relevant.
+                continue;
+            }
+
             if !property.is_set() {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
@@ -469,7 +478,9 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("event", "priority") => Some("21230"),
         ("priority", "math") => Some("21231"),
         ("eventAssignment", "math") => Some("21213"),
-        ("transition", "listOfFunctionTerms") | ("transition", "listOfInputs") | ("transition", "listOfOutputs") => Some("qual-20405"),
+        ("transition", "listOfFunctionTerms")
+        | ("transition", "listOfInputs")
+        | ("transition", "listOfOutputs") => Some("qual-20405"),
         _ => None,
     }
 }
