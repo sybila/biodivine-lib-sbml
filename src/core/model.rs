@@ -1,18 +1,20 @@
 use std::ops::Deref;
 
-use embed_doc_image::embed_doc_image;
-use sbml_macros::{SBase, XmlWrapper};
-
+use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
     FunctionDefinition, InitialAssignment, Parameter, Reaction, Rule, SBase, Species,
     UnitDefinition,
 };
+use crate::layout::Layout;
 use crate::xml::{
-    OptionalChild, OptionalProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
-    XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSupertype, XmlWrapper,
+    OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
+    RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
+    XmlSupertype, XmlWrapper,
 };
+use embed_doc_image::embed_doc_image;
+use sbml_macros::{SBase, XmlWrapper};
 
 /// The SBML model object
 /// (Section 4.2; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -232,31 +234,31 @@ impl XmlDefault for Model {
 
 /// The SBML-defined components of the [`Model`] class.
 impl Model {
-    pub fn substance_units(&self) -> OptionalProperty<SId> {
+    pub fn substance_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
-    pub fn time_units(&self) -> OptionalProperty<SId> {
+    pub fn time_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("timeUnits")
     }
 
-    pub fn volume_units(&self) -> OptionalProperty<SId> {
+    pub fn volume_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("volumeUnits")
     }
 
-    pub fn area_units(&self) -> OptionalProperty<SId> {
+    pub fn area_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("areaUnits")
     }
 
-    pub fn length_units(&self) -> OptionalProperty<SId> {
+    pub fn length_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("lengthUnits")
     }
 
-    pub fn extent_units(&self) -> OptionalProperty<SId> {
+    pub fn extent_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("extentUnits")
     }
 
-    pub fn conversion_factor(&self) -> OptionalProperty<SId> {
+    pub fn conversion_factor(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("conversionFactor")
     }
 
@@ -298,6 +300,10 @@ impl Model {
 
     pub fn events(&self) -> OptionalChild<XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
+    }
+
+    pub fn layouts(&self) -> OptionalChild<XmlList<Layout>> {
+        self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
 }
 

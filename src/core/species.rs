@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalProperty, RequiredProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -20,40 +20,40 @@ impl Species {
         obj
     }
 
-    pub fn id(&self) -> RequiredProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn compartment(&self) -> RequiredProperty<SId> {
+    pub fn compartment(&self) -> RequiredSbmlProperty<SId> {
         self.required_sbml_property("compartment")
     }
 
-    pub fn initial_amount(&self) -> OptionalProperty<f64> {
+    pub fn initial_amount(&self) -> OptionalSbmlProperty<f64> {
         self.optional_sbml_property("initialAmount")
     }
 
-    pub fn initial_concentration(&self) -> OptionalProperty<f64> {
+    pub fn initial_concentration(&self) -> OptionalSbmlProperty<f64> {
         self.optional_sbml_property("initialConcentration")
     }
 
     // TODO: need to embrace recommended units (p. 148)
-    pub fn substance_units(&self) -> OptionalProperty<SId> {
+    pub fn substance_units(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
-    pub fn has_only_substance_units(&self) -> RequiredProperty<bool> {
+    pub fn has_only_substance_units(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("hasOnlySubstanceUnits")
     }
 
-    pub fn boundary_condition(&self) -> RequiredProperty<bool> {
+    pub fn boundary_condition(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("boundaryCondition")
     }
 
-    pub fn constant(&self) -> RequiredProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
         self.required_sbml_property("constant")
     }
 
-    pub fn conversion_factor(&self) -> OptionalProperty<SId> {
+    pub fn conversion_factor(&self) -> OptionalSbmlProperty<SId> {
         self.optional_sbml_property("conversionFactor")
     }
 }

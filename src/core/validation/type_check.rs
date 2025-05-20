@@ -1,11 +1,15 @@
 use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, UNIQUE_CHILDREN,
+    namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
+    REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
-use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
-use crate::xml::{DynamicProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType, XmlWrapper};
+use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_LAYOUT, URL_SBML_CORE};
+use crate::xml::{
+    OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    XmlWrapper,
+};
 use crate::SbmlIssue;
 use biodivine_xml_doc::Element;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 
 /// Denotes an element that possess a way to self-test against the most critical checks. This
@@ -44,14 +48,18 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
 
     // Checks that:
     //  - Only allowed attributes are present.
-    //  - Only allowed children are present (right now, there are no required children).
+    //  - Only allowed children are present.
+    //  - All required children are present.
     //  - Each allowed child is present at most once.
     apply_rule_10102_and_derivatives(xml_element, issues);
 
     // Check that all required attributes are present.
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
-            if !attributes.contains_key(*req_attr) {
+            let (prefix, name) = Element::separate_prefix_name(req_attr);
+            let namespace = namespace_for_prefix(prefix);
+            let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
+            if !property.is_set() {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
                 );
@@ -65,18 +73,23 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Typecheck all relevant attributes.
     for attr in attributes {
         let attr_name = attr.0.as_str();
+        let (_prefix, name) = Element::separate_prefix_name(attr_name);
         let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
             break;
         };
 
         // t => (attribute name, attribute value)
-        for t in types {
-            if &attr_name == t.0 {
-                match *t.1 {
-                    "positive_int" => type_check_of_property::<u32>(attr_name, xml_element, issues),
-                    "int" => type_check_of_property::<i32>(attr_name, xml_element, issues),
-                    "double" => type_check_of_property::<f64>(attr_name, xml_element, issues),
-                    "boolean" => type_check_of_property::<bool>(attr_name, xml_element, issues),
+        for (attr_id, attr_type) in types {
+            let (_prefix, name2) = Element::separate_prefix_name(attr_name);
+            // TODO:
+            //  This ignores namespace prefixes as simply assumes that if we find the
+            //  right name, it is the specified attribute.
+            if name == name2 {
+                match *attr_type {
+                    "positive_int" => type_check_of_property::<u32>(attr_id, xml_element, issues),
+                    "int" => type_check_of_property::<i32>(attr_id, xml_element, issues),
+                    "double" => type_check_of_property::<f64>(attr_id, xml_element, issues),
+                    "boolean" => type_check_of_property::<bool>(attr_id, xml_element, issues),
                     _ => (),
                 }
             };
@@ -116,19 +129,20 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
 /// Performs a type check of a value of a specific attribute.
 /// If check fails, error is logged in *issues*.
 fn type_check_of_property<T: XmlPropertyType>(
-    attribute_name: &str,
+    attribute_name: &'static str,
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let property = DynamicProperty::<T>::new(xml_element, attribute_name).get_checked();
-    if property.is_err() {
+    let (prefix, name) = Element::separate_prefix_name(attribute_name);
+    let namespace = namespace_for_prefix(prefix);
+    let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
+    if let Some(err) = property.get_checked().err() {
         // TODO:
         //  This also maps to a lot of concrete rule IDs based on the tag/attribute and
         //  will need a separate method to resolve.
         let message = format!(
             "Sanity check failed: {0} On the attribute [{1}].",
-            property.err().unwrap(),
-            attribute_name
+            err, attribute_name
         );
         issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
     }
@@ -154,6 +168,7 @@ fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<S
 
     validate_allowed_attributes(xml_element, &attributes, issues);
     validate_allowed_children(xml_element, issues);
+    validate_required_children(xml_element, issues);
     validate_unique_children(xml_element, issues);
 }
 
@@ -217,9 +232,7 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
             issues.push(SbmlIssue::new_error("10201", xml_element, message));
-        } else if child_namespace == URL_SBML_CORE {
-            // All other children are expected to be in the SBML Core namespace. Anything else
-            // that is not in the core namespace is skipped.
+        } else if child_namespace == URL_SBML_CORE || child_namespace == URL_PACKAGE_LAYOUT {
             if !allowed_children.contains(&child_name.as_str()) {
                 let message = format!(
                     "An unknown child <{}> of the element <{}> found.",
@@ -229,6 +242,31 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
                     tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
                 issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
             }
+        }
+    }
+}
+
+pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    let element_name = xml_element.tag_name();
+    let Some(required_children) = REQUIRED_CHILDREN.get(element_name.as_str()) else {
+        return;
+    };
+
+    let mut child_tag_names = HashSet::new();
+    for child in xml_element.child_elements() {
+        let child_name = child.tag_name();
+        child_tag_names.insert(child_name);
+    }
+
+    for required in required_children.iter() {
+        if !child_tag_names.contains(*required) {
+            let message = format!(
+                "Missing required child <{}> of the element <{}>.",
+                required, element_name
+            );
+            // TODO: Check if these rule IDs are ok.
+            let rule_id = tag_to_required_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
         }
     }
 }
@@ -243,7 +281,10 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
         let child_namespace = child.namespace_url();
-        if child_namespace == URL_SBML_CORE || child_namespace == URL_MATHML {
+        if child_namespace == URL_SBML_CORE
+            || child_namespace == URL_MATHML
+            || child_namespace == URL_PACKAGE_LAYOUT
+        {
             // Right now, we are only testing core and math elements.
             let entry = counts.entry(child_name);
             let count = entry.or_insert(0usize);
@@ -315,12 +356,35 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "trigger" => Some("21226"),
         "delay" => Some("21227"),
         "priority" => Some("21232"),
+
+        "dimensions" => Some("layout-21703"),
+        "curve" => Some("layout-21402"),
+        "boundingBox" => Some("layout-21302"),
+        "position" => Some("layout-21204"),
+        "referenceGlyph" => Some("layout-21104"),
+        "speciesReferenceGlyph" => Some("layout-21004"),
+        "textGlyph" => Some("layout-20904"),
+        "listOfSubGlyphs" => Some("layout-20813"),
+        "listOfReferenceGlyphs" => Some("layout-20811"),
+        "generalGlyph" => Some("layout-20804"),
+        "listOfSpeciesReferenceGlyphs" => Some("layout-20711"),
+        "reactionGlyph" => Some("layout-20704"),
+        "speciesGlyph" => Some("layout-20604"),
+        "compartmentGlyph" => Some("layout-20504"),
+        "graphicalObject" => Some("layout-20404"),
+        "listOfTextGlyphs" => Some("layout-20316"),
+        "listOfAdditionalGraphicalObjects" => Some("layout-20313"),
+        "listOfReactionGlyphs" => Some("layout-20311"),
+        "listOfSpeciesGlyphs" => Some("layout-20309"),
+        "listOfCompartmentGlyphs" => Some("layout-20307"),
+        "layout" => Some("layout-20305"),
         _ => None,
     }
 }
 
 /// Similar to [tag_to_attribute_rule_id], resolves a tag name into a rule ID which specifies
 /// what child elements are allowed for that particular element.
+/// TODO: Add elements from packages...
 fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
     match tag_name {
         "listOfFunctionDefinitions" => Some("20206"),
@@ -338,6 +402,30 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "listOfModifiers" => Some("21105"),
         "listOfEventAssignments" => Some("21223"),
         "listOfLocalParameters" => Some("21128"),
+        "boundingBox" => Some("layout-21303"),
+        "layout" => Some("layout-20302"),
+        "listOfCompartmentGlyphs" => Some("layout-20308"),
+        "listOfSpeciesGlyphs" => Some("layout-20310"),
+        "listOfReactionGlyphs" => Some("layout-20312"),
+        "listOfAdditionalGraphicalObjects" => Some("layout-20304"),
+        "listOfTextGlyphs" => Some("layout-20317"),
+        "listOfSpeciesReferenceGlyphs" => Some("layout-20710"),
+        "listOfReferenceGlyphs" => Some("layout-20810"),
+        "listOfSubGlyphs" => Some("layout-20812"),
+        "listOfCurveSegments" => Some("layout-21406"),
+        _ => None,
+    }
+}
+
+fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
+    match tag_name {
+        "layout" => Some("layout-20015"),
+        "graphicalObject" => Some("layout-20407"),
+        "textGlyph" => Some("layout-20903"),
+        "boundingBox" => Some("layout-21303"),
+        "curve" => Some("layout-21403"),
+        "lineSegment" => Some("layout-21503"),
+        "cubicBezier" => Some("layout-21603"),
         _ => None,
     }
 }
@@ -380,6 +468,22 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("event", "priority") => Some("21230"),
         ("priority", "math") => Some("21231"),
         ("eventAssignment", "math") => Some("21213"),
+        ("layout", _) => Some("layout-20303"),
+        ("graphicalObject", "boundingBox") => Some("layout-20403"),
+        ("compartmentGlyph", "boundingBox") => Some("layout-20503"),
+        ("speciesGlyph", "boundingBox") => Some("layout-20603"),
+        ("reactionGlyph", "boundingBox") => Some("layout-20703"),
+        ("reactionGlyph", "curve") => Some("layout-20703"),
+        ("reactionGlyph", "listOfSpeciesReferenceGlyphs") => Some("layout-20703"),
+        ("generalGlyph", "boundingBox") => Some("layout-20803"),
+        ("generalGlyph", "curve") => Some("layout-20803"),
+        ("generalGlyph", "listOfReferenceGlyphs") => Some("layout-20803"),
+        ("generalGlyph", "listOfSubGlyphs") => Some("layout-20803"),
+        ("textGlyph", "boundingBox") => Some("layout-20903"),
+        ("speciesReferenceGlyph", "boundingBox") => Some("layout-21003"),
+        ("speciesReferenceGlyph", "curve") => Some("layout-21003"),
+        ("referenceGlyph", "boundingBox") => Some("layout-21103"),
+        ("referenceGlyph", "curve") => Some("layout-21103"),
         _ => None,
     }
 }

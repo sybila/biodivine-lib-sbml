@@ -146,8 +146,8 @@ impl SbmlValidable for LocalParameter {
         let xml_element = self.xml_element();
         let units = self.units();
 
-        apply_rule_10311(units.name(), units.get_raw(), xml_element, issues);
-        apply_rule_10313(units.name(), units.get(), xml_element, issues);
+        apply_rule_10311(units.simple_name(), units.get_raw(), xml_element, issues);
+        apply_rule_10313(units.simple_name(), units.get(), xml_element, issues);
     }
 }
 

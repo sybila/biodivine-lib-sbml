@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    RequiredProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
@@ -12,19 +12,19 @@ use strum_macros::{Display, EnumString};
 pub struct Unit(XmlElement);
 
 impl Unit {
-    pub fn kind(&self) -> RequiredProperty<BaseUnit> {
+    pub fn kind(&self) -> RequiredSbmlProperty<BaseUnit> {
         self.required_sbml_property("kind")
     }
 
-    pub fn exponent(&self) -> RequiredProperty<f64> {
+    pub fn exponent(&self) -> RequiredSbmlProperty<f64> {
         self.required_sbml_property("exponent")
     }
 
-    pub fn scale(&self) -> RequiredProperty<i32> {
+    pub fn scale(&self) -> RequiredSbmlProperty<i32> {
         self.required_sbml_property("scale")
     }
 
-    pub fn multiplier(&self) -> RequiredProperty<f64> {
+    pub fn multiplier(&self) -> RequiredSbmlProperty<f64> {
         self.required_sbml_property("multiplier")
     }
 }
@@ -119,8 +119,7 @@ impl From<BaseUnit> for SId {
     }
 }
 
-/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
-/// interpreted as an error.
+/// A conversion between an XML attribute and a [BaseUnit] value.
 ///
 /// ## Specification
 ///  - Section 4.4.2
@@ -134,7 +133,7 @@ impl XmlPropertyType for BaseUnit {
                     e
                 )),
             },
-            None => Err("Value missing".to_string()),
+            None => Ok(None),
         }
     }
 
