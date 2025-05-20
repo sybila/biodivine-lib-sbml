@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::constants::namespaces::{NS_FBC, NS_LAYOUT};
+use crate::constants::namespaces::{NS_FBC, NS_LAYOUT, NS_QUAL};
 use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
@@ -9,6 +9,7 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
+use crate::qual::{QualitativeSpecies, Transition};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
@@ -317,6 +318,14 @@ impl Model {
 
     pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
         self.optional_package_child("listOfObjectives", NS_FBC, false)
+    }
+
+    pub fn transitions(&self) -> OptionalChild<XmlList<Transition>> {
+        self.optional_package_child("listOfTransitions", NS_QUAL, true)
+    }
+
+    pub fn qual_species(&self) -> OptionalChild<XmlList<QualitativeSpecies>> {
+        self.optional_package_child("listOfQualitativeSpecies", NS_QUAL, true)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_SBML_CORE};
+use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_QUAL, NS_SBML_CORE};
 use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
@@ -91,6 +91,16 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "and" => ALLOWED_SBASE_ATTRIBUTES,
     "or" => ALLOWED_SBASE_ATTRIBUTES,
     "geneProduct" => extended_sbase_attributes!("fbc:id", "fbc:label", "fbc:name", "fbc:associatedSpecies"),
+    //qual package
+    "qualitativeSpecies" => extended_sbase_attributes!("qual:id", "qual:name", "qual:compartment", "qual:constant", "qual:initialLevel", "qual:maxLevel"),
+    "listOfQualitativeSpecies" => ALLOWED_SBASE_ATTRIBUTES,
+    "listOfTransitions" => ALLOWED_SBASE_ATTRIBUTES,
+    "transition" => ALLOWED_SBASE_ATTRIBUTES,
+    "listOfInputs" => ALLOWED_SBASE_ATTRIBUTES,
+    "input" => extended_sbase_attributes!("qual:id", "qual:name", "qual:sign", "qual:qualitativeSpecies", "qual:transitionEffect", "qual:thresholdLevel"),
+    "output" => extended_sbase_attributes!("qual:id", "qual:name", "qual:qualitativeSpecies", "qual:transitionEffect", "qual:outputLevel"),
+    "defaultTerm" => extended_sbase_attributes!("qual:resultLevel"),
+    "functionTerm" => extended_sbase_attributes!("qual:resultLevel"),
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
@@ -106,19 +116,26 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "localParameter" => phf_map! { "value" => "double"},
     "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
     "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
+    //fbc package
     "objective" => phf_map! { "fbc:id" => "sid", "fbc:type" => "fbc_type" },
     "listOfObjectives" => phf_map! { "fbc:activeObjective" => "sid" },
     "fluxObjective" => phf_map! { "fbc:reaction" => "sid", "fbc:coefficient" => "double" },
     "geneProductAssociation" => phf_map! {"fbc:id" => "sid"},
     "geneProductRef" => phf_map! {"fbc:id" => "sid", "fbc:geneProduct" => "sid"},
     "geneProduct" => phf_map!("fbc:id" => "sid", "fbc:geneProduct" => "sid"),
-
+    //qual package
+    "qualitativeSpecies" => phf_map!("qual:id" => "sid", "qual:compartment" => "sid", "qual:constant" => "boolean", "qual:initialLevel" => "positive_int", "qual:maxLevel" => "positive_int"),
+    "input" => phf_map!("qual:id" => "sid", "qual:sign" => "sign", "qual:qualitativeSpecies" => "sid", "qual:transitionEffect" => "input_effect", "qual:thresholdLevel" => "positive_int"),
+    "output" => phf_map!("qual:id" => "sid", "qual:qualitativeSpecies" => "sid", "qual:transitionEffect" => "output_effect", "qual:outputLevel" => "positive_int"),
+    "defaultTerm" => phf_map!("qual:resultLevel" => "positive_int"),
+    "functionTerm" => phf_map!("qual:resultLevel" => "positive_int"),
 };
 
 pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
     "" => NS_SBML_CORE,
     "layout" => NS_LAYOUT,
     "fbc" => NS_FBC,
+    "qual" => NS_QUAL
 };
 
 /// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
@@ -187,6 +204,12 @@ pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "fluxObjective" => &["fbc:reaction", "fbc:coefficient"],
     "geneProductRef" => &["fbc:geneProduct"],
     "geneProduct" => &["fbc:id", "fbc:label"],
+    //qual package
+    "qualitativeSpecies" => &["qual:id", "qual:compartment", "qual:constant"],
+    "input" => &["qual:qualitativeSpecies", "qual:transitionEffect"],
+    "output" => &["qual:qualitativeSpecies", "qual:transitionEffect"],
+    "defaultTerm" => &["qual:resultLevel"],
+    "functionTerm" => &["qual:resultLevel"],
 };
 
 pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -215,11 +238,16 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfObjectives" => &["objective"],
     "listOfGeneProducts" => &["geneProduct"],
     "objective" => &["listOfFluxObjectives"],
+    //qual package
+    "listOfTransitions" => &["transitions"],
+    "listOfQualitativeSpecies" => &["qualitativeSpecies"],
+    "transition" => &["listOfFunctionTerms"],
+    "functionTerms" => &["math"],
 };
 
 pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
-    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfGeneProducts", "listOfObjectives"),
+    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfGeneProducts", "listOfObjectives", "listOfTransitions", "listOfQualitativeSpecies"),
     "listOfFunctionDefinitions" => extended_sbase_children!("functionDefinition"),
     "functionDefinition" => extended_sbase_children!("math"),
     "listOfUnitDefinitions" => extended_sbase_children!("unitDefinition"),
@@ -293,7 +321,15 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "and" => extended_sbase_children!("and", "or", "geneProductRef"),
     "or" => extended_sbase_children!("and", "or", "geneProductRef"),
     "geneProduct" => ALLOWED_SBASE_CHILDREN,
-
+    //qual package
+    "listOfTransitions" => extended_sbase_children!("transitions"),
+    "listOfQualitativeSpecies" => extended_sbase_children!("qualitativeSpecies"),
+    "qualitativeSpecies" => ALLOWED_SBASE_CHILDREN,
+    "transition" => extended_sbase_children!("listOfInputs", "listOfOutputs", "listOfFunctionTerms"),
+    "input" => ALLOWED_SBASE_CHILDREN,
+    "output" => ALLOWED_SBASE_CHILDREN,
+    "defaultTerm" => ALLOWED_SBASE_CHILDREN,
+    "functionTerm" => extended_sbase_children!("math"),
 };
 
 /// This lists the (optional) child elements that must be unique in each SBML Core element.
@@ -302,7 +338,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
 /// elements can obviously repeat.
 pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
-    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents"),
+    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfTransitions", "listOfQualitativeSpecies"),
     "listOfFunctionDefinitions" => extended_sbase_children!(),
     "functionDefinition" => extended_sbase_children!("math"),
     "listOfUnitDefinitions" => extended_sbase_children!(),
@@ -375,6 +411,15 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "geneProduct" => ALLOWED_SBASE_CHILDREN,
     "listOfGeneProducts" => ALLOWED_SBASE_CHILDREN,
     "fluxObjective" => ALLOWED_SBASE_CHILDREN,
+    //qual package
+    "listOfTransitions" => ALLOWED_SBASE_CHILDREN,
+    "listOfQualitativeSpecies" => ALLOWED_SBASE_CHILDREN,
+    "qualitativeSpecies" => ALLOWED_SBASE_CHILDREN,
+    "transition" => extended_sbase_children!("listOfInputs", "listOfOutputs", "listOfFunctionTerms"),
+    "input" => ALLOWED_SBASE_CHILDREN,
+    "output" => ALLOWED_SBASE_CHILDREN,
+    "defaultTerm" => ALLOWED_SBASE_CHILDREN,
+    "functionTerm" => extended_sbase_children!("math")
 };
 
 // There are no required children in SBML core level 3 version 1

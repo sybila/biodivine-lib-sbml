@@ -124,6 +124,7 @@ pub mod xml;
 /// namespace URLs or mappings assigning elements their allowed attributes.
 pub(crate) mod constants;
 
+mod qual;
 /// **(test)** A helper module for executing the syntactic SBML test suite as part of the
 /// standard unit tests.
 #[cfg(test)]

@@ -5,6 +5,7 @@ use crate::constants::element::{
 use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_FBC, URL_SBML_CORE};
 use crate::constraint::FbcType;
 use crate::core::SId;
+use crate::qual::{Sign, TransitionInputEffect, TransitionOutputEffect};
 use crate::xml::{
     OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
@@ -94,6 +95,17 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
                     "boolean" => type_check_of_property::<bool>(attr_id, xml_element, issues),
                     "sid" => type_check_of_property::<SId>(attr_id, xml_element, issues),
                     "fbc_type" => type_check_of_property::<FbcType>(attr_id, xml_element, issues),
+                    "sign" => type_check_of_property::<Sign>(attr_id, xml_element, issues),
+                    "input_effect" => type_check_of_property::<TransitionInputEffect>(
+                        attr_id,
+                        xml_element,
+                        issues,
+                    ),
+                    "output_effect" => type_check_of_property::<TransitionOutputEffect>(
+                        attr_id,
+                        xml_element,
+                        issues,
+                    ),
                     _ => (),
                 }
             };

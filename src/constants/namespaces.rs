@@ -7,6 +7,8 @@ pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
 
 pub const URL_PACKAGE_LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/layout/version1";
 
+pub const URL_PACKAGE_QUAL: &str = "http://www.sbml.org/sbml/level3/version1/qual/version1";
+
 pub const URL_PACKAGE_FBC: &str = "http://www.sbml.org/sbml/level3/version1/fbc/version2";
 /// The URL of the HTML namespace.
 pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
@@ -22,6 +24,8 @@ pub const URL_EMPTY: &str = "";
 pub const NS_SBML_CORE: Namespace = ("", URL_SBML_CORE);
 
 pub const NS_LAYOUT: Namespace = ("layout", URL_PACKAGE_LAYOUT);
+
+pub const NS_QUAL: Namespace = ("qual", URL_PACKAGE_QUAL);
 
 pub const NS_FBC: Namespace = ("fbc", URL_PACKAGE_FBC);
 

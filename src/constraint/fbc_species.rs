@@ -14,7 +14,7 @@ impl XmlNamedSubtype<Species> for FbcSpecies {
 }
 
 impl FbcSpecies {
-    pub fn charge(&self) -> OptionalSbmlProperty<i32> {
+    pub fn charge(&self) -> OptionalSbmlProperty<u32> {
         self.optional_package_property("charge", NS_FBC, NS_FBC)
     }
     pub fn formula(&self) -> OptionalSbmlProperty<String> {

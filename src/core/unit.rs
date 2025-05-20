@@ -20,7 +20,7 @@ impl Unit {
         self.required_sbml_property("exponent")
     }
 
-    pub fn scale(&self) -> RequiredSbmlProperty<i32> {
+    pub fn scale(&self) -> RequiredSbmlProperty<u32> {
         self.required_sbml_property("scale")
     }
 
