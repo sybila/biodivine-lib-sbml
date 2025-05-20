@@ -111,7 +111,7 @@ use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
 /// by the SBML core specification.
 pub mod core;
-
+pub mod qual;
 pub mod constraint;
 pub mod layout;
 
@@ -123,8 +123,6 @@ pub mod xml;
 /// **(internal)** An internal module which defines constant values relevant for SBML, such as
 /// namespace URLs or mappings assigning elements their allowed attributes.
 pub(crate) mod constants;
-
-mod qual;
 /// **(test)** A helper module for executing the syntactic SBML test suite as part of the
 /// standard unit tests.
 #[cfg(test)]

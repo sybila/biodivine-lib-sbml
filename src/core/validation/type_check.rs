@@ -383,6 +383,14 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "geneProduct" => Some("fbc-21203"),
         //qual package
         "qualitativeSpecies" => Some("qual-20303"),
+        "transition" => Some("qual-20403"),
+        "listOfInputs" => Some("qual-20410"),
+        "listOfOutputs" => Some("qual-20411"),
+        "listOfFunctionTerms" => Some("qual-20412"),
+        "input" => Some("qual-20503"),
+        "output" => Some("qual-20603"),
+        "defaultTerm" => Some("qual-20703"),
+        "functionTerm" => Some("qual-20803"),
         _ => None,
     }
 }
@@ -412,6 +420,13 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         //fbc  package
         "listOfFluxObjectives" => Some("fbc-20508"),
         "geneProductAssociation" => Some("fbc-20805"),
+        //qual package
+        "transition" => Some("20406"),
+        "listOfInputs" => Some("qual-20407"),
+        "listOfOutputs" => Some("qual-20408"),
+        "listOfFunctionTerms" => Some("qual-20409"),
+        "functionTerm" => Some("qual-20804"),
+
         _ => None,
     }
 }
@@ -454,6 +469,7 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("event", "priority") => Some("21230"),
         ("priority", "math") => Some("21231"),
         ("eventAssignment", "math") => Some("21213"),
+        ("transition", "listOfFunctionTerms") | ("transition", "listOfInputs") | ("transition", "listOfOutputs") => Some("qual-20405"),
         _ => None,
     }
 }

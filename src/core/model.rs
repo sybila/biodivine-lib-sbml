@@ -9,7 +9,7 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
-use crate::qual::{QualitativeSpecies, Transition};
+use crate::qual::{get_outputs_from_transition, QualOutput, QualitativeSpecies, Transition};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
@@ -599,5 +599,19 @@ impl Model {
         } else {
             None
         }
+    }
+
+    pub(crate) fn get_all_transition_outputs(&self) -> Vec<QualOutput> {
+        let mut lst = Vec::new();
+
+        if !self.transitions().is_set() {
+            return lst;
+        }
+
+        for transition in self.transitions() {
+            lst.extend(get_outputs_from_transition(transition))
+        }
+
+        lst
     }
 }
