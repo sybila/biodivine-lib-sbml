@@ -160,6 +160,13 @@ fn type_check_of_property<T: XmlPropertyType>(
 ) {
     let (prefix, name) = Element::separate_prefix_name(attribute_name);
     let namespace = namespace_for_prefix(prefix);
+    let package_declaration = Sbml::try_for_child(xml_element)
+        .unwrap()
+        .find_sbml_package(namespace);
+    if package_declaration.is_err() {
+        // This package is not declared, hence it's required attributes are not relevant.
+        return
+    }
     let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
     if let Some(err) = property.get_checked().err() {
         // TODO:
@@ -286,6 +293,7 @@ pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut 
     }
 
     for required in required_children.iter() {
+
         if !child_tag_names.contains(*required) {
             let message = format!(
                 "Missing required child <{}> of the element <{}>.",

@@ -239,7 +239,7 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfGeneProducts" => &["geneProduct"],
     "objective" => &["listOfFluxObjectives"],
     //qual package
-    "listOfTransitions" => &["transitions"],
+    "listOfTransitions" => &["transition"],
     "listOfQualitativeSpecies" => &["qualitativeSpecies"],
     "transition" => &["listOfFunctionTerms"],
     "functionTerms" => &["math"],

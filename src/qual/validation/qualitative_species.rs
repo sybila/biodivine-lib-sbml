@@ -52,6 +52,10 @@ pub fn apply_rule_qual_20310(element: &QualitativeSpecies, issues: &mut Vec<Sbml
     let model = Model::for_child_element(element.xml_element());
     let outputs = model.unwrap().get_all_transition_outputs();
 
+    if !element.constant().get(){
+        return
+    }
+
     for output in outputs {
         if output.qualitative_species().get() == element.id().get() {
             let message = "When the [constant] element is set to true, qualitativeSpecies element can not be referenced by output!".to_string();
