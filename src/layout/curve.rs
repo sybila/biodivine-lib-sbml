@@ -3,8 +3,8 @@ use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
     OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredSbmlProperty, RequiredXmlChild,
-    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSubtype,
-    XmlSupertype, XmlWrapper,
+    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    XmlSubtype, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
@@ -63,7 +63,7 @@ impl XmlPropertyType for XsiType {
         match value {
             Some(value) => match XsiType::try_from(value.to_string()) {
                 Ok(xsi) => Ok(Some(xsi)),
-                Err(_) => Err("Invalid xsi type".to_string()),
+                Err(message) => Err(message),
             },
             None => Ok(None),
         }
@@ -114,7 +114,8 @@ pub struct CubicBezier(XmlElement);
 
 impl XmlSubtype<LineSegment> for CubicBezier {
     fn try_cast_from_super(value: &LineSegment) -> Option<Self> {
-        if value.xsi_type().get() == XsiType::CubicBezier {
+        // Must check the "safe" way, because this method could be used during validation.
+        if value.xsi_type().get_checked() == Ok(Some(XsiType::CubicBezier)) {
             Some(unsafe { CubicBezier::unchecked_cast(value.clone()) })
         } else {
             None
