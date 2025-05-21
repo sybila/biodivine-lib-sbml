@@ -9,7 +9,7 @@ use crate::layout::{
 };
 use crate::xml::{
     OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild,
-    RequiredXmlProperty, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
+    RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -59,7 +59,9 @@ impl SbmlValidable for Layout {
 
 impl CanTypeCheck for Layout {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        self.dimensions().get().type_check(issues);
+        if self.dimensions().get_raw().is_some() {
+            self.dimensions().get().type_check(issues);
+        }
 
         if let Some(list_of_compartment_glyphs) = self.compartment_glyphs().get() {
             type_check_of_list(&list_of_compartment_glyphs, issues);
@@ -248,7 +250,9 @@ impl CanTypeCheck for ReactionGlyph {
             curve.type_check(issues);
         }
 
-        type_check_of_list(&self.species_reference_glyphs().get(), issues);
+        if self.species_reference_glyphs().get_raw().is_some() {
+            type_check_of_list(&self.species_reference_glyphs().get(), issues);
+        }
     }
 }
 
@@ -546,7 +550,9 @@ impl SbmlValidable for GraphicalObject {
 
 impl CanTypeCheck for GraphicalObject {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        self.bounding_box().get().type_check(issues);
+        if self.bounding_box().get_raw().is_some() {
+            self.bounding_box().get().type_check(issues);
+        }
 
         if let Some(glyph) = GeneralGlyph::try_cast_from_super(self) {
             glyph.type_check(issues);

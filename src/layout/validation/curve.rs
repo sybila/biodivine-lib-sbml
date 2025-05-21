@@ -5,7 +5,9 @@ use crate::core::{MetaId, SId};
 use crate::layout::curve::CubicBezier;
 use crate::layout::curve::XsiType;
 use crate::layout::curve::{Curve, LineSegment};
-use crate::xml::{OptionalXmlChild, RequiredXmlChild, RequiredXmlProperty, XmlSubtype, XmlWrapper};
+use crate::xml::{
+    OptionalXmlChild, RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlSubtype, XmlWrapper,
+};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -23,7 +25,9 @@ impl SbmlValidable for Curve {
 
 impl CanTypeCheck for Curve {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        type_check_of_list(&self.curve_segments().get(), issues)
+        if self.curve_segments().get_raw().is_some() {
+            type_check_of_list(&self.curve_segments().get(), issues)
+        }
     }
 }
 
@@ -68,8 +72,12 @@ impl CanTypeCheck for LineSegment {
         }
 
         internal_type_check(element, issues);
-        self.start().get().type_check(issues);
-        self.end().get().type_check(issues);
+        if self.start().get_raw().is_some() {
+            self.start().get().type_check(issues);
+        }
+        if self.end().get_raw().is_some() {
+            self.end().get().type_check(issues);
+        }
     }
 }
 
@@ -120,7 +128,11 @@ impl CanTypeCheck for CubicBezier {
             self.base_point2().get().unwrap().type_check(issues);
         }
 
-        self.start().get().type_check(issues);
-        self.end().get().type_check(issues);
+        if self.start().get_raw().is_some() {
+            self.start().get().type_check(issues);
+        }
+        if self.end().get_raw().is_some() {
+            self.end().get().type_check(issues);
+        }
     }
 }
