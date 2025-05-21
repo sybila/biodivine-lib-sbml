@@ -27,6 +27,8 @@ mod impl_xml_property;
 /// including required/optional variants.
 mod impl_xml_child;
 
+mod impl_sbml_child;
+
 /// Some primitive [XmlPropertyType] implementations, as declared in SBML
 /// specification Section 3.1.
 mod impl_xml_property_type;
@@ -39,6 +41,7 @@ mod xml_inheritance;
 /// somewhat more specific than normal XML namespaces.
 mod impl_sbml_property;
 
+pub use crate::xml::impl_sbml_child::{OptionalSbmlChild, RequiredSbmlChild, SbmlChild};
 pub use crate::xml::impl_sbml_property::{
     OptionalSbmlProperty, RequiredSbmlProperty, SbmlProperty,
 };

@@ -11,7 +11,7 @@ use crate::core::{
 use crate::layout::Layout;
 use crate::qual::{get_outputs_from_transition, QualOutput, QualitativeSpecies, Transition};
 use crate::xml::{
-    OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
+    OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
     XmlPropertyType, XmlSupertype, XmlWrapper,
 };
@@ -268,63 +268,63 @@ impl Model {
         self.required_package_property("strict", NS_FBC, NS_FBC)
     }
 
-    pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
+    pub fn function_definitions(&self) -> OptionalSbmlChild<XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
     }
 
-    pub fn unit_definitions(&self) -> OptionalChild<XmlList<UnitDefinition>> {
+    pub fn unit_definitions(&self) -> OptionalSbmlChild<XmlList<UnitDefinition>> {
         self.optional_sbml_child("listOfUnitDefinitions")
     }
 
-    pub fn compartments(&self) -> OptionalChild<XmlList<Compartment>> {
+    pub fn compartments(&self) -> OptionalSbmlChild<XmlList<Compartment>> {
         self.optional_sbml_child("listOfCompartments")
     }
 
-    pub fn species(&self) -> OptionalChild<XmlList<Species>> {
+    pub fn species(&self) -> OptionalSbmlChild<XmlList<Species>> {
         self.optional_sbml_child("listOfSpecies")
     }
 
-    pub fn parameters(&self) -> OptionalChild<XmlList<Parameter>> {
+    pub fn parameters(&self) -> OptionalSbmlChild<XmlList<Parameter>> {
         self.optional_sbml_child("listOfParameters")
     }
 
-    pub fn initial_assignments(&self) -> OptionalChild<XmlList<InitialAssignment>> {
+    pub fn initial_assignments(&self) -> OptionalSbmlChild<XmlList<InitialAssignment>> {
         self.optional_sbml_child("listOfInitialAssignments")
     }
 
-    pub fn rules(&self) -> OptionalChild<XmlList<AbstractRule>> {
+    pub fn rules(&self) -> OptionalSbmlChild<XmlList<AbstractRule>> {
         self.optional_sbml_child("listOfRules")
     }
 
-    pub fn constraints(&self) -> OptionalChild<XmlList<Constraint>> {
+    pub fn constraints(&self) -> OptionalSbmlChild<XmlList<Constraint>> {
         self.optional_sbml_child("listOfConstraints")
     }
 
-    pub fn reactions(&self) -> OptionalChild<XmlList<Reaction>> {
+    pub fn reactions(&self) -> OptionalSbmlChild<XmlList<Reaction>> {
         self.optional_sbml_child("listOfReactions")
     }
 
-    pub fn events(&self) -> OptionalChild<XmlList<Event>> {
+    pub fn events(&self) -> OptionalSbmlChild<XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
     }
 
-    pub fn layouts(&self) -> OptionalChild<XmlList<Layout>> {
+    pub fn layouts(&self) -> OptionalSbmlChild<XmlList<Layout>> {
         self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
 
-    pub fn gene_products(&self) -> OptionalChild<XmlList<GeneProduct>> {
+    pub fn gene_products(&self) -> OptionalSbmlChild<XmlList<GeneProduct>> {
         self.optional_package_child("listOfGeneProducts", NS_FBC, false)
     }
 
-    pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
+    pub fn objectives(&self) -> OptionalSbmlChild<XmlList<Objective>> {
         self.optional_package_child("listOfObjectives", NS_FBC, false)
     }
 
-    pub fn transitions(&self) -> OptionalChild<XmlList<Transition>> {
+    pub fn transitions(&self) -> OptionalSbmlChild<XmlList<Transition>> {
         self.optional_package_child("listOfTransitions", NS_QUAL, true)
     }
 
-    pub fn qual_species(&self) -> OptionalChild<XmlList<QualitativeSpecies>> {
+    pub fn qual_species(&self) -> OptionalSbmlChild<XmlList<QualitativeSpecies>> {
         self.optional_package_child("listOfQualitativeSpecies", NS_QUAL, true)
     }
 }

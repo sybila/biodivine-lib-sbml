@@ -17,7 +17,6 @@ pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
 pub const URL_MATHML: &str = "http://www.w3.org/1998/Math/MathML";
 
 /// The URL of the "default" empty namespace.
-#[cfg(test)]
 pub const URL_EMPTY: &str = "";
 
 /// The "core" SBML namespace. Default prefix for this namespace is empty.
@@ -30,12 +29,10 @@ pub const NS_QUAL: Namespace = ("qual", URL_PACKAGE_QUAL);
 pub const NS_FBC: Namespace = ("fbc", URL_PACKAGE_FBC);
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.
-#[cfg(test)]
 pub const NS_HTML: Namespace = ("", URL_HTML);
 
 /// The MathML namespace. Default prefix for this namespace is empty.
 pub const NS_MATHML: (&str, &str) = ("", URL_MATHML);
 
 /// The "default" empty namespace. Default prefix for this namespace is empty.
-#[cfg(test)]
 pub const NS_EMPTY: (&str, &str) = ("", URL_EMPTY);

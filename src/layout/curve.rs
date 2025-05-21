@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    OptionalChild, OptionalXmlChild, RequiredChild, RequiredSbmlProperty, RequiredXmlChild,
+    OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredSbmlProperty, RequiredXmlChild,
     RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSubtype,
     XmlSupertype, XmlWrapper,
 };
@@ -18,7 +18,7 @@ impl Curve {
         curve.curve_segments().set(segments);
         curve
     }
-    pub fn curve_segments(&self) -> RequiredChild<XmlList<LineSegment>> {
+    pub fn curve_segments(&self) -> RequiredSbmlChild<XmlList<LineSegment>> {
         self.required_package_child("listOfCurveSegments", NS_LAYOUT, false)
     }
 }
@@ -93,18 +93,18 @@ impl LineSegment {
         self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn start(&self) -> RequiredChild<Point> {
+    pub fn start(&self) -> RequiredSbmlChild<Point> {
         self.required_package_child("start", NS_LAYOUT, false)
     }
 
-    pub fn end(&self) -> RequiredChild<Point> {
+    pub fn end(&self) -> RequiredSbmlChild<Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
 
-    pub fn base_point1(&self) -> OptionalChild<Point> {
+    pub fn base_point1(&self) -> OptionalSbmlChild<Point> {
         self.optional_package_child("basePoint1", NS_LAYOUT, false)
     }
-    pub fn base_point2(&self) -> OptionalChild<Point> {
+    pub fn base_point2(&self) -> OptionalSbmlChild<Point> {
         self.optional_package_child("basePoint2", NS_LAYOUT, false)
     }
 }
@@ -142,16 +142,16 @@ impl CubicBezier {
     pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
         self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn start(&self) -> RequiredChild<Point> {
+    pub fn start(&self) -> RequiredSbmlChild<Point> {
         self.required_package_child("start", NS_LAYOUT, false)
     }
-    pub fn end(&self) -> RequiredChild<Point> {
+    pub fn end(&self) -> RequiredSbmlChild<Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
-    pub fn base_point1(&self) -> OptionalChild<Point> {
+    pub fn base_point1(&self) -> OptionalSbmlChild<Point> {
         self.optional_package_child("basePoint1", NS_LAYOUT, false)
     }
-    pub fn base_point2(&self) -> OptionalChild<Point> {
+    pub fn base_point2(&self) -> OptionalSbmlChild<Point> {
         self.optional_package_child("basePoint2", NS_LAYOUT, false)
     }
 }

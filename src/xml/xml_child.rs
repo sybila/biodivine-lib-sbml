@@ -1,3 +1,4 @@
+use crate::constants::namespaces::{Namespace, NS_EMPTY};
 use crate::xml::{XmlDefault, XmlElement, XmlList, XmlWrapper};
 use std::ops::Deref;
 
@@ -21,7 +22,7 @@ use std::ops::Deref;
 /// ### On singleton validation
 ///
 /// *Warning:* At the moment, [XmlChild] implementations do not check that the child element
-/// is truly a singleton. Undefined behaviour can occur if this is not the case. Ideally,
+/// is truly a singleton. Undefined behavior can occur if this is not the case. Ideally,
 /// this condition should be checked by additional document-wide validation steps.
 pub trait XmlChild<T: XmlWrapper> {
     /// Returns a reference to the underlying parent [XmlElement].
@@ -35,25 +36,54 @@ pub trait XmlChild<T: XmlWrapper> {
     /// It is expected that this name is immutable. That is, an `XmlChild` instance is associated
     /// with a specific tag name, and this name must not change. It is also required that all
     /// XML elements that appear in `get`/`set` methods use this tag name.
-    fn name(&self) -> &str;
+    fn simple_name(&self) -> &str;
 
-    /// Returns the namespace URL of this child.
+    /// Returns the namespace of this child element, if any. This is used to make sure
+    /// any newly created child tags have the proper namespace declared on them.
+    fn namespace(&self) -> Option<Namespace> {
+        None
+    }
+
+    /// Returns the **fully quantified** name of the underlying XML tag, including
+    /// namespace prefix if relevant. Can return an error at runtime if there is some problem
+    /// with the construction of the quantified name (e.g., the namespace is not declared, or
+    /// not declared correctly).
     ///
-    /// The url can be empty, in which case it corresponds to the "default" empty namespace
-    /// (i.e. the namespace in which tags reside when there is no default namespace declared).
-    /// Just as the name, this value is considered immutable and all XML elements that appear
-    /// in the `get`/`set` methods must use this namespace.
-    fn namespace_url(&self) -> &str;
+    /// This name can (and probably should be) computed dynamically at runtime for properties
+    /// that belong to a specific non-default namespace, as the prefix can change depending
+    /// on the position of the property in the document.
+    ///
+    /// If `write_doc` is set to `true`, it indicates to the method that it can try to
+    /// ensure necessary conditions for the quantified name to be valid (e.g., create a namespace
+    /// declaration). The exact conditions as to when this is valid can vary depending on the
+    /// implementation. In general, methods that only read the document should not allow
+    /// any modification. Meanwhile, methods that write values to the document can set this to
+    /// true to indicate that "fixing" the document into a consistent state is allowed.
+    ///
+    /// The default implementation for this method simply returns [XmlChild::simple_name]
+    /// (i.e., it assumes the attribute is in the default empty namespace). Please override this
+    /// in cases where the property can depend on XML namespaces.
+    ///
+    /// The same as [crate::xml::XmlProperty::quantified_name].
+    fn quantified_name(&self, _write_doc: bool) -> Result<String, String> {
+        Ok(self.simple_name().to_string())
+    }
 
     /// Get the "raw" child [XmlElement] referenced by this [XmlChild], or `None` if the child
     /// is not present.
     fn get_raw(&self) -> Option<XmlElement> {
+        let Ok(full_name) = self.quantified_name(false) else {
+            return None;
+        };
+
         let element = self.parent();
         let doc = element.read_doc();
-        let (name, namespace) = (self.name(), self.namespace_url());
-        let parent = element.raw_element();
-        let child = parent.find_quantified(doc.deref(), name, namespace);
-        child.map(|it| XmlElement::new_raw(element.document(), it))
+        for child in element.raw_element().child_elements(&doc) {
+            if child.full_name(&doc) == full_name {
+                return Some(XmlElement::new_raw(element.document(), child));
+            }
+        }
+        None
     }
 
     /// Replace the referenced child element with a new [XmlWrapper] element and return the
@@ -68,17 +98,23 @@ pub trait XmlChild<T: XmlWrapper> {
     ///  - The inserted element must be in a detached state.
     ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn set_raw(&self, value: XmlElement) -> Option<XmlElement> {
+        let Ok(full_name) = self.quantified_name(true) else {
+            panic!(
+                "Cannot ensure valid namespace for `{}`.",
+                self.simple_name()
+            );
+        };
+
         let element = self.parent();
         let parent = element.raw_element();
 
         // First, check that the new value has the correct name and namespace.
-        if value.tag_name() != self.name() || value.namespace_url() != self.namespace_url() {
+        let expected_namespace = self.namespace().unwrap_or(NS_EMPTY);
+        if value.tag_name() != self.simple_name() || value.namespace_url() != expected_namespace.1 {
             panic!(
-                "Cannot set XML child `({},{})` to value `({},{})`.",
-                self.name(),
-                self.namespace_url(),
-                value.tag_name(),
-                value.namespace_url(),
+                "Cannot set XML child `{}` to value `{}`.",
+                full_name,
+                value.full_name(),
             )
         }
 
@@ -92,7 +128,7 @@ pub trait XmlChild<T: XmlWrapper> {
                     .position(|e| e == to_remove.raw_element())
             };
             if to_remove.try_detach().is_err() {
-                // The element should be always safe to detach assuming the document is in
+                // The element should always be safe to detach assuming the document is in
                 // a consistent state.
                 unreachable!()
             }
@@ -103,7 +139,7 @@ pub trait XmlChild<T: XmlWrapper> {
 
         // Now, push the new child and check that the result is ok.
         if let Err(e) = value.try_attach_at(element, index) {
-            panic!("Cannot set value of child `{}`: {}", self.name(), e);
+            panic!("Cannot set value of child `{}`: {}", self.simple_name(), e);
         }
 
         // Return the old child.
@@ -135,10 +171,10 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     /// Panics if the child element does not exist.
     fn get(&self) -> T {
         let Some(child) = self.get_raw() else {
-            panic!("Missing child element `{}`.", self.name());
+            panic!("Missing child element `{}`.", self.simple_name());
         };
 
-        // The cast is ok, because the `get_raw` method only succeeds if the quantified name
+        // The cast is ok because the `get_raw` method only succeeds if the quantified name
         // of the returned element matches the quantified name specified by this XmlChild.
         unsafe { T::unchecked_cast(child) }
     }
@@ -158,7 +194,7 @@ pub trait RequiredXmlChild<T: XmlWrapper>: XmlChild<T> {
     ///  - Can panic if the old child cannot be detached, but this should be unreachable.
     fn set(&self, value: T) -> T {
         let Some(old) = self.set_raw(value.into()) else {
-            panic!("Missing child element `{}`.", self.name());
+            panic!("Missing child element `{}`.", self.simple_name());
         };
 
         // See [RequiredXmlChild::get].
@@ -172,7 +208,7 @@ pub trait OptionalXmlChild<T: XmlWrapper>: XmlChild<T> {
     fn is_set(&self) -> bool {
         self.get_raw().is_some()
     }
-    /// Return the `T` wrapper for the underlying child element, or none if the element
+    /// Return the `T` wrapper for the underlying child element or none if the element
     /// does not exist.
     fn get(&self) -> Option<T> {
         self.get_raw().map(|it| {
@@ -235,29 +271,29 @@ impl<Element: XmlDefault, Child: OptionalXmlChild<Element>> XmlChildDefault<Elem
 }
 
 /// Implement [XmlChildDefault] for an optional [XmlList], regardless of the inner list type.
-///
-/// This approach assumes the namespace of the [XmlChild] is already declared. If it is not
-/// declared somewhere in the document, the empty prefix is used to declare it.
 impl<Element: XmlWrapper, Child: OptionalXmlChild<XmlList<Element>>>
     XmlChildDefault<XmlList<Element>> for Child
 {
     fn ensure(&self) {
         if self.get_raw().is_none() {
-            let url = self.namespace_url();
-            let prefix: String = {
-                let doc = self.parent().read_doc();
-                self.parent()
-                    .element
-                    .closest_prefix(doc.deref(), url)
-                    .unwrap_or("")
-                    .to_string()
+            // We want to call "quantified name" in both situations because it ensures the
+            // relevant package is correctly declared if it is necessary.
+            let Ok(full_name) = self.quantified_name(true) else {
+                panic!(
+                    "Cannot ensure valid namespace for `{}`.",
+                    self.simple_name()
+                );
             };
-            let list_element = XmlElement::new_quantified(
-                self.parent().document(),
-                self.name(),
-                (prefix.as_str(), url),
-            );
-            self.set_raw(list_element);
+            let child_element = if let Some(namespace) = self.namespace() {
+                XmlElement::new_quantified(self.parent().document(), self.simple_name(), namespace)
+            } else {
+                let child = {
+                    let mut doc = self.parent().write_doc();
+                    biodivine_xml_doc::Element::new(&mut doc, full_name)
+                };
+                XmlElement::new_raw(self.parent().document(), child)
+            };
+            self.set_raw(child_element);
         }
     }
 }

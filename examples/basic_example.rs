@@ -47,12 +47,11 @@ fn main() {
 
     // We can use `DynamicProperty` and `DynamicChild` to access
     // items that are not in the SBML core specification.
-    let qual_namespace = "http://www.sbml.org/sbml/level3/version1/qual/version1";
 
     // For example, here, we are reading the list of qualitative species defined
     // in the sbml-qual package as a "generic" list of `XmlElement` objects.
     let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
-        model.optional_child("listOfQualitativeSpecies", qual_namespace);
+        model.optional_child("listOfQualitativeSpecies");
     println!(
         "This model has {} qualitative species.",
         qual_species.get_or_create().len(),

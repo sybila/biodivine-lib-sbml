@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
-    OptionalChild, OptionalSbmlProperty, OptionalXmlChild, RequiredSbmlProperty,
+    OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, RequiredSbmlProperty,
     RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -30,19 +30,19 @@ impl Reaction {
         self.optional_sbml_property("compartment")
     }
 
-    pub fn reactants(&self) -> OptionalChild<XmlList<SpeciesReference>> {
+    pub fn reactants(&self) -> OptionalSbmlChild<XmlList<SpeciesReference>> {
         self.optional_sbml_child("listOfReactants")
     }
 
-    pub fn products(&self) -> OptionalChild<XmlList<SpeciesReference>> {
+    pub fn products(&self) -> OptionalSbmlChild<XmlList<SpeciesReference>> {
         self.optional_sbml_child("listOfProducts")
     }
 
-    pub fn modifiers(&self) -> OptionalChild<XmlList<ModifierSpeciesReference>> {
+    pub fn modifiers(&self) -> OptionalSbmlChild<XmlList<ModifierSpeciesReference>> {
         self.optional_sbml_child("listOfModifiers")
     }
 
-    pub fn kinetic_law(&self) -> OptionalChild<KineticLaw> {
+    pub fn kinetic_law(&self) -> OptionalSbmlChild<KineticLaw> {
         self.optional_sbml_child("kineticLaw")
     }
 }
@@ -111,7 +111,7 @@ impl KineticLaw {
         self.optional_math_child("math")
     }
 
-    pub fn local_parameters(&self) -> OptionalChild<XmlList<LocalParameter>> {
+    pub fn local_parameters(&self) -> OptionalSbmlChild<XmlList<LocalParameter>> {
         self.optional_sbml_child("listOfLocalParameters")
     }
 

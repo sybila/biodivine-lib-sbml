@@ -4,8 +4,8 @@ use crate::qual::qual_input::QualInput;
 use crate::qual::qual_output::QualOutput;
 use crate::qual::terms::AbstractTerm;
 use crate::xml::{
-    OptionalChild, OptionalXmlChild, RequiredChild, RequiredXmlChild, XmlDocument, XmlElement,
-    XmlList,
+    OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredXmlChild, XmlDocument,
+    XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -18,15 +18,15 @@ impl Transition {
         obj.function_terms().set(function_terms);
         obj
     }
-    pub fn inputs(&self) -> OptionalChild<XmlList<QualInput>> {
+    pub fn inputs(&self) -> OptionalSbmlChild<XmlList<QualInput>> {
         self.optional_package_child("listOfInputs", NS_QUAL, true)
     }
 
-    pub fn outputs(&self) -> OptionalChild<XmlList<QualOutput>> {
+    pub fn outputs(&self) -> OptionalSbmlChild<XmlList<QualOutput>> {
         self.optional_package_child("listOfOutputs", NS_QUAL, true)
     }
 
-    pub fn function_terms(&self) -> RequiredChild<XmlList<AbstractTerm>> {
+    pub fn function_terms(&self) -> RequiredSbmlChild<XmlList<AbstractTerm>> {
         self.required_package_child("listOfFunctionTerms", NS_QUAL, true)
     }
 }

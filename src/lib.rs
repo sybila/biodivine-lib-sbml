@@ -58,12 +58,11 @@
 //!
 //! // We can use `DynamicProperty` and `DynamicChild` to access
 //! // items that are not in the SBML core specification.
-//! let qual_namespace = "http://www.sbml.org/sbml/level3/version1/qual/version1";
 //!
 //! // For example, here, we are reading the list of qualitative species defined
 //! // in the sbml-qual package as a "generic" list of `XmlElement` objects.
 //! let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
-//!     model.optional_child("listOfQualitativeSpecies", qual_namespace);
+//!     model.optional_child("listOfQualitativeSpecies");
 //! println!(
 //!     "This model has {} qualitative species.",
 //!     qual_species.get_or_create().len(),
@@ -98,14 +97,14 @@ use std::sync::{Arc, RwLock};
 use biodivine_xml_doc::{Document, Element, ReadOptions};
 use embed_doc_image::embed_doc_image;
 
-use xml::{OptionalChild, RequiredProperty};
+use xml::RequiredProperty;
 
-use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
+use crate::constants::namespaces::{Namespace, NS_SBML_CORE};
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
-use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
+use crate::xml::{OptionalSbmlChild, OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 
 pub mod constraint;
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -192,8 +191,8 @@ pub struct Sbml {
 
 /// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
-    pub fn model(&self) -> OptionalChild<Model> {
-        OptionalChild::new(&self.sbml_root, "model", URL_SBML_CORE)
+    pub fn model(&self) -> OptionalSbmlChild<Model> {
+        OptionalSbmlChild::new(&self.sbml_root, "model", NS_SBML_CORE)
     }
 
     pub fn level(&self) -> RequiredProperty<u32> {
@@ -513,9 +512,7 @@ pub enum SbmlIssueSeverity {
 mod tests {
     use std::ops::{Deref, DerefMut};
 
-    use crate::constants::namespaces::{
-        NS_EMPTY, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_EMPTY, URL_SBML_CORE,
-    };
+    use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_SBML_CORE};
     use crate::core::sbase::SbmlUtils;
     use crate::core::validation::SbmlValidable;
     use crate::core::RuleTypes::Assignment;
@@ -699,7 +696,7 @@ mod tests {
         // get child
         let notes = model.notes();
         assert!(notes.is_set(), "Notes in Model is not set.");
-        assert_eq!(notes.name(), "notes", "Wrong name of Notes child.");
+        assert_eq!(notes.simple_name(), "notes", "Wrong name of Notes child.");
         assert_eq!(
             notes.parent().raw_element(),
             model.raw_element(),
@@ -733,10 +730,9 @@ mod tests {
         let model = doc.model().get().unwrap();
 
         // get child
-        let req_child: RequiredDynamicChild<'_, XmlElement> =
-            model.required_child("required", URL_EMPTY);
+        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
         assert!(req_child.get_raw().is_none());
-        assert_eq!(req_child.name(), "required");
+        assert_eq!(req_child.simple_name(), "required");
         assert_eq!(req_child.parent().raw_element(), model.raw_element());
         let xml_element = XmlElement::new_quantified(model.document(), "required", NS_EMPTY);
         let inner_element = xml_element.raw_element();
@@ -770,7 +766,7 @@ mod tests {
         let list = model.compartments();
 
         assert!(list.is_set());
-        assert_eq!(list.name(), "listOfCompartments");
+        assert_eq!(list.simple_name(), "listOfCompartments");
         assert_eq!(list.parent().raw_element(), model.raw_element());
         let content = list.get();
         assert!(content.is_some());
@@ -1196,15 +1192,13 @@ mod tests {
         let notes = model.notes();
         assert!(notes.is_set());
         assert_eq!(notes.parent().raw_element(), model.raw_element());
-        assert_eq!(notes.name(), "notes");
-        assert_eq!(notes.namespace_url(), URL_SBML_CORE);
+        assert_eq!(notes.simple_name(), "notes");
         assert!(notes.get().is_some());
 
         let annotation = model.annotation();
         assert!(annotation.is_set());
         assert_eq!(annotation.parent().raw_element(), model.raw_element());
-        assert_eq!(annotation.name(), "annotation");
-        assert_eq!(annotation.namespace_url(), URL_SBML_CORE);
+        assert_eq!(annotation.simple_name(), "annotation");
         assert!(annotation.get().is_some());
     }
 

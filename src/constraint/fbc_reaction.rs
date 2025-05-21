@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_FBC;
 use crate::constraint::gene_product_association::GeneProductAssociation;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Reaction, SId};
-use crate::xml::{OptionalChild, OptionalSbmlProperty, XmlElement, XmlNamedSubtype};
+use crate::xml::{OptionalSbmlChild, OptionalSbmlProperty, XmlElement, XmlNamedSubtype};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
@@ -21,7 +21,7 @@ impl FbcReaction {
     pub fn upper_flux_bound(&self) -> OptionalSbmlProperty<SId> {
         self.optional_package_property("upperFluxBound", NS_FBC, NS_FBC)
     }
-    pub fn gene_product_association(&self) -> OptionalChild<GeneProductAssociation> {
+    pub fn gene_product_association(&self) -> OptionalSbmlChild<GeneProductAssociation> {
         self.optional_package_child("geneProductAssociation", NS_FBC, false)
     }
 }

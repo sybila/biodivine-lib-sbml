@@ -3,7 +3,9 @@ use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::layout::dimensions::Dimensions;
 use crate::layout::point::Point;
-use crate::xml::{OptionalSbmlProperty, RequiredChild, RequiredXmlChild, XmlDocument, XmlElement};
+use crate::xml::{
+    OptionalSbmlProperty, RequiredSbmlChild, RequiredXmlChild, XmlDocument, XmlElement,
+};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
@@ -20,10 +22,10 @@ impl BoundingBox {
     pub fn id(&self) -> OptionalSbmlProperty<SId> {
         self.optional_package_property("id", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn position(&self) -> RequiredChild<Point> {
+    pub fn position(&self) -> RequiredSbmlChild<Point> {
         self.required_package_child("position", NS_LAYOUT, false)
     }
-    pub fn dimensions(&self) -> RequiredChild<Dimensions> {
+    pub fn dimensions(&self) -> RequiredSbmlChild<Dimensions> {
         self.required_package_child("dimensions", NS_LAYOUT, false)
     }
 }

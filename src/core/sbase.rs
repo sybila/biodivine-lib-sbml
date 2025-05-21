@@ -3,13 +3,13 @@
 //      because IDs have a special format that should be enforced. This is also related to other
 //      types that are "string like", e.g. meta id and sboTerm.
 
-use crate::constants::namespaces::{Namespace, NS_SBML_CORE, URL_HTML, URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{Namespace, NS_HTML, NS_MATHML, NS_SBML_CORE, URL_SBML_CORE};
 use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
 use crate::xml::{
-    OptionalChild, OptionalSbmlProperty, RequiredChild, RequiredSbmlProperty, XmlDocument,
-    XmlElement, XmlPropertyType, XmlWrapper,
+    OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild,
+    RequiredSbmlProperty, XmlDocument, XmlElement, XmlPropertyType, XmlWrapper,
 };
 use crate::Sbml;
 use biodivine_xml_doc::{Document, Element};
@@ -223,17 +223,17 @@ pub trait SBase: XmlWrapper {
         self.optional_sbml_property("sboTerm")
     }
 
-    fn notes(&self) -> OptionalChild<XmlElement> {
+    fn notes(&self) -> OptionalSbmlChild<XmlElement> {
         self.optional_sbml_child("notes")
     }
 
-    fn annotation(&self) -> OptionalChild<XmlElement> {
+    fn annotation(&self) -> OptionalSbmlChild<XmlElement> {
         self.optional_sbml_child("annotation")
     }
 
     /// Returns the root [`Sbml`] object, assuming the root of the containing document is an
-    /// `<sbml>` tag. For detached elements, this uses the internal  [`XmlDocument`] reference
-    /// to obtain the document root directly.
+    /// `<sbml>` tag. For detached elements, this uses the internal [`XmlDocument`] reference
+    /// to get the document root directly.
     ///
     /// The method panics if the element is not a member of an SBML document.
     fn sbml_root(&self) -> Sbml {
@@ -277,7 +277,7 @@ pub(crate) trait SbmlUtils: SBase {
     /// and using SBML namespace.
     ///
     /// Warning: Depending on the specific contract of the underlying type, this can create
-    /// an element that is not in a valid state (e.g. missing certain required attributes).
+    /// an element that is not in a valid state (e.g., missing certain required attributes).
     #[inline(always)]
     fn new_empty(document: XmlDocument, tag_name: &str) -> Self {
         unsafe {
@@ -288,8 +288,8 @@ pub(crate) trait SbmlUtils: SBase {
 
     /// Create an instance of [OptionalChild] with the given `name` and using the SBML namespace.
     #[inline(always)]
-    fn optional_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
-        OptionalChild::new(self.xml_element(), name, URL_SBML_CORE)
+    fn optional_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalSbmlChild<T> {
+        OptionalSbmlChild::new(self.xml_element(), name, NS_SBML_CORE)
     }
 
     #[inline(always)]
@@ -297,19 +297,9 @@ pub(crate) trait SbmlUtils: SBase {
         &self,
         name: &'static str,
         extension: Namespace,
-        required: bool,
-    ) -> OptionalChild<T> {
-        // TODO:
-        //  This should probably create the package declaration only when the element is
-        //  written, and check that the package declaration is present if the element is read.
-        //  However, for that, we will need to derive a new sub-type from `XmlChild`... -_-
-
-        // TODO 2:
-        //  SBML packages are always either required or not required. I.e. the required flag
-        //  can be part of the namespace "object" and we don't need to set it dynamically
-        //  based on which document elements are accessed.
-        self.ensure_package(extension, required);
-        OptionalChild::new(self.xml_element(), name, extension.1)
+        _required: bool,
+    ) -> OptionalSbmlChild<T> {
+        OptionalSbmlChild::new(self.xml_element(), name, extension)
     }
 
     #[inline(always)]
@@ -317,22 +307,21 @@ pub(crate) trait SbmlUtils: SBase {
         &self,
         name: &'static str,
         extension: Namespace,
-        required: bool,
-    ) -> RequiredChild<T> {
-        self.ensure_package(extension, required);
-        RequiredChild::new(self.xml_element(), name, extension.1)
+        _required: bool,
+    ) -> RequiredSbmlChild<T> {
+        RequiredSbmlChild::new(self.xml_element(), name, extension)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the MathML namespace.
     #[inline(always)]
     fn optional_math_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
-        OptionalChild::new(self.xml_element(), name, URL_MATHML)
+        OptionalChild::new(self.xml_element(), name, NS_MATHML)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the HTML namespace.
     #[inline(always)]
     fn optional_html_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
-        OptionalChild::new(self.xml_element(), name, URL_HTML)
+        OptionalChild::new(self.xml_element(), name, NS_HTML)
     }
 
     /// Create an instance of a [RequiredProperty] with the given `name` which adheres to
@@ -353,12 +342,6 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
     ) -> OptionalSbmlProperty<T> {
         OptionalSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
-    }
-
-    /// Ensures the root `<sbml>` tag correctly declares a package namespace.
-    fn ensure_package(&self, namespace: Namespace, required: bool) {
-        let sbml = self.sbml_root();
-        sbml.ensure_sbml_package(namespace, required).unwrap();
     }
 
     fn optional_package_property<T: XmlPropertyType>(

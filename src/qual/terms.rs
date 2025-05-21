@@ -1,9 +1,9 @@
-use crate::constants::namespaces::NS_QUAL;
+use crate::constants::namespaces::{NS_MATHML, NS_QUAL};
 use crate::core::sbase::SbmlUtils;
 use crate::core::{AbstractRule, Math};
 use crate::xml::{
     RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
-    XmlElement, XmlNamedSubtype, XmlSupertype,
+    XmlElement, XmlNamedSubtype, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -56,6 +56,6 @@ impl FunctionTerm {
     }
 
     pub fn math(&self) -> RequiredChild<Math> {
-        self.required_package_child("math", NS_QUAL, true)
+        RequiredChild::new(self.xml_element(), "math", NS_MATHML)
     }
 }

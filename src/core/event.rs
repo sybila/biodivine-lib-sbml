@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
 use crate::xml::{
-    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
-    XmlList,
+    OptionalChild, OptionalSbmlChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault,
+    XmlDocument, XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -27,19 +27,19 @@ impl Event {
         self.required_sbml_property("useValuesFromTriggerTime")
     }
 
-    pub fn trigger(&self) -> OptionalChild<Trigger> {
+    pub fn trigger(&self) -> OptionalSbmlChild<Trigger> {
         self.optional_sbml_child("trigger")
     }
 
-    pub fn priority(&self) -> OptionalChild<Priority> {
+    pub fn priority(&self) -> OptionalSbmlChild<Priority> {
         self.optional_sbml_child("priority")
     }
 
-    pub fn delay(&self) -> OptionalChild<Delay> {
+    pub fn delay(&self) -> OptionalSbmlChild<Delay> {
         self.optional_sbml_child("delay")
     }
 
-    pub fn event_assignments(&self) -> OptionalChild<XmlList<EventAssignment>> {
+    pub fn event_assignments(&self) -> OptionalSbmlChild<XmlList<EventAssignment>> {
         self.optional_sbml_child("listOfEventAssignments")
     }
 }

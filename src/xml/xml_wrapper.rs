@@ -268,23 +268,15 @@ pub trait XmlWrapper: Into<XmlElement> {
     /// Get a reference to a specific [OptionalDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
-    fn optional_child<T: XmlWrapper>(
-        &self,
-        name: &str,
-        namespace_url: &str,
-    ) -> OptionalDynamicChild<T> {
-        OptionalDynamicChild::new(self.xml_element(), name, namespace_url)
+    fn optional_child<T: XmlWrapper>(&self, name: &str) -> OptionalDynamicChild<T> {
+        OptionalDynamicChild::new(self.xml_element(), name)
     }
 
     /// Get a reference to a specific [RequiredDynamicChild] of this XML element.
     ///
     /// Also see notes on safety in [Self::required_property].
-    fn required_child<T: XmlWrapper>(
-        &self,
-        name: &str,
-        namespace_url: &str,
-    ) -> RequiredDynamicChild<T> {
-        RequiredDynamicChild::new(self.xml_element(), name, namespace_url)
+    fn required_child<T: XmlWrapper>(&self, name: &str) -> RequiredDynamicChild<T> {
+        RequiredDynamicChild::new(self.xml_element(), name)
     }
 
     /// Detach this [XmlWrapper] from its current parent while maintaining the necessary
