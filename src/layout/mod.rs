@@ -38,7 +38,6 @@ impl Layout {
     pub fn dimensions(&self) -> RequiredChild<Dimensions> {
         self.required_package_child("dimensions", NS_LAYOUT, false)
     }
-    //can contain only GraphicalObject or GeneralGlyph
     pub fn additional_graph_obj(&self) -> OptionalChild<XmlList<GraphicalObject>> {
         self.optional_package_child("listOfAdditionalGraphicalObjects", NS_LAYOUT, false)
     }
@@ -91,10 +90,9 @@ impl XmlNamedSubtype<GraphicalObject> for CompartmentGlyph {
 }
 
 impl CompartmentGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox) -> Self {
+    pub fn new(document: XmlDocument, id: SId) -> Self {
         let glyph = CompartmentGlyph::new_empty(document, "compartmentGlyph");
         glyph.id().set(&id);
-        glyph.bounding_box().set(bounding_box);
         glyph
     }
 
@@ -104,8 +102,8 @@ impl CompartmentGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn compartment(&self) -> OptionalSbmlProperty<SId> {
@@ -126,10 +124,9 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesGlyph {
 }
 
 impl SpeciesGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox) -> Self {
+    pub fn new(document: XmlDocument, id: SId) -> Self {
         let glyph = SpeciesGlyph::new_empty(document, "speciesGlyph");
         glyph.id().set(&id);
-        glyph.bounding_box().set(bounding_box);
         glyph
     }
 
@@ -139,8 +136,8 @@ impl SpeciesGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn species(&self) -> OptionalSbmlProperty<SId> {
@@ -158,15 +155,9 @@ impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {
 }
 
 impl ReactionGlyph {
-    pub fn new(
-        document: XmlDocument,
-        id: SId,
-        bounding_box: BoundingBox,
-        list: XmlList<SpeciesReferenceGlyph>,
-    ) -> Self {
+    pub fn new(document: XmlDocument, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
         let glyph = ReactionGlyph::new_empty(document, "reactionGlyph");
         glyph.id().set(&id);
-        glyph.bounding_box().set(bounding_box);
         glyph.species_reference_glyphs().set(list);
         glyph
     }
@@ -177,15 +168,15 @@ impl ReactionGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn reaction(&self) -> OptionalSbmlProperty<SId> {
         self.optional_package_property("reaction", NS_LAYOUT, NS_LAYOUT)
     }
     pub fn species_reference_glyphs(&self) -> RequiredChild<XmlList<SpeciesReferenceGlyph>> {
-        self.required_package_child("speciesReferenceGlyphs", NS_LAYOUT, false)
+        self.required_package_child("listOfSpeciesReferenceGlyphs", NS_LAYOUT, false)
     }
     pub fn curve(&self) -> OptionalChild<Curve> {
         self.optional_package_child("curve", NS_LAYOUT, false)
@@ -202,11 +193,10 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {
 }
 
 impl SpeciesReferenceGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox, glyph: SId) -> Self {
+    pub fn new(document: XmlDocument, id: SId, glyph: SId) -> Self {
         let srg = SpeciesReferenceGlyph::new_empty(document, "speciesRefGlyph");
         srg.species_glyph().set(&glyph);
         srg.id().set(&id);
-        srg.bounding_box().set(bounding_box);
         srg
     }
 
@@ -216,8 +206,8 @@ impl SpeciesReferenceGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn species_glyph(&self) -> RequiredSbmlProperty<SId> {
@@ -307,10 +297,9 @@ impl XmlNamedSubtype<GraphicalObject> for GeneralGlyph {
 }
 
 impl GeneralGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox) -> Self {
+    pub fn new(document: XmlDocument, id: SId) -> Self {
         let gen = GeneralGlyph::new_empty(document, "generalGlyph");
         gen.id().set(&id);
-        gen.bounding_box().set(bounding_box);
         gen
     }
 
@@ -320,8 +309,8 @@ impl GeneralGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn reference(&self) -> OptionalSbmlProperty<SId> {
@@ -348,10 +337,9 @@ impl XmlNamedSubtype<GraphicalObject> for ReferenceGlyph {
 }
 
 impl ReferenceGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox, glyph: SId) -> Self {
+    pub fn new(document: XmlDocument, id: SId, glyph: SId) -> Self {
         let ref_g = ReferenceGlyph::new_empty(document, "referenceGlyph");
         ref_g.id().set(&id);
-        ref_g.bounding_box().set(bounding_box);
         ref_g.glyph().set(&glyph);
         ref_g
     }
@@ -362,8 +350,8 @@ impl ReferenceGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn glyph(&self) -> RequiredSbmlProperty<SId> {
@@ -390,10 +378,9 @@ impl XmlNamedSubtype<GraphicalObject> for TextGlyph {
 }
 
 impl TextGlyph {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox) -> Self {
+    pub fn new(document: XmlDocument, id: SId) -> Self {
         let txt = TextGlyph::new_empty(document, "textGlyph");
         txt.id().set(&id);
-        txt.bounding_box().set(bounding_box);
         txt
     }
 
@@ -403,8 +390,8 @@ impl TextGlyph {
     pub fn meta_id_ref(&self) -> OptionalSbmlProperty<MetaId> {
         self.optional_package_property("metaidRef", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn bounding_box(&self) -> RequiredChild<BoundingBox> {
-        self.required_package_child("boundingBox", NS_LAYOUT, false)
+    pub fn bounding_box(&self) -> OptionalChild<BoundingBox> {
+        self.optional_package_child("boundingBox", NS_LAYOUT, false)
     }
 
     pub fn graphical_object(&self) -> OptionalSbmlProperty<SId> {
@@ -415,5 +402,93 @@ impl TextGlyph {
     }
     pub fn origin_of_text(&self) -> OptionalSbmlProperty<SId> {
         self.optional_package_property("originOfText", NS_LAYOUT, NS_LAYOUT)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::layout::curve::XsiType;
+    use crate::layout::Role;
+    use crate::tests::sid;
+    use crate::xml::{
+        OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, RequiredXmlProperty,
+    };
+    use crate::Sbml;
+
+    #[test]
+    fn layout_example() {
+        let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
+        let issues = doc.validate();
+        assert!(issues.is_empty());
+
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        let one_layout = layouts.get(0);
+
+        assert_eq!(one_layout.id().get(), sid("layout1"));
+        assert_eq!(one_layout.dimensions().get().height().get(), f64::from(600));
+        assert_eq!(
+            one_layout
+                .additional_graph_obj()
+                .get()
+                .unwrap()
+                .get(0)
+                .id()
+                .get(),
+            sid("gg0")
+        );
+    }
+
+    #[test]
+    fn compartment_glyph() {
+        let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
+        assert!(doc.validate().is_empty());
+
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        let comp_glyph = layouts.get(0).compartment_glyphs().get().unwrap().get(0);
+
+        assert_eq!(comp_glyph.id().get(), sid("cg0"));
+        assert_eq!(comp_glyph.compartment().get().unwrap(), sid("default"));
+        assert_eq!(
+            comp_glyph
+                .bounding_box()
+                .get()
+                .unwrap()
+                .position()
+                .get()
+                .x()
+                .get(),
+            f64::from(10)
+        );
+    }
+
+    #[test]
+    fn reaction_glyphs() {
+        let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
+        assert!(doc.validate().is_empty());
+
+        let model = doc.model().get().unwrap();
+        let layouts = model.layouts().get().unwrap();
+        let reactions = layouts.get(0).reaction_glyphs().get().unwrap();
+
+        assert_eq!(reactions.get(0).id().get(), sid("rg0"));
+        let sp_references = reactions.get(0).species_reference_glyphs().get();
+
+        assert_eq!(reactions.get(2).id().get(), sid("rg2"));
+        assert_eq!(reactions.get(1).reaction().get().unwrap(), sid("r1"));
+        assert_eq!(sp_references.get(0).role().get().unwrap(), Role::Substrate);
+
+        let curve1 = reactions.get(0).curve().get().unwrap();
+        let curve2 = reactions.get(1).curve().get().unwrap();
+
+        assert_eq!(
+            curve1.curve_segments().get().get(0).start().get().x().get(),
+            f64::from(170)
+        );
+        assert_eq!(
+            curve2.curve_segments().get().get(0).xsi_type().get(),
+            XsiType::CubicBezier
+        );
     }
 }

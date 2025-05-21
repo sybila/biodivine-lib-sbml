@@ -119,8 +119,7 @@ impl From<BaseUnit> for SId {
     }
 }
 
-/// A conversion between an XML attribute and a [BaseUnit] value. Missing attribute value is
-/// interpreted as an error.
+/// A conversion between an XML attribute and a [BaseUnit] value.
 ///
 /// ## Specification
 ///  - Section 4.4.2
@@ -134,7 +133,7 @@ impl XmlPropertyType for BaseUnit {
                     e
                 )),
             },
-            None => Err("Value missing".to_string()),
+            None => Ok(None),
         }
     }
 
