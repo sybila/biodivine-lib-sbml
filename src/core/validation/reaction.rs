@@ -1,13 +1,17 @@
+use crate::constants::namespaces::NS_FBC;
+use crate::constraint::FbcReaction;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
 use crate::core::{
-    KineticLaw, LocalParameter, MetaId, ModifierSpeciesReference, Reaction, SId, SpeciesReference,
+    KineticLaw, LocalParameter, MetaId, ModifierSpeciesReference, Reaction, SBase, SId,
+    SpeciesReference,
 };
 use crate::xml::{
-    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlWrapper,
+    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlSubtype,
+    XmlWrapper,
 };
 use crate::SbmlIssue;
 use std::collections::HashSet;
@@ -32,6 +36,11 @@ impl SbmlValidable for Reaction {
         if let Some(kinetic_law) = self.kinetic_law().get() {
             kinetic_law.validate(issues, identifiers, meta_ids);
         }
+        if self.sbml_root().find_sbml_package(NS_FBC) == Ok("fbc".to_string()) {
+            if let Some(fbc_reaction) = FbcReaction::try_cast_from_super(self) {
+                fbc_reaction.validate(issues, identifiers, meta_ids);
+            }
+        }
     }
 }
 
@@ -50,6 +59,11 @@ impl CanTypeCheck for Reaction {
         }
         if let Some(kinetic_law) = self.kinetic_law().get() {
             kinetic_law.type_check(issues);
+        }
+        if self.sbml_root().find_sbml_package(NS_FBC) == Ok("fbc".to_string()) {
+            if let Some(fbc_reaction) = FbcReaction::try_cast_from_super(self) {
+                fbc_reaction.type_check(issues);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
-use crate::constants::namespaces::NS_LAYOUT;
+use crate::constants::namespaces::{NS_FBC, NS_LAYOUT};
+use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Event,
@@ -10,8 +11,8 @@ use crate::core::{
 use crate::layout::Layout;
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
-    RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlPropertyType,
-    XmlSupertype, XmlWrapper,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
+    XmlPropertyType, XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
@@ -262,6 +263,10 @@ impl Model {
         self.optional_sbml_property("conversionFactor")
     }
 
+    pub fn strict(&self) -> RequiredSbmlProperty<bool> {
+        self.required_package_property("strict", NS_FBC, NS_FBC)
+    }
+
     pub fn function_definitions(&self) -> OptionalChild<XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
     }
@@ -304,6 +309,14 @@ impl Model {
 
     pub fn layouts(&self) -> OptionalChild<XmlList<Layout>> {
         self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
+    }
+
+    pub fn gene_products(&self) -> OptionalChild<XmlList<GeneProduct>> {
+        self.optional_package_child("listOfGeneProducts", NS_FBC, false)
+    }
+
+    pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
+        self.optional_package_child("listOfObjectives", NS_FBC, false)
     }
 }
 

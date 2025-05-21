@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core"
+      xmlns:fbc="http://www.sbml.org/sbml/level3/version1/fbc/version2"
+      level="3" version="2"
+      fbc:required="true">
+
+    <model id="minimal_model" name="Minimal Model" fbc:strict="true">
+
+        <listOfInitialAssignments>
+            <initialAssignment symbol="mu_H">
+            </initialAssignment>
+            <initialAssignment symbol="delta_M">
+            </initialAssignment>
+        </listOfInitialAssignments>
+        <listOfCompartments>
+            <compartment id="c" constant="true"/>
+        </listOfCompartments>
+
+        <listOfSpecies>
+            <species id="A" compartment="c" initialAmount="0" boundaryCondition="false" hasOnlySubstanceUnits="false" constant="false"/>
+            <species id="B" compartment="c" initialAmount="0" boundaryCondition="false" hasOnlySubstanceUnits="false" constant="false"/>
+        </listOfSpecies>
+
+        <listOfParameters>
+            <parameter id="LB_R1" constant="true" value="0"/>
+            <parameter id="UB_R1" constant="true" value="1000"/>
+        </listOfParameters>
+
+        <listOfReactions>
+            <reaction id="R1" reversible="false" fbc:lowerFluxBound="LB_R1">
+                <listOfReactants>
+                    <speciesReference species="A" constant="true" stoichiometry="1"/>
+                </listOfReactants>
+                <listOfProducts>
+                    <speciesReference species="B" constant="true" stoichiometry="1"/>
+                </listOfProducts>
+            </reaction>
+        </listOfReactions>
+
+        <fbc:listOfObjectives fbc:activeObjective="obj">
+            <fbc:objective fbc:id="obj" fbc:type="maximize">
+                <fbc:listOfFluxObjectives>
+                    <fbc:fluxObjective fbc:reaction="R1" fbc:coefficient="1"/>
+                </fbc:listOfFluxObjectives>
+            </fbc:objective>
+        </fbc:listOfObjectives>
+
+    </model>
+</sbml>

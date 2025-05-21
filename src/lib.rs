@@ -112,6 +112,7 @@ use crate::xml::{OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
 /// by the SBML core specification.
 pub mod core;
 
+pub mod constraint;
 pub mod layout;
 
 /// Defines [`XmlDocument`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
