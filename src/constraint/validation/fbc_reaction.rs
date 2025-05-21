@@ -72,14 +72,9 @@ impl SbmlValidable for FbcReaction {
                     let message = "When attribute [strict] is se to true [lowerFluxBound] parameter value must be less or equal to [upperFluxBound] parameter value].".to_string();
                     issues.push(SbmlIssue::new_error("fbc-20713", self, message))
                 } else {
-                    if let Some(initial_assignments) = self
-                        .sbml_root()
-                        .model()
-                        .get()
-                        .unwrap()
-                        .initial_assignments()
-                        .get()
-                    {
+                    let model = self.sbml_root().model().get().unwrap();
+                    let initial_assignments = model.initial_assignments().get();
+                    if let Some(initial_assignments) = initial_assignments {
                         let is_initial = initial_assignments.iter().any(|ia| {
                             let symbol = ia.symbol();
                             initial_assignments_sid.insert(ia.symbol().get());
@@ -103,7 +98,7 @@ impl SbmlValidable for FbcReaction {
                     let stoichiometry = reactant.stoichiometry().get();
 
                     !reactant.constant().get()
-                        || stoichiometry.map_or(false, |s| {
+                        || stoichiometry.is_some_and(|s| {
                             s.is_nan()
                                 || s.is_infinite()
                                 || (s.is_sign_negative() && s.is_infinite())
@@ -122,7 +117,7 @@ impl SbmlValidable for FbcReaction {
                     let stoichiometry = product.stoichiometry().get();
 
                     !product.constant().get()
-                        || stoichiometry.map_or(false, |s| {
+                        || stoichiometry.is_some_and(|s| {
                             s.is_nan()
                                 || s.is_infinite()
                                 || (s.is_sign_negative() && s.is_infinite())

@@ -55,7 +55,7 @@ impl TryFrom<String> for TransitionOutputEffect {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             "production" => Ok(TransitionOutputEffect::Production),
-            "assignmentLevel" => Ok(TransitionOutputEffect::AssignmentLevel),
+            "assignmentlevel" => Ok(TransitionOutputEffect::AssignmentLevel),
             _ => Err(format!("'{value}' is not valid TransitionInputEffect type")),
         }
     }

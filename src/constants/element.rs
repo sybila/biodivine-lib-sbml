@@ -150,10 +150,9 @@ pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
 /// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
 /// packages can use different namespace prefixes as well.
 pub fn namespace_for_prefix(prefix: &str) -> Namespace {
-    KNOWN_DEFAULT_PREFIX
+    *KNOWN_DEFAULT_PREFIX
         .get(prefix)
         .expect("Default prefix not found")
-        .clone()
 }
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
