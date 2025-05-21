@@ -2,7 +2,9 @@ use crate::constants::element::{
     namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
     REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
-use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_FBC, URL_SBML_CORE};
+use crate::constants::namespaces::{
+    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_SBML_CORE,
+};
 use crate::constraint::FbcType;
 use crate::core::SId;
 use crate::xml::{
@@ -236,7 +238,10 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
             issues.push(SbmlIssue::new_error("10201", xml_element, message));
-        } else if child_namespace == URL_SBML_CORE || child_namespace == URL_PACKAGE_FBC {
+        } else if child_namespace == URL_SBML_CORE
+            || child_namespace == URL_PACKAGE_FBC
+            || child_namespace == URL_PACKAGE_LAYOUT
+        {
             // All other children are expected to be in the SBML Core namespace. Anything else
             // that is not in the core namespace is skipped.
             if !allowed_children.contains(&child_name.as_str()) {
@@ -271,7 +276,7 @@ pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut 
                 required, element_name
             );
             // TODO: Check if these rule IDs are ok.
-            let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            let rule_id = tag_to_required_child_rule_id(element_name.as_str()).unwrap_or("10102");
             issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
         }
     }
@@ -287,7 +292,10 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
         let child_namespace = child.namespace_url();
-        if child_namespace == URL_SBML_CORE || child_namespace == URL_MATHML {
+        if child_namespace == URL_SBML_CORE
+            || child_namespace == URL_MATHML
+            || child_namespace == URL_PACKAGE_LAYOUT
+        {
             // Right now, we are only testing core and math elements.
             let entry = counts.entry(child_name);
             let count = entry.or_insert(0usize);
@@ -369,7 +377,28 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "fluxObjective" => Some("fbc-20603"),
         "geneProductRef" => Some("fbc-20903"),
         "geneProduct" => Some("fbc-21203"),
-
+        // layout package
+        "dimensions" => Some("layout-21703"),
+        "curve" => Some("layout-21402"),
+        "boundingBox" => Some("layout-21302"),
+        "position" => Some("layout-21204"),
+        "referenceGlyph" => Some("layout-21104"),
+        "speciesReferenceGlyph" => Some("layout-21004"),
+        "textGlyph" => Some("layout-20904"),
+        "listOfSubGlyphs" => Some("layout-20813"),
+        "listOfReferenceGlyphs" => Some("layout-20811"),
+        "generalGlyph" => Some("layout-20804"),
+        "listOfSpeciesReferenceGlyphs" => Some("layout-20711"),
+        "reactionGlyph" => Some("layout-20704"),
+        "speciesGlyph" => Some("layout-20604"),
+        "compartmentGlyph" => Some("layout-20504"),
+        "graphicalObject" => Some("layout-20404"),
+        "listOfTextGlyphs" => Some("layout-20316"),
+        "listOfAdditionalGraphicalObjects" => Some("layout-20313"),
+        "listOfReactionGlyphs" => Some("layout-20311"),
+        "listOfSpeciesGlyphs" => Some("layout-20309"),
+        "listOfCompartmentGlyphs" => Some("layout-20307"),
+        "layout" => Some("layout-20305"),
         _ => None,
     }
 }
@@ -394,11 +423,34 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "listOfModifiers" => Some("21105"),
         "listOfEventAssignments" => Some("21223"),
         "listOfLocalParameters" => Some("21128"),
-        "boundingBox" => Some("21303"),
-
         //fbc  package
         "listOfFluxObjectives" => Some("fbc-20508"),
         "geneProductAssociation" => Some("fbc-20805"),
+        //layout package
+        "boundingBox" => Some("layout-21303"),
+        "layout" => Some("layout-20302"),
+        "listOfCompartmentGlyphs" => Some("layout-20308"),
+        "listOfSpeciesGlyphs" => Some("layout-20310"),
+        "listOfReactionGlyphs" => Some("layout-20312"),
+        "listOfAdditionalGraphicalObjects" => Some("layout-20304"),
+        "listOfTextGlyphs" => Some("layout-20317"),
+        "listOfSpeciesReferenceGlyphs" => Some("layout-20710"),
+        "listOfReferenceGlyphs" => Some("layout-20810"),
+        "listOfSubGlyphs" => Some("layout-20812"),
+        "listOfCurveSegments" => Some("layout-21406"),
+        _ => None,
+    }
+}
+
+fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
+    match tag_name {
+        "layout" => Some("layout-20015"),
+        "graphicalObject" => Some("layout-20407"),
+        "textGlyph" => Some("layout-20903"),
+        "boundingBox" => Some("layout-21303"),
+        "curve" => Some("layout-21403"),
+        "lineSegment" => Some("layout-21503"),
+        "cubicBezier" => Some("layout-21603"),
         _ => None,
     }
 }
@@ -441,6 +493,22 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("event", "priority") => Some("21230"),
         ("priority", "math") => Some("21231"),
         ("eventAssignment", "math") => Some("21213"),
+        ("layout", _) => Some("layout-20303"),
+        ("graphicalObject", "boundingBox") => Some("layout-20403"),
+        ("compartmentGlyph", "boundingBox") => Some("layout-20503"),
+        ("speciesGlyph", "boundingBox") => Some("layout-20603"),
+        ("reactionGlyph", "boundingBox") => Some("layout-20703"),
+        ("reactionGlyph", "curve") => Some("layout-20703"),
+        ("reactionGlyph", "listOfSpeciesReferenceGlyphs") => Some("layout-20703"),
+        ("generalGlyph", "boundingBox") => Some("layout-20803"),
+        ("generalGlyph", "curve") => Some("layout-20803"),
+        ("generalGlyph", "listOfReferenceGlyphs") => Some("layout-20803"),
+        ("generalGlyph", "listOfSubGlyphs") => Some("layout-20803"),
+        ("textGlyph", "boundingBox") => Some("layout-20903"),
+        ("speciesReferenceGlyph", "boundingBox") => Some("layout-21003"),
+        ("speciesReferenceGlyph", "curve") => Some("layout-21003"),
+        ("referenceGlyph", "boundingBox") => Some("layout-21103"),
+        ("referenceGlyph", "curve") => Some("layout-21103"),
         _ => None,
     }
 }

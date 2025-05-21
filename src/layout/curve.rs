@@ -2,8 +2,9 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
-    XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType, XmlSupertype,
+    OptionalChild, OptionalXmlChild, RequiredChild, RequiredSbmlProperty, RequiredXmlChild,
+    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlPropertyType, XmlSubtype,
+    XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
@@ -62,7 +63,7 @@ impl XmlPropertyType for XsiType {
         match value {
             Some(value) => match XsiType::try_from(value.to_string()) {
                 Ok(xsi) => Ok(Some(xsi)),
-                Err(_) => Ok(None),
+                Err(_) => Err("Invalid xsi type".to_string()),
             },
             None => Ok(None),
         }
@@ -80,7 +81,7 @@ impl XmlSupertype for LineSegment {}
 
 impl LineSegment {
     pub fn new(document: XmlDocument, start: Point, end: Point) -> Self {
-        let line = LineSegment::new_empty(document, "lineSegment");
+        let line = LineSegment::new_empty(document, "curveSegment");
 
         line.xsi_type().set(&XsiType::LineSegment);
         line.start().set(start);
@@ -89,7 +90,7 @@ impl LineSegment {
     }
 
     pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
+        self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
 
     pub fn start(&self) -> RequiredChild<Point> {
@@ -99,14 +100,25 @@ impl LineSegment {
     pub fn end(&self) -> RequiredChild<Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
+
+    pub fn base_point1(&self) -> OptionalChild<Point> {
+        self.optional_package_child("basePoint1", NS_LAYOUT, false)
+    }
+    pub fn base_point2(&self) -> OptionalChild<Point> {
+        self.optional_package_child("basePoint2", NS_LAYOUT, false)
+    }
 }
 
 #[derive(Debug, Clone, SBase, XmlWrapper)]
 pub struct CubicBezier(XmlElement);
 
-impl XmlNamedSubtype<LineSegment> for CubicBezier {
-    fn expected_tag_name() -> &'static str {
-        "cubicBezier"
+impl XmlSubtype<LineSegment> for CubicBezier {
+    fn try_cast_from_super(value: &LineSegment) -> Option<Self> {
+        if value.xsi_type().get() == XsiType::CubicBezier {
+            Some(unsafe { CubicBezier::unchecked_cast(value.clone()) })
+        } else {
+            None
+        }
     }
 }
 
@@ -128,7 +140,7 @@ impl CubicBezier {
         cub
     }
     pub fn xsi_type(&self) -> RequiredSbmlProperty<XsiType> {
-        self.required_package_property("xsiType", NS_LAYOUT, NS_LAYOUT)
+        self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
     pub fn start(&self) -> RequiredChild<Point> {
         self.required_package_child("start", NS_LAYOUT, false)
@@ -136,10 +148,10 @@ impl CubicBezier {
     pub fn end(&self) -> RequiredChild<Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
-    pub fn base_point1(&self) -> RequiredChild<Point> {
-        self.required_package_child("basePoint1", NS_LAYOUT, false)
+    pub fn base_point1(&self) -> OptionalChild<Point> {
+        self.optional_package_child("basePoint1", NS_LAYOUT, false)
     }
-    pub fn base_point2(&self) -> RequiredChild<Point> {
-        self.required_package_child("basePoint2", NS_LAYOUT, false)
+    pub fn base_point2(&self) -> OptionalChild<Point> {
+        self.optional_package_child("basePoint2", NS_LAYOUT, false)
     }
 }
