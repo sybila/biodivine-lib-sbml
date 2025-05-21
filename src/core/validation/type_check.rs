@@ -252,7 +252,11 @@ pub fn validate_allowed_attributes(
 /// of children (tag names). If not, an error is logged in the vector of issues.
 pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let allowed_children = ALLOWED_CHILDREN.get(element_name.as_str()).unwrap();
+    let Some(allowed_children) = ALLOWED_CHILDREN.get(element_name.as_str()) else {
+        // If the element has no allowed children registered, then it can be safely skipped
+        // (we have no relevant rules for this element and anything is thus allowed)
+        return;
+    };
 
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
@@ -314,7 +318,10 @@ pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut 
 /// indeed do. Logs error if this is violated.
 pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let unique_children = UNIQUE_CHILDREN.get(element_name.as_str()).unwrap();
+    let Some(unique_children) = UNIQUE_CHILDREN.get(element_name.as_str()) else {
+        // No rules are given for this child element.
+        return;
+    };
 
     let mut counts = HashMap::new();
     for child in xml_element.child_elements() {
