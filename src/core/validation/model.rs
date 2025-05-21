@@ -59,6 +59,12 @@ impl SbmlValidable for Model {
         if let Some(list_of_gene_products) = self.gene_products().get() {
             validate_list_of_objects(&list_of_gene_products, issues, identifiers, meta_ids);
         }
+        if let Some(list_of_transitions) = self.transitions().get() {
+            validate_list_of_objects(&list_of_transitions, issues, identifiers, meta_ids)
+        }
+        if let Some(list_of_qual_species) = self.qual_species().get() {
+            validate_list_of_objects(&list_of_qual_species, issues, identifiers, meta_ids);
+        }
         if let Some(list_of_layouts) = self.layouts().get() {
             validate_list_of_objects(&list_of_layouts, issues, identifiers, meta_ids);
         }
@@ -104,6 +110,12 @@ impl CanTypeCheck for Model {
         }
         if let Some(list_of_gene_products) = self.gene_products().get() {
             type_check_of_list(&list_of_gene_products, issues);
+        }
+        if let Some(list_of_transitions) = self.transitions().get() {
+            type_check_of_list(&list_of_transitions, issues)
+        }
+        if let Some(list_of_qual_species) = self.qual_species().get() {
+            type_check_of_list(&list_of_qual_species, issues)
         }
         if let Some(list_of_layouts) = self.layouts().get() {
             type_check_of_list(&list_of_layouts, issues);

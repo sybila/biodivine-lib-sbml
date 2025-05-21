@@ -7,11 +7,12 @@ use crate::constants::namespaces::{
 };
 use crate::constraint::FbcType;
 use crate::core::SId;
+use crate::qual::{Sign, TransitionInputEffect, TransitionOutputEffect};
 use crate::xml::{
     OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
 };
-use crate::SbmlIssue;
+use crate::{Sbml, SbmlIssue};
 use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
@@ -63,6 +64,15 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
             let (prefix, name) = Element::separate_prefix_name(req_attr);
             let namespace = namespace_for_prefix(prefix);
             let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
+
+            let package_declaration = Sbml::try_for_child(xml_element)
+                .unwrap()
+                .find_sbml_package(namespace);
+            if package_declaration.is_err() {
+                // This package is not declared, hence it's required attributes are not relevant.
+                continue;
+            }
+
             if !property.is_set() {
                 let message = format!(
                     "Sanity check failed: missing required attribute [{req_attr}] on <{element_name}>."
@@ -96,6 +106,17 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
                     "boolean" => type_check_of_property::<bool>(attr_id, xml_element, issues),
                     "sid" => type_check_of_property::<SId>(attr_id, xml_element, issues),
                     "fbc_type" => type_check_of_property::<FbcType>(attr_id, xml_element, issues),
+                    "sign" => type_check_of_property::<Sign>(attr_id, xml_element, issues),
+                    "input_effect" => type_check_of_property::<TransitionInputEffect>(
+                        attr_id,
+                        xml_element,
+                        issues,
+                    ),
+                    "output_effect" => type_check_of_property::<TransitionOutputEffect>(
+                        attr_id,
+                        xml_element,
+                        issues,
+                    ),
                     _ => (),
                 }
             };
@@ -141,6 +162,13 @@ fn type_check_of_property<T: XmlPropertyType>(
 ) {
     let (prefix, name) = Element::separate_prefix_name(attribute_name);
     let namespace = namespace_for_prefix(prefix);
+    let package_declaration = Sbml::try_for_child(xml_element)
+        .unwrap()
+        .find_sbml_package(namespace);
+    if package_declaration.is_err() {
+        // This package is not declared, hence it's required attributes are not relevant.
+        return;
+    }
     let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
     if let Some(err) = property.get_checked().err() {
         // TODO:
@@ -377,6 +405,16 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "fluxObjective" => Some("fbc-20603"),
         "geneProductRef" => Some("fbc-20903"),
         "geneProduct" => Some("fbc-21203"),
+        //qual package
+        "qualitativeSpecies" => Some("qual-20303"),
+        "transition" => Some("qual-20403"),
+        "listOfInputs" => Some("qual-20410"),
+        "listOfOutputs" => Some("qual-20411"),
+        "listOfFunctionTerms" => Some("qual-20412"),
+        "input" => Some("qual-20503"),
+        "output" => Some("qual-20603"),
+        "defaultTerm" => Some("qual-20703"),
+        "functionTerm" => Some("qual-20803"),
         // layout package
         "dimensions" => Some("layout-21703"),
         "curve" => Some("layout-21402"),
@@ -426,6 +464,12 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
         //fbc  package
         "listOfFluxObjectives" => Some("fbc-20508"),
         "geneProductAssociation" => Some("fbc-20805"),
+        //qual package
+        "transition" => Some("20406"),
+        "listOfInputs" => Some("qual-20407"),
+        "listOfOutputs" => Some("qual-20408"),
+        "listOfFunctionTerms" => Some("qual-20409"),
+        "functionTerm" => Some("qual-20804"),
         //layout package
         "boundingBox" => Some("layout-21303"),
         "layout" => Some("layout-20302"),
@@ -493,6 +537,9 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("event", "priority") => Some("21230"),
         ("priority", "math") => Some("21231"),
         ("eventAssignment", "math") => Some("21213"),
+        ("transition", "listOfFunctionTerms")
+        | ("transition", "listOfInputs")
+        | ("transition", "listOfOutputs") => Some("qual-20405"),
         ("layout", _) => Some("layout-20303"),
         ("graphicalObject", "boundingBox") => Some("layout-20403"),
         ("compartmentGlyph", "boundingBox") => Some("layout-20503"),

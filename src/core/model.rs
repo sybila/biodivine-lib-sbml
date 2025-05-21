@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::constants::namespaces::{NS_FBC, NS_LAYOUT};
+use crate::constants::namespaces::{NS_FBC, NS_LAYOUT, NS_QUAL};
 use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
 use crate::core::{
@@ -9,6 +9,7 @@ use crate::core::{
     UnitDefinition,
 };
 use crate::layout::Layout;
+use crate::qual::{get_outputs_from_transition, QualOutput, QualitativeSpecies, Transition};
 use crate::xml::{
     OptionalChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
@@ -318,6 +319,14 @@ impl Model {
     pub fn objectives(&self) -> OptionalChild<XmlList<Objective>> {
         self.optional_package_child("listOfObjectives", NS_FBC, false)
     }
+
+    pub fn transitions(&self) -> OptionalChild<XmlList<Transition>> {
+        self.optional_package_child("listOfTransitions", NS_QUAL, true)
+    }
+
+    pub fn qual_species(&self) -> OptionalChild<XmlList<QualitativeSpecies>> {
+        self.optional_package_child("listOfQualitativeSpecies", NS_QUAL, true)
+    }
 }
 
 /// Other methods for creating and manipulating SBML [`Model`].
@@ -590,5 +599,21 @@ impl Model {
         } else {
             None
         }
+    }
+
+    pub(crate) fn get_all_transition_outputs(&self) -> Vec<QualOutput> {
+        let mut lst = Vec::new();
+
+        if !self.transitions().is_set() {
+            return lst;
+        }
+
+        for i in 0..self.transitions().get().unwrap().len() {
+            lst.extend(get_outputs_from_transition(
+                self.transitions().get().unwrap().get(i),
+            ))
+        }
+
+        lst
     }
 }
