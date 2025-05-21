@@ -3,7 +3,7 @@ use crate::constants::element::{
     REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{
-    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_SBML_CORE,
+    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_SBML_CORE,
 };
 use crate::constraint::FbcType;
 use crate::core::SId;
@@ -65,12 +65,14 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
             let namespace = namespace_for_prefix(prefix);
             let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
 
-            let package_declaration = Sbml::try_for_child(xml_element)
-                .unwrap()
-                .find_sbml_package(namespace);
-            if package_declaration.is_err() {
-                // This package is not declared, hence it's required attributes are not relevant.
-                continue;
+            if namespace != NS_SBML_CORE {
+                let package_declaration = Sbml::try_for_child(xml_element)
+                    .unwrap()
+                    .find_sbml_package(namespace);
+                if package_declaration.is_err() {
+                    // This package is not declared, hence it's required attributes are not relevant.
+                    continue;
+                }
             }
 
             if !property.is_set() {
