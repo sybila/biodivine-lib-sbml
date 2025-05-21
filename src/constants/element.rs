@@ -1,4 +1,4 @@
-use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_SBML_CORE};
+use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_QUAL, NS_SBML_CORE};
 use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
@@ -144,7 +144,7 @@ pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
     "" => NS_SBML_CORE,
     "layout" => NS_LAYOUT,
     "fbc" => NS_FBC,
-    "qual" => NS_QUAL
+    "qual" => NS_QUAL,
 };
 
 /// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
