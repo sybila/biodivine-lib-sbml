@@ -17,12 +17,12 @@ impl SbmlValidable for Transition {
         validate_sbase(self, issues, identifiers, meta_ids);
         validate_list_of_objects(&self.function_terms().get(), issues, identifiers, meta_ids);
 
-        if let Some(listOfInputs) = self.inputs().get() {
-            validate_list_of_objects(&listOfInputs, issues, identifiers, meta_ids);
+        if let Some(list_of_inputs) = self.inputs().get() {
+            validate_list_of_objects(&list_of_inputs, issues, identifiers, meta_ids);
         }
 
-        if let Some(listOfOutputs) = self.outputs().get() {
-            validate_list_of_objects(&listOfOutputs, issues, identifiers, meta_ids);
+        if let Some(list_of_outputs) = self.outputs().get() {
+            validate_list_of_objects(&list_of_outputs, issues, identifiers, meta_ids);
         }
     }
 }

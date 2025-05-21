@@ -2,5 +2,6 @@ mod qual_input;
 mod qual_output;
 mod qualitative_species;
 mod terms;
-mod transition;
+#[cfg(test)]
 mod tests;
+mod transition;

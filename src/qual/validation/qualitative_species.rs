@@ -2,7 +2,7 @@ use crate::core::sbase::SbmlUtils;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
-use crate::core::{Compartment, MetaId, Model, SBase, SId};
+use crate::core::{Compartment, MetaId, Model, SId};
 use crate::qual::QualitativeSpecies;
 use crate::xml::{OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
@@ -52,8 +52,8 @@ pub fn apply_rule_qual_20310(element: &QualitativeSpecies, issues: &mut Vec<Sbml
     let model = Model::for_child_element(element.xml_element());
     let outputs = model.unwrap().get_all_transition_outputs();
 
-    if !element.constant().get(){
-        return
+    if !element.constant().get() {
+        return;
     }
 
     for output in outputs {
