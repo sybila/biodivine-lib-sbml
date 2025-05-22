@@ -9,7 +9,7 @@
             <qual:qualitativeSpecies qual:id="s_Cl" qual:compartment="comp1"
                                      qual:maxLevel="2" qual:constant="false"/>
             <qual:qualitativeSpecies qual:id="s_Cro" qual:compartment="comp1"
-                                     qual:maxLevel="3" qual:constant="false"/>
+                                     qual:maxLevel="3" qual:constant="true"/>
             <qual:qualitativeSpecies qual:id="s_Cll" qual:compartment="comp1"
                                      qual:maxLevel="1" qual:constant="false"/>
             <qual:qualitativeSpecies qual:id="s_N" qual:compartment="comp1"

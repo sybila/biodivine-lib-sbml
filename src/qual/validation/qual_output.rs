@@ -41,10 +41,11 @@ fn apply_rule_qual_20607_and_20608(
     if qual_species.is_none() || qual_species.clone().unwrap().tag_name() != "qualitativeSpecies" {
         let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
         issues.push(SbmlIssue::new_error("qual-20607", element, message));
+        return;
     }
 
     if qual_species.unwrap().constant().get() {
-        let message = "The value of constant of qualitativeSpecies element has to be se to false!"
+        let message = "The value of [constant] attribute of the [qualitativeSpecies] element has to be se to false!"
             .to_string();
         issues.push(SbmlIssue::new_error("qual-20608", element, message));
     }

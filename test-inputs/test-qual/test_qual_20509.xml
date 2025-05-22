@@ -13,7 +13,7 @@
             <qual:qualitativeSpecies qual:id="s_Cll" qual:compartment="comp1"
                                      qual:maxLevel="1" qual:constant="false"/>
             <qual:qualitativeSpecies qual:id="s_N" qual:compartment="comp1"
-                                     qual:maxLevel="1" qual:constant="false"/>
+                                     qual:maxLevel="1" qual:constant="true"/>
         </qual:listOfQualitativeSpecies>
         <qual:listOfTransitions>
             <qual:transition qual:id="tr_CI">
@@ -146,13 +146,13 @@
             </qual:transition>
             <qual:transition qual:id="tr_N">
                 <qual:listOfInputs>
-                    <qual:input qual:qualitativeSpecies="s_Cl" qual:sign="negative"
-                                qual:transitionEffect="none"/>
+                    <qual:input qual:qualitativeSpecies="s_N" qual:sign="negative"
+                                qual:transitionEffect="consumption"/>
                     <qual:input qual:qualitativeSpecies="s_Cro" qual:sign="negative"
                                 qual:transitionEffect="none"/>
                 </qual:listOfInputs>
                 <qual:listOfOutputs>
-                    <qual:output qual:qualitativeSpecies="s_N"
+                    <qual:output qual:qualitativeSpecies="s_Cro"
                                  qual:transitionEffect="assignmentLevel"/>
                 </qual:listOfOutputs>
                 <qual:listOfFunctionTerms>

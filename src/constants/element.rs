@@ -101,6 +101,7 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "qualitativeSpecies" => extended_sbase_attributes!("qual:id", "qual:name", "qual:compartment", "qual:constant", "qual:initialLevel", "qual:maxLevel"),
     "listOfQualitativeSpecies" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfTransitions" => ALLOWED_SBASE_ATTRIBUTES,
+    "listOfFunctionTerms" => ALLOWED_SBASE_ATTRIBUTES,
     "transition" => ALLOWED_SBASE_ATTRIBUTES,
     "listOfInputs" => ALLOWED_SBASE_ATTRIBUTES,
     "input" => extended_sbase_attributes!("qual:id", "qual:name", "qual:sign", "qual:qualitativeSpecies", "qual:transitionEffect", "qual:thresholdLevel"),
@@ -251,6 +252,9 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfQualitativeSpecies" => &["qualitativeSpecies"],
     "transition" => &["listOfFunctionTerms"],
     "functionTerms" => &["math"],
+    "listOfFunctionTerms" => &["defaultTerm"],
+    "listOfInputs" => &["input"],
+    "listOfOutputs" => &["output"],
 };
 
 pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
@@ -334,7 +338,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "or" => extended_sbase_children!("and", "or", "geneProductRef"),
     "geneProduct" => ALLOWED_SBASE_CHILDREN,
     //qual package
-    "listOfTransitions" => extended_sbase_children!("transitions"),
+    "listOfTransitions" => extended_sbase_children!("transition"),
     "listOfQualitativeSpecies" => extended_sbase_children!("qualitativeSpecies"),
     "qualitativeSpecies" => ALLOWED_SBASE_CHILDREN,
     "transition" => extended_sbase_children!("listOfInputs", "listOfOutputs", "listOfFunctionTerms"),
@@ -342,6 +346,9 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "output" => ALLOWED_SBASE_CHILDREN,
     "defaultTerm" => ALLOWED_SBASE_CHILDREN,
     "functionTerm" => extended_sbase_children!("math"),
+    "listOfFunctionTerms" => extended_sbase_children!("functionTerm", "defaultTerm"),
+    "listOfInputs" => extended_sbase_children!("input"),
+    "listOfOutputs" => extended_sbase_children!("output"),
 };
 
 /// This lists the (optional) child elements that must be unique in each SBML Core element.
@@ -436,7 +443,10 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "input" => ALLOWED_SBASE_CHILDREN,
     "output" => ALLOWED_SBASE_CHILDREN,
     "defaultTerm" => ALLOWED_SBASE_CHILDREN,
-    "functionTerm" => extended_sbase_children!("math")
+    "functionTerm" => extended_sbase_children!("math"),
+    "listOfFunctionTerms" => extended_sbase_children!("defaultTerm"),
+    "listOfInputs" => ALLOWED_SBASE_CHILDREN,
+    "listOfOutputs" => ALLOWED_SBASE_CHILDREN,
 };
 
 // There are no required children in SBML core level 3 version 1

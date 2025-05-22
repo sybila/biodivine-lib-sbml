@@ -146,7 +146,7 @@
             </qual:transition>
             <qual:transition qual:id="tr_N">
                 <qual:listOfInputs>
-                    <qual:input qual:qualitativeSpecies="s_Cl" qual:sign="negative"
+                    <qual:input qual:qualitativeSpecies="experiment" qual:sign="negative"
                                 qual:transitionEffect="none"/>
                     <qual:input qual:qualitativeSpecies="s_Cro" qual:sign="negative"
                                 qual:transitionEffect="none"/>

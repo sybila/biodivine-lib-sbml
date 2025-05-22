@@ -12,7 +12,7 @@
                                      qual:maxLevel="3" qual:constant="false"/>
             <qual:qualitativeSpecies qual:id="s_Cll" qual:compartment="comp1"
                                      qual:maxLevel="1" qual:constant="false"/>
-            <qual:qualitativeSpecies qual:id="s_N" qual:compartment="comp1"
+            <qual:qualitativeSpecies qual:id="s_N" qual:compartment="puf"
                                      qual:maxLevel="1" qual:constant="false"/>
         </qual:listOfQualitativeSpecies>
         <qual:listOfTransitions>

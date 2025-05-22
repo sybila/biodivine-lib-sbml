@@ -17,29 +17,21 @@ impl SbmlValidable for QualInput {
         meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
-        apply_rule_qual_20508(self, issues, self.qualitative_species().get());
-        apply_rule_qual_20509(self, issues)
+        apply_rule_qual_20509_and_20508(self, issues)
     }
 }
 
 impl CanTypeCheck for QualInput {}
 
-fn apply_rule_qual_20508(
-    element: &QualInput,
-    issues: &mut Vec<SbmlIssue>,
-    qualitative_species: SId,
-) {
-    let qual_species = element.find_by_sid::<QualitativeSpecies>(&qualitative_species);
-
-    if qual_species.is_none() || qual_species.unwrap().tag_name() != "qualitativeSpecies" {
-        let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
-        issues.push(SbmlIssue::new_error("qual-20508", element, message));
-    }
-}
-
-fn apply_rule_qual_20509(element: &QualInput, issues: &mut Vec<SbmlIssue>) {
+fn apply_rule_qual_20509_and_20508(element: &QualInput, issues: &mut Vec<SbmlIssue>) {
     let qual_species =
         element.find_by_sid::<QualitativeSpecies>(&element.qualitative_species().get());
+
+    if qual_species.is_none() || qual_species.clone().unwrap().tag_name() != "qualitativeSpecies" {
+        let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
+        issues.push(SbmlIssue::new_error("qual-20508", element, message));
+        return;
+    }
 
     if qual_species.unwrap().constant().get()
         && element.transition_effect().get() == TransitionInputEffect::Consumption

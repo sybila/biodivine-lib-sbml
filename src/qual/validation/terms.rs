@@ -26,7 +26,7 @@ impl CanTypeCheck for AbstractTerm {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
         if let Some(term) = DefaultTerm::try_cast_from_super(self) {
             term.type_check(issues);
-        } else if let Some(term) = DefaultTerm::try_cast_from_super(self) {
+        } else if let Some(term) = FunctionTerm::try_cast_from_super(self) {
             term.type_check(issues);
         }
     }

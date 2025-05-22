@@ -152,7 +152,7 @@
                                 qual:transitionEffect="none"/>
                 </qual:listOfInputs>
                 <qual:listOfOutputs>
-                    <qual:output qual:qualitativeSpecies="s_N"
+                    <qual:output qual:qualitativeSpecies="example"
                                  qual:transitionEffect="assignmentLevel"/>
                 </qual:listOfOutputs>
                 <qual:listOfFunctionTerms>

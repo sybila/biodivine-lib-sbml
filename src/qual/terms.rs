@@ -1,6 +1,6 @@
 use crate::constants::namespaces::{NS_MATHML, NS_QUAL};
 use crate::core::sbase::SbmlUtils;
-use crate::core::{AbstractRule, Math};
+use crate::core::Math;
 use crate::xml::{
     RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
     XmlElement, XmlNamedSubtype, XmlSupertype, XmlWrapper,
@@ -38,7 +38,7 @@ impl DefaultTerm {
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct FunctionTerm(XmlElement);
 
-impl XmlNamedSubtype<AbstractRule> for FunctionTerm {
+impl XmlNamedSubtype<AbstractTerm> for FunctionTerm {
     fn expected_tag_name() -> &'static str {
         "functionTerm"
     }

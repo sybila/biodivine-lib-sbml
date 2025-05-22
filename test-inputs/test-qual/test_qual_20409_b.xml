@@ -29,6 +29,7 @@
                 </qual:listOfOutputs>
                 <qual:listOfFunctionTerms>
                     <qual:defaultTerm qual:resultLevel="0"/>
+                    <qual:defaultTerm qual:resultLevel="0"/>
                     <qual:functionTerm qual:resultLevel="2">
                         <math xmlns="http://www.w3.org/1998/Math/MathML">
                             <apply>

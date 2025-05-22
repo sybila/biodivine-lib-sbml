@@ -3,7 +3,7 @@ use crate::constants::element::{
     REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{
-    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_SBML_CORE,
+    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE,
 };
 use crate::constraint::FbcType;
 use crate::core::SId;
@@ -332,6 +332,8 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
         if child_namespace == URL_SBML_CORE
             || child_namespace == URL_MATHML
             || child_namespace == URL_PACKAGE_LAYOUT
+            || child_namespace == URL_PACKAGE_FBC
+            || child_namespace == URL_PACKAGE_QUAL
         {
             // Right now, we are only testing core and math elements.
             let entry = counts.entry(child_name);
@@ -504,6 +506,7 @@ fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "curve" => Some("layout-21403"),
         "lineSegment" => Some("layout-21503"),
         "cubicBezier" => Some("layout-21603"),
+        "listOfFunctionTerms" => Some("qual-20409"),
         _ => None,
     }
 }
@@ -549,6 +552,7 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("transition", "listOfFunctionTerms")
         | ("transition", "listOfInputs")
         | ("transition", "listOfOutputs") => Some("qual-20405"),
+        ("listOfFunctionTerms", "defaultTerm") => Some("qual-20409"),
         ("layout", _) => Some("layout-20303"),
         ("graphicalObject", "boundingBox") => Some("layout-20403"),
         ("compartmentGlyph", "boundingBox") => Some("layout-20503"),

@@ -1,5 +1,5 @@
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::CanTypeCheck;
+use crate::core::validation::type_check::{type_check_of_list, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{MetaId, SId};
 use crate::qual::Transition;
@@ -27,4 +27,16 @@ impl SbmlValidable for Transition {
     }
 }
 
-impl CanTypeCheck for Transition {}
+impl CanTypeCheck for Transition {
+    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+        type_check_of_list(&self.function_terms().get(), issues);
+
+        if let Some(list_of_inputs) = self.inputs().get() {
+            type_check_of_list(&list_of_inputs, issues);
+        }
+
+        if let Some(list_of_outputs) = self.outputs().get() {
+            type_check_of_list(&list_of_outputs, issues);
+        }
+    }
+}
