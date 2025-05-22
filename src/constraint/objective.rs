@@ -48,7 +48,7 @@ impl XmlPropertyType for FbcType {
         match value {
             Some(value) => match FbcType::try_from(value.to_string()) {
                 Ok(fbc) => Ok(Some(fbc)),
-                Err(_) => Err(format!("FbcType '{value}' is not valid.")),
+                Err(message) => Err(message),
             },
             None => Ok(None),
         }

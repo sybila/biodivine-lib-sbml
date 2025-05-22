@@ -77,7 +77,7 @@ impl XmlPropertyType for TransitionOutputEffect {
         match value {
             Some(value) => match TransitionOutputEffect::try_from(value.to_string()) {
                 Ok(output_effect) => Ok(Some(output_effect)),
-                Err(_) => Ok(None),
+                Err(message) => Err(message),
             },
             None => Ok(None),
         }

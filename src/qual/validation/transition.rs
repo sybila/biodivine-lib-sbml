@@ -3,7 +3,7 @@ use crate::core::validation::type_check::{type_check_of_list, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{MetaId, SId};
 use crate::qual::Transition;
-use crate::xml::{OptionalXmlChild, RequiredXmlChild};
+use crate::xml::{OptionalXmlChild, RequiredXmlChild, XmlChild};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -15,7 +15,10 @@ impl SbmlValidable for Transition {
         meta_ids: &mut HashSet<MetaId>,
     ) {
         validate_sbase(self, issues, identifiers, meta_ids);
-        validate_list_of_objects(&self.function_terms().get(), issues, identifiers, meta_ids);
+
+        if self.function_terms().get_raw().is_some() {
+            validate_list_of_objects(&self.function_terms().get(), issues, identifiers, meta_ids);
+        }
 
         if let Some(list_of_inputs) = self.inputs().get() {
             validate_list_of_objects(&list_of_inputs, issues, identifiers, meta_ids);
@@ -29,7 +32,9 @@ impl SbmlValidable for Transition {
 
 impl CanTypeCheck for Transition {
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        type_check_of_list(&self.function_terms().get(), issues);
+        if self.function_terms().get_raw().is_some() {
+            type_check_of_list(&self.function_terms().get(), issues)
+        }
 
         if let Some(list_of_inputs) = self.inputs().get() {
             type_check_of_list(&list_of_inputs, issues);

@@ -18,7 +18,8 @@ impl SbmlValidable for QualOutput {
         validate_sbase(self, issues, identifiers, meta_ids);
         apply_rule_qual_20607_and_20608(self, issues, self.qualitative_species().get());
 
-        if self.transition_effect().get() == TransitionOutputEffect::Production
+        if self.transition_effect().get_raw().is_some()
+            && self.transition_effect().get() == TransitionOutputEffect::Production
             && !self.output_level().is_set()
         {
             let message =

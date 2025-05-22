@@ -5,7 +5,7 @@ use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
 use crate::qual::qual_input::QualInput;
 use crate::qual::{QualitativeSpecies, TransitionInputEffect};
-use crate::xml::{RequiredXmlProperty, XmlWrapper};
+use crate::xml::{RequiredXmlProperty, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -33,7 +33,8 @@ fn apply_rule_qual_20509_and_20508(element: &QualInput, issues: &mut Vec<SbmlIss
         return;
     }
 
-    if qual_species.unwrap().constant().get()
+    if element.transition_effect().get_raw().is_some()
+        && qual_species.unwrap().constant().get()
         && element.transition_effect().get() == TransitionInputEffect::Consumption
     {
         let message = "When qualitativeSpecies attribute const is set to true the transitionEffect attribute can not be set to consumption!".to_string();

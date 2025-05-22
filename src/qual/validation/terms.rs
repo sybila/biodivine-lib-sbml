@@ -3,7 +3,7 @@ use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
 use crate::qual::terms::{AbstractTerm, DefaultTerm, FunctionTerm};
-use crate::xml::{RequiredXmlChild, XmlSubtype};
+use crate::xml::{RequiredXmlChild, XmlChild, XmlSubtype};
 use crate::SbmlIssue;
 use std::collections::HashSet;
 
@@ -52,7 +52,9 @@ impl SbmlValidable for FunctionTerm {
         _identifiers: &mut HashSet<SId>,
         _meta_ids: &mut HashSet<MetaId>,
     ) {
-        self.math().get().validate(issues);
+        if self.math().get_raw().is_some() {
+            self.math().get().validate(issues);
+        }
     }
 }
 
