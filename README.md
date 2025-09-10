@@ -113,7 +113,7 @@ You can learn more about the library API in the official documentation.
 Future roadmap, including estimated development priorities:
 
  - [ ] **[high]** Idiomatic MathML support.
- - [ ] **[high]** Python bindings using `pyo3`.
+ - [ ] **[high]** Python bindings using `pyo3` (currently under development).
  - [ ] **[medium]** WASM/JS bindings using `wasm-bindgen`.
  - [ ] **[medium]** Hooks for incorporating packages into the validation flow.
  - [ ] **[medium]** Validation of the *recommendation* SBML conformance rules.
@@ -125,11 +125,11 @@ Future roadmap, including estimated development priorities:
    * [ ] **[medium]** Hierarchical model composition
    * [ ] **[medium]** Distributions
    * [ ] **[low]** Dynamic structures
-   * [ ] **[medium]** Flux balance constraints
+   * [x] **[medium]** Flux balance constraints
    * [ ] **[low]** Groups
-   * [ ] **[high]** Layout
+   * [x] **[high]** Layout
    * [ ] **[high]** Rendering
    * [ ] **[medium]** Extended MathML
    * [ ] **[high]** Multi-state species
-   * [ ] **[high]** Qualitative models
+   * [x] **[high]** Qualitative models
    * [ ] **[low]** Spatial processes
