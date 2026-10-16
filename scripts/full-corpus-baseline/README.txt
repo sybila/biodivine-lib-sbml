@@ -12,7 +12,9 @@ The snapshot is derived from the unpacked SBML syntactic test suite in `./syntac
 git-ignored (download a release from https://github.com/sbmlteam/sbml-test-suite/releases and
 extract the `syntactic` subset). `fingerprint.txt` records the corpus the snapshot was recorded
 from (rule-directory, XML-file and XML-byte counts); the script refuses to compare against a
-different corpus and asks for `--record` instead.
+different corpus and asks for `--record` instead. First recorded on 2026-10-16. The corpus is
+identified by that fingerprint rather than by a date, so re-recording from an unchanged corpus
+leaves every file in this directory byte-identical.
 
 Files
 -----

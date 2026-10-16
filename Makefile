@@ -40,7 +40,11 @@ coverage:
 # Compare the whole-corpus syntactic-test-suite report against the recorded baseline in
 # scripts/full-corpus-baseline/. Re-record with `make full-corpus RECORD=1`.
 full-corpus:
-	scripts/full_corpus_parity.sh $${RECORD:+--record}
+	@if [ "$${RECORD:-0}" = "1" ]; then \
+		scripts/full_corpus_parity.sh --record; \
+	else \
+		scripts/full_corpus_parity.sh; \
+	fi
 
 verify:
 	scripts/verify.sh

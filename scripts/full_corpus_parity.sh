@@ -12,8 +12,11 @@
 # that report into a reviewable, order-independent snapshot by sorting it and counting duplicates.
 #
 # The example deliberately exits with a non-zero status when it finds mismatches, so this gate
-# tolerates that exit code and compares the report files instead of the exit status. On failure it
-# prints the differing report lines, so a reviewer can see what moved without re-running the suite.
+# tolerates that exit code and compares the report files instead of the exit status. Because
+# `cargo run` also exits 101 when the build or the run fails, the gate requires the example's
+# `Report written.` marker in its output: that line is printed once the report files are written and
+# before the example's own asserts fire. It is therefore the contract between the example and this
+# script, so an edit to the example's output strings has to keep it.
 #
 # The snapshot under `scripts/full-corpus-baseline/` is derived from the (git-ignored) SBML
 # syntactic test suite in `./syntactic`; its header records the corpus it was recorded from and a
@@ -100,12 +103,28 @@ trap 'restore_reports; rm -rf "$workdir"' EXIT
 echo "\$ cargo run --release --example test-suite-syntactic   # no rule filter"
 cargo run --release --example test-suite-syntactic > "$workdir/run.log" 2>&1
 status=$?
-if [ "$status" -ne 0 ] && [ "$status" -ne 101 ]; then
-    echo "FAIL: the test-suite example exited with unexpected status $status"
-    tail -20 "$workdir/run.log"
+grep -A4 '^Found:' "$workdir/run.log" || true
+
+# The example prints `Report written.` once it has written its report, just before its (by-design)
+# asserts fire. Requiring it separates "the example ran and reported its result" (exit 0 or 101)
+# from "the build or the run broke", which also exits 101 for `cargo run`.
+if ! grep -q 'Report written\.' "$workdir/run.log"; then
+    echo ""
+    echo "FAIL: the test-suite example did not complete (no 'Report written.' in its output; exit status $status)."
+    echo "      The report files were not compared. Last lines of the run:"
+    tail -20 "$workdir/run.log" | sed 's/^/      /'
     exit 1
 fi
-grep -A4 '^Found:' "$workdir/run.log" || true
+if [ "$status" -ne 0 ] && [ "$status" -ne 101 ]; then
+    echo "FAIL: the test-suite example exited with unexpected status $status"
+    exit 1
+fi
+for report in "${REPORTS[@]}"; do
+    if [ ! -f "$report" ]; then
+        echo "FAIL: the example reported completion but did not write $report"
+        exit 1
+    fi
+done
 
 failed=0
 for report in "${REPORTS[@]}"; do
