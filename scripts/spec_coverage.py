@@ -174,6 +174,18 @@ def load_validated_rules(crate: Path) -> tuple[set[str], set[str]]:
     return enabled, disabled
 
 
+def spec_relative(path: Path | None, spec: Path) -> str:
+    """Render a path relative to the specification root, so the generated matrix does not
+    depend on where the specification checkout lives."""
+
+    if path is None:
+        return "-"
+    try:
+        return path.resolve().relative_to(spec.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 QUOTED = re.compile(r'"([A-Za-z0-9_.\-]+)"')
 
 
@@ -216,9 +228,11 @@ def build_rows(spec: Path, crate: Path) -> list[dict[str, str]]:
         # One-file-per-rule directories first: they are the ground truth for core rules and
         # let the appendix refine the kind.
         rules.update(parse_rules_dir(target.rules_dir))
-        appendix_source = "-"
+        # The `source` column points at the appendix when there is one, and at the
+        # rule-file directory otherwise (registries such as Level 2 Version 1 ship the
+        # latter without a referring appendix).
+        appendix_source = spec_relative(target.appendix or target.rules_dir, spec)
         if target.appendix is not None and target.appendix.exists():
-            appendix_source = str(target.appendix)
             for rule_id, kind in parse_appendix(target.appendix).items():
                 rules[rule_id] = kind if rules.get(rule_id, "unknown") == "unknown" else rules[rule_id]
         if not rules:
@@ -276,6 +290,12 @@ def render_markdown(rows: list[dict[str, str]]) -> str:
         "| disabled | the rule is commented out in `validated-rules.txt` |",
         "| missing | the rule is neither implemented nor disabled |",
         "| harness-only | declared in `validated-rules.txt` but no rule id in `src/` |",
+        "",
+        "The `in_source` column is a substring match for the rule id as a quoted string literal",
+        "anywhere in `src/`, so `partial` means \"the id occurs somewhere in the sources\", not",
+        "\"the rule is nearly done\"; ids are shared between levels and packages, and a single",
+        "generic check can carry several ids. Treat the status as a pointer to where to look,",
+        "not as an estimate of completeness.",
         "",
         "| level | version | package | " + " | ".join(STATUS_ORDER) + " | rules |",
         "| --- | --- | --- | " + " | ".join("---" for _ in STATUS_ORDER) + " | --- |",

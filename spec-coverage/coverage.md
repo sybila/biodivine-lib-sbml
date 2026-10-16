@@ -12,6 +12,12 @@ and the rule ids that appear in `src/`.
 | missing | the rule is neither implemented nor disabled |
 | harness-only | declared in `validated-rules.txt` but no rule id in `src/` |
 
+The `in_source` column is a substring match for the rule id as a quoted string literal
+anywhere in `src/`, so `partial` means "the id occurs somewhere in the sources", not
+"the rule is nearly done"; ids are shared between levels and packages, and a single
+generic check can carry several ids. Treat the status as a pointer to where to look,
+not as an estimate of completeness.
+
 | level | version | package | implemented | partial | disabled | missing | harness-only | not-machine-readable | rules |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1 | core | 0 | 0 | 0 | 0 | 0 | 1 | 1 |

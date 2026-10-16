@@ -34,7 +34,7 @@ examples:
 # Regenerate the coverage matrix from the SBML specification sources. Pass the checkout with
 # SPEC=/path/to/sbml-specifications.
 coverage:
-	python3 scripts/spec_coverage.py --spec "$${SPEC:-../../../sbml-specifications}"
+	python3 scripts/spec_coverage.py --spec "$${SPEC:-../../sbml-specifications}"
 
 verify:
 	scripts/verify.sh
