@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -10,7 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Parameter(XmlElement);
 
 impl Parameter {
-    pub fn new(document: XmlDocument, id: &SId, constant: bool) -> Self {
+    pub fn new(document: Document, id: &SId, constant: bool) -> Self {
         let obj = Parameter::new_empty(document, "parameter");
         obj.id().set(id);
         obj.constant().set(&constant);

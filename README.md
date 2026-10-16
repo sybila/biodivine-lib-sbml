@@ -13,7 +13,7 @@ This crate provides a Rust interface for reading, editing, and validating System
  - [x] Complete support for the SBML Level 3 Version 2 core specification.
  - [x] Validation of the *required* SBML conformance rules, including validation of proper namespace usage.
  - [x] Ability to (safely) edit invalid or partially corrupted files (e.g. to fix errors).
- - [x] Full access to the raw underlying XML document through the `xml-doc` interface. 
+ - [x] Full access to the underlying XML document through the [`biodivine-lib-xml-dom`](https://github.com/sybila/biodivine-lib-xml-dom) interface.
  - [x] `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
  - [x] Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
 
@@ -33,74 +33,75 @@ biodivine-lib-sbml = { git = "https://github.com/sybila/biodivine-lib-sbml" }
 Then, you can use `Sbml`, `Model` and other SBML wrapper objects that should directly map to the SBML specification:
 
 ```rust
-use biodivine_lib_sbml::*;
-use biodivine_lib_sbml::core::*;
-use biodivine_lib_sbml::xml::*;
+use biodivine_lib_sbml::core::{SBase, SId, Species};
+use biodivine_lib_sbml::xml::{
+    OptionalDynamicChild, OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty,
+    XmlChildDefault, XmlElement, XmlList, XmlWrapper,
+};
+use biodivine_lib_sbml::Sbml;
 
 fn main() {
-   let doc = Sbml::read_path("./test-inputs/model.sbml").expect("This document is not valid XML.");
+    let doc = Sbml::read_path("./test-inputs/model.sbml").expect("This document is not valid XML.");
 
-   // First, we want to know if the document we
-   // just read is valid SBML.
-   let issues = doc.validate();
-   if issues.len() > 0 {
-      // Note that these could be just warnings/notes.
-      // You can check `SbmlIssue::severity` of each item
-      // to detect fatal errors.
-      eprintln!("This document has issues:");
-      for issue in issues {
-         eprintln!("{:?}", issue);
-      }
-   }
+    // First, we want to know if the document we
+    // just read is valid SBML.
+    let issues = doc.validate();
+    if !issues.is_empty() {
+        // Note that these could be just warnings/notes.
+        // You can check `SbmlIssue::severity` of each item
+        // to detect fatal errors.
+        eprintln!("This document has issues:");
+        for issue in issues {
+            eprintln!("{:?}", issue);
+        }
+    }
 
-   let model = doc
-           .model()
-           .get()
-           // This is strange but allowed by the specification.
-           .expect("This document does not contain any model.");
+    let model = doc
+        .model()
+        .get()
+        // This is strange but allowed by the specification.
+        .expect("This document does not contain any model.");
 
-   // Note that individual lists of model components
-   // are also optional in the specification. Here,
-   // an empty list is created if it does not exist.
-   let species = model.species().get_or_create();
-   let compartments = model.compartments().get_or_create();
-   println!(
-      "This model has {} compartments and {} species.",
-      compartments.len(),
-      species.len(),
-   );
+    // Note that individual lists of model components
+    // are also optional in the specification. Here,
+    // an empty list is created if it does not exist.
+    let species = model.species().get_or_create();
+    let compartments = model.compartments().get_or_create();
+    println!(
+        "This model has {} compartments and {} species.",
+        compartments.len(),
+        species.len(),
+    );
 
-   // We can use `DynamicProperty` and `DynamicChild` to access
-   // items that are not in the SBML core specification.
-   let qual_namespace = "http://www.sbml.org/sbml/level3/version1/qual/version1";
+    // We can use `DynamicProperty` and `DynamicChild` to access
+    // items that are not in the SBML core specification.
 
-   // For example, here, we are reading the list of qualitative species defined
-   // in the sbml-qual package as a "generic" list of `XmlElement` objects.
-   let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
-           model.optional_child("listOfQualitativeSpecies", qual_namespace);
-   println!(
-      "This model has {} qualitative species.",
-      qual_species.get_or_create().len(),
-   );
+    // For example, here, we are reading the list of qualitative species defined
+    // in the sbml-qual package as a "generic" list of `XmlElement` objects.
+    let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
+        model.optional_child("listOfQualitativeSpecies");
+    println!(
+        "This model has {} qualitative species.",
+        qual_species.get_or_create().len(),
+    );
 
-   // We can also modify the model.
+    // We can also modify the model.
 
-   // First, create a new instance of a `Species` object.
-   let species_id = "sp-1".to_string();
-   let compartment_id = compartments.get(0).id().get();
-   let s = Species::new(model.document(), &species_id, &compartment_id);
-   let species_name = "MySpecies".to_string();
-   s.name().set_some(&species_name);
+    // First, create a new instance of a `Species` object.
+    let species_id = SId::try_from("sp_1").unwrap();
+    let compartment_id = compartments.get(0).id().get();
+    let s = Species::new(model.document(), &species_id, &compartment_id);
+    let species_name = "MySpecies".to_string();
+    s.name().set_some(&species_name);
 
-   // Then, add it to the current list of species.
-   species.push(s);
-   assert_eq!(species.get(0).name().get(), Some(species_name));
+    // Then, add it to the current list of species.
+    species.push(s);
+    assert_eq!(species.get(0).name().get(), Some(species_name));
 
-   // Finally, we can print the model back as XML:
-   let xml_string = doc.to_xml_string()
-           .expect("Encoding error.");
+    // Finally, we can print the model back as XML:
+    let xml_string = doc.to_xml_string().expect("Encoding error.");
 
-   println!("{} ... ", &xml_string[..200]);
+    println!("{} ... ", &xml_string[..200]);
 }
 ```
 

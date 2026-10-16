@@ -271,7 +271,7 @@ impl Math {
 
         let is_first_child = parent
             .get_child_at(0)
-            .map(|it| it.raw_element() == child.raw_element())
+            .map(|it| it.xml_element().element() == child.xml_element().element())
             .unwrap_or(false);
 
         if !is_first_child {

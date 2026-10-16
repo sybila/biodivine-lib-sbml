@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
-    OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, RequiredSbmlProperty,
-    RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList, XmlSupertype,
+    Document, OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -11,7 +11,7 @@ pub struct Reaction(XmlElement);
 
 impl XmlSupertype for Reaction {}
 impl Reaction {
-    pub fn new(document: XmlDocument, id: &SId, reversible: bool) -> Self {
+    pub fn new(document: Document, id: &SId, reversible: bool) -> Self {
         let obj = Reaction::new_empty(document, "reaction");
         obj.id().set(id);
         obj.reversible().set(&reversible);
@@ -59,7 +59,7 @@ pub struct SpeciesReference(XmlElement);
 impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
-    pub fn new(document: XmlDocument, species: &SId, constant: bool) -> Self {
+    pub fn new(document: Document, species: &SId, constant: bool) -> Self {
         let obj = SpeciesReference::new_empty(document, "speciesReference");
         obj.species().set(species);
         obj.constant().set(&constant);
@@ -81,7 +81,7 @@ pub struct ModifierSpeciesReference(XmlElement);
 impl SimpleSpeciesReference for ModifierSpeciesReference {}
 
 impl ModifierSpeciesReference {
-    pub fn new(document: XmlDocument, species: &SId) -> Self {
+    pub fn new(document: Document, species: &SId) -> Self {
         let obj = ModifierSpeciesReference::new_empty(document, "modifierSpeciesReference");
         obj.species().set(species);
         obj
@@ -92,7 +92,7 @@ impl ModifierSpeciesReference {
 pub struct KineticLaw(XmlElement);
 
 impl XmlDefault for KineticLaw {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         KineticLaw::new_empty(document, "kineticLaw")
     }
 }
@@ -131,7 +131,7 @@ impl KineticLaw {
 pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {
-    pub fn new(document: XmlDocument, id: &SId) -> Self {
+    pub fn new(document: Document, id: &SId) -> Self {
         let obj = LocalParameter::new_empty(document, "localParameter");
         obj.id().set(id);
         obj

@@ -5,7 +5,7 @@
 //!  - Complete support for the SBML Level 3 Version 2 core specification.
 //!  - validation of the *required* SBML conformance rules, including validation of proper namespace usage.
 //!  - Ability to (safely) edit invalid or partially corrupted files (e.g. to fix errors).
-//!  - Full access to the raw underlying XML document through the `xml-doc` interface.
+//!  - Full access to the underlying XML document through the [biodivine_lib_xml_dom] interface.
 //!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
 //!  - Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
 //!
@@ -90,21 +90,20 @@
 //!
 
 use std::collections::HashSet;
-use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
-use std::sync::{Arc, RwLock};
 
-use biodivine_xml_doc::{Document, Element, ReadOptions};
+use biodivine_lib_xml_dom::{Document, Element, QualifiedName};
 use embed_doc_image::embed_doc_image;
 
 use xml::RequiredProperty;
 
-use crate::constants::namespaces::{Namespace, NS_SBML_CORE};
+use crate::constants::namespaces::{
+    prefixed_qualified_name, to_xml_namespace, Namespace, NS_SBML_CORE,
+};
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
-use crate::xml::{OptionalSbmlChild, OptionalXmlChild, XmlDocument, XmlElement, XmlWrapper};
+use crate::xml::{OptionalSbmlChild, OptionalXmlChild, XmlElement, XmlWrapper};
 
 pub mod constraint;
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -114,7 +113,7 @@ pub mod core;
 pub mod layout;
 pub mod qual;
 
-/// Defines [`XmlDocument`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
+/// Defines [`Document`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
 /// [`XmlChild`][xml::XmlChild] and other utility types or traits that can be used to safely
 /// manipulate the underlying XML document.
 pub mod xml;
@@ -126,6 +125,47 @@ pub(crate) mod constants;
 /// standard unit tests.
 #[cfg(test)]
 pub mod test_suite;
+
+/// The error type produced by the fallible operations of this crate.
+///
+/// Parsing, reading and writing an SBML document can fail for several reasons, and this type
+/// keeps them apart. Most variants wrap an underlying error; [`SbmlError::Xml`] covers
+/// well-formedness, namespace and serialization problems detected by the XML layer, and
+/// [`SbmlError::Cancelled`] is returned when a [`cancel_this`] trigger fires during a
+/// long-running operation.
+#[non_exhaustive]
+#[derive(Debug, thiserror::Error)]
+pub enum SbmlError {
+    /// The document could not be parsed or serialized as XML.
+    #[error("XML error: {0}")]
+    Xml(#[from] biodivine_lib_xml_dom::XmlError),
+    /// A cancellation trigger fired while an SBML operation was running.
+    #[error("The operation was cancelled.")]
+    Cancelled(#[from] cancel_this::Cancelled),
+    /// The parsed document does not contain an `<sbml>` root element.
+    #[error("The document does not contain an <sbml> root element.")]
+    NotSbmlDocument,
+    /// The document declares an SBML level/version that this crate cannot handle.
+    #[error("Unsupported SBML level {level} version {version}.")]
+    UnsupportedLevel { level: u32, version: u32 },
+    /// An I/O error occurred while reading or writing a document.
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+}
+
+/// A [`Result`] whose error is an [`SbmlError`].
+pub type SbmlResult<T> = Result<T, SbmlError>;
+
+/// Convert an error from the underlying XML layer into an [`SbmlError`].
+///
+/// Cancellation is pulled out into its own variant so that a caller can distinguish "the
+/// operation was aborted on request" from "the document is not valid XML".
+fn sbml_error(error: biodivine_lib_xml_dom::XmlError) -> SbmlError {
+    match error {
+        biodivine_lib_xml_dom::XmlError::Cancelled(inner) => SbmlError::Cancelled(inner),
+        other => SbmlError::Xml(other),
+    }
+}
 
 /// The SBML container object
 /// (Section 4.1; [specification](https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf)).
@@ -185,7 +225,7 @@ pub mod test_suite;
 #[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
 #[derive(Clone, Debug)]
 pub struct Sbml {
-    xml: XmlDocument,
+    xml: Document,
     sbml_root: XmlElement,
 }
 
@@ -218,67 +258,63 @@ impl Sbml {
 
     /// Same as [Self::try_for_child], but uses the raw [XmlElement], which is a bit more flexible.
     pub fn try_for_child_element(child: &XmlElement) -> Option<Sbml> {
-        let root = child.document_root();
+        let root = child.document_root()?;
         if root.tag_name().as_str() == "sbml" {
-            unsafe { Some(Self::unchecked_cast(root)) }
+            Some(Sbml {
+                xml: root.document(),
+                sbml_root: root,
+            })
         } else {
             None
         }
     }
 
-    pub fn read_str(file_contents: &str) -> Result<Sbml, String> {
-        // Only accept documents that are using UTF-8.
-        let opts = ReadOptions {
-            enforce_encoding: true,
-            encoding: Some("UTF-8".to_string()),
-            ..Default::default()
-        };
-        let doc = match Document::parse_str_with_opts(file_contents, opts) {
-            Ok(doc) => doc,
-            Err(why) => {
-                return if matches!(why, biodivine_xml_doc::Error::CannotDecode) {
-                    Err("SBML documents must use UTF-8 encoding.".to_string())
-                } else {
-                    Err(why.to_string())
-                }
-            }
-        };
-        let root = doc.root_element().unwrap();
-        let xml_document = Arc::new(RwLock::new(doc));
+    /// Parse a document from a string.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Xml`] if `file_contents` is not a well-formed XML 1.0 document
+    /// with a single root element, or if it declares an encoding other than UTF-8. Returns
+    /// [`SbmlError::Cancelled`] if a cancellation trigger fires while the document is being
+    /// parsed.
+    pub fn read_str(file_contents: &str) -> SbmlResult<Sbml> {
+        let doc = Document::parse_string(file_contents).map_err(sbml_error)?;
+        normalize_text_nodes(&doc);
+        let root = doc.root().ok_or(SbmlError::NotSbmlDocument)?;
         Ok(Sbml {
-            xml: xml_document.clone(),
-            sbml_root: XmlElement::new_raw(xml_document, root),
+            xml: doc,
+            sbml_root: XmlElement::new(root),
         })
     }
 
-    pub fn read_path(path: &str) -> Result<Sbml, String> {
-        let file_contents = match std::fs::read_to_string(path) {
-            Ok(file_contents) => file_contents,
-            Err(why) => return Err(why.to_string()),
-        };
+    /// Read and parse a document from a file.
+    ///
+    /// # Errors
+    ///
+    /// As [`Sbml::read_str`], plus [`SbmlError::Io`] if the file cannot be read.
+    pub fn read_path(path: &str) -> SbmlResult<Sbml> {
+        let file_contents = std::fs::read_to_string(path)?;
         Self::read_str(file_contents.as_str())
     }
 
-    pub fn write_path(&self, path: &str) -> Result<(), String> {
-        let doc = match self.xml.read() {
-            Ok(doc) => doc,
-            Err(why) => return Err(why.to_string()),
-        };
-        match doc.write_file(path) {
-            Ok(()) => Ok(()),
-            Err(why) => Err(why.to_string()),
-        }
+    /// Serialize this document into a file.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Xml`] if the document cannot be serialized, and [`SbmlError::Io`]
+    /// if the file cannot be written.
+    pub fn write_path(&self, path: &str) -> SbmlResult<()> {
+        self.xml.write_file(path).map_err(sbml_error)?;
+        Ok(())
     }
 
-    pub fn to_xml_string(&self) -> Result<String, String> {
-        let doc = match self.xml.read() {
-            Ok(doc) => doc,
-            Err(why) => return Err(why.to_string()),
-        };
-        match doc.write_str() {
-            Ok(str) => Ok(str),
-            Err(why) => Err(why.to_string()),
-        }
+    /// Serialize this document into a string.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Xml`] if the document cannot be serialized.
+    pub fn to_xml_string(&self) -> SbmlResult<String> {
+        self.xml.write_string().map_err(sbml_error)
     }
 
     /// Perform a basic type checking procedure. If this procedure passes without issues,
@@ -289,19 +325,9 @@ impl Sbml {
     /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
     /// with no issues.
     fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
-        {
-            // Only hold document lock while necessary, because referenced methods may need to
-            // update the document as well.
-            let doc = self.xml.read().unwrap();
-
-            // For the root SBMl element, there are a few extra conditions related to the rule 10102.
-            if doc.container().child_elements(doc.deref()).len() != 1 {
-                let container = XmlElement::new_raw(self.xml.clone(), doc.container());
-                let message = "The document contains multiple root nodes. \
-                Only one root <sbml> object is allowed.";
-                issues.push(SbmlIssue::new_error("10102", &container, message));
-            }
-        }
+        // Note: a document that contains more than one root element, or no root element at all,
+        // is rejected while parsing, so the previous explicit multi-root check is unnecessary.
+        // Only a root element that is not `<sbml>` can still reach this point.
 
         let root_element = self.sbml_root.xml_element();
         if root_element.tag_name() != "sbml" {
@@ -311,20 +337,15 @@ impl Sbml {
 
         internal_type_check(&self.sbml_root, issues);
 
+        let element = self.sbml_root.element();
+        if element.local_name().as_str() == "sbml"
+            && !element.namespace_declarations().contains_key(&None)
         {
-            // See above regarding locks...
-            let doc = self.xml.read().unwrap();
-            let element = self.sbml_root.raw_element();
-
-            if element.name(doc.deref()) == "sbml"
-                && !element.namespace_decls(doc.deref()).contains_key("")
-            {
-                issues.push(SbmlIssue::new_error(
-                    "SANITY_CHECK",
-                    &self.sbml_root,
-                    "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
-                ));
-            }
+            issues.push(SbmlIssue::new_error(
+                "SANITY_CHECK",
+                &self.sbml_root,
+                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
+            ));
         }
 
         if let Some(model) = self.model().get() {
@@ -336,13 +357,12 @@ impl Sbml {
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     /// Eventual issues are returned in the vector. Empty vector represents a valid document.
     /// ### Rule 10101
-    /// is already satisfied implicitly by the use of the package *xml-doc* as writing
-    /// is done only in UTF-8 and reading produces error if encoding is different from UTF-8,
-    /// UTF-16, ISO 8859-1, GBK or EUC-KR. The specific error is currently covered
-    /// in [Self::read_str].
+    /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as writing
+    /// is done only in UTF-8 and reading produces an error if the declared encoding is anything
+    /// other than UTF-8. The specific error is covered in [Sbml::read_str].
     ///
     /// ### Rule 10104
-    /// is already satisfied implicitly by the use of the package *xml-doc* as loading
+    /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as loading
     /// a document without an error ensures that the document conforms to the basic
     /// structural and syntactic constraints.
     pub fn validate(&self) -> Vec<SbmlIssue> {
@@ -365,59 +385,75 @@ impl Sbml {
         issues
     }
 
-    /// Ensure that SBML package specified by the given `Namespace` exists.
+    /// Ensure that the SBML package specified by the given `Namespace` is declared on the
+    /// `<sbml>` element.
     ///
-    /// If the package already exists, its prefix is returned. If it does not exist, it is created
-    /// with the default prefix.
+    /// If the package is already declared, its prefix is returned. If it does not exist, it is
+    /// created with the default prefix of `package`, and the corresponding `required`
+    /// attribute is set as well.
     ///
-    /// Normally, the method should not fail, but this is reserved for future changes in the API
-    /// where further checking might be present.
+    /// # Errors
+    ///
+    /// Returns an error if the package namespace cannot be represented as an XML namespace.
     pub fn ensure_sbml_package(
         &self,
         package: Namespace,
         required: bool,
     ) -> Result<String, String> {
-        let mut doc = self.xml.write().unwrap();
-        let e = self.sbml_root.raw_element();
-        let namespace_declarations = e.namespace_decls(doc.deref());
+        let element = self.sbml_root.element();
+        let existing_prefix = element
+            .namespace_declarations()
+            .into_iter()
+            .find(|(_prefix, binding)| binding.as_ref().is_some_and(|it| it.uri() == package.1))
+            .map(|(prefix, _binding)| prefix.map(|it| it.as_str().to_string()).unwrap_or_default());
 
-        // Find if the namespace already exists. If not, create it.
-        let current_prefix = namespace_declarations
-            .iter()
-            .find(|(_prefix, url)| *url == package.1)
-            .map(|(prefix, _url)| prefix.to_string())
-            .unwrap_or_else(|| {
+        let prefix = match existing_prefix {
+            Some(prefix) => prefix,
+            None => {
                 // The package is not declared. We have to create it with the default prefix.
-                e.set_namespace_decl(doc.deref_mut(), package.0, package.1);
+                let namespace = to_xml_namespace(package).ok_or_else(|| {
+                    format!(
+                        "Namespace of SBML package {} cannot be declared.",
+                        package.1
+                    )
+                })?;
+                element.declare_namespace(namespace);
                 package.0.to_string()
-            });
+            }
+        };
 
         // Find if the required attribute already exists, if not create it. Also make sure that
         // its value is not "lower" than the given `required` value.
-        let required_name = format!("{}:required", current_prefix);
-        let required_attribute = e.attribute(doc.deref(), required_name.as_str());
-        if required_attribute == Some("true") {
+        let required_name = package_attribute_name(package, prefix.as_str())?;
+        if element
+            .attribute(&required_name)
+            .is_some_and(|it| it.as_str() == "true")
+        {
             // If the package is already required, we can't make it "more required".
-            Ok(current_prefix)
+            Ok(prefix)
         } else {
             let value = if required { "true" } else { "false" };
-            e.set_attribute(doc.deref_mut(), required_name, value);
-            Ok(current_prefix)
+            element
+                .set_attribute_checked(required_name, value)
+                .map_err(|it| it.to_string())?;
+            Ok(prefix)
         }
     }
 
     /// Retrieve a namespace prefix which is used with the given `package_url`, if such prefix
     /// exists.
     ///
-    /// The function can return an error if the prefix does not exist, or when the corresponding
-    /// `required` attribute is not specified (i.e. it is not a valid SBML package).
+    /// # Errors
+    ///
+    /// The function returns an error if the package namespace is not declared, or when the
+    /// corresponding `required` attribute is not specified (i.e. it is not a valid SBML
+    /// package declaration).
     pub fn find_sbml_package(&self, package: Namespace) -> Result<String, String> {
-        let doc = self.xml.read().unwrap();
-        let e = self.sbml_root.raw_element();
-        let namespace_declarations = e.namespace_decls(doc.deref());
-        let Some((prefix, _url)) = namespace_declarations
-            .iter()
-            .find(|(_prefix, url)| *url == package.1)
+        let element = self.sbml_root.element();
+        let Some((prefix, _binding)) = element
+            .namespace_declarations()
+            .into_iter()
+            .find(|(_prefix, binding)| binding.as_ref().is_some_and(|it| it.uri() == package.1))
         else {
             return Err(format!(
                 "Namespace for SBML package {} does not exist.",
@@ -425,15 +461,57 @@ impl Sbml {
             ));
         };
 
-        let required_name = format!("{}:required", prefix);
-        let required_attribute = e.attribute(doc.deref(), required_name.as_str());
-        if required_attribute.is_none() {
+        let prefix = prefix.map(|it| it.as_str().to_string()).unwrap_or_default();
+        let required_name = package_attribute_name(package, prefix.as_str())?;
+        if element.attribute(&required_name).is_none() {
             return Err(format!(
                 "Namespace of SBML package {} does not have a `required` attribute on the `<sbml>` element.", package.1
             ));
         }
 
-        Ok(prefix.clone())
+        Ok(prefix)
+    }
+}
+
+/// Build the expanded name of the `required` attribute of a package namespace, using the
+/// concrete prefix that the document binds to the package URL.
+fn package_attribute_name(package: Namespace, prefix: &str) -> Result<QualifiedName, String> {
+    prefixed_qualified_name(package.1, prefix, "required")
+}
+
+/// Normalize the text nodes of a freshly parsed document.
+///
+/// The XML data model preserves whitespace verbatim, but SBML documents routinely write
+/// values such as `<ci> x </ci>` with incidental padding around the actual text, and the SBML
+/// object model expects the padding to be gone. This pass trims every text node and removes
+/// the nodes that become empty, so that reading a document yields the same text content
+/// regardless of how it was formatted.
+fn normalize_text_nodes(document: &Document) {
+    let text_nodes = document
+        .nodes()
+        .into_iter()
+        .filter(|it| it.text().is_some())
+        .collect::<Vec<_>>();
+
+    for node in text_nodes {
+        let Some(text) = node.text() else {
+            continue;
+        };
+        let value = text.as_str();
+        let trimmed = value.trim();
+        if trimmed.len() == value.len() {
+            continue;
+        }
+        let (Some(parent), Some(index)) = (node.parent(), node.index_in_parent()) else {
+            continue;
+        };
+        node.detach();
+        if !trimmed.is_empty() {
+            let replacement = document
+                .create_text(trimmed)
+                .expect("A trimmed text node is still a valid XML text node.");
+            parent.insert_child(index, replacement);
+        }
     }
 }
 
@@ -441,12 +519,14 @@ impl Default for Sbml {
     /// Creates a new blank SBML document with initial skeleton consisting of valid
     /// xml header and sbml root element.
     fn default() -> Self {
-        let doc = Document::from_str(constants::document::SBML_DEFAULT_DOCUMENT).unwrap();
-        let root = doc.root_element().unwrap();
-        let xml_document = Arc::new(RwLock::new(doc));
+        let doc = Document::parse_string(constants::document::SBML_DEFAULT_DOCUMENT)
+            .expect("The default SBML document is a valid XML document.");
+        let root = doc
+            .root()
+            .expect("The default SBML document contains a root element.");
         Sbml {
-            xml: xml_document.clone(),
-            sbml_root: XmlElement::new_raw(xml_document, root),
+            xml: doc,
+            sbml_root: XmlElement::new(root),
         }
     }
 }
@@ -455,18 +535,20 @@ impl XmlWrapper for Sbml {
     fn xml_element(&self) -> &XmlElement {
         &self.sbml_root
     }
-
-    unsafe fn unchecked_cast<T: XmlWrapper>(element: T) -> Self {
-        Sbml {
-            xml: element.document(),
-            sbml_root: element.xml_element().clone(),
-        }
-    }
 }
 
 impl From<Sbml> for XmlElement {
     fn from(value: Sbml) -> Self {
         value.sbml_root
+    }
+}
+
+impl From<XmlElement> for Sbml {
+    fn from(value: XmlElement) -> Self {
+        Sbml {
+            xml: value.document(),
+            sbml_root: value,
+        }
     }
 }
 
@@ -486,7 +568,7 @@ impl SbmlIssue {
     /// severity.
     pub fn new_error<S: ToString, E: XmlWrapper>(rule: &str, element: &E, message: S) -> SbmlIssue {
         SbmlIssue {
-            element: element.raw_element(),
+            element: element.xml_element().element().clone(),
             severity: SbmlIssueSeverity::Error,
             rule: rule.to_string(),
             message: message.to_string(),
@@ -510,8 +592,6 @@ pub enum SbmlIssueSeverity {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::{Deref, DerefMut};
-
     use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_SBML_CORE};
     use crate::core::sbase::SbmlUtils;
     use crate::core::validation::SbmlValidable;
@@ -580,8 +660,8 @@ mod tests {
             "Wrong name of the <id> property."
         );
         assert_eq!(
-            property.element().raw_element(),
-            model.raw_element(),
+            property.element().xml_element().element(),
+            model.xml_element().element(),
             "Wrong underlying element of the <id> property."
         );
         // try reading the <id> property
@@ -653,8 +733,8 @@ mod tests {
             "Wrong name of the required property."
         );
         assert_eq!(
-            property.element().raw_element(),
-            model.raw_element(),
+            property.element().xml_element().element(),
+            model.xml_element().element(),
             "Wrong underlying element of the required property."
         );
         // try to write and read to/from property
@@ -698,8 +778,8 @@ mod tests {
         assert!(notes.is_set(), "Notes in Model is not set.");
         assert_eq!(notes.simple_name(), "notes", "Wrong name of Notes child.");
         assert_eq!(
-            notes.parent().raw_element(),
-            model.raw_element(),
+            notes.parent().xml_element().element(),
+            model.xml_element().element(),
             "Wrong parent of Notes child."
         );
         // get child value
@@ -716,7 +796,7 @@ mod tests {
         assert!(!notes.is_set(), "Notes are still present after clear.");
 
         // set child
-        let xml_element = XmlElement::new_quantified(model.document(), "notes", NS_SBML_CORE);
+        let xml_element = XmlElement::new_qualified(model.document(), "notes", NS_SBML_CORE);
         let notes_elem = notes.set(xml_element);
         assert!(notes_elem.is_none(), "Old Notes should be empty.");
         assert!(notes.is_set(), "Notes should be set.");
@@ -733,24 +813,20 @@ mod tests {
         let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
         assert!(req_child.get_raw().is_none());
         assert_eq!(req_child.simple_name(), "required");
-        assert_eq!(req_child.parent().raw_element(), model.raw_element());
-        let xml_element = XmlElement::new_quantified(model.document(), "required", NS_EMPTY);
-        let inner_element = xml_element.raw_element();
-        // set child
-        req_child.set_raw(xml_element);
-        assert!(req_child.get_raw().is_some());
-        inner_element.set_text_content(model.write_doc().deref_mut(), "Some additional content");
-        let xml_element = XmlElement::new_raw(doc.xml.clone(), inner_element);
-        let old_child = req_child.set(xml_element);
-        assert_eq!(old_child.raw_element(), inner_element);
-        assert!(req_child.get_raw().is_some());
         assert_eq!(
-            req_child
-                .get()
-                .raw_element()
-                .text_content(model.read_doc().deref()),
-            "Some additional content"
+            req_child.parent().xml_element().element(),
+            model.xml_element().element()
         );
+        let xml_element = XmlElement::new_qualified(model.document(), "required", NS_EMPTY);
+        let inner_element = xml_element.element().clone();
+        // set child
+        req_child.set_raw(xml_element.clone());
+        assert!(req_child.get_raw().is_some());
+        xml_element.set_text_content("Some additional content");
+        let old_child = req_child.set(xml_element.clone());
+        assert_eq!(old_child.element(), &inner_element);
+        assert!(req_child.get_raw().is_some());
+        assert_eq!(req_child.get().text_content(), "Some additional content");
         req_child.clear_raw();
         assert!(req_child.get_raw().is_none());
     }
@@ -767,7 +843,10 @@ mod tests {
 
         assert!(list.is_set());
         assert_eq!(list.simple_name(), "listOfCompartments");
-        assert_eq!(list.parent().raw_element(), model.raw_element());
+        assert_eq!(
+            list.parent().xml_element().element(),
+            model.xml_element().element()
+        );
         let content = list.get();
         assert!(content.is_some());
         let content = content.unwrap();
@@ -784,18 +863,36 @@ mod tests {
         compartment2.id().set_raw("comp2".to_string()).unwrap();
         content.insert(1, compartment2.clone());
         assert_eq!(content.len(), 2);
-        assert_eq!(content.get(0).raw_element(), compartment1.raw_element());
-        assert_eq!(content.get(1).raw_element(), compartment2.raw_element());
+        assert_eq!(
+            content.get(0).xml_element().element(),
+            compartment1.xml_element().element()
+        );
+        assert_eq!(
+            content.get(1).xml_element().element(),
+            compartment2.xml_element().element()
+        );
         content.remove(0);
         assert_eq!(content.len(), 1);
-        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
+        assert_eq!(
+            content.get(0).xml_element().element(),
+            compartment2.xml_element().element()
+        );
         content.push(compartment1.clone());
         assert_eq!(content.len(), 2);
-        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
-        assert_eq!(content.get(1).raw_element(), compartment1.raw_element());
+        assert_eq!(
+            content.get(0).xml_element().element(),
+            compartment2.xml_element().element()
+        );
+        assert_eq!(
+            content.get(1).xml_element().element(),
+            compartment1.xml_element().element()
+        );
         content.pop();
         assert_eq!(content.len(), 1);
-        assert_eq!(content.get(0).raw_element(), compartment2.raw_element());
+        assert_eq!(
+            content.get(0).xml_element().element(),
+            compartment2.xml_element().element()
+        );
     }
 
     #[test]
@@ -812,12 +909,12 @@ mod tests {
             .sbo_term()
             .set_some(&SboTerm::try_from("SBO:0003204").unwrap());
         model.meta_id().set_some(&mid("MT-TEST-MODEL-NO1"));
-        model.notes().set(XmlElement::new_quantified(
+        model.notes().set(XmlElement::new_qualified(
             model.document(),
             "notes",
             NS_SBML_CORE,
         ));
-        model.annotation().set(XmlElement::new_quantified(
+        model.annotation().set(XmlElement::new_qualified(
             model.document(),
             "annotation",
             NS_SBML_CORE,
@@ -825,17 +922,11 @@ mod tests {
 
         // set default notes for model
         let notes = model.notes().get().unwrap();
-        notes.raw_element().set_text_content(
-            notes.write_doc().deref_mut(),
-            "This is a SBML model element.",
-        );
+        notes.set_text_content("This is a SBML model element.");
 
         // set default annotation for model
         let annotation = model.annotation().get().unwrap();
-        annotation.raw_element().set_text_content(
-            annotation.write_doc().deref_mut(),
-            "This is a SBML annotation element.",
-        );
+        annotation.set_text_content("This is a SBML annotation element.");
 
         build_function_defs(&model);
         build_unit_defs(&model);
@@ -850,8 +941,77 @@ mod tests {
 
         let _ = sbml_doc.write_path("test-inputs/sbml_build_test.sbml");
 
+        // The built document must serialize into XML that parses back into a document with the
+        // same validation outcome, and serializing it again must be byte-identical.
+        let xml = sbml_doc.to_xml_string().unwrap();
+        let reread = Sbml::read_str(xml.as_str()).unwrap();
+        assert_eq!(
+            sorted_issues(&sbml_doc.validate()),
+            sorted_issues(&reread.validate())
+        );
+        assert_eq!(xml, reread.to_xml_string().unwrap());
+
         // Clean up the test file.
         std::fs::remove_file("test-inputs/sbml_build_test.sbml").unwrap();
+    }
+
+    /// A helper that turns a validation report into a comparable, order-independent summary.
+    fn sorted_issues(issues: &[crate::SbmlIssue]) -> Vec<String> {
+        let mut summary = issues
+            .iter()
+            .map(|it| format!("{}|{:?}|{}", it.rule, it.severity, it.message))
+            .collect::<Vec<_>>();
+        summary.sort();
+        summary
+    }
+
+    /// An edit of a document read from disk must survive a serialization round trip: the result
+    /// parses back into a document with the same validation outcome, and serializing it a second
+    /// time must be byte-identical.
+    #[test]
+    pub fn test_write_round_trip() {
+        let doc = Sbml::read_path("test-inputs/model.sbml").unwrap();
+        let model = doc.model().get().unwrap();
+        model.name().set_some(&"round trip model".to_string());
+        model.notes().set(XmlElement::new_qualified(
+            model.document(),
+            "notes",
+            NS_SBML_CORE,
+        ));
+        model
+            .notes()
+            .get()
+            .unwrap()
+            .set_text_content("A round-trip note.");
+
+        let before = sorted_issues(&doc.validate());
+
+        let xml = doc.to_xml_string().unwrap();
+        let reread = Sbml::read_str(xml.as_str()).unwrap();
+        assert_eq!(before, sorted_issues(&reread.validate()));
+
+        // A second serialization of the re-read document is byte-identical to the first one,
+        // because the XML layer orders namespace declarations deterministically.
+        assert_eq!(xml, reread.to_xml_string().unwrap());
+        assert_eq!(model.name().get().unwrap(), "round trip model");
+    }
+
+    /// Reading a document through the XML layer honours a `cancel-this` trigger: a trigger that
+    /// has already fired aborts the read with `SbmlError::Cancelled`.
+    #[test]
+    pub fn test_read_cancellation() {
+        let document = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model/>
+</sbml>"#;
+
+        let trigger = cancel_this::CancelAtomic::new();
+        trigger.cancel();
+        let result = cancel_this::on_atomic(trigger, || Sbml::read_str(document));
+        assert!(matches!(result, Err(crate::SbmlError::Cancelled(_))));
+
+        // Without a fired trigger, the same document reads without an error.
+        assert!(Sbml::read_str(document).is_ok());
     }
 
     fn build_function_defs(model: &Model) {
@@ -1038,7 +1198,7 @@ mod tests {
         constraints.get(1).id().set_some(&sid("constraint2"));
 
         let constraint_top = constraints.top();
-        constraint_top.message().set(XmlElement::new_quantified(
+        constraint_top.message().set(XmlElement::new_qualified(
             model.document(),
             "message",
             NS_HTML,
@@ -1151,7 +1311,10 @@ mod tests {
         let id = model.id();
         assert!(id.is_set());
         assert_eq!(id.simple_name(), "id");
-        assert_eq!(id.element().raw_element(), model.raw_element());
+        assert_eq!(
+            id.element().xml_element().element(),
+            model.xml_element().element()
+        );
         assert_eq!(id.get().unwrap().as_str(), "model_id");
         id.set_some(&sid("new_model_id"));
         assert_eq!(id.get().unwrap().as_str(), "new_model_id");
@@ -1161,7 +1324,10 @@ mod tests {
         let name = model.name();
         assert!(!name.is_set());
         assert_eq!(name.simple_name(), "name");
-        assert_eq!(name.element().raw_element(), model.raw_element());
+        assert_eq!(
+            name.element().xml_element().element(),
+            model.xml_element().element()
+        );
         name.set_some(&"model_name".to_string());
         assert_eq!(name.get().unwrap(), "model_name");
         name.clear().unwrap();
@@ -1170,7 +1336,10 @@ mod tests {
         let meta_id = model.meta_id();
         assert!(meta_id.is_set());
         assert_eq!(meta_id.simple_name(), "metaid");
-        assert_eq!(meta_id.element().raw_element(), model.raw_element());
+        assert_eq!(
+            meta_id.element().xml_element().element(),
+            model.xml_element().element()
+        );
         assert_eq!(
             meta_id.get().unwrap().as_str(),
             "_174907b7-8e1c-47f3-9a50-bb8e4c6ebd0d"
@@ -1183,7 +1352,10 @@ mod tests {
         let sbo_term = model.sbo_term();
         assert!(!sbo_term.is_set());
         assert_eq!(sbo_term.simple_name(), "sboTerm");
-        assert_eq!(name.element().raw_element(), model.raw_element());
+        assert_eq!(
+            name.element().xml_element().element(),
+            model.xml_element().element()
+        );
         sbo_term.set_some(&SboTerm::try_from("SBO:0000014").unwrap());
         assert_eq!(sbo_term.get().unwrap().as_str(), "SBO:0000014");
         sbo_term.clear().unwrap();
@@ -1191,13 +1363,19 @@ mod tests {
 
         let notes = model.notes();
         assert!(notes.is_set());
-        assert_eq!(notes.parent().raw_element(), model.raw_element());
+        assert_eq!(
+            notes.parent().xml_element().element(),
+            model.xml_element().element()
+        );
         assert_eq!(notes.simple_name(), "notes");
         assert!(notes.get().is_some());
 
         let annotation = model.annotation();
         assert!(annotation.is_set());
-        assert_eq!(annotation.parent().raw_element(), model.raw_element());
+        assert_eq!(
+            annotation.parent().xml_element().element(),
+            model.xml_element().element()
+        );
         assert_eq!(annotation.simple_name(), "annotation");
         assert!(annotation.get().is_some());
     }
@@ -1533,18 +1711,18 @@ mod tests {
         constraints.push(single.clone());
         assert!(!constraints.is_empty());
         assert_eq!(constraints.len(), 1);
-        assert_eq!(constraints.top().raw_element(), single.raw_element());
+        assert_eq!(
+            constraints.top().xml_element().element(),
+            single.xml_element().element()
+        );
 
         let single = constraints.top();
         assert!(!single.math().is_set());
         assert!(!single.message().is_set());
 
         let math_el = Math::default(model.document());
-        let msg_el = XmlElement::new_quantified(model.document(), "message", NS_HTML);
-        msg_el.raw_element().set_text_content(
-            model.clone().write_doc().deref_mut(),
-            "Warning: Unsatisfied constraint.",
-        );
+        let msg_el = XmlElement::new_qualified(model.document(), "message", NS_HTML);
+        msg_el.set_text_content("Warning: Unsatisfied constraint.");
         single.math().set(math_el);
         single.message().set(msg_el);
         assert!(single.math().is_set());
@@ -1553,8 +1731,7 @@ mod tests {
             .message()
             .get()
             .unwrap()
-            .raw_element()
-            .text_content(model.clone().read_doc().deref())
+            .text_content()
             .starts_with("Warning:"));
     }
 

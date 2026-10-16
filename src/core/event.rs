@@ -1,8 +1,8 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
 use crate::xml::{
-    OptionalChild, OptionalSbmlChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault,
-    XmlDocument, XmlElement, XmlList,
+    Document, OptionalChild, OptionalSbmlChild, RequiredSbmlProperty, RequiredXmlProperty,
+    XmlDefault, XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -10,13 +10,13 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Event(XmlElement);
 
 impl XmlDefault for Event {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Event::new(document, false)
     }
 }
 
 impl Event {
-    pub fn new(document: XmlDocument, use_values_from_trigger_time: bool) -> Self {
+    pub fn new(document: Document, use_values_from_trigger_time: bool) -> Self {
         let obj = Event::new_empty(document, "event");
         obj.use_values_from_trigger_time()
             .set(&use_values_from_trigger_time);
@@ -48,13 +48,13 @@ impl Event {
 pub struct Trigger(XmlElement);
 
 impl XmlDefault for Trigger {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Trigger::new(document, false, false)
     }
 }
 
 impl Trigger {
-    pub fn new(document: XmlDocument, persistent: bool, initial_value: bool) -> Self {
+    pub fn new(document: Document, persistent: bool, initial_value: bool) -> Self {
         let obj = Trigger::new_empty(document, "trigger");
         obj.persistent().set(&persistent);
         obj.initial_value().set(&initial_value);
@@ -78,7 +78,7 @@ impl Trigger {
 pub struct Priority(XmlElement);
 
 impl XmlDefault for Priority {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Priority::new_empty(document, "priority")
     }
 }
@@ -93,7 +93,7 @@ impl Priority {
 pub struct Delay(XmlElement);
 
 impl XmlDefault for Delay {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Delay::new_empty(document, "delay")
     }
 }
@@ -108,7 +108,7 @@ impl Delay {
 pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
-    pub fn new(document: XmlDocument, variable: &SId) -> Self {
+    pub fn new(document: Document, variable: &SId) -> Self {
         let obj = EventAssignment::new_empty(document, "eventAssignment");
         obj.variable().set(variable);
         obj

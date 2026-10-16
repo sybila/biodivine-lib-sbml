@@ -1,5 +1,25 @@
-use crate::xml::{XmlElement, XmlPropertyType, XmlWrapper};
-use std::ops::{Deref, DerefMut};
+use crate::xml::{XmlElement, XmlPropertyType};
+use biodivine_lib_xml_dom::QualifiedName;
+
+/// Resolve the expanded name of an attribute from its written form.
+///
+/// A name of the form `prefix:local` (for example `xsi:type`) is resolved against the
+/// namespace declarations that are in scope for `element`. A name without a prefix is an
+/// attribute in no namespace, which is how unqualified attributes are always spelled.
+pub(crate) fn resolve_attribute_name(
+    element: &XmlElement,
+    name: &str,
+) -> Result<QualifiedName, String> {
+    if let Some((prefix, _local)) = name.split_once(':') {
+        if !prefix.is_empty() {
+            return element
+                .element()
+                .resolve_attribute_name(name)
+                .map_err(|it| it.to_string());
+        }
+    }
+    QualifiedName::without_namespace(name).map_err(|it| it.to_string())
+}
 
 /// Any [XmlProperty] object provides type-safe access to a single XML attribute
 /// of an underlying tag.
@@ -17,32 +37,23 @@ use std::ops::{Deref, DerefMut};
 /// In practice, we use two derived "variants" inheriting from [XmlProperty]:
 /// [RequiredXmlProperty] and [OptionalXmlProperty]. These provide the two common "default"
 /// behaviours for treating missing values.
-///
 pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// Returns a reference to the underlying [XmlElement].
     fn element(&self) -> &XmlElement;
 
-    /// Returns the **fully quantified** name of the underlying XML attribute, including
-    /// namespace prefix if relevant. Can return an error at runtime if there is some problem
-    /// with the construction of the quantified name (e.g. the namespace is not declared, or
-    /// not declared correctly).
+    /// The **expanded** name of the underlying XML attribute.
     ///
-    /// This name can (and probably should be) computed dynamically at runtime for properties
-    /// that belong to a specific non-default namespace, as the prefix can change depending
-    /// on the position of the property in the document.
+    /// An unprefixed SBML core attribute is in *no* namespace (XML attributes never take the
+    /// default namespace), so the default implementation simply returns an attribute name
+    /// without a namespace. Implementations whose attribute belongs to a non-empty namespace
+    /// (an SBML package) override this method; they can also resolve the namespace prefix
+    /// dynamically based on the position of the attribute in the document.
     ///
-    /// If `write_doc` is set to `true`, it indicates to the method that it can try to
-    /// ensure necessary conditions for the quantified name to be valid (e.g. create a namespace
-    /// declaration). The exact conditions as to when this is valid can vary depending on the
-    /// implementation. In general, methods that only read the document should not allow
-    /// any modification. Meanwhile, methods that write values to the document can set this to
-    /// true in order to indicate that "fixing" the document into a consistent state is allowed.
-    ///
-    /// The default implementation for this method simply returns [XmlProperty::simple_name]
-    /// (i.e. it assumes the attribute is in the default empty namespace). Please override this
-    /// in cases where the property can depend on XML namespaces.
-    fn quantified_name(&self, _write_doc: bool) -> Result<String, String> {
-        Ok(self.simple_name().to_string())
+    /// If `write_doc` is `true`, the method is allowed to ensure the conditions necessary for
+    /// the returned name to be usable (in particular, to declare a namespace that the document
+    /// does not declare yet). Read-only callers pass `false` and must not modify the document.
+    fn qualified_name(&self, _write_doc: bool) -> Result<QualifiedName, String> {
+        resolve_attribute_name(self.element(), self.simple_name())
     }
 
     /// Returns the **simple** name of the underlying XML attribute, i.e. excluding any
@@ -58,16 +69,11 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// if the attribute is missing, or give an error if the value is invalid.
     fn is_set(&self) -> bool {
         let element = self.element();
-        let Ok(name) = self.quantified_name(false) else {
-            // If the quantified name can't be built, the property has no value.
+        let Ok(name) = self.qualified_name(false) else {
+            // If the name cannot be built, the property has no value.
             return false;
         };
-        // As opposed to `self.read_raw().is_some()`, this does not need to copy the attribute.
-        let doc = element.read_doc();
-        element
-            .raw_element()
-            .attribute(doc.deref(), name.as_str())
-            .is_some()
+        element.element().attribute(&name).is_some()
     }
 
     /// Read the value of this [XmlProperty], or a `String` error if the underlying value
@@ -78,25 +84,23 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     ///  > value conversion.
     fn get_checked(&self) -> Result<Option<T>, String> {
         let element = self.element();
-        let name = self.quantified_name(false)?;
-        let doc = element.read_doc();
-        let value = element.raw_element().attribute(doc.deref(), name.as_str());
-        XmlPropertyType::try_get(value)
+        let name = self.qualified_name(false)?;
+        let value = element.element().attribute(&name);
+        XmlPropertyType::try_get(value.as_ref().map(|it| it.as_str()))
     }
 
     /// Read the "raw" underlying attribute value of this [XmlProperty], or `None` if the value
     /// is not set.
     fn get_raw(&self) -> Option<String> {
         let element = self.element();
-        let Ok(name) = self.quantified_name(false) else {
-            // If the quantified name can't be built, the property has no value.
+        let Ok(name) = self.qualified_name(false) else {
+            // If the name cannot be built, the property has no value.
             return None;
         };
-        let doc = element.read_doc();
         element
-            .raw_element()
-            .attribute(doc.deref(), name.as_str())
-            .map(|it| it.to_string())
+            .element()
+            .attribute(&name)
+            .map(|it| it.as_str().to_string())
     }
 
     /// Remove the underlying XML attribute completely.
@@ -107,12 +111,8 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// does not map to any valid property value.
     fn clear(&self) -> Result<(), String> {
         let element = self.element();
-        let name = self.quantified_name(true)?;
-        let mut doc = element.write_doc();
-        element
-            .raw_element()
-            .mut_attributes(doc.deref_mut())
-            .remove(name.as_str());
+        let name = self.qualified_name(true)?;
+        element.element().remove_attribute(&name);
         Ok(())
     }
 
@@ -123,12 +123,15 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// Obviously, this function can be used to set the property to a completely invalid value.
     fn set_raw(&self, value: String) -> Result<(), String> {
         let element = self.element();
-        let name = self.quantified_name(true)?;
-        let mut doc = element.write_doc();
+        let name = self.qualified_name(true)?;
+        if let Some(namespace) = name.namespace() {
+            // Make sure the namespace is in scope, so that the resulting document is valid.
+            element.ensure_namespace(namespace);
+        }
         element
-            .raw_element()
-            .set_attribute(doc.deref_mut(), name, value);
-        Ok(())
+            .element()
+            .set_attribute_checked(name, value)
+            .map_err(|it| it.to_string())
     }
 }
 

@@ -36,3 +36,60 @@ pub const NS_MATHML: (&str, &str) = ("", URL_MATHML);
 
 /// The "default" empty namespace. Default prefix for this namespace is empty.
 pub const NS_EMPTY: (&str, &str) = ("", URL_EMPTY);
+
+/// Convert a `(prefix, url)` namespace pair into the `xml_dom` representation used by the
+/// underlying document.
+///
+/// The empty namespace (empty URL) has no `xml_dom` counterpart, because `xml_dom` represents
+/// "no namespace" as `None`; this function returns `None` for it as well.
+///
+/// # Panics
+///
+/// Panics if a non-empty `url`/`prefix` pair is not a valid XML namespace. All constant
+/// namespaces used by this crate are valid, so this cannot happen for the values defined here.
+pub(crate) fn to_xml_namespace(namespace: Namespace) -> Option<biodivine_lib_xml_dom::Namespace> {
+    if namespace.1.is_empty() {
+        return None;
+    }
+    let result = if namespace.0.is_empty() {
+        biodivine_lib_xml_dom::Namespace::without_prefix(namespace.1)
+    } else {
+        biodivine_lib_xml_dom::Namespace::prefixed(namespace.1, namespace.0)
+    };
+    Some(result.expect("Constant SBML namespaces are valid XML namespaces."))
+}
+
+/// Build the expanded name of an element or attribute from a `(prefix, url)` namespace pair
+/// and a local `name`.
+///
+/// A namespace with an empty URL produces a name without a namespace.
+pub(crate) fn qualified_name(
+    namespace: Namespace,
+    name: &str,
+) -> Result<biodivine_lib_xml_dom::QualifiedName, String> {
+    match to_xml_namespace(namespace) {
+        None => biodivine_lib_xml_dom::QualifiedName::without_namespace(name),
+        Some(namespace) => biodivine_lib_xml_dom::QualifiedName::with_namespace(name, &namespace),
+    }
+    .map_err(|it| it.to_string())
+}
+
+/// Build an expanded name in the namespace identified by `url`, using the concrete namespace
+/// `prefix` that a particular document binds to that URL.
+///
+/// An empty `prefix` produces a name in the default namespace, which is meaningful for element
+/// names but is not how a namespaced attribute can be written.
+pub(crate) fn prefixed_qualified_name(
+    url: &str,
+    prefix: &str,
+    name: &str,
+) -> Result<biodivine_lib_xml_dom::QualifiedName, String> {
+    let namespace = if prefix.is_empty() {
+        biodivine_lib_xml_dom::Namespace::without_prefix(url)
+    } else {
+        biodivine_lib_xml_dom::Namespace::prefixed(url, prefix)
+    }
+    .map_err(|it| it.to_string())?;
+    biodivine_lib_xml_dom::QualifiedName::with_namespace(name, &namespace)
+        .map_err(|it| it.to_string())
+}

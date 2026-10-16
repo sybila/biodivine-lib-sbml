@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_QUAL;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -11,7 +11,7 @@ pub struct QualitativeSpecies(XmlElement);
 
 impl QualitativeSpecies {
     pub fn new(
-        document: XmlDocument,
+        document: Document,
         id: SId,
         compartment: SId,
         constant: bool,

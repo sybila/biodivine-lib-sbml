@@ -1,6 +1,6 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
-use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement};
+use crate::xml::{Document, OptionalChild, XmlDefault, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual function definition
@@ -22,7 +22,7 @@ impl FunctionDefinition {
 }
 
 impl XmlDefault for FunctionDefinition {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         FunctionDefinition::new_empty(document, "functionDefinition")
     }
 }

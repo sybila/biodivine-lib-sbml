@@ -3,16 +3,14 @@ use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::layout::dimensions::Dimensions;
 use crate::layout::point::Point;
-use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlChild, RequiredXmlChild, XmlDocument, XmlElement,
-};
+use crate::xml::{Document, OptionalSbmlProperty, RequiredSbmlChild, RequiredXmlChild, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 pub struct BoundingBox(XmlElement);
 
 impl BoundingBox {
-    pub fn new(document: XmlDocument, position: Point, dimensions: Dimensions) -> Self {
+    pub fn new(document: Document, position: Point, dimensions: Dimensions) -> Self {
         let b_box = BoundingBox::new_empty(document, "bounding_box");
         b_box.position().set(position);
         b_box.dimensions().set(dimensions);

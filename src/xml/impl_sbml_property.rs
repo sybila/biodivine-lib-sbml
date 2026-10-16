@@ -1,8 +1,8 @@
-use crate::constants::namespaces::{Namespace, URL_SBML_CORE};
-use crate::xml::{XmlElement, XmlPropertyType, XmlWrapper};
+use crate::constants::namespaces::{prefixed_qualified_name, Namespace, URL_SBML_CORE};
+use crate::xml::{XmlElement, XmlPropertyType};
 use crate::Sbml;
+use biodivine_lib_xml_dom::QualifiedName;
 use std::marker::PhantomData;
-use std::ops::Deref;
 
 /// A variant of [crate::xml::Property] which adheres to SBML package prefix resolution rules.
 ///
@@ -10,17 +10,16 @@ use std::ops::Deref;
 ///  - An SBML property must be declared with a namespace URL (either the core namespace, or
 ///    an SBML package namespace).
 ///  - If the property is in the core namespace, it *must* be defined without any prefix, even
-///    if the core namespace itself is defined with a prefix.
-///  - If the property is in a package namespace, the behavior is different depending on whether
-///    the element is the same package or different (in the core specification, this only applies
-///    to the core package, but it makes sense for all instances where one
-///    package extends another):
+///    if the core namespace itself is defined with a prefix. In XML terms, an SBML core
+///    attribute lives in *no* namespace, because attributes never take the default namespace.
+///  - If the property is in a package namespace, the behaviour depends on whether the element
+///    is in the same package or not (in the core specification, this only applies to the core
+///    package, but it makes sense for all instances where one package extends another):
 ///     * For elements from different packages (or core), the property *must* be used
 ///       with the namespace prefix.
 ///     * For same package elements, the property *can* be used with the namespace prefix, or
 ///       without a prefix (either is fine). If both (or none) are declared, the one *with*
-///       namespace prefix is preferred, as it appears to have better backwards compatibility
-///       (this last part is not officially in the SBML specification).
+///       the namespace prefix is preferred.
 pub struct SbmlProperty<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: &'static str,
@@ -35,25 +34,25 @@ pub struct OptionalSbmlProperty<'a, T: XmlPropertyType>(SbmlProperty<'a, T>);
 pub struct RequiredSbmlProperty<'a, T: XmlPropertyType>(SbmlProperty<'a, T>);
 
 impl<'a, T: XmlPropertyType> SbmlProperty<'a, T> {
-    /// Create a new instance of a [SbmlProperty] for the given `element`, `name` and `package_url`.
+    /// Create a new instance of a [SbmlProperty] for the given `element`, `name`,
+    /// `property_namespace` and `element_namespace`.
     pub fn new(
         element: &'a XmlElement,
         name: &'static str,
-        property_package_url: Namespace,
-        element_package_url: Namespace,
+        property_namespace: Namespace,
+        element_namespace: Namespace,
     ) -> SbmlProperty<'a, T> {
         SbmlProperty {
             element,
             name,
-            property_namespace: property_package_url,
-            element_namespace: element_package_url,
-            _marker: Default::default(),
+            property_namespace,
+            element_namespace,
+            _marker: PhantomData,
         }
     }
 
     /// Check if this property belongs to the SBML core namespace.
     pub fn is_sbml_core(&self) -> bool {
-        // If we ever need to support more than one SBML version, this will need to be updated.
         self.property_namespace.1 == URL_SBML_CORE
     }
 
@@ -96,49 +95,67 @@ impl<'a, T: XmlPropertyType> RequiredSbmlProperty<'a, T> {
     }
 }
 
+/// Build the expanded name of a package attribute from its namespace URL and the prefix that
+/// the document actually binds to that URL.
+fn package_property_name(
+    namespace: Namespace,
+    name: &str,
+    prefix: &str,
+) -> Result<QualifiedName, String> {
+    prefixed_qualified_name(namespace.1, prefix, name)
+}
+
 impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for SbmlProperty<'_, T> {
     fn element(&self) -> &XmlElement {
         self.element
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
         if self.is_sbml_core() {
-            // If the property is in the core namespace, it must be used without a prefix, using
-            // just its name. No need to manipulate any package declarations.
-            Ok(self.name.to_string())
+            // A core attribute is unprefixed and lives in no namespace, so it needs no
+            // namespace resolution at all.
+            return crate::xml::xml_property::resolve_attribute_name(self.element, self.name);
+        }
+
+        // A property whose name is already written as `prefix:local` (for example `xsi:type`)
+        // is resolved directly against the namespace declarations that are in scope.
+        if self
+            .name
+            .split_once(':')
+            .is_some_and(|(prefix, _)| !prefix.is_empty())
+        {
+            return crate::xml::xml_property::resolve_attribute_name(self.element, self.name);
+        }
+
+        let Some(sbml_root) = Sbml::try_for_child_element(self.element) else {
+            return Err(format!(
+                "SBML property `{}` used outside of an SBML document.",
+                self.name
+            ));
+        };
+
+        let prefix = if write_doc {
+            sbml_root.ensure_sbml_package(self.property_namespace, false)?
         } else {
-            let Some(sbml_root) = Sbml::try_for_child_element(self.element) else {
-                return Err(format!(
-                    "SBML property `{}` used outside of an SBML document.",
-                    self.name
-                ));
-            };
+            sbml_root.find_sbml_package(self.property_namespace)?
+        };
 
-            let prefix = if write_doc {
-                sbml_root.ensure_sbml_package(self.property_namespace, false)?
-            } else {
-                sbml_root.find_sbml_package(self.property_namespace)?
-            };
+        let prefixed = package_property_name(self.property_namespace, self.name, prefix.as_str())?;
 
-            if !self.is_the_same_package_as_element() {
-                // In an element from a different package (or core), a package property must
-                // always be declared using a prefix.
-                Ok(format!("{}:{}", prefix, self.name))
+        if !self.is_the_same_package_as_element() {
+            // In an element from a different package (or core), a package property must
+            // always be declared using a prefix.
+            Ok(prefixed)
+        } else {
+            // In the same package element, a package property can be defined using a prefix,
+            // but it can also be defined without a prefix. The preferred option is to use the
+            // prefix, but only if the attribute without a prefix does not already exist.
+            let unprefixed =
+                QualifiedName::without_namespace(self.name).map_err(|it| it.to_string())?;
+            if self.element.element().attribute(&unprefixed).is_some() {
+                Ok(unprefixed)
             } else {
-                // In the same package element, a package property can be defined using a prefix
-                // (which still *must* exist anyway), but it can also be defined without a prefix.
-                // The preferred option is to use the prefix, but only if the attribute without a
-                // prefix does not already exist.
-                let doc = self.element.read_doc();
-                let attributes = self.element.element.attributes(doc.deref());
-                if attributes.contains_key(self.simple_name()) {
-                    // If the attribute without prefix already exists, we use it directly.
-                    Ok(self.simple_name().to_string())
-                } else {
-                    // If the attribute without prefix does not exist, we use the fully quantified
-                    // name *with* the prefix.
-                    Ok(format!("{}:{}", prefix, self.name))
-                }
+                Ok(prefixed)
             }
         }
     }
@@ -153,8 +170,8 @@ impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for OptionalSbmlProperty<'_,
         self.0.element
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
-        self.0.quantified_name(write_doc)
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
+        self.0.qualified_name(write_doc)
     }
 
     fn simple_name(&self) -> &str {
@@ -167,8 +184,8 @@ impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for RequiredSbmlProperty<'_,
         self.0.element
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
-        self.0.quantified_name(write_doc)
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
+        self.0.qualified_name(write_doc)
     }
 
     fn simple_name(&self) -> &str {

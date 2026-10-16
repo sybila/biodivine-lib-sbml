@@ -1,13 +1,13 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
-use crate::xml::{OptionalChild, XmlDefault, XmlDocument, XmlElement};
+use crate::xml::{Document, OptionalChild, XmlDefault, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 pub struct Constraint(XmlElement);
 
 impl XmlDefault for Constraint {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Constraint::new_empty(document, "constraint")
     }
 }

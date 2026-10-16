@@ -1,6 +1,6 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::Unit;
-use crate::xml::{OptionalSbmlChild, XmlDefault, XmlDocument, XmlElement, XmlList};
+use crate::xml::{Document, OptionalSbmlChild, XmlDefault, XmlElement, XmlList};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual unit definition
@@ -14,7 +14,7 @@ impl UnitDefinition {
 }
 
 impl XmlDefault for UnitDefinition {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         UnitDefinition::new_empty(document, "unitDefinition")
     }
 }

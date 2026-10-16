@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -10,7 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct FluxObjective(XmlElement);
 
 impl FluxObjective {
-    pub fn new(document: XmlDocument, reaction: SId, coefficient: f64) -> FluxObjective {
+    pub fn new(document: Document, reaction: SId, coefficient: f64) -> FluxObjective {
         let obj = FluxObjective::new_empty(document, "fluxObjective");
         obj.reaction().set(&reaction);
         obj.coefficient().set(&coefficient);

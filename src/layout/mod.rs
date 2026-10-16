@@ -11,9 +11,9 @@ use crate::layout::bounding_box::BoundingBox;
 use crate::layout::curve::Curve;
 use crate::layout::dimensions::Dimensions;
 use crate::xml::{
-    OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty,
-    RequiredXmlChild, RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlNamedSubtype,
-    XmlPropertyType, XmlSupertype,
+    Document, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty,
+    RequiredXmlChild, RequiredXmlProperty, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType,
+    XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
@@ -22,7 +22,7 @@ use std::fmt::Display;
 pub struct Layout(XmlElement);
 
 impl Layout {
-    pub fn new(document: XmlDocument, id: SId, dimensions: Dimensions) -> Self {
+    pub fn new(document: Document, id: SId, dimensions: Dimensions) -> Self {
         let layout = Layout::new_empty(document, "layout");
         layout.id().set(&id);
         layout.dimensions().set(dimensions);
@@ -61,7 +61,7 @@ pub struct GraphicalObject(XmlElement);
 impl XmlSupertype for GraphicalObject {}
 
 impl GraphicalObject {
-    pub fn new(document: XmlDocument, id: SId, bounding_box: BoundingBox) -> Self {
+    pub fn new(document: Document, id: SId, bounding_box: BoundingBox) -> Self {
         let obj = GraphicalObject::new_empty(document, "graphObject");
 
         obj.id().set(&id);
@@ -90,7 +90,7 @@ impl XmlNamedSubtype<GraphicalObject> for CompartmentGlyph {
 }
 
 impl CompartmentGlyph {
-    pub fn new(document: XmlDocument, id: SId) -> Self {
+    pub fn new(document: Document, id: SId) -> Self {
         let glyph = CompartmentGlyph::new_empty(document, "compartmentGlyph");
         glyph.id().set(&id);
         glyph
@@ -124,7 +124,7 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesGlyph {
 }
 
 impl SpeciesGlyph {
-    pub fn new(document: XmlDocument, id: SId) -> Self {
+    pub fn new(document: Document, id: SId) -> Self {
         let glyph = SpeciesGlyph::new_empty(document, "speciesGlyph");
         glyph.id().set(&id);
         glyph
@@ -155,7 +155,7 @@ impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {
 }
 
 impl ReactionGlyph {
-    pub fn new(document: XmlDocument, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
+    pub fn new(document: Document, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
         let glyph = ReactionGlyph::new_empty(document, "reactionGlyph");
         glyph.id().set(&id);
         glyph.species_reference_glyphs().set(list);
@@ -193,7 +193,7 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {
 }
 
 impl SpeciesReferenceGlyph {
-    pub fn new(document: XmlDocument, id: SId, glyph: SId) -> Self {
+    pub fn new(document: Document, id: SId, glyph: SId) -> Self {
         let srg = SpeciesReferenceGlyph::new_empty(document, "speciesRefGlyph");
         srg.species_glyph().set(&glyph);
         srg.id().set(&id);
@@ -297,7 +297,7 @@ impl XmlNamedSubtype<GraphicalObject> for GeneralGlyph {
 }
 
 impl GeneralGlyph {
-    pub fn new(document: XmlDocument, id: SId) -> Self {
+    pub fn new(document: Document, id: SId) -> Self {
         let gen = GeneralGlyph::new_empty(document, "generalGlyph");
         gen.id().set(&id);
         gen
@@ -337,7 +337,7 @@ impl XmlNamedSubtype<GraphicalObject> for ReferenceGlyph {
 }
 
 impl ReferenceGlyph {
-    pub fn new(document: XmlDocument, id: SId, glyph: SId) -> Self {
+    pub fn new(document: Document, id: SId, glyph: SId) -> Self {
         let ref_g = ReferenceGlyph::new_empty(document, "referenceGlyph");
         ref_g.id().set(&id);
         ref_g.glyph().set(&glyph);
@@ -378,7 +378,7 @@ impl XmlNamedSubtype<GraphicalObject> for TextGlyph {
 }
 
 impl TextGlyph {
-    pub fn new(document: XmlDocument, id: SId) -> Self {
+    pub fn new(document: Document, id: SId) -> Self {
         let txt = TextGlyph::new_empty(document, "textGlyph");
         txt.id().set(&id);
         txt

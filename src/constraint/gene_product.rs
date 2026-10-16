@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -10,7 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct GeneProduct(XmlElement);
 
 impl GeneProduct {
-    pub fn new(document: XmlDocument, id: SId, label: String) -> GeneProduct {
+    pub fn new(document: Document, id: SId, label: String) -> GeneProduct {
         let obj = GeneProduct::new_empty(document, "geneProduct");
         obj.id().set(&id);
         obj.label().set(&label);

@@ -13,9 +13,7 @@ use crate::xml::{
     XmlWrapper,
 };
 use crate::{Sbml, SbmlIssue};
-use biodivine_xml_doc::Element;
 use std::collections::{HashMap, HashSet};
-use std::ops::Deref;
 
 /// Denotes an element that possess a way to self-test against the most critical checks. This
 /// should be executed **before** the actual document validation. If the type check fails,
@@ -61,7 +59,7 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     // Check that all required attributes are present.
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
-            let (prefix, name) = Element::separate_prefix_name(req_attr);
+            let (prefix, name) = separate_prefix_name(req_attr);
             let namespace = namespace_for_prefix(prefix);
             let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
 
@@ -87,16 +85,16 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     }
 
     // Typecheck all relevant attributes.
-    for attr in attributes {
-        let attr_name = attr.0.as_str();
-        let (_prefix, name) = Element::separate_prefix_name(attr_name);
+    for attr in attributes.keys() {
+        let attr_name = attr.local_name_str();
+        let (_prefix, name) = separate_prefix_name(attr_name);
         let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
             break;
         };
 
         // t => (attribute name, attribute value)
         for (attr_id, attr_type) in types {
-            let (_prefix, name2) = Element::separate_prefix_name(attr_name);
+            let (_prefix, name2) = separate_prefix_name(attr_name);
             // TODO:
             //  This ignores namespace prefixes as simply assumes that if we find the
             //  right name, it is the specified attribute.
@@ -155,6 +153,15 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
     }
 }
 
+/// Splits an attribute or element name written as `prefix:local` into its prefix and local
+/// part. A name without a prefix is returned with an empty prefix.
+fn separate_prefix_name(name: &str) -> (&str, &str) {
+    match name.split_once(':') {
+        Some((prefix, local)) => (prefix, local),
+        None => ("", name),
+    }
+}
+
 /// Performs a type check of a value of a specific attribute.
 /// If check fails, error is logged in *issues*.
 fn type_check_of_property<T: XmlPropertyType>(
@@ -162,7 +169,7 @@ fn type_check_of_property<T: XmlPropertyType>(
     xml_element: &XmlElement,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    let (prefix, name) = Element::separate_prefix_name(attribute_name);
+    let (prefix, name) = separate_prefix_name(attribute_name);
     let namespace = namespace_for_prefix(prefix);
     let package_declaration = Sbml::try_for_child(xml_element)
         .unwrap()
@@ -194,13 +201,11 @@ fn type_check_of_property<T: XmlPropertyType>(
 /// See [tag_to_allowed_child_rule_id], [tag_to_unique_child_rule_id], and
 /// [tag_to_attribute_rule_id] for the exact mapping between rule IDs and problematic tags.
 fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    let doc = xml_element.read_doc();
-    let element = xml_element.raw_element();
-    let attributes = element
-        .attributes(doc.deref())
+    let attributes = xml_element
+        .attributes()
         .keys()
-        .map(|key| key.as_str())
-        .collect::<Vec<&str>>();
+        .map(|key| key.to_string())
+        .collect::<Vec<String>>();
 
     validate_allowed_attributes(xml_element, &attributes, issues);
     validate_allowed_children(xml_element, issues);
@@ -212,7 +217,7 @@ fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<S
 /// attributes (keys). If not, an error is logged in the vector of issues.
 pub fn validate_allowed_attributes(
     xml_element: &XmlElement,
-    attributes: &Vec<&str>,
+    attributes: &[String],
     issues: &mut Vec<SbmlIssue>,
 ) {
     let element_name = xml_element.tag_name();
@@ -224,7 +229,7 @@ pub fn validate_allowed_attributes(
     };
 
     for full_name in attributes {
-        let (prefix, attr_name) = Element::separate_prefix_name(full_name);
+        let (prefix, attr_name) = separate_prefix_name(full_name);
 
         if !prefix.is_empty() {
             // According to the specification, the SBML core attributes should be placed in the

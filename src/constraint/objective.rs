@@ -3,8 +3,8 @@ use crate::constraint::flux_objective::FluxObjective;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty, RequiredXmlProperty,
-    XmlDocument, XmlElement, XmlList, XmlPropertyType,
+    Document, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty, RequiredXmlProperty,
+    XmlElement, XmlList, XmlPropertyType,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
@@ -62,7 +62,7 @@ impl XmlPropertyType for FbcType {
 pub struct Objective(XmlElement);
 
 impl Objective {
-    pub fn new(document: XmlDocument, id: SId, bound_type: FbcType) -> Objective {
+    pub fn new(document: Document, id: SId, bound_type: FbcType) -> Objective {
         let obj = Objective::new_empty(document, "objective");
         obj.id().set(&id);
         obj.bound_type().set(&bound_type);

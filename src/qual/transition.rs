@@ -4,8 +4,8 @@ use crate::qual::qual_input::QualInput;
 use crate::qual::qual_output::QualOutput;
 use crate::qual::terms::AbstractTerm;
 use crate::xml::{
-    OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredXmlChild, XmlDocument,
-    XmlElement, XmlList,
+    Document, OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredXmlChild, XmlElement,
+    XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -13,7 +13,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Transition(XmlElement);
 
 impl Transition {
-    pub fn new(document: XmlDocument, function_terms: XmlList<AbstractTerm>) -> Transition {
+    pub fn new(document: Document, function_terms: XmlList<AbstractTerm>) -> Transition {
         let obj = Transition::new_empty(document, "transition");
         obj.function_terms().set(function_terms);
         obj

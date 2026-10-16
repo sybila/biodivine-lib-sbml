@@ -148,7 +148,7 @@ fn matches_unit_sid_pattern(value: &Option<String>) -> bool {
 
 fn matches_xml_string_pattern(value: &Option<String>) -> bool {
     // TODO:
-    //      The `&` `'` and `"` escaping is probably handled by `xml-doc` and we should just see
+    //      The `&` `'` and `"` escaping is probably handled by `biodivine-lib-xml-dom` and we should just see
     //      "normal", unescaped strings in XML attributes, hence this check is probably a bit
     //      too aggressive. But we should make sure to test this.
     let pattern =

@@ -2,7 +2,7 @@ use crate::constants::namespaces::{NS_MATHML, NS_QUAL};
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
 use crate::xml::{
-    RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty, XmlDocument,
+    Document, RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty,
     XmlElement, XmlNamedSubtype, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -24,7 +24,7 @@ impl XmlNamedSubtype<AbstractTerm> for DefaultTerm {
 }
 
 impl DefaultTerm {
-    pub fn new(document: XmlDocument, result_level: u32) -> DefaultTerm {
+    pub fn new(document: Document, result_level: u32) -> DefaultTerm {
         let obj = DefaultTerm::new_empty(document, "defaultTerm");
         obj.result_level().set(&result_level);
         obj
@@ -45,7 +45,7 @@ impl XmlNamedSubtype<AbstractTerm> for FunctionTerm {
 }
 
 impl FunctionTerm {
-    pub fn new(document: XmlDocument, result_level: u32, math: Math) -> FunctionTerm {
+    pub fn new(document: Document, result_level: u32, math: Math) -> FunctionTerm {
         let obj = FunctionTerm::new_empty(document, "functionTerm");
         obj.result_level().set(&result_level);
         obj.math().set(math);

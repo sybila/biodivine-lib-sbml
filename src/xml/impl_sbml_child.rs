@@ -1,6 +1,7 @@
-use crate::constants::namespaces::{Namespace, NS_SBML_CORE};
+use crate::constants::namespaces::{to_xml_namespace, Namespace, NS_SBML_CORE};
 use crate::xml::{OptionalXmlChild, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper};
 use crate::Sbml;
+use biodivine_lib_xml_dom::QualifiedName;
 use std::marker::PhantomData;
 
 /// A variant of [crate::xml::Child] that supports SBML packages.
@@ -48,8 +49,8 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalSbmlChild<'a, T> {
         self.0.namespace()
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
-        self.0.quantified_name(write_doc)
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
+        self.0.qualified_name(write_doc)
     }
 }
 
@@ -74,8 +75,8 @@ impl<'a, T: XmlWrapper> XmlChild<T> for RequiredSbmlChild<'a, T> {
         self.0.namespace()
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
-        self.0.quantified_name(write_doc)
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
+        self.0.qualified_name(write_doc)
     }
 }
 
@@ -92,34 +93,36 @@ impl<'a, T: XmlWrapper> XmlChild<T> for SbmlChild<'a, T> {
         Some(self.element_namespace)
     }
 
-    fn quantified_name(&self, write_doc: bool) -> Result<String, String> {
+    fn qualified_name(&self, write_doc: bool) -> Result<QualifiedName, String> {
+        if self.element_namespace == NS_SBML_CORE {
+            // A core element lives in the core namespace, which is resolved without an explicit
+            // prefix (against the default SBML namespace declared on the <sbml> element).
+            let namespace = to_xml_namespace(self.element_namespace)
+                .expect("The SBML core namespace is a valid XML namespace.");
+            return QualifiedName::with_namespace(self.name, &namespace)
+                .map_err(|it| it.to_string());
+        }
+
         let Some(sbml_root) = Sbml::try_for_child_element(self.parent) else {
-            println!("Root not found.");
             return Err(format!(
-                "SBML property `{}` used outside of an SBML document.",
+                "SBML child `{}` used outside of an SBML document.",
                 self.name
             ));
         };
 
-        let prefix = if self.element_namespace == NS_SBML_CORE {
-            // Find the core prefix. Core is not declared as a package, hence we can't use
-            // ensure/find methods.
-            let doc = self.parent().read_doc();
-            self.parent()
-                .element
-                .closest_prefix(&doc, self.element_namespace.1)
-                .unwrap_or(self.element_namespace.0)
-                .to_string()
-        } else if write_doc {
+        let prefix = if write_doc {
             sbml_root.ensure_sbml_package(self.element_namespace, false)?
         } else {
             sbml_root.find_sbml_package(self.element_namespace)?
         };
 
-        if prefix.is_empty() {
-            Ok(self.name.to_string())
+        let namespace = if prefix.is_empty() {
+            biodivine_lib_xml_dom::Namespace::without_prefix(self.element_namespace.1)
         } else {
-            Ok(format!("{}:{}", prefix, self.name))
+            biodivine_lib_xml_dom::Namespace::prefixed(self.element_namespace.1, prefix.as_str())
         }
+        .map_err(|it| it.to_string())?;
+
+        QualifiedName::with_namespace(self.name, &namespace).map_err(|it| it.to_string())
     }
 }

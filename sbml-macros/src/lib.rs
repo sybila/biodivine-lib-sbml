@@ -20,13 +20,14 @@ fn check_single_field(ast: &syn::DeriveInput) {
     }
 }
 
-/// This procedural macro takes a declaration of a `T` `struct` type and derives the
+/// This procedural macro takes the declaration of a tuple `struct` type and derives the
 /// following trait implementations for it:
 ///  - `XmlWrapper for T`
 ///  - `From<XmlElement> for T`
 ///  - `From<T> for XmlElement`
 ///
-/// The only requirement is that the type must have an `xml` field whose type is `XmlElement`.
+/// The only requirement is that the type must have a single anonymous field whose type is
+/// `XmlElement`.
 #[proc_macro_derive(XmlWrapper)]
 pub fn derive_xml_wrapper(item: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = syn::parse(item).unwrap();
@@ -41,13 +42,15 @@ pub fn derive_xml_wrapper(item: TokenStream) -> TokenStream {
             }}
         }}
 
+        impl From<crate::xml::XmlElement> for {wrapper_type} {{
+            fn from(value: crate::xml::XmlElement) -> Self {{
+                Self(value)
+            }}
+        }}
+
         impl crate::xml::XmlWrapper for {wrapper_type} {{
             fn xml_element(&self) -> &crate::xml::XmlElement {{
                 &self.0
-            }}
-
-            unsafe fn unchecked_cast<T: crate::xml::XmlWrapper>(element: T) -> Self {{
-                Self(element.xml_element().clone())
             }}
         }}
     "#

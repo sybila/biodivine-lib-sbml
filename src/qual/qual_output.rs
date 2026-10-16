@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_QUAL;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
     XmlPropertyType,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -13,7 +13,7 @@ pub struct QualOutput(XmlElement);
 
 impl QualOutput {
     pub fn new(
-        document: XmlDocument,
+        document: Document,
         qualitative_species: SId,
         transition_effect: TransitionOutputEffect,
     ) -> QualOutput {

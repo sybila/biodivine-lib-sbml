@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
     XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -13,7 +13,7 @@ pub struct Species(XmlElement);
 impl XmlSupertype for Species {}
 
 impl Species {
-    pub fn new(document: XmlDocument, id: &SId, compartment: &SId) -> Self {
+    pub fn new(document: Document, id: &SId, compartment: &SId) -> Self {
         let obj = Species::new_empty(document, "species");
         obj.id().set(id);
         obj.compartment().set(compartment);

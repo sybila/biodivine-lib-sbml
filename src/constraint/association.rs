@@ -2,8 +2,8 @@ use crate::constants::namespaces::NS_FBC;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty,
-    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype,
+    Document, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty,
+    RequiredXmlProperty, XmlElement, XmlList, XmlNamedSubtype, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -22,7 +22,7 @@ impl XmlNamedSubtype<Association> for GeneProductRef {
 }
 
 impl GeneProductRef {
-    pub fn new(document: XmlDocument, gene_product: SId) -> Self {
+    pub fn new(document: Document, gene_product: SId) -> Self {
         let obj = GeneProductRef::new_empty(document, "geneProductRef");
         obj.gene_product().set(&gene_product);
         obj

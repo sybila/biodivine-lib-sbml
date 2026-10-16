@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlPropertyType,
+    Document, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlPropertyType,
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::str::FromStr;
@@ -30,7 +30,7 @@ impl Unit {
 }
 
 impl XmlDefault for Unit {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         let unit = Unit::new_empty(document, "unit");
 
         unit.kind().set(&BaseUnit::Dimensionless);

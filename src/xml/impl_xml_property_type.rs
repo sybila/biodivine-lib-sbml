@@ -1,6 +1,6 @@
 // TODO:
 //      Check that escaping rules are obeyed for a "generic" string type (see specification
-//      section 3.1.1). I believe these should be handled by `xml-doc` already, but we should
+//      section 3.1.1). I believe these should be handled by `biodivine-lib-xml-dom` already, but we should
 //      have a test case for this.
 use crate::xml::XmlPropertyType;
 

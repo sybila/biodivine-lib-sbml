@@ -2,8 +2,8 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::layout::point::Point;
 use crate::xml::{
-    OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredSbmlProperty, RequiredXmlChild,
-    RequiredXmlProperty, XmlDocument, XmlElement, XmlList, XmlProperty, XmlPropertyType,
+    Document, OptionalSbmlChild, OptionalXmlChild, RequiredSbmlChild, RequiredSbmlProperty,
+    RequiredXmlChild, RequiredXmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlSubtype, XmlSupertype, XmlWrapper,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -13,7 +13,7 @@ use std::fmt::Display;
 pub struct Curve(XmlElement);
 
 impl Curve {
-    pub fn new(document: XmlDocument, segments: XmlList<LineSegment>) -> Self {
+    pub fn new(document: Document, segments: XmlList<LineSegment>) -> Self {
         let curve = Curve::new_empty(document, "curve");
         curve.curve_segments().set(segments);
         curve
@@ -80,7 +80,7 @@ pub struct LineSegment(XmlElement);
 impl XmlSupertype for LineSegment {}
 
 impl LineSegment {
-    pub fn new(document: XmlDocument, start: Point, end: Point) -> Self {
+    pub fn new(document: Document, start: Point, end: Point) -> Self {
         let line = LineSegment::new_empty(document, "curveSegment");
 
         line.xsi_type().set(&XsiType::LineSegment);
@@ -116,7 +116,7 @@ impl XmlSubtype<LineSegment> for CubicBezier {
     fn try_cast_from_super(value: &LineSegment) -> Option<Self> {
         // Must check the "safe" way, because this method could be used during validation.
         if value.xsi_type().get_checked() == Ok(Some(XsiType::CubicBezier)) {
-            Some(unsafe { CubicBezier::unchecked_cast(value.clone()) })
+            Some(CubicBezier::from(value.xml_element().clone()))
         } else {
             None
         }
@@ -125,7 +125,7 @@ impl XmlSubtype<LineSegment> for CubicBezier {
 
 impl CubicBezier {
     pub fn new(
-        document: XmlDocument,
+        document: Document,
         start: Point,
         end: Point,
         base_point1: Point,

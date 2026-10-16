@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::constants::namespaces::{NS_FBC, NS_LAYOUT, NS_QUAL};
 use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
@@ -11,9 +9,9 @@ use crate::core::{
 use crate::layout::Layout;
 use crate::qual::{get_outputs_from_transition, QualOutput, QualitativeSpecies, Transition};
 use crate::xml::{
-    OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
-    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement, XmlList,
-    XmlPropertyType, XmlSupertype, XmlWrapper,
+    Document, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlPropertyType,
+    XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
@@ -229,7 +227,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Model(XmlElement);
 
 impl XmlDefault for Model {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         Model::new_empty(document, "model")
     }
 }
@@ -368,10 +366,11 @@ impl Model {
             .find(|function| function.id().get().unwrap().set() == expected)?;
 
         // And this function has its `math` element with a `lambda` child element specified.
-        let doc = self.read_doc();
         let math = function.math().get()?;
-        let lambda = math.raw_element().find(doc.deref(), "lambda")?;
-        let lambda = XmlElement::new_raw(self.document(), lambda);
+        let lambda = math
+            .recursive_child_elements()
+            .into_iter()
+            .find(|it| it.tag_name() == "lambda")?;
 
         // We then return the number of `bvar` child nodes in the lambda element.
         let count = lambda

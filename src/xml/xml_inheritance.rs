@@ -8,7 +8,7 @@ use crate::xml::XmlWrapper;
 pub trait XmlSubtype<Super: XmlSupertype>: XmlWrapper {
     /// Try to cast the value of `Super` type as `Self`.
     ///
-    /// Typically, this checks the name of the XML tag, but in som cases could also
+    /// Typically, this checks the name of the XML tag, but in some cases could also
     /// involve other properties of the XML tag.
     fn try_cast_from_super(value: &Super) -> Option<Self>;
 
@@ -26,17 +26,18 @@ pub trait XmlSubtype<Super: XmlSupertype>: XmlWrapper {
 
     /// Cast the value of this subtype as the `Super` type.
     ///
-    /// This cast should be always valid, hence we can provide a default implementation.
+    /// This cast is always valid, hence we can provide a default implementation.
     fn upcast(&self) -> Super {
-        // Safety follows from the "contracts" prescribed for implementations of `XmlSubtype`.
-        unsafe { Super::unchecked_cast(self.xml_element().clone()) }
+        // Valid because implementations of `XmlSubtype` guarantee that `Self` is a valid
+        // `Super`.
+        Super::from(self.xml_element().clone())
     }
 }
 
 /// A counterpart for [XmlSubtype]. It provides default implementations for various utility
 /// methods that are potentially more idiomatic than calling [XmlSubtype] directly.
 ///
-/// Unfortunately, Rust does not allow us to provide a blanket implementation
+/// Unfortunately, Rust does not allow us to provide a blanket implementation.
 pub trait XmlSupertype: XmlWrapper {
     /// Try to cast the value of `Self` as the value of `Sub` type. The `Sub` type must
     /// implement the appropriate [XmlSubtype] trait.
@@ -74,7 +75,7 @@ pub trait XmlNamedSubtype<Super: XmlSupertype>: XmlSubtype<Super> {
 impl<Super: XmlSupertype, Sub: XmlNamedSubtype<Super>> XmlSubtype<Super> for Sub {
     fn try_cast_from_super(value: &Super) -> Option<Self> {
         if value.tag_name() == Self::expected_tag_name() {
-            unsafe { Some(Self::unchecked_cast(value.xml_element().clone())) }
+            Some(Self::from(value.xml_element().clone()))
         } else {
             None
         }

@@ -8,13 +8,11 @@ use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
 use crate::xml::{
-    OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild,
-    RequiredSbmlProperty, XmlDocument, XmlElement, XmlPropertyType, XmlWrapper,
+    Document, OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild,
+    RequiredSbmlProperty, XmlElement, XmlPropertyType, XmlWrapper,
 };
 use crate::Sbml;
-use biodivine_xml_doc::{Document, Element};
 use std::fmt::Display;
-use std::ops::Deref;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SId(String);
@@ -232,7 +230,7 @@ pub trait SBase: XmlWrapper {
     }
 
     /// Returns the root [`Sbml`] object, assuming the root of the containing document is an
-    /// `<sbml>` tag. For detached elements, this uses the internal [`XmlDocument`] reference
+    /// `<sbml>` tag. For detached elements, this uses the internal [`Document`] reference
     /// to get the document root directly.
     ///
     /// The method panics if the element is not a member of an SBML document.
@@ -251,26 +249,18 @@ pub(crate) trait SbmlUtils: SBase {
     ///
     /// TODO: Currently, this requires SBML core namespace.
     fn search_in_parents(child: &XmlElement, tag_name: &str) -> Option<Self> {
-        let parent = {
-            let read_doc = child.read_doc();
-            fn check_name(doc: &Document, e: Element, tag_name: &str) -> bool {
-                let name = e.name(doc);
-                let Some(namespace) = e.namespace(doc) else {
-                    return false;
-                };
-
-                name == tag_name && namespace == URL_SBML_CORE
+        let mut parent = child.element().clone();
+        loop {
+            if parent.local_name().as_str() == tag_name
+                && parent
+                    .namespace()
+                    .is_some_and(|it| it.uri() == URL_SBML_CORE)
+            {
+                break;
             }
-
-            let mut parent = child.raw_element();
-            while !check_name(read_doc.deref(), parent, tag_name) {
-                parent = parent.parent(read_doc.deref())?;
-            }
-            parent
-        };
-        let model = XmlElement::new_raw(child.document(), parent);
-        // Safe because we checked that the element has the correct tag name and namespace.
-        Some(unsafe { Self::unchecked_cast(model) })
+            parent = parent.parent()?.as_element()?;
+        }
+        Some(Self::from(XmlElement::new(parent)))
     }
 
     /// Create a new instance of `Self` which is just an empty tag with the given `tag_name`
@@ -279,11 +269,9 @@ pub(crate) trait SbmlUtils: SBase {
     /// Warning: Depending on the specific contract of the underlying type, this can create
     /// an element that is not in a valid state (e.g., missing certain required attributes).
     #[inline(always)]
-    fn new_empty(document: XmlDocument, tag_name: &str) -> Self {
-        unsafe {
-            let element = XmlElement::new_quantified(document, tag_name, NS_SBML_CORE);
-            Self::unchecked_cast(element)
-        }
+    fn new_empty(document: Document, tag_name: &str) -> Self {
+        let element = XmlElement::new_qualified(document, tag_name, NS_SBML_CORE);
+        Self::from(element)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the SBML namespace.
@@ -365,21 +353,20 @@ pub(crate) trait SbmlUtils: SBase {
     fn find_by_sid<E: SBase>(&self, id: &SId) -> Option<E> {
         let e = self.find_element_by_sid(id)?;
         // TODO: This should check that the conversion can succeed?
-        unsafe { Some(E::unchecked_cast(e)) }
+        Some(E::from(e))
     }
 
     fn find_element_by_sid(&self, id: &SId) -> Option<XmlElement> {
-        let doc = self.document();
-        let doc = doc.read().unwrap();
+        let root = self.document().root()?;
 
-        let root = doc.root_element()?;
-
-        for child in root.child_elements_recursive(&doc) {
-            for (name, value) in child.attributes(&doc) {
-                let (_namespace, attr_name) = Element::separate_prefix_name(name.as_str());
+        for child in root.descendants() {
+            let Some(child) = child.as_element() else {
+                continue;
+            };
+            for (name, value) in child.attributes() {
                 // TODO: Can we check if the namespace corresponds to an SBML extension? Probably not...
-                if attr_name == "id" && id.as_str() == value.as_str() {
-                    return Some(XmlElement::new_raw(self.document(), child));
+                if name.local_name_str() == "id" && id.as_str() == value.as_str() {
+                    return Some(XmlElement::new(child));
                 }
             }
         }
@@ -390,21 +377,20 @@ pub(crate) trait SbmlUtils: SBase {
     fn find_by_meta_id<E: SBase>(&self, id: &MetaId) -> Option<E> {
         let e = self.find_element_by_meta_id(id)?;
         // TODO: This should check that the conversion can succeed?
-        unsafe { Some(E::unchecked_cast(e)) }
+        Some(E::from(e))
     }
 
     fn find_element_by_meta_id(&self, id: &MetaId) -> Option<XmlElement> {
-        let doc = self.document();
-        let doc = doc.read().unwrap();
+        let root = self.document().root()?;
 
-        let root = doc.root_element()?;
-
-        for child in root.child_elements_recursive(&doc) {
-            for (name, value) in child.attributes(&doc) {
-                let (_namespace, attr_name) = Element::separate_prefix_name(name.as_str());
+        for child in root.descendants() {
+            let Some(child) = child.as_element() else {
+                continue;
+            };
+            for (name, value) in child.attributes() {
                 // TODO: Can we check if the namespace corresponds to an SBML extension? Probably not...
-                if attr_name == "metaid" && id.as_str() == value.as_str() {
-                    return Some(XmlElement::new_raw(self.document(), child));
+                if name.local_name_str() == "metaid" && id.as_str() == value.as_str() {
+                    return Some(XmlElement::new(child));
                 }
             }
         }

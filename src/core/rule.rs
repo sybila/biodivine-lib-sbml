@@ -1,7 +1,7 @@
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
-    OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlDocument, XmlElement,
+    Document, OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement,
     XmlNamedSubtype, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
@@ -40,7 +40,7 @@ impl AbstractRule {
         }
     }
 
-    pub fn default(document: XmlDocument, tag_name: &str) -> Self {
+    pub fn default(document: Document, tag_name: &str) -> Self {
         AbstractRule::new_empty(document, tag_name)
     }
 }
@@ -51,7 +51,7 @@ pub struct AlgebraicRule(XmlElement);
 impl Rule for AlgebraicRule {}
 
 impl XmlDefault for AlgebraicRule {
-    fn default(document: XmlDocument) -> Self {
+    fn default(document: Document) -> Self {
         AlgebraicRule::new_empty(document, "algebraicRule")
     }
 }
@@ -74,7 +74,7 @@ impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
 }
 
 impl AssignmentRule {
-    pub fn new(document: XmlDocument, variable: &SId) -> Self {
+    pub fn new(document: Document, variable: &SId) -> Self {
         let obj = AssignmentRule::new_empty(document, "assignmentRule");
         obj.variable().set(variable);
         obj
@@ -97,7 +97,7 @@ impl XmlNamedSubtype<AbstractRule> for RateRule {
 }
 
 impl RateRule {
-    pub fn new(document: XmlDocument, variable: &SId) -> Self {
+    pub fn new(document: Document, variable: &SId) -> Self {
         let obj = RateRule::new_empty(document, "rateRule");
         obj.variable().set(variable);
         obj

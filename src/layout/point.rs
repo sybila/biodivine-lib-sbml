@@ -2,7 +2,7 @@ use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
-    OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlDocument, XmlElement,
+    Document, OptionalSbmlProperty, RequiredSbmlProperty, RequiredXmlProperty, XmlElement,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -10,7 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct Point(XmlElement);
 
 impl Point {
-    pub fn new(document: XmlDocument, x: f64, y: f64) -> Self {
+    pub fn new(document: Document, x: f64, y: f64) -> Self {
         let obj = Point::new_empty(document, "point");
         obj.x().set(&x);
         obj.y().set(&y);
