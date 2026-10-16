@@ -27,3 +27,7 @@ syntactic
 test_suite_error.txt
 test_suite_warning.txt
 test_suite_info.txt
+
+# Python bytecode from the helper scripts.
+__pycache__/
+*.pyc
