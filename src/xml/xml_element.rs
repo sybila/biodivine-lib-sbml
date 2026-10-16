@@ -121,6 +121,17 @@ impl XmlElement {
         result
     }
 
+    /// The text content of this element with the surrounding whitespace removed.
+    ///
+    /// MathML payloads are routinely written on their own lines (`<ci>\n  x\n</ci>`), and the
+    /// XML data model keeps that whitespace, so it has to be ignored where the text is
+    /// *interpreted* as an SBML value (typically an identifier inside a `ci` or `bvar` element).
+    /// The document keeps the original text: use [XmlElement::text_content] to read the payload
+    /// verbatim.
+    pub(crate) fn interpreted_text(&self) -> String {
+        self.text_content().trim().to_string()
+    }
+
     /// Replace the content of this element with a single text node containing `text`.
     ///
     /// # Panics

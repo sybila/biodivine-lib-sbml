@@ -85,8 +85,16 @@ pub trait XmlProperty<T: XmlPropertyType>: Sized {
     fn get_checked(&self) -> Result<Option<T>, String> {
         let element = self.element();
         let name = self.qualified_name(false)?;
-        let value = element.element().attribute(&name);
-        XmlPropertyType::try_get(value.as_ref().map(|it| it.as_str()))
+        let raw = element.element().attribute(&name);
+        let raw = raw.as_ref().map(|it| it.as_str());
+        // See [XmlPropertyType::trims_whitespace]: a value that uses an XML Schema datatype with
+        // the "collapse" whitespace facet may carry incidental padding in the document.
+        let raw = if T::trims_whitespace() {
+            raw.map(str::trim)
+        } else {
+            raw
+        };
+        XmlPropertyType::try_get(raw)
     }
 
     /// Read the "raw" underlying attribute value of this [XmlProperty], or `None` if the value

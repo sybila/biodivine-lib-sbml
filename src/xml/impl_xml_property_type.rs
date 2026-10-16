@@ -6,6 +6,9 @@ use crate::xml::XmlPropertyType;
 
 /// A "trivial" conversion between an XML attribute and a `String`.
 ///
+/// This is the SBML `string` type, which preserves whitespace, so a value is returned verbatim
+/// (see [XmlPropertyType::trims_whitespace]).
+///
 /// ## Specification
 ///  - Section 3.1.1
 impl XmlPropertyType for String {
@@ -15,6 +18,10 @@ impl XmlPropertyType for String {
 
     fn set(&self) -> Option<String> {
         Some(self.clone())
+    }
+
+    fn trims_whitespace() -> bool {
+        false
     }
 }
 

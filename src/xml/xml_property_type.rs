@@ -45,4 +45,21 @@ pub trait XmlPropertyType: Sized {
     /// Convert the value of `Self` into a [String], or `None` when the value should be
     /// represented as a missing attribute.
     fn set(&self) -> Option<String>;
+
+    /// Whether the surrounding whitespace of a value read from the document is insignificant.
+    ///
+    /// The XML data model preserves text verbatim, but only some of it is a *value*: the SBML
+    /// attribute types that stand for numbers, booleans, identifiers and enumerated values use
+    /// XML Schema datatypes whose whitespace facet is "collapse", so `<compartment id=" c1 "/>`
+    /// and `level=" 3 "` are valid spellings of `c1` and `3`. Such an implementation reports
+    /// `true` (the default) and receives the value with its whitespace removed.
+    ///
+    /// The SBML `string` type is the exception: it preserves whitespace, so the implementation
+    /// for [String] reports `false` and a value such as `name="  a  "` keeps its padding.
+    ///
+    /// This is deliberately not a property of the *document*: the text of an element that is not
+    /// a value (a `notes`, `annotation` or MathML payload) is never rewritten.
+    fn trims_whitespace() -> bool {
+        true
+    }
 }

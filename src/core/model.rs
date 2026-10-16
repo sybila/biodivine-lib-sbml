@@ -522,7 +522,7 @@ impl Model {
                                 false
                             }
                         })
-                        .map(|ci| ci.text_content())
+                        .map(|ci| ci.interpreted_text())
                         .map(|text| {
                             // TODO: This should be a validation step (ci elements can only use SId compliant identifiers)
                             // SBML Core Specification, Section 3.4.3

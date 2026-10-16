@@ -305,7 +305,7 @@ impl Math {
 
             for child in children_of_interest {
                 // This unwrap must succeed because we enforced that ci is the first child.
-                let value = child.get_child_at(0).unwrap().text_content();
+                let value = child.get_child_at(0).unwrap().interpreted_text();
                 // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
                 let Ok(value_id) = SId::try_from(value) else {
                     continue;
@@ -363,7 +363,7 @@ impl Math {
                 .collect::<Vec<_>>();
 
             for ci in ci_elements {
-                let value = ci.text_content();
+                let value = ci.interpreted_text();
                 // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
                 let Ok(value_id) = SId::try_from(value) else {
                     continue;
@@ -400,14 +400,14 @@ impl Math {
             .recursive_child_elements()
             .into_iter()
             .filter(|child| child.tag_name() == "bvar")
-            .filter_map(|bvar| bvar.get_child_at(0).map(|it| it.text_content()))
+            .filter_map(|bvar| bvar.get_child_at(0).map(|it| it.interpreted_text()))
             .filter_map(|it| SId::try_from(it).ok())
             .collect::<Vec<SId>>();
 
         let ci_elements = self.recursive_child_elements_filtered(|child| child.tag_name() == "ci");
 
         for ci in ci_elements {
-            let value = ci.text_content();
+            let value = ci.interpreted_text();
             // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
             let Ok(value_id) = SId::try_from(value) else {
                 continue;
@@ -507,7 +507,7 @@ impl Math {
 
             let arg_count = children.len() - 1;
             let func_identifiers = model.function_definition_identifiers();
-            let id = function_call.text_content();
+            let id = function_call.interpreted_text();
             // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
             let Ok(id) = SId::try_from(id) else {
                 continue;
@@ -649,7 +649,7 @@ impl Math {
 
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
-            let value = ci.text_content();
+            let value = ci.interpreted_text();
             // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?
             let Ok(value_id) = SId::try_from(value) else {
                 continue;
@@ -700,7 +700,7 @@ impl Math {
 
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
-            let value = ci.text_content();
+            let value = ci.interpreted_text();
 
             let Some(species) = model.find_species(value.as_str()) else {
                 continue;

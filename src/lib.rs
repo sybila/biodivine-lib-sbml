@@ -9,10 +9,11 @@
 //!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
 //!  - Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
 //!
-//! Reading a document normalizes the whitespace inside element text: every text node is trimmed,
-//! and a text node that is empty after trimming is dropped. The parsed tree is therefore not a
-//! byte-preserving view of the source, and serializing it back reproduces the normalized tree.
-//! See [`Sbml::read_str`].
+//! Reading a document preserves its text: the tree is a verbatim view of the source, so a read,
+//! edit and write cycle keeps the content of `notes`, `annotation` and MathML elements intact.
+//! Where SBML *interprets* text as a value (an identifier, a number or an enumerated value, in an
+//! attribute or in a MathML element such as `ci`), the incidental whitespace around that value is
+//! ignored, because the relevant XML Schema datatypes collapse it. See [`Sbml::read_str`].
 //!
 //! For basic usage, explore the documentation of SBML objects declared in the [core]
 //! module. More advanced operations can be then performed using the XML abstraction layer
@@ -291,7 +292,6 @@ impl Sbml {
     /// parsed.
     pub fn read_str(file_contents: &str) -> SbmlResult<Sbml> {
         let doc = Document::parse_string(file_contents).map_err(sbml_error)?;
-        normalize_text_nodes(&doc);
         let root = doc.root().ok_or(SbmlError::NotSbmlDocument)?;
         Ok(Sbml {
             xml: doc,
@@ -489,42 +489,6 @@ impl Sbml {
 /// concrete prefix that the document binds to the package URL.
 fn package_attribute_name(package: Namespace, prefix: &str) -> Result<QualifiedName, String> {
     prefixed_qualified_name(package.1, prefix, "required")
-}
-
-/// Normalize the text nodes of a freshly parsed document.
-///
-/// The XML data model preserves whitespace verbatim, but SBML documents routinely write
-/// values such as `<ci> x </ci>` with incidental padding around the actual text, and the SBML
-/// object model expects the padding to be gone. This pass trims every text node and removes
-/// the nodes that become empty, so that reading a document yields the same text content
-/// regardless of how it was formatted.
-fn normalize_text_nodes(document: &Document) {
-    let text_nodes = document
-        .nodes()
-        .into_iter()
-        .filter(|it| it.text().is_some())
-        .collect::<Vec<_>>();
-
-    for node in text_nodes {
-        let Some(text) = node.text() else {
-            continue;
-        };
-        let value = text.as_str();
-        let trimmed = value.trim();
-        if trimmed.len() == value.len() {
-            continue;
-        }
-        let (Some(parent), Some(index)) = (node.parent(), node.index_in_parent()) else {
-            continue;
-        };
-        node.detach();
-        if !trimmed.is_empty() {
-            let replacement = document
-                .create_text(trimmed)
-                .expect("A trimmed text node is still a valid XML text node.");
-            parent.insert_child(index, replacement);
-        }
-    }
 }
 
 impl Default for Sbml {
@@ -1024,6 +988,178 @@ mod tests {
 
         // Without a fired trigger, the same document reads without an error.
         assert!(Sbml::read_str(document).is_ok());
+    }
+
+    /// The text of every text node of a document, in document order.
+    fn document_text_nodes(doc: &Sbml) -> Vec<String> {
+        doc.xml_element()
+            .document()
+            .nodes()
+            .into_iter()
+            .filter_map(|it| it.text().map(|text| text.as_str().to_string()))
+            .collect()
+    }
+
+    /// Reading a document keeps its text: the padding inside a `notes`, `annotation` or MathML
+    /// payload is still there after reading, and after serializing and reading the document
+    /// again.
+    #[test]
+    pub fn test_read_preserves_text() {
+        let source = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model id="m">
+    <notes>
+      A   note
+        with    padding.
+    </notes>
+    <annotation>
+      <p>  annotation   text  </p>
+    </annotation>
+    <listOfParameters>
+      <parameter id="p" constant="true"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="p">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <ci> p </ci>
+            <cn> 1 </cn>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+  </model>
+</sbml>"#;
+
+        let doc = Sbml::read_str(source).unwrap();
+        let model = doc.model().get().unwrap();
+        assert_eq!(
+            model.notes().get().unwrap().text_content(),
+            "\n      A   note\n        with    padding.\n    "
+        );
+        assert!(model
+            .annotation()
+            .get()
+            .unwrap()
+            .text_content()
+            .contains("  annotation   text  "));
+        let math = model
+            .initial_assignments()
+            .get()
+            .unwrap()
+            .get(0)
+            .math()
+            .get()
+            .unwrap();
+        let ci = math
+            .recursive_child_elements_filtered(|it| it.tag_name() == "ci")
+            .pop()
+            .unwrap();
+        assert_eq!(ci.text_content(), " p ");
+
+        let written = doc.to_xml_string().unwrap();
+        let reread = Sbml::read_str(written.as_str()).unwrap();
+        assert_eq!(document_text_nodes(&doc), document_text_nodes(&reread));
+        assert_eq!(written, reread.to_xml_string().unwrap());
+    }
+
+    /// A value that SBML *interprets* is read without its surrounding whitespace: identifiers,
+    /// numbers, booleans and enumerated values may all be padded in the document.
+    #[test]
+    pub fn test_padded_values_are_interpreted() {
+        let source = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level=" 3 " version="	2	">
+  <model id="m">
+    <listOfUnitDefinitions>
+      <unitDefinition id="u">
+        <listOfUnits>
+          <unit kind=" litre " exponent=" 1 " scale=" 0 " multiplier=" 1 "/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id=" c " constant=" true " size=" 2.5 "/>
+    </listOfCompartments>
+    <listOfParameters>
+      <parameter id="p" constant="true"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="p">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <cn>1</cn>
+            <ci>missing</ci>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+  </model>
+</sbml>"#;
+
+        let doc = Sbml::read_str(source).unwrap();
+        assert_eq!(doc.level().get(), 3);
+        assert_eq!(doc.version().get(), 2);
+        let model = doc.model().get().unwrap();
+        assert_eq!(model.id().get().unwrap().as_str(), "m");
+        let unit = model
+            .unit_definitions()
+            .get()
+            .unwrap()
+            .get(0)
+            .units()
+            .get()
+            .unwrap()
+            .get(0);
+        assert_eq!(unit.kind().get(), BaseUnit::Litre);
+        assert_eq!(unit.exponent().get(), 1.0);
+        let compartment = model.compartments().get().unwrap().get(0);
+        assert_eq!(compartment.id().get().as_str(), "c");
+        assert!(compartment.constant().get());
+        assert_eq!(compartment.size().get(), Some(2.5));
+    }
+
+    /// A text payload that SBML interprets as an identifier is read without its surrounding
+    /// whitespace: the padded and the unpadded document produce the same report.
+    ///
+    /// The check is discriminating because the identifier used here is *not* part of the model:
+    /// a `<ci>` element whose text cannot be parsed as an `SId` is skipped silently by the
+    /// formula layer, so a version that did not remove the padding would report one issue fewer.
+    #[test]
+    pub fn test_padded_math_identifier_is_interpreted() {
+        let source = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model id="m">
+    <listOfParameters>
+      <parameter id="p" constant="true"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="p">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <cn>1</cn>
+            <ci>missing</ci>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+  </model>
+</sbml>"#;
+
+        let padded = source.replace("<ci>missing</ci>", "<ci>\n  missing\n</ci>");
+        assert_ne!(source, padded);
+
+        let plain_report = sorted_issues(&Sbml::read_str(source).unwrap().validate());
+        assert!(
+            plain_report.iter().any(|it| it.starts_with("10215|")),
+            "the test is only meaningful if an unknown identifier is reported: {plain_report:?}"
+        );
+        assert_eq!(
+            plain_report,
+            sorted_issues(&Sbml::read_str(&padded).unwrap().validate())
+        );
     }
 
     fn build_function_defs(model: &Model) {
