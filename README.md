@@ -17,6 +17,10 @@ This crate provides a Rust interface for reading, editing, and validating System
  - [x] `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
  - [x] Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
 
+Reading a document normalizes the whitespace inside element text: every text node is trimmed, and a
+text node that is empty after trimming is dropped. A parsed document is therefore a normalized view
+of the source, and serializing it back reproduces the normalized tree.
+
 ## Usage
 
 You can import `lib-sbml` as any other Rust dependency:

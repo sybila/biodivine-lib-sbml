@@ -1,0 +1,1 @@
+rule_dirs=936 xml_files=7825 xml_bytes=12652556

@@ -70,6 +70,10 @@ fi
 # --- SBML syntactic test suite ----------------------------------------------------------------
 if [ -d "$ROOT/syntactic" ]; then
     run cargo run --release --example test-suite-syntactic -- $(cat validated-rules.txt)
+    # The filtered run above only reports the rules listed in `validated-rules.txt`; this second
+    # gate runs the same example without a filter and compares the whole mismatch report against a
+    # recorded snapshot, so rules the filtered run cannot see are still covered.
+    run scripts/full_corpus_parity.sh
 else
     skip "the SBML syntactic test suite is not unpacked in $ROOT/syntactic"
 fi

@@ -45,3 +45,30 @@ requested rules.
 For the purposes of automated testing, we apply the list of rules in the 
 `validated-rules.txt` file. As such, if you extend the list of actually validated
 rules, you have to also extend this file.
+
+### Whole-corpus parity gate
+
+The rule list above filters the report down to the rules the library declares as
+checked, which means a mismatch in any *other* rule that appears in the corpus is
+invisible. The `scripts/full_corpus_parity.sh` script closes that gap: it runs the
+same example with no rule filter, sorts the resulting mismatch report (with duplicate
+counts), and compares it against a recorded snapshot in `scripts/full-corpus-baseline/`.
+
+```
+scripts/full_corpus_parity.sh            # compare against the recorded snapshot
+scripts/full_corpus_parity.sh --record   # re-record the snapshot
+make full-corpus                         # same as the check; RECORD=1 to re-record
+```
+
+It is also part of `make verify` and of `scripts/verify.sh` whenever `./syntactic` is
+present, and it skips successfully when the test suite is not unpacked. Like the filtered
+run, it overwrites the example's `test_suite_{error,warning,info}.txt` files; it restores
+their previous contents on exit.
+
+The snapshot is tied to a specific corpus release through the fingerprint in
+`scripts/full-corpus-baseline/fingerprint.txt` (counts of rule directories, `*.xml` files
+and XML bytes). Upgrading the test suite therefore makes the baseline stale, and the script
+fails with an explicit message instead of printing a misleading diff; re-record it with
+`--record` and review the resulting diff rule by rule. A failure caused by a code change
+(because the reported mismatches moved) is printed line by line, so the reviewer can see
+exactly which rule changed without re-running the suite.

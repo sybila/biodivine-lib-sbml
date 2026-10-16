@@ -19,7 +19,8 @@ use std::marker::PhantomData;
 ///       with the namespace prefix.
 ///     * For same package elements, the property *can* be used with the namespace prefix, or
 ///       without a prefix (either is fine). If both (or none) are declared, the one *with*
-///       the namespace prefix is preferred.
+///       the namespace prefix is preferred. This last preference is a convention of this crate;
+///       the SBML specification does not mandate it.
 pub struct SbmlProperty<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: &'static str,

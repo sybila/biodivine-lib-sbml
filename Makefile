@@ -1,6 +1,6 @@
 # Convenience entry points for building and checking this repository. Everything here is also
 # runnable by hand; `make verify` runs every gate and prints each command with its exit code.
-.PHONY: help build test lint docs examples coverage verify
+.PHONY: help build test lint docs examples coverage full-corpus verify
 
 help:
 	@echo "make build       build the crate (and the workspace member crates)"
@@ -9,6 +9,7 @@ help:
 	@echo "make docs        build rustdoc with warnings denied"
 	@echo "make examples    run every example"
 	@echo "make coverage    regenerate the specification coverage matrix"
+	@echo "make full-corpus check the whole syntactic-test-suite report against its recorded baseline"
 	@echo "make verify      run every gate and report each exit code"
 	@echo ""
 	@echo "The SBML syntactic test suite needs an unpacked ./syntactic folder; see VALIDATION.md."
@@ -35,6 +36,11 @@ examples:
 # SPEC=/path/to/sbml-specifications.
 coverage:
 	python3 scripts/spec_coverage.py --spec "$${SPEC:-../../sbml-specifications}"
+
+# Compare the whole-corpus syntactic-test-suite report against the recorded baseline in
+# scripts/full-corpus-baseline/. Re-record with `make full-corpus RECORD=1`.
+full-corpus:
+	scripts/full_corpus_parity.sh $${RECORD:+--record}
 
 verify:
 	scripts/verify.sh

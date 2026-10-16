@@ -9,6 +9,11 @@
 //!  - `Annotation`, `Notes` and other custom XML/HTML elements are fully accessible as raw `XmlElement` objects.
 //!  - Unofficial or unsupported features can be accessed using `DynamicProperty` or `DynamicChild` wrappers.
 //!
+//! Reading a document normalizes the whitespace inside element text: every text node is trimmed,
+//! and a text node that is empty after trimming is dropped. The parsed tree is therefore not a
+//! byte-preserving view of the source, and serializing it back reproduces the normalized tree.
+//! See [`Sbml::read_str`].
+//!
 //! For basic usage, explore the documentation of SBML objects declared in the [core]
 //! module. More advanced operations can be then performed using the XML abstraction layer
 //! described in module [xml].
@@ -142,10 +147,17 @@ pub enum SbmlError {
     /// A cancellation trigger fired while an SBML operation was running.
     #[error("The operation was cancelled.")]
     Cancelled(#[from] cancel_this::Cancelled),
-    /// The parsed document does not contain an `<sbml>` root element.
-    #[error("The document does not contain an <sbml> root element.")]
+    /// The parsed document has no root element.
+    ///
+    /// This is a defensive variant: the XML parser already rejects a document without a root
+    /// element. A document whose root element is not `<sbml>` parses successfully and is reported
+    /// by [`Sbml::validate`] as rule 10102 instead of failing the read.
+    #[error("The document does not contain a root element.")]
     NotSbmlDocument,
-    /// The document declares an SBML level/version that this crate cannot handle.
+    /// The document declares an SBML level/version outside the range this crate can process.
+    ///
+    /// Returned by level/version dispatch when a document declares a level/version that the crate
+    /// does not support.
     #[error("Unsupported SBML level {level} version {version}.")]
     UnsupportedLevel { level: u32, version: u32 },
     /// An I/O error occurred while reading or writing a document.
