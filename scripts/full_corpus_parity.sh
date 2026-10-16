@@ -18,13 +18,24 @@
 # before the example's own asserts fire. It is therefore the contract between the example and this
 # script, so an edit to the example's output strings has to keep it.
 #
+# The same run also produces two stronger snapshots, because the mismatch report alone cannot see
+# everything:
+#
+#   * `test_suite_issues.txt` (`--dump-issues`) holds one `document|rule|severity` line for every
+#     issue the library reports for every document of the corpus, including the translated Level 3
+#     Version 1 documents. The mismatch report cannot see an issue that is added or removed where
+#     the suite already expects that rule, nor anything in the translated half of the corpus.
+#   * `test_suite_roundtrip.txt` (`--check-roundtrip`) lists every document whose text does not
+#     survive `Sbml::read_str` -> serialization -> parse unchanged. The mismatch report never
+#     serializes, so a rewrite of the document text is invisible to it.
+#
 # The snapshot under `scripts/full-corpus-baseline/` is derived from the (git-ignored) SBML
 # syntactic test suite in `./syntactic`; its header records the corpus it was recorded from and a
 # fingerprint that this script re-checks. See `VALIDATION.md`.
 #
 # The script needs the unpacked test suite in `./syntactic`; without it, it reports a skip and
 # exits successfully, matching the convention of `scripts/verify.sh`. It overwrites the example's
-# `test_suite_{error,warning,info}.txt` files and restores their previous contents on exit.
+# `test_suite_*.txt` files and restores their previous contents on exit.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -33,7 +44,7 @@ cd "$ROOT"
 
 CORPUS="$ROOT/syntactic"
 BASELINE="$ROOT/scripts/full-corpus-baseline"
-REPORTS=(test_suite_error.txt test_suite_warning.txt test_suite_info.txt)
+REPORTS=(test_suite_error.txt test_suite_warning.txt test_suite_info.txt test_suite_issues.txt test_suite_roundtrip.txt)
 
 record=0
 case "${1:-}" in
@@ -100,8 +111,8 @@ trap restore_reports EXIT
 workdir=$(mktemp -d)
 trap 'restore_reports; rm -rf "$workdir"' EXIT
 
-echo "\$ cargo run --release --example test-suite-syntactic   # no rule filter"
-cargo run --release --example test-suite-syntactic > "$workdir/run.log" 2>&1
+echo "\$ cargo run --release --example test-suite-syntactic -- --dump-issues --check-roundtrip   # no rule filter"
+cargo run --release --example test-suite-syntactic -- --dump-issues --check-roundtrip > "$workdir/run.log" 2>&1
 status=$?
 grep -A4 '^Found:' "$workdir/run.log" || true
 
@@ -134,7 +145,7 @@ for report in "${REPORTS[@]}"; do
     fi
     if ! diff -u "$BASELINE/$report.sorted" "$workdir/$report.sorted" > "$workdir/$report.diff"; then
         echo ""
-        echo "FAIL: $report differs from the recorded baseline:"
+        echo "FAIL: $report differs from the recorded baseline:" 
         cat "$workdir/$report.diff"
         failed=1
     fi
@@ -155,11 +166,11 @@ fi
 
 if [ "$failed" -ne 0 ]; then
     echo ""
-    echo "The whole-corpus mismatch report changed. Corpus fingerprint: $current_fingerprint"
+    echo "A whole-corpus report changed. Corpus fingerprint: $current_fingerprint"
     exit 1
 fi
 
 echo ""
-echo "The whole-corpus mismatch report matches the recorded baseline."
+echo "Every whole-corpus report matches the recorded baseline."
 echo "  corpus: $current_fingerprint"
 exit 0

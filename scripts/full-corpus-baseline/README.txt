@@ -2,9 +2,17 @@ Whole-corpus syntactic-suite parity baseline
 ============================================
 
 This directory holds the expected output of `scripts/full_corpus_parity.sh`, which runs the SBML
-syntactic test-suite example with NO rule filter and records every mismatch it reports, sorted and
-with duplicate counts. It complements `validated-rules.txt`, which lists only the rules this crate
-declares as checked: the snapshot here also covers every other rule that appears in the corpus.
+syntactic test-suite example with NO rule filter and records, sorted and with duplicate counts:
+
+  * every mismatch it reports (the census of the rules whose behaviour disagrees with the suite's
+    expectations),
+  * every issue the library reports for every document of the corpus, including the translated
+    Level 3 Version 1 half whose issues the mismatch report ignores, and
+  * every document whose text does not survive a read -> write -> read cycle unchanged.
+
+It complements `validated-rules.txt`, which lists only the rules this crate declares as checked:
+the snapshots here also cover every other rule that appears in the corpus, the translated half of
+the corpus, and the effect of reading and writing on document text.
 
 Provenance
 ----------
@@ -18,10 +26,16 @@ leaves every file in this directory byte-identical.
 
 Files
 -----
-  fingerprint.txt              the corpus fingerprint the snapshot was recorded from
-  test_suite_error.txt.sorted  sorted, count-prefixed mismatch lines (rule severity Error)
-  test_suite_warning.txt.sorted  ... (Warning)
-  test_suite_info.txt.sorted   ... (Informational)
+  fingerprint.txt               the corpus fingerprint the snapshot was recorded from
+  test_suite_error.txt.sorted   sorted, count-prefixed mismatch lines (rule severity Error)
+  test_suite_warning.txt.sorted   ... (Warning)
+  test_suite_info.txt.sorted    ... (Informational)
+  test_suite_issues.txt.sorted  sorted, count-prefixed `document|rule|severity` lines for every
+                                reported issue (an issue that a document is *expected* to have is
+                                in this file even though the mismatch report cannot see it)
+  test_suite_roundtrip.txt.sorted  sorted, count-prefixed lines for the documents whose text
+                                changes on a read -> write -> read cycle (empty once reading is
+                                lossless)
 
 Re-record with `scripts/full_corpus_parity.sh --record` after a deliberate change to the reported
 mismatches (or after upgrading the corpus), and review the resulting diff.
