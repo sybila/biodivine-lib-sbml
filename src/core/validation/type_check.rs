@@ -67,9 +67,6 @@ pub(crate) trait CanTypeCheck: XmlWrapper {
 ///
 /// Any failing check is logged into `issues`.
 pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    // One step of the walk, so that a type check of a large document notices a cancellation
-    // request instead of running to completion (see [CancellationCheck]).
-
     let attributes = xml_element.attributes();
     let element_name = xml_element.tag_name();
 
@@ -150,11 +147,21 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
 
 /// A utility function to perform a type check on an [XmlList] instance and all its valid
 /// child elements.
+///
+/// The list container is a visited object of the walk as well, so it accounts for itself here and
+/// then leaves the accounting of every child to the child's own
+/// [`CanTypeCheck::type_check`].
+///
+/// # Errors
+///
+/// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
+/// current thread has fired.
 pub(crate) fn type_check_of_list<T: CanTypeCheck>(
     xml_list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     check: &mut CancellationCheck,
 ) -> SbmlResult<()> {
+    check.tick()?;
     let element = xml_list.xml_element();
     let name = element.tag_name();
     internal_type_check(element, issues);

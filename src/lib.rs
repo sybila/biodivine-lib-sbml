@@ -1050,20 +1050,22 @@ mod tests {
     /// fires on a *later* consultation aborts the call after the walk has already accounted for
     /// more than a thousand steps.
     ///
-    /// The document has 500 `<parameter>` elements, so the call accounts for about 1500 steps —
+    /// The document has 800 `<parameter>` elements, so the call accounts for about 2400 steps —
     /// one per element in the type check, one per element in the `unused-namespace` lint and one
-    /// per object in the rule-by-rule walk — and therefore consults the triggers twice: once at
-    /// the first step of the call, and once about 1024 steps later. A trigger that fires on the
+    /// per object in the rule-by-rule walk — and therefore consults the triggers three times: at
+    /// the first step of the call and then about every 1024 steps. A trigger that fires on the
     /// second consultation can therefore only be seen by a tick *inside* a walk.
     ///
     /// Only the error is asserted, not the step at which it was produced: the countdown is shared
     /// by all phases, so the exact step (and therefore the phase that supplies it) is an
-    /// implementation detail, while "the walk notices a request" is the contract. The size of the
-    /// document leaves a margin of several hundred steps above the second consultation, so the
-    /// test does not depend on the exact number of steps a phase accounts for.
+    /// implementation detail, while "the walk notices a request" is the contract. The document is
+    /// large enough that the second consultation is reached with more than 1300 steps to spare, so
+    /// the test does not depend on the exact number of steps a phase accounts for; should the step
+    /// count ever shrink below the interval, the test fails loudly on the assertion below rather
+    /// than passing vacuously.
     #[test]
     pub fn test_validate_cancellation_during_the_walk() {
-        let document = document_with_parameters(500);
+        let document = document_with_parameters(800);
         let doc = Sbml::read_str(document.as_str()).expect("The test document is well formed.");
 
         // The document is clean, so the call runs every phase (a report would make it return
