@@ -418,7 +418,7 @@ mod test {
     #[test]
     fn layout_example() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
-        let issues = doc.validate();
+        let issues = doc.validate().unwrap();
         assert!(issues.is_empty());
 
         let model = doc.model().get().unwrap();
@@ -442,7 +442,7 @@ mod test {
     #[test]
     fn compartment_glyph() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
-        assert!(doc.validate().is_empty());
+        assert!(doc.validate().unwrap().is_empty());
 
         let model = doc.model().get().unwrap();
         let layouts = model.layouts().get().unwrap();
@@ -466,7 +466,7 @@ mod test {
     #[test]
     fn reaction_glyphs() {
         let doc = Sbml::read_path("test-inputs/test-layout/layout_example.xml").unwrap();
-        assert!(doc.validate().is_empty());
+        assert!(doc.validate().unwrap().is_empty());
 
         let model = doc.model().get().unwrap();
         let layouts = model.layouts().get().unwrap();

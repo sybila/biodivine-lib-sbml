@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
+use crate::cancellation::CancellationCheck;
 use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
 use crate::core::sbase::SId;
 use crate::core::validation::sbase::validate_sbase;
@@ -12,6 +13,7 @@ use crate::xml::XmlElement;
 use crate::xml::XmlList;
 use crate::xml::XmlWrapper;
 use crate::SbmlIssue;
+use crate::SbmlResult;
 
 mod compartment;
 mod constraint;
@@ -48,29 +50,54 @@ mod xml_definitions;
 /// Denotes an element that can be (and should be) validated against the SBML
 /// validation rules.
 pub(crate) trait SbmlValidable: XmlWrapper {
+    /// Check this object and its SBML children against the rules of the specification.
+    ///
+    /// A `check` is handed down explicitly rather than read from a thread-local, so that the
+    /// countdown of a document walk cannot be reset by a nested walk; the implementation accounts
+    /// for itself (and every object it visits) with
+    /// [`CancellationCheck::tick`](crate::cancellation::CancellationCheck::tick).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of
+    /// the current thread has fired.
     fn validate(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    );
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()>;
 }
 
 /// Executes a validation of xml list object itself and all its children.
+///
+/// The list container is a visited object of the walk as well, so it accounts for itself here and
+/// then leaves the accounting of every element to the leading tick of the element's own
+/// [`SbmlValidable::validate`] implementation.
+///
+/// # Errors
+///
+/// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
+/// current thread has fired.
 pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<SId>,
     meta_ids: &mut HashSet<MetaId>,
-) {
+    check: &mut CancellationCheck,
+) -> SbmlResult<()> {
+    check.tick()?;
     validate_sbase(list, issues, identifiers, meta_ids);
 
     let allowed = get_allowed_children(list.xml_element());
     for object in list.as_vec() {
         if allowed.contains(&object.xml_element().tag_name().as_str()) {
-            object.validate(issues, identifiers, meta_ids);
+            object.validate(issues, identifiers, meta_ids, check)?;
         }
     }
+
+    Ok(())
 }
 
 pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {

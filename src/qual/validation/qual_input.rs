@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::core::sbase::SbmlUtils;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
@@ -7,6 +8,7 @@ use crate::qual::qual_input::QualInput;
 use crate::qual::{QualitativeSpecies, TransitionInputEffect};
 use crate::xml::{RequiredXmlProperty, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualInput {
@@ -15,9 +17,13 @@ impl SbmlValidable for QualInput {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
-        apply_rule_qual_20509_and_20508(self, issues)
+        apply_rule_qual_20509_and_20508(self, issues);
+
+        Ok(())
     }
 }
 

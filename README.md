@@ -50,8 +50,12 @@ fn main() {
     let doc = Sbml::read_path("./test-inputs/model.sbml").expect("This document is not valid XML.");
 
     // First, we want to know if the document we
-    // just read is valid SBML.
-    let issues = doc.validate();
+    // just read is valid SBML. Validating can be cancelled (see the
+    // `cancel-this` crate), so it returns a `Result`; this example
+    // registers no cancellation trigger.
+    let issues = doc
+        .validate()
+        .expect("The validation cannot be cancelled here.");
     if !issues.is_empty() {
         // Note that these could be just warnings/notes.
         // You can check `SbmlIssue::severity` of each item

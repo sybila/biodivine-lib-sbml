@@ -33,8 +33,13 @@
 //!     .expect("This document is not valid XML.");
 //!
 //! // First, we want to know if the document we
-//! // just read is valid SBML.//!
-//! let issues = doc.validate();
+//! // just read is valid SBML. Validating is a cancellable, fallible
+//! // operation, so it returns a `Result`; here, no cancellation
+//! // trigger is registered, and a document that breaks a rule is
+//! // reported through the returned issues rather than as an error.
+//! let issues = doc
+//!     .validate()
+//!     .expect("Validation cannot be cancelled here.");
 //! if issues.len() > 0 {
 //!     // Note that these could be just warnings/notes. //!
 //!     // You can check `SbmlIssue::severity` of each item
@@ -102,6 +107,7 @@ use embed_doc_image::embed_doc_image;
 
 use xml::RequiredProperty;
 
+use crate::cancellation::CancellationCheck;
 use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
@@ -127,6 +133,8 @@ pub mod xml;
 mod validation;
 pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 
+/// **(internal)** The periodic cancellation check shared by every document walk of this crate.
+pub(crate) mod cancellation;
 /// **(internal)** An internal module which defines constant values relevant for SBML, such as
 /// namespace URLs or mappings assigning elements their allowed attributes.
 pub(crate) mod constants;
@@ -339,7 +347,19 @@ impl Sbml {
     /// Note that [Sbml::validate] internally also performs a type check before running the full
     /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
     /// with no issues.
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    ///
+    /// The pass accounts for every element it visits, so a cancellation request that arrives
+    /// while it is running stops it.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`] if a cancellation trigger of the current thread has fired.
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         // Note: a document that contains more than one root element, or no root element at all,
         // is rejected while parsing, so the previous explicit multi-root check is unnecessary.
         // Only a root element that is not `<sbml>` can still reach this point.
@@ -364,8 +384,10 @@ impl Sbml {
         }
 
         if let Some(model) = self.model().get() {
-            model.type_check(issues);
+            model.type_check(issues, check)?;
         }
+
+        Ok(())
     }
 
     /// Validates the document against the validation rules specified in the
@@ -403,18 +425,54 @@ impl Sbml {
     /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as loading
     /// a document without an error ensures that the document conforms to the basic
     /// structural and syntactic constraints.
-    pub fn validate(&self) -> Vec<SbmlIssue> {
+    ///
+    /// ## Cancellation
+    ///
+    /// The whole call is cancellable, through the same mechanism as reading and writing: a
+    /// [`cancel_this`] trigger registered on the current thread aborts the call, and the caller
+    /// sees [`SbmlError::Cancelled`] instead of a report. There is no separate parameter for it,
+    /// because a trigger registered for a long-running operation is expected to cover every step
+    /// of that operation.
+    ///
+    /// The four phases are all covered:
+    ///
+    ///  1. the very first step of the call consults the triggers, so a trigger that has already
+    ///     fired aborts the call before any work is done — in particular before the type check and
+    ///     before the lints below, so an already-fired trigger produces `Cancelled` and no report
+    ///     at all;
+    ///  2. the type check of the document, one step per element;
+    ///  3. the `unused-namespace` lint pass, one step per element;
+    ///  4. the rule-by-rule walk of the object model, one step per object.
+    ///
+    /// The trigger is consulted once every 1024 steps rather than on every step, and every phase
+    /// shares the same countdown, so a caller that cancels a large document is delayed by at most a
+    /// few hundred steps of whichever phase is running. See the crate's `cancellation` module for
+    /// the policy and for its mirror in the XML layer, which covers the read and write halves of an
+    /// operation.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`] if a cancellation trigger registered on the current thread
+    /// has fired. A document that violates rules of the specification is *not* an error: it is
+    /// reported through the returned issues.
+    pub fn validate(&self) -> SbmlResult<Vec<SbmlIssue>> {
+        let mut check = CancellationCheck::new();
         let mut issues: Vec<SbmlIssue> = vec![];
-        self.type_check(&mut issues);
+
+        // The first step of the call consults the triggers, before any phase does any work: a
+        // trigger that has already fired aborts the call instead of producing a report.
+        check.tick()?;
+
+        self.type_check(&mut issues, &mut check)?;
 
         // The library lints are reported for every document, before the early return below: a
         // document whose typed view is unusable still has a dead namespace declaration to report,
         // and a lint must not depend on the type check's outcome. They are appended after the type
         // check so that a fatal problem stays the first issue of the report.
-        validation::validate_unused_namespaces(&self.sbml_root, &mut issues);
+        validation::validate_unused_namespaces(&self.sbml_root, &mut issues, &mut check)?;
 
         if !issues.is_empty() {
-            return issues;
+            return Ok(issues);
         }
 
         let mut identifiers: HashSet<SId> = HashSet::new();
@@ -423,10 +481,10 @@ impl Sbml {
         validate_sbase(self, &mut issues, &mut identifiers, &mut meta_ids);
 
         if let Some(model) = self.model().get() {
-            model.validate(&mut issues, &mut identifiers, &mut meta_ids);
+            model.validate(&mut issues, &mut identifiers, &mut meta_ids, &mut check)?;
         }
 
-        issues
+        Ok(issues)
     }
 }
 
@@ -507,6 +565,8 @@ mod tests {
         XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
     use crate::Sbml;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
 
     /// Utility method to create [SId] objects used during testing (we assume the ID is valid).
     pub fn sid(value: &str) -> SId {
@@ -846,8 +906,8 @@ mod tests {
         let xml = sbml_doc.to_xml_string().unwrap();
         let reread = Sbml::read_str(xml.as_str()).unwrap();
         assert_eq!(
-            sorted_issues(&sbml_doc.validate()),
-            sorted_issues(&reread.validate())
+            sorted_issues(&sbml_doc.validate().unwrap()),
+            sorted_issues(&reread.validate().unwrap())
         );
         assert_eq!(xml, reread.to_xml_string().unwrap());
 
@@ -884,11 +944,11 @@ mod tests {
             .unwrap()
             .set_text_content("A round-trip note.");
 
-        let before = sorted_issues(&doc.validate());
+        let before = sorted_issues(&doc.validate().unwrap());
 
         let xml = doc.to_xml_string().unwrap();
         let reread = Sbml::read_str(xml.as_str()).unwrap();
-        assert_eq!(before, sorted_issues(&reread.validate()));
+        assert_eq!(before, sorted_issues(&reread.validate().unwrap()));
 
         // A second serialization of the re-read document is byte-identical to the first one,
         // because the XML layer orders namespace declarations deterministically.
@@ -912,6 +972,119 @@ mod tests {
 
         // Without a fired trigger, the same document reads without an error.
         assert!(Sbml::read_str(document).is_ok());
+    }
+
+    /// A cancellation trigger that reports a cancellation only on the `fire_at`-th consultation.
+    ///
+    /// [`crate::cancellation::CancellationCheck`] consults the triggers on the first step and then
+    /// once every `CHECK_INTERVAL` (1024) steps, so this trigger fires only after at least
+    /// `1024 * (fire_at - 1)` steps of the operation have been accounted for. An operation that
+    /// reports a cancellation therefore proves that it ticks *inside* its walk, not only once when
+    /// it starts.
+    #[derive(Clone)]
+    struct FireOnConsultation {
+        consultations: Arc<AtomicUsize>,
+        fire_at: usize,
+    }
+
+    impl FireOnConsultation {
+        fn new(fire_at: usize) -> Self {
+            FireOnConsultation {
+                consultations: Arc::new(AtomicUsize::new(0)),
+                fire_at,
+            }
+        }
+
+        /// How many times the triggers of this operation have been consulted so far.
+        fn consultations(&self) -> usize {
+            self.consultations.load(Ordering::SeqCst)
+        }
+    }
+
+    impl cancel_this::CancellationTrigger for FireOnConsultation {
+        fn is_cancelled(&self) -> bool {
+            self.consultations.fetch_add(1, Ordering::SeqCst) + 1 >= self.fire_at
+        }
+
+        fn type_name(&self) -> &'static str {
+            "FireOnConsultation"
+        }
+    }
+
+    /// A document with `parameters` `<parameter>` elements, in the core namespace.
+    fn document_with_parameters(parameters: usize) -> String {
+        let mut document = String::from(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model id="m"><listOfParameters>"#,
+        );
+        for index in 0..parameters {
+            document.push_str(&format!(r#"<parameter id="p{index}" constant="true"/>"#));
+        }
+        document.push_str("</listOfParameters></model></sbml>");
+        document
+    }
+
+    /// Validation honours the same `cancel-this` triggers as reading: a trigger that has already
+    /// fired aborts the whole call with `SbmlError::Cancelled` instead of producing a report.
+    #[test]
+    pub fn test_validate_cancellation() {
+        let document = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model/>
+</sbml>"#;
+
+        // The document is read first, so that the trigger below can only be seen by `validate`.
+        let doc = Sbml::read_str(document).expect("The test document is well formed.");
+
+        let trigger = cancel_this::CancelAtomic::new();
+        trigger.cancel();
+        let result = cancel_this::on_atomic(trigger, || doc.validate());
+        assert!(matches!(result, Err(crate::SbmlError::Cancelled(_))));
+
+        // Without a fired trigger, the same document validates without an error.
+        assert!(doc.validate().is_ok());
+    }
+
+    /// The tick of [`Sbml::validate`] is inside its walks, not only at the start: a trigger that
+    /// fires on a *later* consultation aborts the call after the walk has already accounted for
+    /// more than a thousand steps.
+    ///
+    /// The document has 500 `<parameter>` elements, so the call accounts for about 1500 steps —
+    /// one per element in the type check, one per element in the `unused-namespace` lint and one
+    /// per object in the rule-by-rule walk — and therefore consults the triggers twice: once at
+    /// the first step of the call, and once about 1024 steps later. A trigger that fires on the
+    /// second consultation can therefore only be seen by a tick *inside* a walk.
+    ///
+    /// Only the error is asserted, not the step at which it was produced: the countdown is shared
+    /// by all phases, so the exact step (and therefore the phase that supplies it) is an
+    /// implementation detail, while "the walk notices a request" is the contract. The size of the
+    /// document leaves a margin of several hundred steps above the second consultation, so the
+    /// test does not depend on the exact number of steps a phase accounts for.
+    #[test]
+    pub fn test_validate_cancellation_during_the_walk() {
+        let document = document_with_parameters(500);
+        let doc = Sbml::read_str(document.as_str()).expect("The test document is well formed.");
+
+        // The document is clean, so the call runs every phase (a report would make it return
+        // after the type check and the lints).
+        assert!(doc
+            .validate()
+            .expect("Validation cannot be cancelled here.")
+            .is_empty());
+
+        let trigger = FireOnConsultation::new(2);
+        let observer = trigger.clone();
+        let result = cancel_this::on_trigger(trigger, || doc.validate());
+        assert!(
+            matches!(result, Err(crate::SbmlError::Cancelled(_))),
+            "The second consultation of the walk must abort the validation."
+        );
+        assert!(
+            observer.consultations() >= 2,
+            "The walk must consult the triggers more than once, but they were consulted {} time(s).",
+            observer.consultations()
+        );
     }
 
     /// The text of every text node of a document, in document order.
@@ -1076,14 +1249,14 @@ mod tests {
         let padded = source.replace("<ci>missing</ci>", "<ci>\n  missing\n</ci>");
         assert_ne!(source, padded);
 
-        let plain_report = sorted_issues(&Sbml::read_str(source).unwrap().validate());
+        let plain_report = sorted_issues(&Sbml::read_str(source).unwrap().validate().unwrap());
         assert!(
             plain_report.iter().any(|it| it.starts_with("10215|")),
             "the test is only meaningful if an unknown identifier is reported: {plain_report:?}"
         );
         assert_eq!(
             plain_report,
-            sorted_issues(&Sbml::read_str(&padded).unwrap().validate())
+            sorted_issues(&Sbml::read_str(&padded).unwrap().validate().unwrap())
         );
     }
 
@@ -1860,11 +2033,15 @@ mod tests {
                 .id()
                 .get()
         );
-        layouts.get(0).validate(
-            &mut issues,
-            &mut Default::default(),
-            &mut Default::default(),
-        );
+        layouts
+            .get(0)
+            .validate(
+                &mut issues,
+                &mut Default::default(),
+                &mut Default::default(),
+                &mut crate::cancellation::CancellationCheck::new(),
+            )
+            .unwrap();
         println!("Issues: {:?}", issues);
         let layout = layouts.get(0);
         println!("{} {:?}", layout.id().get(), layout.name().get());

@@ -1,9 +1,11 @@
+use crate::cancellation::CancellationCheck;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{Delay, Event, EventAssignment, MetaId, Model, Priority, SId, Trigger};
 use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlList, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Event {
@@ -12,42 +14,57 @@ impl SbmlValidable for Event {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
 
         if let Some(trigger) = self.trigger().get() {
-            trigger.validate(issues, identifiers, meta_ids);
+            trigger.validate(issues, identifiers, meta_ids, check)?;
         }
         if let Some(priority) = self.priority().get() {
-            priority.validate(issues, identifiers, meta_ids);
+            priority.validate(issues, identifiers, meta_ids, check)?;
         }
         if let Some(delay) = self.delay().get() {
-            delay.validate(issues, identifiers, meta_ids);
+            delay.validate(issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_event_assignments) = self.event_assignments().get() {
-            validate_list_of_objects(&list_of_event_assignments, issues, identifiers, meta_ids);
+            validate_list_of_objects(
+                &list_of_event_assignments,
+                issues,
+                identifiers,
+                meta_ids,
+                check,
+            )?;
             Event::apply_rule_10305(&list_of_event_assignments, issues);
             Event::apply_rule_10306(&list_of_event_assignments, issues);
         }
+        Ok(())
     }
 }
 
 impl CanTypeCheck for Event {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         internal_type_check(self.xml_element(), issues);
 
         if let Some(trigger) = self.trigger().get() {
-            trigger.type_check(issues);
+            trigger.type_check(issues, check)?;
         }
         if let Some(priority) = self.priority().get() {
-            priority.type_check(issues);
+            priority.type_check(issues, check)?;
         }
         if let Some(delay) = self.delay().get() {
-            delay.type_check(issues);
+            delay.type_check(issues, check)?;
         }
         if let Some(list_of_event_assignments) = self.event_assignments().get() {
-            type_check_of_list(&list_of_event_assignments, issues);
+            type_check_of_list(&list_of_event_assignments, issues, check)?;
         }
+        Ok(())
     }
 }
 
@@ -108,11 +125,14 @@ impl SbmlValidable for Trigger {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
-            math.validate(issues);
+            math.validate(issues, check)?;
         }
+        Ok(())
     }
 }
 
@@ -124,11 +144,14 @@ impl SbmlValidable for Priority {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
-            math.validate(issues);
+            math.validate(issues, check)?;
         }
+        Ok(())
     }
 }
 
@@ -140,11 +163,14 @@ impl SbmlValidable for Delay {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
-            math.validate(issues);
+            math.validate(issues, check)?;
         }
+        Ok(())
     }
 }
 
@@ -156,11 +182,14 @@ impl SbmlValidable for EventAssignment {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         if let Some(math) = self.math().get() {
-            math.validate(issues);
+            math.validate(issues, check)?;
         }
+        Ok(())
     }
 }
 

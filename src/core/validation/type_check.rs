@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::constants::element::{
     ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
     UNIQUE_CHILDREN,
@@ -13,6 +14,7 @@ use crate::xml::{
     OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
     XmlWrapper,
 };
+use crate::SbmlResult;
 use crate::{Sbml, SbmlIssue};
 use std::collections::{HashMap, HashSet};
 
@@ -23,8 +25,26 @@ use std::collections::{HashMap, HashSet};
 /// Once a document is type checked, performing only safe operations on it should always keep
 /// it in a type checked state.
 pub(crate) trait CanTypeCheck: XmlWrapper {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    /// Type-check this object and the objects it contains.
+    ///
+    /// Every implementation accounts for itself with exactly one
+    /// [`CancellationCheck::tick`](crate::cancellation::CancellationCheck::tick) before it starts
+    /// checking (and then recurses into its children, each of which ticks for itself), so that the
+    /// type check of a large document is cancellable like the rest of
+    /// [`Sbml::validate`](crate::Sbml::validate).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of
+    /// the current thread has fired.
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         internal_type_check(self.xml_element(), issues);
+        Ok(())
     }
 }
 
@@ -47,6 +67,9 @@ pub(crate) trait CanTypeCheck: XmlWrapper {
 ///
 /// Any failing check is logged into `issues`.
 pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    // One step of the walk, so that a type check of a large document notices a cancellation
+    // request instead of running to completion (see [CancellationCheck]).
+
     let attributes = xml_element.attributes();
     let element_name = xml_element.tag_name();
 
@@ -130,7 +153,8 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
 pub(crate) fn type_check_of_list<T: CanTypeCheck>(
     xml_list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
-) {
+    check: &mut CancellationCheck,
+) -> SbmlResult<()> {
     let element = xml_list.xml_element();
     let name = element.tag_name();
     internal_type_check(element, issues);
@@ -144,14 +168,16 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
                 // children is typically very short anyway.
                 continue;
             }
-            object.type_check(issues);
+            object.type_check(issues, check)?;
         }
     } else {
         // Sanity-check everyone.
         for object in xml_list.iter() {
-            object.type_check(issues);
+            object.type_check(issues, check)?;
         }
     }
+
+    Ok(())
 }
 
 /// Splits an attribute or element name written as `prefix:local` into its prefix and local

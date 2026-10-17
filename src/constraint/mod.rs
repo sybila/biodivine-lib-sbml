@@ -24,7 +24,7 @@ mod tests {
     #[test]
     pub fn basic_test() {
         let doc = Sbml::read_path("test-inputs/test-fbc/example_fbc.xml");
-        assert!(doc.as_ref().unwrap().validate().is_empty());
+        assert!(doc.as_ref().unwrap().validate().unwrap().is_empty());
 
         let reactions = doc
             .unwrap()

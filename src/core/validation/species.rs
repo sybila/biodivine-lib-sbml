@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::constants::namespaces::NS_FBC;
 use crate::constraint::FbcSpecies;
 use crate::core::validation::sbase::validate_sbase;
@@ -6,6 +7,7 @@ use crate::core::validation::{apply_rule_10311, apply_rule_10313, SbmlValidable}
 use crate::core::{MetaId, SBase, SId, Species};
 use crate::xml::{OptionalXmlProperty, XmlProperty, XmlSubtype, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Species {
@@ -14,7 +16,9 @@ impl SbmlValidable for Species {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         let xml_element = self.xml_element();
         let sbstnc_units = self.substance_units();
@@ -31,17 +35,24 @@ impl SbmlValidable for Species {
             xml_element,
             issues,
         );
+        Ok(())
     }
 }
 
 impl CanTypeCheck for Species {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         internal_type_check(self.xml_element(), issues);
 
         if self.sbml_root().declared_package_prefix(NS_FBC) == Ok("fbc".to_string()) {
             if let Some(fbc_species) = FbcSpecies::try_cast_from_super(self) {
-                fbc_species.type_check(issues);
+                fbc_species.type_check(issues, check)?;
             }
         }
+        Ok(())
     }
 }

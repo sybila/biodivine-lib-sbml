@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use crate::cancellation::CancellationCheck;
 use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
@@ -8,6 +9,7 @@ use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_un
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model, SId};
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 
 impl Math {
     /// ### Applies rules:
@@ -49,7 +51,17 @@ impl Math {
     ///   or "e-notation" numbers, or the time, delay, avogadro, or rateOf csymbol): math in KineticLaw, math in InitialAssignment, math in
     ///   AssignmentRule, math in RateRule, math in AlgebraicRule, math in Event Delay, and math in EventAssignment."
     ///
-    pub(crate) fn validate(&self, issues: &mut Vec<SbmlIssue>) {
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of
+    /// the current thread has fired; the checks below walk the whole formula, so the step of the
+    /// walk that accounts for this formula consults the triggers too.
+    pub(crate) fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         self.apply_rule_10202(issues);
         self.apply_rule_10203(issues);
         self.apply_rule_10204(issues);
@@ -69,6 +81,8 @@ impl Math {
         self.apply_rule_10225(issues);
         self.apply_rule_10311(issues);
         self.apply_rule_10313(issues);
+
+        Ok(())
     }
 
     // TODO: Complete implementation when adding extensions/packages is solved

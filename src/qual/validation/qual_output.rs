@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::core::sbase::SbmlUtils;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
@@ -6,6 +7,7 @@ use crate::core::{MetaId, SId};
 use crate::qual::{QualOutput, QualitativeSpecies, TransitionOutputEffect};
 use crate::xml::{RequiredXmlProperty, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualOutput {
@@ -14,7 +16,9 @@ impl SbmlValidable for QualOutput {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         apply_rule_qual_20607_and_20608(self, issues, self.qualitative_species().get());
 
@@ -27,6 +31,7 @@ impl SbmlValidable for QualOutput {
                     .to_string();
             issues.push(SbmlIssue::new("qual-20609", self, message))
         }
+        Ok(())
     }
 }
 

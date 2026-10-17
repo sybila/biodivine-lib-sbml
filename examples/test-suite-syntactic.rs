@@ -1,4 +1,4 @@
-use biodivine_lib_sbml::{RuleSet, Sbml, SbmlIssueSeverity};
+use biodivine_lib_sbml::{RuleSet, Sbml, SbmlError, SbmlIssueSeverity};
 use biodivine_lib_xml_dom::Document;
 use sbml_test_suite::{corpus_documents, test_helper};
 use std::collections::HashSet;
@@ -107,6 +107,13 @@ fn main() {
 /// Documents that the XML layer cannot parse at all (they declare an encoding other than UTF-8)
 /// and documents that the library refuses to read are counted and skipped: they are covered by
 /// the issue dump, which reports the read failure as rule 10101.
+///
+/// # Panics
+///
+/// Panics if any of the operations is cancelled: like [`test_document`], this report is a gate,
+/// so a cancellation request must not be counted as a property of the corpus. Every step that
+/// would otherwise silently count a document (parsing, reading, serializing, re-parsing) checks
+/// for a cancellation first.
 fn write_roundtrip_report() {
     let mut mismatches = Vec::new();
     let mut documents = 0usize;
@@ -116,24 +123,48 @@ fn write_roundtrip_report() {
     for rule in corpus_documents("./syntactic", true) {
         for document in rule.documents {
             let id = document.id();
-            let Ok(direct) = Document::parse_string(&document.content) else {
-                unparsable += 1;
-                continue;
+            let direct = match Document::parse_string(&document.content) {
+                Ok(direct) => direct,
+                Err(biodivine_lib_xml_dom::XmlError::Cancelled(_)) => {
+                    panic!("{NO_CANCELLATION_TRIGGER}")
+                }
+                Err(_) => {
+                    unparsable += 1;
+                    continue;
+                }
             };
-            let Ok(sbml) = Sbml::read_str(&document.content) else {
-                unreadable += 1;
-                continue;
+            let sbml = match Sbml::read_str(&document.content) {
+                Ok(sbml) => sbml,
+                Err(SbmlError::Cancelled(_)) => panic!("{NO_CANCELLATION_TRIGGER}"),
+                Err(_) => {
+                    unreadable += 1;
+                    continue;
+                }
             };
-            let Ok(first) = sbml.to_xml_string() else {
-                mismatches.push(format!("{id}|serialization-failed"));
-                continue;
+            let first = match sbml.to_xml_string() {
+                Ok(first) => first,
+                Err(SbmlError::Cancelled(_)) => panic!("{NO_CANCELLATION_TRIGGER}"),
+                Err(_) => {
+                    mismatches.push(format!("{id}|serialization-failed"));
+                    continue;
+                }
             };
-            if sbml.to_xml_string().ok().as_deref() != Some(first.as_str()) {
+            let second = sbml.to_xml_string();
+            if let Err(SbmlError::Cancelled(_)) = second {
+                panic!("{NO_CANCELLATION_TRIGGER}")
+            }
+            if second.ok().as_deref() != Some(first.as_str()) {
                 mismatches.push(format!("{id}|unstable-serialization"));
             }
-            let Ok(reparsed) = Document::parse_string(&first) else {
-                mismatches.push(format!("{id}|unparsable-output"));
-                continue;
+            let reparsed = match Document::parse_string(&first) {
+                Ok(reparsed) => reparsed,
+                Err(biodivine_lib_xml_dom::XmlError::Cancelled(_)) => {
+                    panic!("{NO_CANCELLATION_TRIGGER}")
+                }
+                Err(_) => {
+                    mismatches.push(format!("{id}|unparsable-output"));
+                    continue;
+                }
             };
 
             documents += 1;
@@ -191,26 +222,45 @@ fn abbreviated(text: &str) -> String {
     }
 }
 
+/// The message this example prints when a document cannot be validated because a cancellation
+/// trigger fired; see [`test_document`].
+const NO_CANCELLATION_TRIGGER: &str =
+    "the SBML test-suite harness registers no cancellation trigger";
+
 /// A method that can be passed to `test_helper` to validate a document.
+///
+/// The harness is a gate, not an interactive operation: it compares the library's report against
+/// the expectation files of the SBML test suite, which only makes sense if the report was actually
+/// produced. A cancellation request that reaches the harness would therefore silently replace the
+/// report of the affected documents — the read would be reported as the "document could not be
+/// read" rule `10101`, and the validation would report nothing at all — and the gate would compare
+/// something that is not a validation result. Both are turned into a hard failure instead, so that
+/// a stray trigger can never hollow out the gate.
+///
+/// # Panics
+///
+/// Panics if the read or the validation of a document is cancelled.
 pub fn test_document(document: &str) -> Vec<(String, String)> {
-    match Sbml::read_str(document) {
-        Ok(doc) => doc
-            .validate()
-            .into_iter()
-            .map(|issue| {
-                let severity = match issue.severity() {
-                    SbmlIssueSeverity::Error => "Error",
-                    SbmlIssueSeverity::Warning => "Warning",
-                    SbmlIssueSeverity::Info => "Informational",
-                };
-                (issue.rule().to_string(), severity.to_string())
-            })
-            .collect(),
+    let doc = match Sbml::read_str(document) {
+        Ok(doc) => doc,
+        Err(SbmlError::Cancelled(_)) => panic!("{NO_CANCELLATION_TRIGGER}"),
         Err(_e) => {
             // This process *can* fail if the document is not encoded correctly.
             // In that case, rule 10101 should appear in the expected results. If it does
             // not appear in this list, it is an error.
-            vec![("10101".to_string(), "Error".to_string())]
+            return vec![("10101".to_string(), "Error".to_string())];
         }
-    }
+    };
+    doc.validate()
+        .expect(NO_CANCELLATION_TRIGGER)
+        .into_iter()
+        .map(|issue| {
+            let severity = match issue.severity() {
+                SbmlIssueSeverity::Error => "Error",
+                SbmlIssueSeverity::Warning => "Warning",
+                SbmlIssueSeverity::Info => "Informational",
+            };
+            (issue.rule().to_string(), severity.to_string())
+        })
+        .collect()
 }

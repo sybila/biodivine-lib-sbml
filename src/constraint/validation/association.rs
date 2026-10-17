@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::constraint::association::{And, Association, GeneProductRef, Or};
 use crate::constraint::GeneProduct;
 use crate::core::sbase::SbmlUtils;
@@ -7,6 +8,7 @@ use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
 use crate::xml::{RequiredXmlProperty, XmlSubtype, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Association {
@@ -15,34 +17,43 @@ impl SbmlValidable for Association {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         if let Some(association) = GeneProductRef::try_cast_from_super(self) {
-            association.validate(issues, identifiers, meta_ids);
+            association.validate(issues, identifiers, meta_ids, check)?;
         }
 
         if let Some(association) = And::try_cast_from_super(self) {
-            association.validate(issues, identifiers, meta_ids);
+            association.validate(issues, identifiers, meta_ids, check)?;
         }
 
         if let Some(association) = Or::try_cast_from_super(self) {
-            association.validate(issues, identifiers, meta_ids);
+            association.validate(issues, identifiers, meta_ids, check)?;
         }
+        Ok(())
     }
 }
 
 impl CanTypeCheck for Association {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         if let Some(association) = GeneProductRef::try_cast_from_super(self) {
-            association.type_check(issues);
+            association.type_check(issues, check)?;
         }
 
         if let Some(association) = And::try_cast_from_super(self) {
-            association.type_check(issues);
+            association.type_check(issues, check)?;
         }
 
         if let Some(association) = Or::try_cast_from_super(self) {
-            association.type_check(issues);
+            association.type_check(issues, check)?;
         }
+        Ok(())
     }
 }
 
@@ -52,10 +63,13 @@ impl SbmlValidable for GeneProductRef {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
 
         apply_rule_fbc_20908(self, issues, self.gene_product().get());
+        Ok(())
     }
 }
 
@@ -67,8 +81,11 @@ impl SbmlValidable for And {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
+        Ok(())
     }
 }
 
@@ -80,8 +97,11 @@ impl SbmlValidable for Or {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
+        Ok(())
     }
 }
 

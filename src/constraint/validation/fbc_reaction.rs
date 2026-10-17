@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::constraint::fbc_reaction::FbcReaction;
 use crate::core::sbase::SbmlUtils;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
@@ -7,6 +8,7 @@ use crate::xml::{
     OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for FbcReaction {
@@ -15,9 +17,11 @@ impl SbmlValidable for FbcReaction {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         if let Some(gene_product_association) = self.gene_product_association().get() {
-            gene_product_association.validate(issues, identifiers, meta_ids);
+            gene_product_association.validate(issues, identifiers, meta_ids, check)?;
         }
         if let Some(lower_bound) = self.lower_flux_bound().get() {
             apply_rule_fbc_20705(self, issues, lower_bound);
@@ -130,16 +134,23 @@ impl SbmlValidable for FbcReaction {
                 }
             }
         }
+        Ok(())
     }
 }
 
 impl CanTypeCheck for FbcReaction {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         if let Some(gene_product_association) = self.gene_product_association().get() {
-            gene_product_association.type_check(issues);
+            gene_product_association.type_check(issues, check)?;
         } else {
             internal_type_check(self.xml_element(), issues)
         }
+        Ok(())
     }
 }
 

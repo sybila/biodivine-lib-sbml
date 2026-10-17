@@ -27,7 +27,7 @@ fn check_fbc_21207() {
 </sbml>"#;
 
     let doc = Sbml::read_str(document).expect("The test document is well formed.");
-    let issues = doc.validate();
+    let issues = doc.validate().unwrap();
 
     assert_eq!(issues.len(), 1);
     assert_eq!(issues.first().unwrap().rule(), "fbc-21207");

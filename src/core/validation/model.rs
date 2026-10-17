@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
 use crate::core::validation::{
@@ -6,6 +7,7 @@ use crate::core::validation::{
 use crate::core::{AbstractRule, MetaId, Model, SId, UnitDefinition};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Model {
@@ -14,7 +16,9 @@ impl SbmlValidable for Model {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
         let xml_element = self.xml_element();
 
@@ -22,104 +26,129 @@ impl SbmlValidable for Model {
         self.apply_rule_10313(xml_element, issues);
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
-            validate_list_of_objects(&list_of_function_definition, issues, identifiers, meta_ids);
+            validate_list_of_objects(
+                &list_of_function_definition,
+                issues,
+                identifiers,
+                meta_ids,
+                check,
+            )?;
         }
         if let Some(list_of_unit_definitions) = self.unit_definitions().get() {
-            validate_list_of_objects(&list_of_unit_definitions, issues, identifiers, meta_ids);
+            validate_list_of_objects(
+                &list_of_unit_definitions,
+                issues,
+                identifiers,
+                meta_ids,
+                check,
+            )?;
             UnitDefinition::apply_rule_10302(&list_of_unit_definitions, issues);
         }
         if let Some(list_of_compartments) = self.compartments().get() {
-            validate_list_of_objects(&list_of_compartments, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_compartments, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_species) = self.species().get() {
-            validate_list_of_objects(&list_of_species, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_species, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_parameters) = self.parameters().get() {
-            validate_list_of_objects(&list_of_parameters, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_parameters, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_initial_assignment) = self.initial_assignments().get() {
-            validate_list_of_objects(&list_of_initial_assignment, issues, identifiers, meta_ids);
+            validate_list_of_objects(
+                &list_of_initial_assignment,
+                issues,
+                identifiers,
+                meta_ids,
+                check,
+            )?;
         }
         if let Some(list_of_rules) = self.rules().get() {
-            validate_list_of_objects(&list_of_rules, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_rules, issues, identifiers, meta_ids, check)?;
             AbstractRule::apply_rule_10304(&list_of_rules, issues);
         }
         if let Some(list_of_constraint) = self.constraints().get() {
-            validate_list_of_objects(&list_of_constraint, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_constraint, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_reactions) = self.reactions().get() {
-            validate_list_of_objects(&list_of_reactions, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_reactions, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_events) = self.events().get() {
-            validate_list_of_objects(&list_of_events, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_events, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_objectives) = self.objectives().get() {
-            validate_list_of_objects(&list_of_objectives, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_objectives, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_gene_products) = self.gene_products().get() {
-            validate_list_of_objects(&list_of_gene_products, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_gene_products, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_transitions) = self.transitions().get() {
-            validate_list_of_objects(&list_of_transitions, issues, identifiers, meta_ids)
+            validate_list_of_objects(&list_of_transitions, issues, identifiers, meta_ids, check)?
         }
         if let Some(list_of_qual_species) = self.qual_species().get() {
-            validate_list_of_objects(&list_of_qual_species, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_qual_species, issues, identifiers, meta_ids, check)?;
         }
         if let Some(list_of_layouts) = self.layouts().get() {
-            validate_list_of_objects(&list_of_layouts, issues, identifiers, meta_ids);
+            validate_list_of_objects(&list_of_layouts, issues, identifiers, meta_ids, check)?;
         }
+        Ok(())
     }
 }
 
 impl CanTypeCheck for Model {
-    fn type_check(&self, issues: &mut Vec<SbmlIssue>) {
+    fn type_check(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         internal_type_check(self.xml_element(), issues);
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
-            type_check_of_list(&list_of_function_definition, issues);
+            type_check_of_list(&list_of_function_definition, issues, check)?;
         }
         if let Some(list_of_unit_definitions) = self.unit_definitions().get() {
-            type_check_of_list(&list_of_unit_definitions, issues);
+            type_check_of_list(&list_of_unit_definitions, issues, check)?;
         }
         if let Some(list_of_compartments) = self.compartments().get() {
-            type_check_of_list(&list_of_compartments, issues);
+            type_check_of_list(&list_of_compartments, issues, check)?;
         }
         if let Some(list_of_species) = self.species().get() {
-            type_check_of_list(&list_of_species, issues);
+            type_check_of_list(&list_of_species, issues, check)?;
         }
         if let Some(list_of_parameters) = self.parameters().get() {
-            type_check_of_list(&list_of_parameters, issues);
+            type_check_of_list(&list_of_parameters, issues, check)?;
         }
         if let Some(list_of_initial_assignment) = self.initial_assignments().get() {
-            type_check_of_list(&list_of_initial_assignment, issues);
+            type_check_of_list(&list_of_initial_assignment, issues, check)?;
         }
         if let Some(list_of_rules) = self.rules().get() {
-            type_check_of_list(&list_of_rules, issues);
+            type_check_of_list(&list_of_rules, issues, check)?;
         }
         if let Some(list_of_constraint) = self.constraints().get() {
-            type_check_of_list(&list_of_constraint, issues);
+            type_check_of_list(&list_of_constraint, issues, check)?;
         }
         if let Some(list_of_reactions) = self.reactions().get() {
-            type_check_of_list(&list_of_reactions, issues);
+            type_check_of_list(&list_of_reactions, issues, check)?;
         }
         if let Some(list_of_events) = self.events().get() {
-            type_check_of_list(&list_of_events, issues);
+            type_check_of_list(&list_of_events, issues, check)?;
         }
         if let Some(list_of_objectives) = self.objectives().get() {
-            type_check_of_list(&list_of_objectives, issues);
+            type_check_of_list(&list_of_objectives, issues, check)?;
         }
         if let Some(list_of_gene_products) = self.gene_products().get() {
-            type_check_of_list(&list_of_gene_products, issues);
+            type_check_of_list(&list_of_gene_products, issues, check)?;
         }
         if let Some(list_of_transitions) = self.transitions().get() {
-            type_check_of_list(&list_of_transitions, issues)
+            type_check_of_list(&list_of_transitions, issues, check)?
         }
         if let Some(list_of_qual_species) = self.qual_species().get() {
-            type_check_of_list(&list_of_qual_species, issues)
+            type_check_of_list(&list_of_qual_species, issues, check)?
         }
         if let Some(list_of_layouts) = self.layouts().get() {
-            type_check_of_list(&list_of_layouts, issues);
+            type_check_of_list(&list_of_layouts, issues, check)?;
         }
+        Ok(())
     }
 }
 

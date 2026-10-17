@@ -1,3 +1,4 @@
+use crate::cancellation::CancellationCheck;
 use crate::core::sbase::SbmlUtils;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
@@ -6,6 +7,7 @@ use crate::core::{Compartment, MetaId, Model, SId};
 use crate::qual::QualitativeSpecies;
 use crate::xml::{OptionalXmlProperty, RequiredXmlProperty, XmlWrapper};
 use crate::SbmlIssue;
+use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualitativeSpecies {
@@ -14,12 +16,15 @@ impl SbmlValidable for QualitativeSpecies {
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
         meta_ids: &mut HashSet<MetaId>,
-    ) {
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
 
         apply_rule_qual_20308(self, issues, self.compartment().get());
         apply_rule_qual_20309(self, issues);
         apply_rule_qual_20310(self, issues);
+        Ok(())
     }
 }
 

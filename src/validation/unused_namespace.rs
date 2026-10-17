@@ -45,8 +45,10 @@
 
 use std::collections::BTreeSet;
 
+use crate::cancellation::CancellationCheck;
 use crate::validation::SbmlIssue;
 use crate::xml::XmlElement;
+use crate::SbmlResult;
 
 /// The prefix of every namespace the lint is responsible for: an SBML core namespace or the
 /// namespace of an SBML package.
@@ -60,18 +62,43 @@ const UNUSED_NAMESPACE: &str = "unused-namespace";
 /// The walk starts at `root` (the `<sbml>` element of a document) and visits every element once.
 /// A single recursive pass collects the namespace URIs used by a subtree and reports the unused
 /// declarations of the elements on the way back up, so the check is one traversal of the document
-/// and can later be given a cancellation tick without being restructured.
+/// that accounts for one step per visited element, and it is therefore cancellable like every other
+/// phase of [`crate::Sbml::validate`].
 ///
 /// The reported issues are of kind [`RuleKind::LibraryLint`](crate::RuleKind::LibraryLint) with
 /// severity [`Info`](crate::SbmlIssueSeverity::Info), as the rule table describes the id
 /// [`UNUSED_NAMESPACE`].
-pub(crate) fn validate_unused_namespaces(root: &XmlElement, issues: &mut Vec<SbmlIssue>) {
-    used_namespaces(root, issues);
+///
+/// # Errors
+///
+/// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
+/// current thread has fired while the document was being walked.
+pub(crate) fn validate_unused_namespaces(
+    root: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+    check: &mut CancellationCheck,
+) -> SbmlResult<()> {
+    used_namespaces(root, issues, check)?;
+    Ok(())
 }
 
 /// Reports the unused namespace declarations of `element` and returns the namespace URIs that
 /// `element` and its descendants use.
-fn used_namespaces(element: &XmlElement, issues: &mut Vec<SbmlIssue>) -> BTreeSet<String> {
+///
+/// One step of the walk per element, so that the lint pass of a large document is cancellable like
+/// every other phase of [`crate::Sbml::validate`].
+///
+/// # Errors
+///
+/// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
+/// current thread has fired.
+fn used_namespaces(
+    element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+    check: &mut CancellationCheck,
+) -> SbmlResult<BTreeSet<String>> {
+    check.tick()?;
+
     let raw = element.element();
     let mut used = BTreeSet::new();
     if let Some(namespace) = raw.namespace() {
@@ -83,7 +110,7 @@ fn used_namespaces(element: &XmlElement, issues: &mut Vec<SbmlIssue>) -> BTreeSe
         }
     }
     for child in element.child_elements() {
-        used.append(&mut used_namespaces(&child, issues));
+        used.append(&mut used_namespaces(&child, issues, check)?);
     }
 
     for (prefix, declaration) in raw.namespace_declarations() {
@@ -108,7 +135,7 @@ fn used_namespaces(element: &XmlElement, issues: &mut Vec<SbmlIssue>) -> BTreeSe
         issues.push(SbmlIssue::new(UNUSED_NAMESPACE, element, message));
     }
 
-    used
+    Ok(used)
 }
 
 #[cfg(test)]
@@ -126,6 +153,7 @@ mod tests {
         Sbml::read_str(document)
             .expect("The test document is well formed.")
             .validate()
+            .unwrap()
             .into_iter()
             .filter(|issue| issue.kind() == RuleKind::LibraryLint)
             .collect()

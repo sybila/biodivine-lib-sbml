@@ -5,7 +5,7 @@ use crate::Sbml;
 #[test]
 pub fn property_type() {
     let doc = Sbml::read_path("test-inputs/test-fbc/property_type_test.xml");
-    let issues = doc.unwrap().validate();
+    let issues = doc.unwrap().validate().unwrap();
 
     assert!(!issues.is_empty());
     assert_eq!(issues.get(0).unwrap().rule(), "SANITY_CHECK")
@@ -15,7 +15,7 @@ pub fn property_type() {
 fn test_coefficient_special_values() {
     let doc = Sbml::read_path("test-inputs/test-fbc/special_values.xml").unwrap();
 
-    let issues = doc.validate();
+    let issues = doc.validate().unwrap();
 
     assert!(!issues.is_empty());
 
