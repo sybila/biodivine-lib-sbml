@@ -5,6 +5,45 @@ pub type Namespace = (&'static str, &'static str);
 /// The URL of the "core" SBML namespace.
 pub const URL_SBML_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
 
+/// The root namespace URL of every **published** SBML level/version.
+///
+/// An SBML document is an `<sbml>` element in one of these namespaces; the *content* of the document
+/// is then described by the namespace of its `<model>` and by the level the reader dispatches to.
+/// The list is what [`Sbml`](crate::Sbml) uses to recognize a document root, and it is a plain data
+/// constant: extending it with the URL of a level the crate learns to read is a data change, not a
+/// code change.
+///
+/// The list is the set of root namespaces defined by a specification document of the
+/// [SBML specification repository](http://sbml.org/Documents/Specifications):
+///
+/// | level/version | URL |
+/// | --- | --- |
+/// | Level 1 (version 1 and 2 share the namespace) | `http://www.sbml.org/sbml/level1` |
+/// | Level 2 version 1 | `http://www.sbml.org/sbml/level2` |
+/// | Level 2 version 2 | `http://www.sbml.org/sbml/level2/version2` |
+/// | Level 2 version 3 | `http://www.sbml.org/sbml/level2/version3` |
+/// | Level 2 version 4 | `http://www.sbml.org/sbml/level2/version4` |
+/// | Level 2 version 5 | `http://www.sbml.org/sbml/level2/version5` |
+/// | Level 3 version 1 | `http://www.sbml.org/sbml/level3/version1/core` |
+/// | Level 3 version 2 (this crate's level) | `http://www.sbml.org/sbml/level3/version2/core` |
+///
+/// Two namespaces that appear as the root of documents of the SBML syntactic test suite are
+/// deliberately *not* here, because no specification defines them: the empty namespace (7 documents
+/// whose root declares no namespace at all) and `http://www.sbml.org/sbml/level2/version6`
+/// (1 document). The reader stays tolerant — it dispatches on the local name so that it can report
+/// issues for a document whose root namespace is wrong — while this constant describes what a
+/// *valid* SBML document root looks like.
+pub const SBML_ROOT_NAMESPACES: &[&str] = &[
+    "http://www.sbml.org/sbml/level1",
+    "http://www.sbml.org/sbml/level2",
+    "http://www.sbml.org/sbml/level2/version2",
+    "http://www.sbml.org/sbml/level2/version3",
+    "http://www.sbml.org/sbml/level2/version4",
+    "http://www.sbml.org/sbml/level2/version5",
+    "http://www.sbml.org/sbml/level3/version1/core",
+    URL_SBML_CORE,
+];
+
 pub const URL_PACKAGE_LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/layout/version1";
 
 pub const URL_PACKAGE_QUAL: &str = "http://www.sbml.org/sbml/level3/version1/qual/version1";

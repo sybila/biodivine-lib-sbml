@@ -90,6 +90,17 @@ use crate::xml::{Document, XmlElement, XmlWrapper};
 /// either variant. That matches how the crate reads the attribute everywhere else: one spelling for
 /// "the value of the `xsi:type` attribute", one behaviour.
 ///
+/// ## One identity accepts a set of URLs: the document root
+///
+/// Every type of this crate stands for elements of exactly one namespace, with one exception:
+/// [`Sbml`](crate::Sbml), the `<sbml>` document root, is a valid root in the namespace of *any*
+/// published SBML level and version. Its [`matches_element`](SbmlObject::matches_element) therefore
+/// compares the element's namespace URL against a public data constant
+/// ([`SBML_ROOT_NAMESPACES`](crate::SBML_ROOT_NAMESPACES)) instead of against
+/// [`ELEMENT_NAMESPACE`](SbmlObject::ELEMENT_NAMESPACE), which for the root is the namespace this
+/// crate *writes* with. The widening is data: a level module that teaches the crate a new root
+/// namespace extends the constant, not the type test.
+///
 /// ## A match is not a unique identification
 ///
 /// `matches_element` is a *type test*, not a dispatcher: several types can accept the same
@@ -154,6 +165,12 @@ pub trait SbmlObject: XmlWrapper {
     /// The element the constructor returns is detached and is not guaranteed to be valid: required
     /// attributes and children are not filled in. See [`SbmlObject::matches_element`] for the check
     /// that the element really is of this type.
+    ///
+    /// A type whose identity is written by hand rather than by a `#[sbml_object(..)]` declaration
+    /// can implement [`SbmlObject`] without having this constructor:
+    /// [`Sbml`](crate::Sbml), the document root, is the one such type of this crate, and it declares
+    /// no constructor because a new root has to name a level and a version (that is what
+    /// `Sbml::default` does).
     const CONSTRUCT: Option<fn(Document) -> Self> = None;
 
     /// Every local name this type recognizes.

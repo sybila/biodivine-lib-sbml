@@ -12,6 +12,10 @@
 
 use biodivine_lib_sbml::core::{SId, Species};
 use biodivine_lib_sbml::xml::{Document, RequiredXmlProperty, SbmlObject, XmlElement, XmlWrapper};
+use biodivine_lib_sbml::{
+    set_xsi_type, Sbml, NS_FBC, NS_LAYOUT, NS_MATHML, NS_QUAL, NS_SBML_CORE, NS_XSI,
+    SBML_ROOT_NAMESPACES, URL_PACKAGE_FBC, URL_SBML_CORE, URL_XSI,
+};
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The namespace of the extension, as the declaration writes it: a conventional prefix and the URL
@@ -91,4 +95,44 @@ fn an_out_of_crate_type_can_extend_the_behaviour_of_a_core_type() {
     species.id().set(&id);
     assert_eq!(species.id().get().as_str(), "s1");
     assert!(species.is_element());
+}
+
+/// The namespace surface an extension needs is reachable from outside the crate, which is the point
+/// of this test: the constants, the `xsi:type` writer and the document root's identity are all
+/// public API.
+#[test]
+fn the_extension_surface_is_reachable_from_outside_the_crate() {
+    assert_eq!(NS_SBML_CORE, ("", URL_SBML_CORE));
+    assert_eq!(NS_FBC, ("fbc", URL_PACKAGE_FBC));
+    assert_eq!(NS_LAYOUT.0, "layout");
+    assert_eq!(NS_QUAL.0, "qual");
+    assert_eq!(NS_MATHML.0, "");
+    assert_eq!(NS_XSI, ("xsi", URL_XSI));
+
+    // The root namespace set is public data, and the root identity is usable from here.
+    assert!(SBML_ROOT_NAMESPACES.contains(&URL_SBML_CORE));
+    assert!(SBML_ROOT_NAMESPACES.contains(&"http://www.sbml.org/sbml/level2/version4"));
+    let document = Document::parse_string(&format!(
+        r#"<?xml version="1.0"?><sbml xmlns="{URL_SBML_CORE}" level="3" version="2"/>"#
+    ))
+    .expect("The probe document is well formed.");
+    let root = document.root().expect("The probe document has a root.");
+    let root = XmlElement::new(root);
+    assert!(Sbml::matches_element(&root));
+    assert!(Sbml::try_from_element(root.clone()).is_some());
+    assert_eq!(
+        Sbml::try_for_child_element(&root).map(|it| it.level().get()),
+        Some(3)
+    );
+
+    // An extension can write the `xsi:type` attribute outside a generated constructor.
+    let operand = XmlElement::new_qualified(probe_document(), "operand", MY_EXTENSION);
+    set_xsi_type(&operand, "special");
+    assert_eq!(operand.get_attribute("type").as_deref(), Some("special"));
+}
+
+/// A probe document for the assertions above.
+fn probe_document() -> Document {
+    Document::parse_string(r#"<?xml version="1.0"?><probe/>"#)
+        .expect("The probe document is well formed.")
 }

@@ -48,7 +48,25 @@ impl Sbml {
     /// when such a declaration exists but the document does not also carry a `required` attribute
     /// for that URL. The attribute is looked up by its expanded name, so the prefix it uses in the
     /// document does not matter.
-    pub(crate) fn declared_package_prefix(&self, package: Namespace) -> Result<String, String> {
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use biodivine_lib_sbml::{Sbml, NS_FBC, NS_QUAL, URL_PACKAGE_FBC, URL_SBML_CORE};
+    ///
+    /// let document = Sbml::read_str(&format!(
+    ///     r#"<?xml version="1.0" encoding="UTF-8"?>
+    ///        <sbml xmlns="{URL_SBML_CORE}" xmlns:fbc="{URL_PACKAGE_FBC}" fbc:required="false"
+    ///              level="3" version="2"/>"#
+    /// ))
+    /// .expect("The document is well formed.");
+    ///
+    /// // `fbc` is declared, and under the conventional prefix.
+    /// assert_eq!(document.declared_package_prefix(NS_FBC), Ok("fbc".to_string()));
+    /// // `qual` is not declared, so it has no prefix in this document.
+    /// assert!(document.declared_package_prefix(NS_QUAL).is_err());
+    /// ```
+    pub fn declared_package_prefix(&self, package: Namespace) -> Result<String, String> {
         let element = self.xml_element().element();
         let Some((prefix, _binding)) = element
             .namespace_declarations()
@@ -107,7 +125,31 @@ impl Sbml {
     /// Returns an error if the namespace of `package` cannot be declared, which is the case for the
     /// empty namespace (every package this crate knows about has a namespace URL), and if the
     /// document rejects the `required` attribute value.
-    pub(crate) fn activate_package(&self, package: Namespace) -> Result<(), String> {
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use biodivine_lib_sbml::{Sbml, NS_QUAL, URL_PACKAGE_QUAL, URL_SBML_CORE};
+    ///
+    /// // A fresh document declares no package at all.
+    /// let document = Sbml::read_str(&format!(
+    ///     r#"<?xml version="1.0" encoding="UTF-8"?>
+    ///        <sbml xmlns="{URL_SBML_CORE}" level="3" version="2"/>"#
+    /// ))
+    /// .expect("The document is well formed.");
+    /// assert!(document.declared_package_prefix(NS_QUAL).is_err());
+    ///
+    /// // Activating one declares its conventional prefix and a `required="false"` attribute.
+    /// document
+    ///     .activate_package(NS_QUAL)
+    ///     .expect("The qual namespace can be declared.");
+    /// assert_eq!(document.declared_package_prefix(NS_QUAL), Ok("qual".to_string()));
+    ///
+    /// // Activating it again changes nothing: the declaration is already there.
+    /// document.activate_package(NS_QUAL).expect("Activating twice is fine.");
+    /// assert_eq!(document.declared_package_prefix(NS_QUAL), Ok("qual".to_string()));
+    /// ```
+    pub fn activate_package(&self, package: Namespace) -> Result<(), String> {
         let element = self.xml_element().element();
         let namespace = to_xml_namespace(package).ok_or_else(|| {
             format!(

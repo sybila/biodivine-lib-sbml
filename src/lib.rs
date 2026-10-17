@@ -114,12 +114,12 @@ use embed_doc_image::embed_doc_image;
 use xml::RequiredProperty;
 
 use crate::cancellation::CancellationCheck;
-use crate::constants::namespaces::NS_SBML_CORE;
+use crate::constants::namespaces::Namespace;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
-use crate::xml::{OptionalSbmlChild, OptionalXmlChild, XmlElement, XmlWrapper};
+use crate::xml::{OptionalSbmlChild, OptionalXmlChild, SbmlObject, XmlElement, XmlWrapper};
 
 pub mod constraint;
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
@@ -138,6 +138,37 @@ pub mod xml;
 /// [`SbmlIssue`] a failed check produces.
 mod validation;
 pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
+
+/// The SBML namespaces, as the `(prefix, url)` pairs this crate writes with, and the root
+/// namespace set of the documents it recognizes.
+///
+/// A namespace is identified by its URL; the prefix is only the conventional spelling the crate
+/// writes new names with, and a document that binds the URL under another prefix is read the same
+/// way. An SBML extension needs three things from this list: [`NS_SBML_CORE`] (the namespace of the
+/// elements it extends and of the attributes a core element carries), its own namespace (declared
+/// with [`SbmlObject`] as a pair of its own, for example
+/// `#[sbml_object(name = "myGraph", namespace = ("myext", "http://example.org/myext"))]`), and
+/// [`NS_XSI`] when one of its types is discriminated by `xsi:type` rather than by its local name.
+///
+/// The value type of these constants is [`Namespace`], which lives in the [`xml`]
+/// module: this module exports the values, `xml` exports the type, so each item has exactly one
+/// canonical path.
+///
+/// [`SBML_ROOT_NAMESPACES`] is the set of SBML document roots, which is data a later level module
+/// extends; see its own documentation for exactly what a membership in that set means.
+pub use crate::constants::namespaces::{
+    NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_MATHML, NS_QUAL, NS_SBML_CORE, NS_XSI,
+    SBML_ROOT_NAMESPACES, URL_EMPTY, URL_HTML, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
+    URL_PACKAGE_QUAL, URL_SBML_CORE, URL_XSI,
+};
+
+/// Writes the `xsi:type` attribute of an element, declaring the XML Schema instance namespace on it
+/// when necessary.
+///
+/// This is the write half of [`SbmlObject::XSI_TYPE`], and the constructor
+/// an extension's `#[sbml_object(..)]` declaration generates calls it; it is public because an
+/// extension that sets the attribute outside a constructor needs the same declaration.
+pub use crate::xml::set_xsi_type;
 
 /// **(internal)** The periodic cancellation check shared by every document walk of this crate.
 pub(crate) mod cancellation;
@@ -533,6 +564,35 @@ impl From<XmlElement> for Sbml {
 
 impl SBase for Sbml {}
 
+/// The `<sbml>` root element is an SBML object like any other, and this is its identity.
+///
+/// The declaration differs from the one every other type gets from `#[sbml_object(..)]` in exactly
+/// one way: **the namespace is a set**, not a single URL. An SBML document root legitimately carries
+/// the namespace of its level and version (Level 1 through Level 3, see
+/// [`SBML_ROOT_NAMESPACES`]), and this crate recognizes all of them, so
+/// a type test that accepted only the Level 3 Version 2 namespace would reject documents the crate
+/// reads and validates happily. The set lives in a public data constant, so a level module that
+/// teaches the crate a new root namespace extends data rather than this code.
+///
+/// [`ELEMENT_NAMESPACE`](SbmlObject::ELEMENT_NAMESPACE) is therefore **the namespace this crate
+/// writes with** ([`NS_SBML_CORE`]) — the namespace of the documents the crate
+/// *creates* — and [`matches_element`](SbmlObject::matches_element) is what decides recognition,
+/// accepting any URL of the constant.
+///
+/// Like [`Sbml::default`], whose element is a fresh, valid skeleton of the Level 3 Version 2
+/// namespace, this hand-written identity declares **no constructor**: its `CONSTRUCT` is `None`,
+/// because the root is built either by reading a document or by [`Sbml::default`], and a
+/// `new_empty(document)` would have to invent a level and a version.
+impl SbmlObject for Sbml {
+    const ELEMENT_NAME: &'static str = "sbml";
+    const ELEMENT_NAMESPACE: Namespace = NS_SBML_CORE;
+
+    fn matches_element(element: &XmlElement) -> bool {
+        element.tag_name() == Self::ELEMENT_NAME
+            && SBML_ROOT_NAMESPACES.contains(&element.namespace_url().as_str())
+    }
+}
+
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum SbmlIssueSeverity {
     /// An issue that makes the document impossible to read correctly (e.g. a function is
@@ -550,8 +610,8 @@ pub enum SbmlIssueSeverity {
 #[cfg(test)]
 mod tests {
     use crate::constants::namespaces::{
-        NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
-        URL_SBML_CORE,
+        NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_SBML_CORE, SBML_ROOT_NAMESPACES, URL_PACKAGE_FBC,
+        URL_PACKAGE_LAYOUT, URL_SBML_CORE,
     };
     use crate::constraint::FbcSpecies;
     use crate::core::sbase::SbmlUtils;
@@ -566,9 +626,9 @@ mod tests {
     };
     use crate::layout::GeneralGlyph;
     use crate::xml::{
-        OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild, RequiredDynamicProperty,
-        RequiredXmlChild, RequiredXmlProperty, XmlChild, XmlChildDefault, XmlDefault, XmlElement,
-        XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
+        Document, OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild,
+        RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty, SbmlObject, XmlChild,
+        XmlChildDefault, XmlDefault, XmlElement, XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
     use crate::Sbml;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -2019,6 +2079,85 @@ mod tests {
             .unwrap()
             .text_content()
             .starts_with("Warning:"));
+    }
+
+    /// The identity of the document root accepts the namespace of *every* published SBML level and
+    /// version, and nothing else.
+    ///
+    /// What this proves, precisely: `matches_element` is a membership test over the public constant
+    /// `SBML_ROOT_NAMESPACES` — every URL the constant holds is accepted (so the constant cannot
+    /// drift from the type test, which would fail here if the test compared against a single URL),
+    /// and the two-sided part of the check is that a URL *outside* the constant is rejected. It does
+    /// not, and cannot, enumerate the URLs a later level might define: what makes that a data change
+    /// is that the implementation reads the constant instead of listing URLs itself.
+    #[test]
+    pub fn test_sbml_root_identity_is_a_membership_test_over_the_constant() {
+        let document = || {
+            Document::parse_string(r#"<?xml version="1.0" encoding="UTF-8"?><probe/>"#)
+                .expect("The probe document is well formed.")
+        };
+        // The namespaces are `&'static str` constants, so the closure takes one directly.
+        let root = |namespace: &'static str| {
+            XmlElement::new_qualified(document(), "sbml", ("", namespace))
+        };
+
+        assert!(SBML_ROOT_NAMESPACES.len() >= 8);
+        for namespace in SBML_ROOT_NAMESPACES {
+            let element = root(namespace);
+            assert!(
+                Sbml::matches_element(&element),
+                "The root identity must accept the namespace {namespace}."
+            );
+            assert!(Sbml::try_from_element(element).is_some());
+        }
+
+        // The negative direction, so the membership claim is two-sided.
+        for foreign in [
+            "http://www.w3.org/1999/xhtml", // a namespace this crate knows, but not an SBML root
+            "http://www.sbml.org/sbml/level9", // a level that does not exist
+            "",                             // a document whose root declares no namespace
+            "http://www.sbml.org/sbml/level2/version6", // not defined by any specification
+        ] {
+            let element = root(foreign);
+            assert!(
+                !Sbml::matches_element(&element),
+                "The root identity must reject the namespace {foreign}."
+            );
+            assert!(Sbml::try_from_element(element).is_none());
+        }
+
+        // The name half of the identity is checked as well.
+        let wrong_name = XmlElement::new_qualified(document(), "model", NS_SBML_CORE);
+        assert!(!Sbml::matches_element(&wrong_name));
+
+        // The namespace the crate *writes* with is the level 3 version 2 namespace, which is what
+        // `ELEMENT_NAMESPACE` means for the root (a non-L3V2 document's root carries another one).
+        assert_eq!(<Sbml as SbmlObject>::ELEMENT_NAMESPACE, NS_SBML_CORE);
+        assert_eq!(<Sbml as SbmlObject>::ELEMENT_NAME, "sbml");
+        assert!(<Sbml as SbmlObject>::CONSTRUCT.is_none());
+    }
+
+    /// The document *reader* stays namespace-agnostic: it dispatches on the local name, so a
+    /// document whose root uses the namespace of another level is still recognized as an SBML
+    /// document (and its issues are then reported as usual). Level dispatch is a separate concern;
+    /// what this test pins is that adding the root identity did not tighten the reader.
+    #[test]
+    pub fn test_the_reader_still_accepts_other_sbml_levels() {
+        for namespace in [
+            "http://www.sbml.org/sbml/level1",
+            "http://www.sbml.org/sbml/level2/version4",
+        ] {
+            let document = Sbml::read_str(&format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+                   <sbml xmlns="{namespace}" level="1" version="1"><model/></sbml>"#
+            ))
+            .expect("An older-level document is readable XML.");
+            assert_eq!(document.xml_element().tag_name(), "sbml");
+            assert!(
+                Sbml::try_for_child_element(document.xml_element()).is_some(),
+                "The reader must still recognize an {namespace} root."
+            );
+        }
     }
 
     #[test]
