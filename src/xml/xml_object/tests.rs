@@ -2,13 +2,13 @@
 //!
 //! Five kinds of check live here, and they are complementary:
 //!
-//!  * the **56-row identity table** is exercised row by row — every type must accept its own
+//!  * the **71-row identity table** is exercised row by row — every type must accept its own
 //!    element name(s) in its own namespace, and must reject a foreign local name and a foreign
 //!    namespace, and a namespace that is the same URI under another prefix must still be accepted;
 //!  * the **constructor table** constructs every type that has an identity-derived constructor and
 //!    checks the result with the same function the negative probes use: the constructor must write
 //!    the element the declaration describes, in the declared namespace, and a planted wrong name or
-//!    wrong namespace must be rejected. The row arithmetic (constructed + omitted = 56, and the
+//!    wrong namespace must be rejected. The row arithmetic (constructed + omitted = 71, and the
 //!    omitted rows are exactly the declared, derived set) is asserted, so the table cannot cover
 //!    fewer types by accident;
 //!  * the **special cases** get their own tests: the `xsi:type` discrimination of the curve segment
@@ -25,7 +25,8 @@
 //!    element-name scan at the end of this module.
 
 use crate::constants::namespaces::{
-    NS_FBC, NS_HTML, NS_LAYOUT, NS_QUAL, NS_SBML_CORE, URL_MATHML, URL_SBML_CORE, URL_XSI,
+    NS_FBC, NS_HTML, NS_LAYOUT, NS_MATHML, NS_QUAL, NS_SBML_CORE, URL_MATHML, URL_SBML_CORE,
+    URL_XSI,
 };
 use crate::constraint::{
     And, Association, FbcReaction, FbcSpecies, FluxObjective, GeneProduct, GeneProductAssociation,
@@ -33,14 +34,18 @@ use crate::constraint::{
 };
 use crate::core::{
     AbstractRule, AlgebraicRule, AssignmentRule, Compartment, Constraint, Delay, Event,
-    EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
-    Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Species,
-    SpeciesReference, Trigger, Unit, UnitDefinition,
+    EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Model,
+    ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Species, SpeciesReference,
+    Trigger, Unit, UnitDefinition,
 };
 use crate::layout::{
     BoundingBox, CompartmentGlyph, CubicBezier, Curve, Dimensions, GeneralGlyph, GraphicalObject,
     Layout, LineSegment, Point, ReactionGlyph, ReferenceGlyph, SpeciesGlyph, SpeciesReferenceGlyph,
     TextGlyph, XsiType,
+};
+use crate::math::{
+    Annotation, AnnotationXml, Apply, BVar, Ci, Cn, Csymbol, Degree, Lambda, Logbase, Math,
+    Otherwise, Piece, Piecewise, Semantics, Sep,
 };
 use crate::qual::{
     AbstractTerm, DefaultTerm, FunctionTerm, QualInput, QualOutput, QualitativeSpecies, Transition,
@@ -52,8 +57,8 @@ use crate::Sbml;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-/// The names of all 56 wrapper types of this crate, in one place, so that the checks below cannot
-/// cover 55 of them by accident. Every macro that is applied to this list fails to compile when a
+/// The names of all 71 wrapper types of this crate, in one place, so that the checks below cannot
+/// cover 70 of them by accident. Every macro that is applied to this list fails to compile when a
 /// type is added to it without an implementation of the trait it exercises.
 macro_rules! for_each_object_type {
     ($action:ident) => {
@@ -82,7 +87,23 @@ macro_rules! for_each_object_type {
             AlgebraicRule,
             AssignmentRule,
             RateRule,
+            // mathml
             Math,
+            Apply,
+            BVar,
+            Ci,
+            Cn,
+            Csymbol,
+            Degree,
+            Lambda,
+            Logbase,
+            Otherwise,
+            Piece,
+            Piecewise,
+            Semantics,
+            Sep,
+            Annotation,
+            AnnotationXml,
             // fbc
             FbcSpecies,
             FbcReaction,
@@ -269,14 +290,14 @@ fn the_identity_table_covers_every_wrapper_type_exactly_once() {
     let identities = identities();
     assert_eq!(
         identities.len(),
-        56,
-        "The table must cover all 56 wrapper types."
+        71,
+        "The table must cover all 71 wrapper types."
     );
     let names = identities
         .iter()
         .map(|(type_name, ..)| *type_name)
         .collect::<BTreeSet<_>>();
-    assert_eq!(names.len(), 56, "Two rows share a type name.");
+    assert_eq!(names.len(), 71, "Two rows share a type name.");
 
     // Every element name is recognized by at least one type of its namespace, and every
     // namespace that appears is one of the namespaces this crate supports.
@@ -527,8 +548,8 @@ fn every_constructor_builds_the_element_of_its_declared_identity() {
     // constructed, and the table cannot shrink silently.
     let rows = identities().len();
     assert_eq!(
-        rows, 56,
-        "The identity table must cover all 56 wrapper types."
+        rows, 71,
+        "The identity table must cover all 71 wrapper types."
     );
     assert_eq!(
         constructed.len() + omitted.len(),
@@ -538,8 +559,8 @@ fn every_constructor_builds_the_element_of_its_declared_identity() {
     );
     assert_eq!(
         constructed.len(),
-        53,
-        "Exactly the 53 types that declare an element of their own have a constructor."
+        68,
+        "Exactly the 68 types that declare an element of their own have a constructor."
     );
     assert_eq!(
         omitted.iter().copied().collect::<BTreeSet<_>>(),
@@ -602,7 +623,7 @@ fn every_constructor_builds_the_element_of_its_declared_identity() {
             (NS_LAYOUT.1, 15),   // layout: all 15 declarations have a constructor
             (NS_QUAL.1, 6),      // qual: 7 declarations, `AbstractTerm` omitted
             (NS_FBC.1, 7),       // fbc: 8 declarations, `Association` omitted
-            (URL_MATHML, 1),     // the MathML formula element
+            (URL_MATHML, 16),    // the MathML formula element and the 15 structural constructs
         ]),
         "The namespaces the constructors produced changed."
     );
@@ -889,20 +910,33 @@ const EXPLICIT_NAME_CREATION_ALLOW_LIST: &[(&str, &str)] = &[(
      the name to the named form",
 )];
 
-/// The only place in the non-test sources that builds an element from a name/namespace pair of its
-/// own instead of through a constructor.
+/// The places in the non-test sources that build an element from a name/namespace pair of their own
+/// instead of through a constructor, as `(file, receiver, function, justification)`.
 ///
-/// [`XmlElement::new_qualified`] is the primitive every identity-derived constructor is built on, so
-/// a site of it outside the creation path is exactly the kind of bypass that made the original
-/// defect invisible: the site would write whatever name and namespace it likes. The test asserts set
-/// equality against the sites found under `src/`, so a new bypass has to be justified here.
-const NEW_QUALIFIED_ALLOW_LIST: &[(&str, &str, &str)] = &[(
-    "core/sbase.rs",
-    "XmlElement",
-    "the body of `SbmlUtils::new_empty_named`, which is the named form the allow-list above calls; \
-     its `tag_name` is the caller's choice and its namespace is the core namespace the trait is \
-     restricted to",
-)];
+/// The two primitives (`new_qualified` and `new_qualified_undeclared`) are what every
+/// identity-derived constructor is built on, so a site outside the creation path is exactly the kind
+/// of bypass that made the original defect invisible: the site would write whatever name and
+/// namespace it likes. The test asserts set equality against the sites found under `src/`, so a new
+/// bypass has to be justified here.
+const NEW_QUALIFIED_ALLOW_LIST: &[(&str, &str, &str, &str)] = &[
+    (
+        "core/sbase.rs",
+        "XmlElement",
+        "new_qualified",
+        "the body of `SbmlUtils::new_empty_named`, which is the named form the allow-list above \
+         calls; its `tag_name` is the caller's choice and its namespace is the core namespace the \
+         trait is restricted to",
+    ),
+    (
+        "math/node.rs",
+        "XmlElement",
+        "new_qualified_undeclared",
+        "the body of `new_math_element`, which is how the typed MathML layer creates a node: the name \
+         and the namespace come from the declared identity of the type, and the declaration is the \
+         one thing it leaves out, because a formula built at once declares the MathML namespace once, \
+         on its root (`Math::new_empty`), instead of once per node",
+    ),
+];
 
 /// The Rust sources of this crate, in a deterministic order.
 fn rust_sources(root: &Path) -> Vec<PathBuf> {
@@ -970,13 +1004,25 @@ fn named_creation_sites(source: &str) -> Vec<(String, Option<String>)> {
         .collect()
 }
 
-/// The `T::new_qualified(…)` sites of a source, as the names of the receivers.
-fn qualified_creation_sites(source: &str) -> Vec<String> {
-    let pattern = regex::Regex::new(r#"(\w+)::new_qualified\("#)
+/// The raw name/namespace creation sites of a source, as `(receiver, function)` pairs.
+///
+/// Two primitives build an element from a name/namespace pair: [`XmlElement::new_qualified`], which
+/// declares the namespace on the new element, and `XmlElement::new_qualified_undeclared`, which
+/// deliberately does not (the caller declares it once, on the root of the subtree the element is
+/// part of). Both are functions of the XML layer that bypass the declared identity of a type, so
+/// both are enumerated by this scan, and the function name is part of the site so that a new use of
+/// either primitive cannot hide behind an entry made for the other.
+fn qualified_creation_sites(source: &str) -> Vec<(String, String)> {
+    let pattern = regex::Regex::new(r#"(\w+)::(new_qualified(?:_undeclared)?)\("#)
         .expect("The qualified-creation pattern is a valid regular expression.");
     pattern
         .captures_iter(source)
-        .map(|it| it.get(1).expect("Group 1.").as_str().to_string())
+        .map(|it| {
+            (
+                it.get(1).expect("Group 1.").as_str().to_string(),
+                it.get(2).expect("Group 2.").as_str().to_string(),
+            )
+        })
         .collect()
 }
 
@@ -1110,8 +1156,8 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
         }
 
         // (d) The raw name/namespace pairs: set equality against the allow-list below.
-        for type_name in qualified_creation_sites(&source) {
-            qualified_sites.insert((short.clone(), type_name));
+        for (receiver, function) in qualified_creation_sites(&source) {
+            qualified_sites.insert((short.clone(), receiver, function));
         }
     }
 
@@ -1133,7 +1179,11 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
         qualified_sites,
         NEW_QUALIFIED_ALLOW_LIST
             .iter()
-            .map(|(file, receiver, _reason)| (file.to_string(), receiver.to_string()))
+            .map(|(file, receiver, function, _reason)| (
+                file.to_string(),
+                receiver.to_string(),
+                function.to_string()
+            ))
             .collect::<BTreeSet<_>>(),
         "An element is built from a name/namespace pair of its own outside the allowed site: use a \
          constructor, or add the site to NEW_QUALIFIED_ALLOW_LIST with a justification."
@@ -1154,13 +1204,18 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
 /// they implement is vacuous. This test feeds them a planted fragment and checks every verdict.
 #[test]
 fn the_creation_scanners_reject_planted_sites() {
-    let planted = r#"
+    // The planted fragment names the namespaces through the constants, so the scan is exercised on
+    // the same shapes the crate itself writes.
+    let planted = &format!(
+        r#"
         let a = Species::new_empty(document);
         let b = NotAType::new_empty(document);
         let c = FluxObjective::new_empty_named(document, "wrongName");
         let d = AbstractRule::new_empty_named(document, tag_name);
-        let e = XmlElement::new_qualified(document, "species", NS_SBML_CORE);
-    "#;
+        let e = XmlElement::new_qualified(document, "species", {NS_SBML_CORE:?});
+        let f = XmlElement::new_qualified_undeclared(document, "apply", {NS_MATHML:?});
+    "#
+    );
 
     // A document handle under another name must be seen as well, or a caller could step around the
     // scan by renaming the argument.
@@ -1187,7 +1242,16 @@ fn the_creation_scanners_reject_planted_sites() {
             ("AbstractRule".to_string(), None),
         ]
     );
-    assert_eq!(qualified_creation_sites(planted), ["XmlElement"]);
+    assert_eq!(
+        qualified_creation_sites(planted),
+        vec![
+            ("XmlElement".to_string(), "new_qualified".to_string()),
+            (
+                "XmlElement".to_string(),
+                "new_qualified_undeclared".to_string()
+            ),
+        ]
+    );
 
     // A type with an identity is fine; one without is a defect.
     assert_eq!(identity_creation_defect("Species"), None);
@@ -1204,13 +1268,16 @@ fn the_creation_scanners_reject_planted_sites() {
     );
     assert!(named_creation_defect("AbstractRule", Some("curveSegment")).is_some());
 
-    // The same holds for the raw name/namespace pair.
+    // The same holds for the raw name/namespace pair, and the function is part of the site: an
+    // entry made for `new_qualified` does not cover a `new_qualified_undeclared` site.
     assert!(NEW_QUALIFIED_ALLOW_LIST
         .iter()
-        .any(|(file, receiver, _reason)| *file == "core/sbase.rs" && *receiver == "XmlElement"));
+        .any(|(file, receiver, function, _reason)| {
+            *file == "core/sbase.rs" && *receiver == "XmlElement" && *function == "new_qualified"
+        }));
     assert!(!NEW_QUALIFIED_ALLOW_LIST
         .iter()
-        .any(|(file, _receiver, _reason)| *file == "core/math.rs"));
+        .any(|(file, _receiver, _function, _reason)| *file == "core/math.rs"));
 }
 
 /// Returns `true` if `type_name` declares `literal` as one of its element names.
@@ -1664,10 +1731,15 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
 
     // The scan has to have looked at every key and value, otherwise it would be vacuous. The
     // numbers are pinned: 26 keys and 32 values in `REQUIRED_CHILDREN`, 88 keys and 294 values in
-    // `ALLOWED_CHILDREN`, 88 keys and 249 values in `UNIQUE_CHILDREN`. They are four values lower
-    // than the tables held before this unit's fixes, which removed the four phantom names
-    // (`boundingBox` from two glyph lists, `curveSegments` and the `listOfObjectives` self-entry);
-    // the *universe* of accepted names is what must not shrink, and it is asserted separately.
+    // `ALLOWED_CHILDREN`, 88 keys and 249 values in `UNIQUE_CHILDREN`, and the exception set below
+    // is empty (every exception is enumerated and asserted against what the scan finds).
+    //
+    // Re-measured when the typed MathML layer joined the identity table: the 15 declared MathML
+    // types grow the *universe* (asserted by the guard below the scan) but none of their names occurs
+    // in these three tables — every occurrence of them in `src/constants/element.rs` is in the
+    // `MATHML_*` tables, which this scan deliberately does not read, because their universe is the
+    // MathML content dictionary rather than the object model. So the counts and the findings are
+    // unchanged, and a delta here would mean a MathML name leaked into an SBML table.
     assert_eq!(
         checked, 777,
         "The element-name scan checked {checked} names instead of 777."
@@ -1726,6 +1798,15 @@ fn the_element_name_universe_is_not_empty_and_not_permissive() {
         !universe.contains("graphicalObjects"),
         "A plural that no declaration recognizes must not be in the universe."
     );
+    // The MathML element names enter the universe through the identity rows of `crate::math`, so the
+    // growth is pinned here: a wrapper that is dropped from the table shrinks the universe, which is
+    // what makes the element-name scan above able to report it.
+    for name in ["apply", "piecewise", "annotation-xml", "csymbol"] {
+        assert!(
+            universe.contains(name),
+            "The declared MathML element <{name}> is missing from the universe."
+        );
+    }
     // The list-item candidates are what the item rule accepts for a key.
     assert!(list_item_candidates("listOfTextGlyphs").contains("textGlyph"));
     assert!(list_item_candidates("listOfSpecies").contains("species"));
