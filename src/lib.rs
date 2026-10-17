@@ -474,21 +474,25 @@ impl Sbml {
     ///  4. nothing else: a type-check issue no longer suppresses the walk of the rest of the
     ///     document, so a document with one broken compartment is still validated everywhere else.
     ///
-    /// So a caller detects that part of a document was *not* validated by looking for a
-    /// `not-validated` issue ([`SbmlIssue::rule`] is `not-validated`, and
-    /// [`SbmlIssue::kind`] is [`RuleKind::LibraryLint`]); the element it is attached to is the root
-    /// of the subtree that was skipped, and its message names the first rule the type check
-    /// reported for that element. A report without such an issue means that every object of the
-    /// document was walked.
+    /// So a caller detects that part of a document was *not* validated with
+    /// [`SbmlIssue::is_not_validated`] (the rule id is `not-validated` and the kind is
+    /// [`RuleKind::LibraryLint`]); the element the issue is attached to is the root of the subtree
+    /// that was skipped, and its message names the first rule the type check reported for that
+    /// element. A report without such an issue means that every object of the document was walked.
     ///
     /// **The typed accessors remain unsafe on an element with a type-check issue.** The type check
     /// is no longer a gate for the walk, but it is still the gate for typed access: reading a
-    /// property or child of an element whose type check failed can panic. A document is safe to
-    /// work with *through the typed API* exactly when the report contains no issue whose element
-    /// has a type-check problem - the `SANITY_CHECK` diagnostics and the specification rules the
-    /// type check maps to (for example `10102`, `20517`). To edit such a document, fix the reported
-    /// problems (the crate allows editing a document that is invalid in other ways) and validate
-    /// again before reading it through the typed API.
+    /// property or child of an element whose type check failed can panic. What the type check
+    /// reports for an element is not enumerable from the outside - it emits `SANITY_CHECK`, the
+    /// specification rules its element tables name (for example `10102`, `20517`) and the rules of
+    /// the checks next to the element (for example `layout-10401`) - so the rule to follow is:
+    /// treat the typed view of an element as unusable when the report names a problem on it, and
+    /// look at [`SbmlIssue::is_not_validated`] for the subtrees the walk skipped. The evidence that
+    /// this is sufficient is the corpus: the panic inventory of
+    /// `scripts/corpus_panic_inventory.py` reports zero documents for the whole syntactic test
+    /// suite, and the guard exists because it reported 73 before this design. To edit such a
+    /// document, fix the reported problems (the crate allows editing a document that is invalid in
+    /// other ways) and validate again before reading it through the typed API.
     ///
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as writing
@@ -674,6 +678,30 @@ mod tests {
     use std::path::Path;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+
+    /// The content of a document of the SBML syntactic test suite, or `None` when the corpus is
+    /// not unpacked.
+    ///
+    /// The corpus is downloaded, not part of the repository (see `VALIDATION.md`), so a test that
+    /// reads a document of it has to be able to skip: it prints why and returns, which is the same
+    /// convention as `scripts/full_corpus_parity.sh` and `scripts/verify.sh` (a corpus gate reports
+    /// a skip and exits successfully). A test that skips proves nothing about the corpus, but it
+    /// must not make `cargo test` fail on a fresh checkout.
+    fn corpus_document(name: &str) -> Option<String> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("syntactic")
+            .join(name);
+        match std::fs::read_to_string(&path) {
+            Ok(source) => Some(source),
+            Err(_) => {
+                println!(
+                    "skipping: the document {} is not unpacked (see VALIDATION.md)",
+                    path.display()
+                );
+                None
+            }
+        }
+    }
 
     /// Utility method to create [SId] objects used during testing (we assume the ID is valid).
     pub fn sid(value: &str) -> SId {
@@ -1140,14 +1168,16 @@ mod tests {
     /// to Version 2).
     #[test]
     pub fn test_a_type_check_issue_does_not_skip_the_document() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("syntactic");
         for name in [
             "fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml",
             "fbc-20908/fbc-20908-fail-01-01-sev2-l3v1.xml",
         ] {
-            let path = root.join(name);
-            let source = std::fs::read_to_string(&path)
-                .unwrap_or_else(|error| panic!("cannot read {}: {error}", path.display()));
+            let Some(source) = corpus_document(name) else {
+                return;
+            };
+            // The documents of this corpus half are Level 3 Version 1 files: the test therefore
+            // asserts the contract on the *translated* content (the namespace lift the harness
+            // applies), not on a hand-written document.
             let source = source.replace(
                 "http://www.sbml.org/sbml/level3/version1/core",
                 "http://www.sbml.org/sbml/level3/version2/core",
@@ -1186,12 +1216,14 @@ mod tests {
     /// suppress, so this is the case the architecture change was about.
     #[test]
     pub fn test_a_type_check_issue_on_the_root_leaves_the_walk_intact() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("syntactic");
         for name in [
             "20101/20101-fail-01-08-sev2-l3v2.xml",
             "20101/20101-fail-01-09-sev2-l3v2.xml",
         ] {
-            let document = Sbml::read_path(root.join(name).to_str().expect("a path"))
+            let Some(source) = corpus_document(name) else {
+                return;
+            };
+            let document = Sbml::read_str(&source)
                 .unwrap_or_else(|error| panic!("cannot read {name}: {error}"));
             let issues = document
                 .validate()

@@ -112,6 +112,16 @@ where a change to the `SANITY_CHECK` diagnostics or to `unused-namespace` is vis
 snapshot diff. If a lint ever needs its own census-like snapshot, the cheap extension is a
 separate report file next to `test_suite_issues.txt` rather than a second filtering rule.
 
+A check that is correct but stricter than the suite's reference implementation makes the filtered
+run red without anything being wrong: the document does violate the rule, the suite's expectation
+file simply does not list it. Such a case is recorded as a `KnownDifference` (the harness type of
+`sbml-test-suite`, listed by the example) - one entry per rule *and* document, with the reason and
+the specification citation - and an issue an entry covers is not counted in the mismatch reports.
+The rule stays implemented and enabled, and the unfiltered issue dump still contains the reported
+issue, so the disagreement stays visible in the recorded data; the alternative would be to weaken a
+correct check or to disable its rule id, and neither is acceptable. Three entries exist today, all
+for rule `10215` (`20212-fail-01-02`, `20229-fail-01-02`, `21172-fail-01-03`).
+
 The `not-validated` lint is the third diagnostic of the library, and it is how a caller detects
 that a part of a document was not validated. `Sbml::validate` runs the type check, then the
 `unused-namespace` lint, then the walk of the object model; the walk visits every object whose own

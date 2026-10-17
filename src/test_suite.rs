@@ -15,6 +15,9 @@ fn sbml_test_suite_syntactic() {
         None,
         true,
         |id| RuleSet::CORE.is_spec_rule(id),
+        // The silent run only measures coverage and detects a hard failure, so it needs no
+        // documented differences: the census it produces is not compared against the suite.
+        &[],
         test_document,
     );
 }
@@ -150,6 +153,7 @@ mod tests {
                     None,
                     true,
                     |id| RuleSet::CORE.is_spec_rule(id),
+                    &[],
                     test_document,
                 )
             }));

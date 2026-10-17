@@ -75,6 +75,21 @@ impl SbmlIssue {
         self.rule
     }
 
+    /// Whether this issue is the walk's `not-validated` note, i.e. the report that the object this
+    /// issue is attached to was *not* validated.
+    ///
+    /// This is the programmatic half of the contract of [`Sbml::validate`](crate::Sbml::validate):
+    /// the issue is attached to the root of the subtree the walk skipped, its message names the
+    /// first rule the type check reported for that element, and the typed accessors of the element
+    /// (and of everything below it) are unusable - the type check is still the gate for typed
+    /// access. The other half of the contract is the type check itself: an issue of a rule the type
+    /// check reports (for example [`SANITY_CHECK`](crate::validation::RuleSet) or `10102`) on an
+    /// element means the typed reads of that element may panic, whether or not a `not-validated`
+    /// note is reported for it.
+    pub fn is_not_validated(&self) -> bool {
+        self.rule == "not-validated"
+    }
+
     /// Whether the rule that found this issue is a specification rule or a library lint.
     pub fn kind(&self) -> RuleKind {
         self.kind

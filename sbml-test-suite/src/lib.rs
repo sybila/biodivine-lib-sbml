@@ -6,6 +6,35 @@ const L3V1_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
 /// The namespace of SBML Level 3 Version 2 Core.
 const L3V2_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
 
+/// A disagreement between the library and the expectation files of the suite that is accepted and
+/// documented, instead of being counted as a mismatch.
+///
+/// The suite's expectation files list the issues its own reference implementation reports, so a
+/// check of this library that is *correct* but stricter than that implementation makes the filtered
+/// gate red without anything being wrong: the document does violate the rule, the suite just does
+/// not list it (typically because the reference implementation stops at the first problem of a
+/// document, or because the rule is not one it implements). Such a disagreement is recorded here,
+/// one entry per rule and document, with the reason and the specification citation, so that it is
+/// visible in the harness instead of hidden in a disabled rule id: the rule stays implemented and
+/// enabled, the *unfiltered* dump still shows the reported issue, and only the comparison against
+/// the suite's list is relaxed for exactly that pair.
+#[derive(Debug, Clone, Copy)]
+pub struct KnownDifference {
+    /// The rule id the library reports.
+    pub rule: &'static str,
+    /// A substring of the `directory/file` name of the documents it applies to.
+    pub document: &'static str,
+    /// Why the library is right and the suite's list does not mention it, with the citation.
+    pub reason: &'static str,
+}
+
+impl KnownDifference {
+    /// Whether this entry covers a reported issue of a document.
+    pub fn covers(&self, rule: &str, document: &str) -> bool {
+        self.rule == rule && document.contains(self.document)
+    }
+}
+
 /// The result of a whole-corpus run of [`test_helper`].
 pub struct TestResults {
     /// Mismatches where the library reported an issue the suite does not expect, by severity.
@@ -155,11 +184,15 @@ pub fn corpus_documents(dir_path: &str, all_versions: bool) -> Vec<CorpusRule> {
 ///
 /// Besides the mismatch reports, the result carries a line for every reported issue of every
 /// document (see [`TestResults::issues`]).
+///
+/// `known_differences` lists the disagreements that are accepted and documented (see
+/// [`KnownDifference`]); an issue that one of them covers is reported in neither mismatch report.
 pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
     dir_path: &str,
     filter: Option<HashSet<String>>,
     all_versions: bool,
     is_spec_rule: impl Fn(&str) -> bool,
+    known_differences: &[KnownDifference],
     read_document: F,
 ) -> TestResults {
     if let Some(filter) = filter.as_ref() {
@@ -234,6 +267,16 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                     if filter_rule(rule_id.as_str()) && is_spec_rule(rule_id.as_str()) {
                         if let Some(entry) = expected.get_mut(rule_id) {
                             entry.1 -= 1;
+                        } else if let Some(known) = known_differences
+                            .iter()
+                            .find(|known| known.covers(rule_id, &document.id()))
+                        {
+                            println!(
+                                " >> Known difference: {} on {} - {}",
+                                rule_id,
+                                document.id(),
+                                known.reason
+                            );
                         } else {
                             println!(
                                 " >> Found issue {} that is not in the expected list.",

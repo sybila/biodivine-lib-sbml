@@ -1,6 +1,6 @@
 use biodivine_lib_sbml::{RuleSet, Sbml, SbmlError, SbmlIssueSeverity};
 use biodivine_lib_xml_dom::Document;
-use sbml_test_suite::{corpus_documents, test_helper};
+use sbml_test_suite::{corpus_documents, test_helper, KnownDifference};
 use std::collections::HashSet;
 
 /// This is an integration test that uses the examples from the SBML test suite
@@ -64,6 +64,7 @@ fn main() {
         filter,
         true,
         |id| RuleSet::CORE.is_spec_rule(id),
+        KNOWN_DIFFERENCES,
         move |document| {
             if !report_panics {
                 return test_document(document);
@@ -252,6 +253,40 @@ fn abbreviated(text: &str) -> String {
         escaped
     }
 }
+
+/// The disagreements between this library and the expectation files of the suite that are accepted,
+/// with the reason and the citation for each.
+///
+/// An entry does not disable a rule: the rule stays implemented and enabled, the *unfiltered* issue
+/// dump still contains the reported issue (which is what makes it visible in the recorded snapshot
+/// of `scripts/full_corpus_parity.sh`), and only the comparison against the suite's own list is
+/// relaxed, for exactly the rule and documents named here. Every entry is a case where the library
+/// is right about the specification and the suite's reference implementation does not report the
+/// violation, so the alternative to listing it would be to weaken a correct check.
+const KNOWN_DIFFERENCES: &[KnownDifference] = &[
+    KnownDifference {
+        rule: "10215",
+        document: "20212-fail-01-02",
+        reason: "The document puts a stray <initialAssignment/> inside <listOfRules>, which the \
+                 suite reports as 20212, and its <assignmentRule> refers to <ci> c </ci> - a \
+                 compartment the model does not define. L3V2 rule 10215 requires every <ci> that is \
+                 not the first child of an <apply> to name an existing model entity, so the report \
+                 is correct and the expectation file (which lists only 20212) does not mention it.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "20229-fail-01-02",
+        reason: "Same shape as 20212-fail-01-02, in <listOfConstraints>: the constraint's <math> \
+                 refers to an entity the model does not define, which L3V2 rule 10215 forbids.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "21172-fail-01-03",
+        reason: "The local parameter of this document has no `id` (the suite reports 21172), and the \
+                 kinetic law's <math> refers to it as <ci> k1 </ci>; the reference cannot be \
+                 resolved, which L3V2 rule 10215 forbids. The expectation file lists 21172 only.",
+    },
+];
 
 /// The message this example prints when a document cannot be validated because a cancellation
 /// trigger fired; see [`test_document`].
