@@ -40,6 +40,24 @@ use crate::xml::{XmlElement, XmlWrapper};
 /// assert_eq!(<MySpecies as SbmlObject>::element_names(), &["mySpecies"]);
 /// ```
 ///
+/// The namespace of a type is the pair of its conventional prefix and the URL that identifies the
+/// namespace; the URL is what is compared, and the prefix is what a new declaration is written
+/// with. An extension declares the namespace of the elements it adds the same way, with a pair of
+/// its own:
+///
+/// ```
+/// use biodivine_lib_sbml::xml::{SbmlObject, XmlElement};
+/// use sbml_macros::XmlWrapper;
+///
+/// #[derive(Clone, Debug, XmlWrapper)]
+/// #[sbml_object(name = "myGraph", namespace = ("myext", "http://example.org/myext"))]
+/// pub struct MyGraph(XmlElement);
+///
+/// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAME, "myGraph");
+/// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAMESPACE.0, "myext");
+/// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAMESPACE.1, "http://example.org/myext");
+/// ```
+///
 /// The attribute is a *declaration*, not a validation: it records the fact that this crate's
 /// reader produces a `Species` from a `<species>` element of the core namespace, and the checks
 /// that police the document are the ones in the validation layer, as before.
@@ -54,6 +72,13 @@ use crate::xml::{XmlElement, XmlWrapper};
 ///    matches just as well — this is the same prefix-agnostic rule the reader follows, and
 ///  * the value of the `xsi:type` attribute against [`SbmlObject::XSI_TYPE`], when the type
 ///    declares one.
+///
+/// The prefix-agnostic rule is a statement about the *element's* namespace. An attribute never
+/// takes a default namespace and this crate reads `xsi:type` through its written prefix (the same
+/// path the typed `xsi:type` property of a curve segment uses), so a document that binds the XML
+/// Schema instance namespace under a prefix other than `xsi` is not recognized as a curve segment of
+/// either variant. That matches how the crate reads the attribute everywhere else: one spelling for
+/// "the value of the `xsi:type` attribute", one behaviour.
 ///
 /// ## A match is not a unique identification
 ///

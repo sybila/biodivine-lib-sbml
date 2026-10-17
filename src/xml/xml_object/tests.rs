@@ -292,11 +292,16 @@ fn the_identity_table_covers_every_wrapper_type_exactly_once() {
     }
 }
 
-/// The six types whose element has more than one name, with the evidence for each name.
+/// The five types whose element has more than one name, with the evidence for each name.
 ///
-/// The names are the de-capitalized class names the layout and qual specifications prescribe for
-/// the children of their lists; the test below pins that the declaration matches this list, so a
-/// name cannot be dropped or added silently.
+/// The names are the de-capitalized class names the qual and layout specifications prescribe for
+/// the children of their lists (`sbml-level-3/version-1/layout/syntax.tex` for the glyphs); the test
+/// below pins that each declaration matches this list, so a name cannot be dropped or added
+/// silently. `Point` is the least obvious member: the layout package writes it as `<position>`,
+/// `<start>`, `<end>`, `<basePoint1>` or `<basePoint2>`, never as `<point>`.
+///
+/// The curve segment classes are the counter-example and are pinned separately by the test below:
+/// `LineSegment` and `CubicBezier` share one element name and are told apart by `xsi:type`.
 #[test]
 fn the_multi_name_types_recognize_exactly_the_names_of_the_specification() {
     let expected: &[(&str, &[&str])] = &[
@@ -323,10 +328,6 @@ fn the_multi_name_types_recognize_exactly_the_names_of_the_specification() {
             "Point",
             &["position", "start", "end", "basePoint1", "basePoint2"],
         ),
-        // `LineSegment` is *not* multi-named: the layout specification writes both curve segment
-        // classes as `<layout:curveSegment>` and uses `xsi:type` to tell them apart, which the
-        // dedicated test below pins.
-        ("LineSegment", &["curveSegment"]),
     ];
     let identities = identities();
     for (type_name, names) in expected {
@@ -341,7 +342,9 @@ fn the_multi_name_types_recognize_exactly_the_names_of_the_specification() {
         );
         assert_eq!(*primary, names[0]);
     }
-    // Every other type recognizes exactly one name.
+    // Every other type recognizes exactly one name, including the two curve segment classes: the
+    // layout specification writes both of them as `<layout:curveSegment>` and discriminates them by
+    // `xsi:type`, which the dedicated test below pins.
     let multi = expected.iter().map(|(it, _)| *it).collect::<BTreeSet<_>>();
     for (type_name, _, declared, _) in identities.iter() {
         if multi.contains(type_name) {
@@ -353,6 +356,13 @@ fn the_multi_name_types_recognize_exactly_the_names_of_the_specification() {
             "{} is not a multi-name type but declares several names.",
             type_name
         );
+    }
+    for type_name in ["LineSegment", "CubicBezier"] {
+        let (_, _, declared, _) = identities
+            .iter()
+            .find(|(it, ..)| *it == type_name)
+            .expect("The curve segment classes are part of the table.");
+        assert_eq!(*declared, ["curveSegment"]);
     }
 }
 
@@ -521,6 +531,45 @@ fn rust_sources(root: &Path) -> Vec<PathBuf> {
         }
     }
     result
+}
+
+/// Every wrapper type in the tree declares an identity, and the table knows exactly those types.
+///
+/// The identity of a type is a declaration next to the type, so nothing in the compiler ties the
+/// two together: a wrapper added without an `#[sbml_object(..)]` attribute would simply have no
+/// identity, and the row-driven tests above would not notice because they iterate the table. This
+/// check reads the source instead, so the table and the tree have to agree.
+#[test]
+fn every_wrapper_type_declares_an_identity() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut derives = 0usize;
+    let mut missing = Vec::new();
+    for path in rust_sources(&root) {
+        let source = std::fs::read_to_string(&path).expect("A readable Rust source.");
+        let lines = source.lines().collect::<Vec<_>>();
+        for (index, line) in lines.iter().enumerate() {
+            if !line.starts_with("#[derive(") || !line.contains("XmlWrapper") {
+                continue;
+            }
+            derives += 1;
+            let next = lines[index + 1..].iter().find(|it| !it.trim().is_empty());
+            match next {
+                Some(next) if next.starts_with("#[sbml_object(") => {}
+                _ => missing.push(format!("{}:{}", path.display(), index + 1)),
+            }
+        }
+    }
+    assert!(
+        missing.is_empty(),
+        "A `#[derive(XmlWrapper)]` type does not declare its identity:\n{}",
+        missing.join("\n")
+    );
+    assert_eq!(
+        derives,
+        identities().len(),
+        "The tree declares {derives} wrapper types but the identity table has {} rows.",
+        identities().len()
+    );
 }
 
 #[test]
