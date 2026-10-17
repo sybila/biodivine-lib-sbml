@@ -457,6 +457,27 @@ pub const MATHML_ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
                 "sep", "sinh", "sin", "tanh", "tan", "times", "true", "xor"]
 };
 
+/// The MathML subset of SBML Level 3 **Version 1**: the same set of operators as
+/// [`MATHML_ALLOWED_CHILDREN`] without the five that Version 2 added (the specification marks them
+/// with `\vertwo`): `implies`, `max`, `min`, `quotient` and `rem`.
+///
+/// The two tables exist because the subset is a property of the *document*, not of the crate: a
+/// document that declares `version="1"` is checked against this one, and the difference is the
+/// whole of the version handling for MathML - the operators are the only part of the subset that
+/// changed between the two versions of the core.
+pub const MATHML_ALLOWED_CHILDREN_L3V1: Map<&str, &[&str]> = phf_map! {
+    "math" => &[
+                  "abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",
+                  "arccot", "arccsch", "arccsc", "arcsech", "arcsec", "arcsinh", "arcsin", "arctanh",
+                  "arctan", "bvar", "ceiling", "ci", "cn", "cosh", "cos", "coth", "cot", "csch", "csc",
+                  "csymbol", "degree", "divide", "eq", "exponentiale", "exp", "factorial", "false", "floor",
+                  "geq", "gt", "infinity", "lambda", "leq", "ln", "logbase", "log", "lt", "minus", "neq",
+                  "notanumber", "not", "or", "otherwise", "piecewise", "piece", "pi", "plus", "power",
+                  "root", "sech", "sec", "semantics", "sep", "sinh", "sin", "tanh", "tan", "times", "true",
+                  "xor"
+    ]
+};
+
 pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: Map<&str, &[&str]> = phf_map! {
     "encoding" => &["csymbol", "annotation", "annotation-xml"],
     "definitionURL" => &["ci", "csymbol", "semantics"],

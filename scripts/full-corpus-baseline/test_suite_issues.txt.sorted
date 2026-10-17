@@ -66,6 +66,11 @@
       1 10201/10201-fail-01-20-sev2-l3v1.xml|not-validated|Informational
       1 10202/10202-fail-01-05-10217-sev2-l3v1.xml|10202|Error
       1 10202/10202-fail-01-07-sev2-l3v2.xml|10202|Error
+      1 10202/10202-fail-01-08-sev2-l3v1.xml|10202|Error
+      1 10202/10202-fail-01-09-sev2-l3v1.xml|10202|Error
+      1 10202/10202-fail-01-10-sev2-l3v1.xml|10202|Error
+      1 10202/10202-fail-01-11-sev2-l3v1.xml|10202|Error
+      1 10202/10202-fail-01-12-sev2-l3v1.xml|10202|Error
       1 10203/10203-fail-01-05-sev2-l3v1.xml|10203|Error
       1 10203/10203-fail-01-07-sev2-l3v2.xml|10203|Error
       1 10204/10204-fail-01-05-sev2-l3v1.xml|10204|Error

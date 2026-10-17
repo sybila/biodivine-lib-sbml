@@ -5,13 +5,17 @@ use std::fmt::Display;
 use std::hash::Hash;
 
 use crate::cancellation::CancellationCheck;
-use crate::constants::element::{ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN};
+use crate::constants::element::{
+    ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN_L3V1,
+};
 use crate::core::sbase::SId;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::{BaseUnit, MetaId, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
+use crate::xml::XmlProperty;
 use crate::xml::{SbmlObject, XmlWrapper};
+use crate::Sbml;
 use crate::SbmlIssue;
 use crate::SbmlResult;
 
@@ -153,12 +157,34 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable + SbmlObject>(
     Ok(())
 }
 
+/// Whether the document this element belongs to declares SBML Level 3 Version 1.
+///
+/// A document that cannot be resolved to its root (or whose `level`/`version` attributes are
+/// missing or unparsable) is *not* treated as Version 1: the type check reports those conditions
+/// on the root, and assuming a version would turn one report into a cascade of them.
+pub(crate) fn is_level_3_version_1(xml_element: &XmlElement) -> bool {
+    let Some(root) = Sbml::try_for_child(xml_element) else {
+        return false;
+    };
+    let level = XmlProperty::get_raw(&root.level());
+    let version = XmlProperty::get_raw(&root.version());
+    level.as_deref() == Some("3") && version.as_deref() == Some("1")
+}
+
 pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
     let tag_name = xml_element.tag_name();
     if let Some(allowed) = ALLOWED_CHILDREN.get(&tag_name) {
         allowed
     } else if let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(&tag_name) {
-        allowed
+        if tag_name == "math" && is_level_3_version_1(xml_element) {
+            // The MathML subset is a property of the document's version, not of the crate: the
+            // Level 3 Version 1 subset is the Version 2 one without the five operators Version 2
+            // added, so a Version 1 document that uses one of them has an unknown `<math>` child
+            // (rule 10202), which is exactly what this table switch produces.
+            MATHML_ALLOWED_CHILDREN_L3V1["math"]
+        } else {
+            allowed
+        }
     } else {
         &[]
     }
@@ -294,5 +320,59 @@ pub(crate) fn apply_rule_10313(
         known <unitDefinition> identifier nor a valid base unit."
         );
         issues.push(SbmlIssue::new("10313", xml_element, message));
+    }
+}
+
+#[cfg(test)]
+mod version_tests {
+    use crate::Sbml;
+    use std::collections::BTreeSet;
+
+    fn rules_of(document: &str) -> BTreeSet<String> {
+        Sbml::read_str(document)
+            .expect("the document is well-formed XML")
+            .validate()
+            .expect("validation cannot be cancelled")
+            .into_iter()
+            .map(|issue| issue.rule().to_string())
+            .collect()
+    }
+
+    /// ### Rule 10202, the version difference
+    /// The MathML subset of Level 3 Version 1 is the Version 2 subset without the five operators
+    /// the specification marks with `\vertwo` (`implies`, `max`, `min`, `quotient`, `rem`), so a
+    /// Version 1 document that uses one of them has an unknown `<math>` child (10202) and the same
+    /// document as Version 2 does not.
+    ///
+    /// The two fixtures differ in the `version` attribute *and* in the namespace, because that is
+    /// how a Version 1 document reaches this library: the test-suite harness lifts the core
+    /// namespace of its `l3v1` documents to the Version 2 one and keeps `version="1"`, so the
+    /// version attribute is what a check has to read (a document in the Version 1 namespace is not
+    /// resolved by the object model at all).
+    #[test]
+    fn the_mathml_subset_of_a_version_1_document_excludes_the_version_2_operators() {
+        let document_of_version = |version: &str| {
+            format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="{version}">
+  <model>
+    <listOfParameters><parameter id="p" constant="true"/></listOfParameters>
+    <listOfConstraints>
+      <constraint><math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply><implies/><ci>p</ci><ci>p</ci></apply>
+      </math></constraint>
+    </listOfConstraints>
+  </model>
+</sbml>"#
+            )
+        };
+        assert!(
+            rules_of(&document_of_version("1")).contains("10202"),
+            "`implies` is not in the Version 1 subset"
+        );
+        assert!(
+            !rules_of(&document_of_version("2")).contains("10202"),
+            "`implies` is in the Version 2 subset"
+        );
     }
 }

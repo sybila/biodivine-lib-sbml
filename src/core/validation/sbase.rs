@@ -1,6 +1,6 @@
 use crate::core::validation::{
-    check_identifier_uniqueness, matches_sboterm_pattern, matches_sid_pattern,
-    matches_xml_id_pattern, matches_xml_string_pattern,
+    check_identifier_uniqueness, is_level_3_version_1, matches_sboterm_pattern,
+    matches_sid_pattern, matches_xml_id_pattern, matches_xml_string_pattern,
 };
 use crate::core::{MetaId, SBase, SId};
 use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlElement, XmlProperty, XmlWrapper};
@@ -71,7 +71,16 @@ pub(crate) fn apply_rule_10301(
     // object of a class the list does not name is not covered by this rule at all. Reporting an id
     // conflict on such an object is a false positive - the corpus has 30 of them, all of the shape
     // "two unit definitions or two local parameters share an id" - so the class is checked first.
-    if !RULES_10301_CLASSES.contains(&xml_element.tag_name().as_str()) {
+    // The class list is a property of the document's version: the Level 3 Version 1 text names nine
+    // classes and the Version 2 text names the longer list below, so a Version 1 document is
+    // checked against its own list (a conflict on a class only Version 2 names is not a 10301
+    // there).
+    let classes = if is_level_3_version_1(xml_element) {
+        RULES_10301_CLASSES_L3V1
+    } else {
+        RULES_10301_CLASSES
+    };
+    if !classes.contains(&xml_element.tag_name().as_str()) {
         return;
     }
     check_identifier_uniqueness("10301", "id", id, xml_element, issues, identifiers);
@@ -84,6 +93,23 @@ pub(crate) fn apply_rule_10301(
 /// contains the container classes as well as the object classes, because the rule names both, and
 /// it deliberately does not contain `UnitDefinition`, `LocalParameter` or `LocalSpeciesReference`:
 /// they have rules of their own (10302 and 10303) and are therefore not part of this one.
+/// The classes of L3V1 rule 10301, which names nine of them: `Model`, `FunctionDefinition`,
+/// `Compartment`, `Species`, `Reaction`, `SpeciesReference`, `ModifierSpeciesReference`, `Event` and
+/// `Parameter`. A class the Version 2 list adds (a rule, a constraint, a delay, the container
+/// classes, ...) is not part of the Version 1 rule, so a Version 1 document is not reported for a
+/// conflict on one of them.
+const RULES_10301_CLASSES_L3V1: &[&str] = &[
+    "model",
+    "functionDefinition",
+    "compartment",
+    "species",
+    "reaction",
+    "speciesReference",
+    "modifierSpeciesReference",
+    "event",
+    "parameter",
+];
+
 const RULES_10301_CLASSES: &[&str] = &[
     "algebraicRule",
     "assignmentRule",
@@ -278,6 +304,38 @@ mod tests {
         assert!(
             !rules.contains("10301"),
             "10301 must not cover a UnitDefinition (rule 10302 owns it): {rules:?}"
+        );
+    }
+
+    /// ### Rule 10301, the version difference
+    /// The Level 3 Version 1 text of the rule names nine classes and the Version 2 text a longer
+    /// list, so a conflict on a class only Version 2 names (here an `AssignmentRule`) is a 10301 in
+    /// a Version 2 document and *not* a 10301 in a Version 1 one. Both documents are otherwise
+    /// identical, so the version is the only difference.
+    #[test]
+    fn the_class_list_of_10301_follows_the_document_version() {
+        let rules_of_version = |version: &str| {
+            let document = format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version{version}/core" level="3" version="{version}">
+  <model>
+    <listOfParameters><parameter id="p" constant="true"/></listOfParameters>
+    <listOfRules>
+      <assignmentRule id="r" variable="p"><math xmlns="http://www.w3.org/1998/Math/MathML"><ci>p</ci></math></assignmentRule>
+      <assignmentRule id="r" variable="p"><math xmlns="http://www.w3.org/1998/Math/MathML"><ci>p</ci></math></assignmentRule>
+    </listOfRules>
+  </model>
+</sbml>"#
+            );
+            rules_of(&document)
+        };
+        assert!(
+            rules_of_version("2").contains("10301"),
+            "L3V2 10301 names AssignmentRule"
+        );
+        assert!(
+            !rules_of_version("1").contains("10301"),
+            "L3V1 10301 does not name AssignmentRule"
         );
     }
 
