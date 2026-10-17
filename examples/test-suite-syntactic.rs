@@ -120,6 +120,26 @@ fn main() {
         write_roundtrip_report();
     }
 
+    // An entry of the known-difference list is a claim about one specific disagreement. An entry
+    // that covered nothing in this run is an error, not a no-op: it would keep the comparison
+    // relaxed for a case that no longer exists (a weakened check, or a document that left the
+    // corpus). The check runs before the reports are written, so the whole-corpus gate reports the
+    // failure as an incomplete run instead of comparing a report that was produced under a stale
+    // assumption.
+    if !result.unused_known_differences.is_empty() {
+        for index in &result.unused_known_differences {
+            let entry = &KNOWN_DIFFERENCES[*index];
+            println!(
+                "UNUSED KNOWN DIFFERENCE: {} on {} - {}",
+                entry.rule, entry.document, entry.reason
+            );
+        }
+        panic!(
+            "{} entry/entries of KNOWN_DIFFERENCES covered no reported issue in this run.",
+            result.unused_known_differences.len()
+        );
+    }
+
     println!("Report written.");
 
     assert!(error_problems.is_empty());
@@ -266,7 +286,7 @@ fn abbreviated(text: &str) -> String {
 const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10215",
-        document: "20212-fail-01-02",
+        document: "20212/20212-fail-01-02-sev2-l3v2.xml",
         reason: "The document puts a stray <initialAssignment/> inside <listOfRules>, which the \
                  suite reports as 20212, and its <assignmentRule> refers to <ci> c </ci> - a \
                  compartment the model does not define. L3V2 rule 10215 requires every <ci> that is \
@@ -275,16 +295,17 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     },
     KnownDifference {
         rule: "10215",
-        document: "20229-fail-01-02",
+        document: "20229/20229-fail-01-02-sev2-l3v2.xml",
         reason: "Same shape as 20212-fail-01-02, in <listOfConstraints>: the constraint's <math> \
                  refers to an entity the model does not define, which L3V2 rule 10215 forbids.",
     },
     KnownDifference {
         rule: "10215",
-        document: "21172-fail-01-03",
-        reason: "The local parameter of this document has no `id` (the suite reports 21172), and the \
-                 kinetic law's <math> refers to it as <ci> k1 </ci>; the reference cannot be \
-                 resolved, which L3V2 rule 10215 forbids. The expectation file lists 21172 only.",
+        document: "21172/21172-fail-01-03-sev2-l3v2.xml",
+        reason: "The kinetic law has one <localParameter> and it has no `id` (the suite reports \
+                 21172 for that), while the formula refers to <ci> k </ci>: the reference names no \
+                 model entity and no local parameter, which L3V2 rule 10215 forbids. The expectation \
+                 file lists 21172 only.",
     },
 ];
 

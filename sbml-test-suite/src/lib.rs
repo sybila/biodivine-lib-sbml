@@ -30,8 +30,12 @@ pub struct KnownDifference {
 
 impl KnownDifference {
     /// Whether this entry covers a reported issue of a document.
+    ///
+    /// The document is matched **exactly**, against the `directory/file` id the reports use: a
+    /// substring match would let an entry silently cover a different document whose name happens to
+    /// contain the pattern, which is the opposite of what this list is for.
     pub fn covers(&self, rule: &str, document: &str) -> bool {
-        self.rule == rule && document.contains(self.document)
+        self.rule == rule && self.document == document
     }
 }
 
@@ -41,6 +45,15 @@ pub struct TestResults {
     pub error: Vec<String>,
     pub warning: Vec<String>,
     pub info: Vec<String>,
+    /// The known differences that did **not** cover any reported issue in this run, by index.
+    ///
+    /// An entry of [`KnownDifference`] is a claim about a specific disagreement; if the library
+    /// stops reporting that issue (because the check was weakened, or because the document is not
+    /// in this corpus any more), the entry silently keeps the comparison relaxed for a case that no
+    /// longer exists - which is exactly the property the list must not have. A run therefore
+    /// reports its unused entries, and the caller is expected to treat a non-empty list as a
+    /// failure (the example does, with the entry and its reason in the message).
+    pub unused_known_differences: Vec<usize>,
     /// One `document|rule|severity` line for *every* issue the library reported, for every
     /// document that was read.
     ///
@@ -224,6 +237,10 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
     // One line per issue the library reported, for every document that was read.
     let mut issues = Vec::new();
 
+    // How many reported issues each known difference covered, so an entry that covers nothing can
+    // be reported at the end of the run.
+    let mut known_difference_matches = vec![0usize; known_differences.len()];
+
     let corpus = corpus_documents(dir_path, all_versions);
     for rule in &corpus {
         let name = rule.name.as_str();
@@ -267,10 +284,12 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                     if filter_rule(rule_id.as_str()) && is_spec_rule(rule_id.as_str()) {
                         if let Some(entry) = expected.get_mut(rule_id) {
                             entry.1 -= 1;
-                        } else if let Some(known) = known_differences
+                        } else if let Some(index) = known_differences
                             .iter()
-                            .find(|known| known.covers(rule_id, &document.id()))
+                            .position(|known| known.covers(rule_id, &document.id()))
                         {
+                            known_difference_matches[index] += 1;
+                            let known = &known_differences[index];
                             println!(
                                 " >> Known difference: {} on {} - {}",
                                 rule_id,
@@ -333,10 +352,18 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
         );
     }
 
+    let unused_known_differences = known_difference_matches
+        .iter()
+        .enumerate()
+        .filter(|(_, matches)| **matches == 0)
+        .map(|(index, _)| index)
+        .collect();
+
     TestResults {
         error: error_problems,
         warning: warning_problems,
         info: info_problems,
+        unused_known_differences,
         issues,
     }
 }
