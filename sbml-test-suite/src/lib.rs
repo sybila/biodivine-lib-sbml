@@ -356,7 +356,7 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
         }
     }
 
-    if let Some(filter) = filter {
+    if let Some(filter) = filter.as_ref() {
         let missing = Vec::from_iter(filter.difference(&tested));
         println!(
             "WARNING: {} rules were requested but not found in the test suite: {:?}",
@@ -365,10 +365,15 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
         );
     }
 
+    // An entry whose rule the run does not compare cannot cover anything, and that is expected:
+    // the harness supports comparing a subset of the rules (`-- 10201 10202`), and a documented
+    // difference for a rule outside that subset is not stale, it is simply out of the run's scope.
+    // The staleness check therefore only applies to the entries the run was actually able to
+    // exercise, which for the whole-corpus run (no filter) is all of them.
     let unused_known_differences = known_difference_matches
         .iter()
         .enumerate()
-        .filter(|(_, matches)| **matches == 0)
+        .filter(|(index, matches)| **matches == 0 && filter_rule(known_differences[*index].rule))
         .map(|(index, _)| index)
         .collect();
 
@@ -418,4 +423,75 @@ fn read_expected_issues(result_file: &str) -> HashMap<String, (String, usize)> {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A corpus of one rule with one document, in a fresh directory.
+    ///
+    /// The harness compares a directory tree (`<rule>/<case>.xml` plus `<case>.txt`), so a test of
+    /// the harness itself needs a corpus of its own rather than the downloaded one.
+    fn corpus_with_one_document(case: &str) -> std::path::PathBuf {
+        let dir =
+            std::env::temp_dir().join(format!("sbml-test-suite-{case}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let rule_dir = dir.join("10101");
+        std::fs::create_dir_all(&rule_dir).expect("the temporary directory is writable");
+        std::fs::write(rule_dir.join(format!("{case}-l3v2.xml")), "<sbml/>").unwrap();
+        std::fs::write(
+            rule_dir.join(format!("{case}-l3v2.txt")),
+            "----------------\n\nValidation id : 10101\nSeverity : Error\n\n----------------\n",
+        )
+        .unwrap();
+        dir
+    }
+
+    /// An entry of the documented differences whose rule the run does not compare is out of the
+    /// run's scope, not stale: the harness supports comparing a subset of the rules, and a subset
+    /// run of an unrelated rule must not be turned into a failure by an entry it cannot exercise.
+    ///
+    /// The whole-corpus run (no filter) still reports every entry that covered nothing, which is
+    /// what keeps an entry from silently relaxing a comparison that no longer needs it.
+    #[test]
+    fn a_documented_difference_outside_the_rule_filter_is_not_stale() {
+        let dir = corpus_with_one_document("pass");
+        let entry = KnownDifference {
+            rule: "99999",
+            document: "10101/pass-l3v2.xml",
+            reason: "a test entry",
+        };
+        let read = |_document: &str| vec![("10101".to_string(), "Error".to_string())];
+
+        // The filter compares `10101`, so the entry for `99999` cannot cover anything: expected.
+        let filtered = test_helper(
+            dir.to_str().unwrap(),
+            Some(HashSet::from(["10101".to_string()])),
+            true,
+            |_id| true,
+            std::slice::from_ref(&entry),
+            read,
+        );
+        assert!(
+            filtered.unused_known_differences.is_empty(),
+            "an entry outside the filter is out of scope, not stale"
+        );
+
+        // Without a filter the entry is in scope and covers nothing: that is a failure.
+        let whole_corpus = test_helper(
+            dir.to_str().unwrap(),
+            None,
+            true,
+            |_id| true,
+            std::slice::from_ref(&entry),
+            read,
+        );
+        assert_eq!(
+            whole_corpus.unused_known_differences,
+            vec![0],
+            "an entry that covers nothing in a whole-corpus run is stale"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }
