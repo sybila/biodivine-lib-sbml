@@ -46,6 +46,14 @@ For the purposes of automated testing, we apply the list of rules in the
 `validated-rules.txt` file. As such, if you extend the list of actually validated
 rules, you have to also extend this file.
 
+The comparison set is part of every measurement, so the numbers that go with it are worth stating:
+112 of the file's rules are enabled and three are disabled (`10218`, `10223`, `10224`, each with the
+citation and the reason for staying disabled in the unit's report), nine disagreements are recorded
+as `KnownDifference` entries (three for `10215`, six for `10313`), and the unfiltered census reports
+739 documents with a mismatch over 1852 events. A stage that adjudicates a rule moves the
+denominator of the filtered gate, which is why the filtered metric is always reported together with
+the size of the list that produced it.
+
 ### Whole-corpus gates
 
 The rule list above filters the report down to the rules the library declares as
