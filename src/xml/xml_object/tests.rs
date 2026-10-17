@@ -1360,6 +1360,11 @@ fn list_item_candidates(list: &str) -> BTreeSet<String> {
 /// The fbc specification writes a nested gene product association as `<and>`/`<or>` elements directly
 /// inside their parent, so an `<and>` element legitimately holds several `<and>` children and must
 /// not be listed as unique.
+///
+/// This is the only member of that class, and it is why the recon's disposition table carries a
+/// "rule limitation" entry for `and`/`or`: those two keys are handled here rather than by an entry of
+/// [`ELEMENT_NAME_EXCEPTIONS`], because their children *are* names the object model knows — what the
+/// completeness rule must not require is that they be unique.
 const REPEATABLE_CHILD_KEYS: &[&str] = &["and", "or"];
 
 /// A name in one of the element tables that the scan cannot resolve, with its evidence and the goal
