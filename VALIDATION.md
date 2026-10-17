@@ -155,3 +155,31 @@ fails with an explicit message instead of printing a misleading diff; re-record 
 `--record` and review the resulting diff rule by rule. A failure caused by a code change
 (the reported mismatches moved) is printed line by line, so the reviewer can see exactly
 which rule changed without re-running the suite.
+
+#### Measuring the result
+
+The three report files the example compares are the input of four small tools in `scripts/`
+that turn them into the numbers a change is reviewed against. They are plain `python3` with no
+dependencies and they never write to the repository, so they can be run against the report files
+of a run in progress or against the recorded snapshots.
+
+  * `scripts/corpus_census.py` (`--baseline` for the snapshots, `--by-rule` for the detail) is
+    the pinned metric: how many *documents* carry at least one mismatch and how many mismatch
+    *events* there are, each partitioned by rule family and by direction (`Missed` versus
+    `Found unexpected`). An event is one line counted with multiplicity; a document is counted
+    once. Running the example with the enabled rules of `validated-rules.txt` as arguments gives
+    the filtered metric of the CI gate, running it without them gives the unfiltered census.
+  * `scripts/corpus_worklist.py` ranks every rule the corpus or the census mentions, twice: by
+    mismatch events and by *documents unlocked* (a rule that is a document's only remaining
+    mismatch is worth more than one that appears in a document with five others). It reads
+    `validated-rules.txt` and the crate's rule table to show, per rule, whether the id is enabled,
+    disabled or unknown, so "implemented but not compared" is distinguishable from "not
+    implemented".
+  * `scripts/snapshot_diff.py` attributes a moved snapshot line to a rule and to a *shape*
+    (a missing expectation that is now reported, a spurious one that disappeared, a line that
+    only the issue dump can see, ...) and reports, per rule, how many documents moved from
+    "has a mismatch" to "clean". The shapes are what a reviewer checks; a comment or a commit
+    message supplies the reason, and the two are different kinds of evidence.
+  * `scripts/corpus_lib.py` holds the shared parsing and the rule taxonomy that the three tools
+    above use: rule ids of a core specification, of an extension package, of libSBML (the
+    `8xxxx`/`9xxxx` ranges, which no SBML specification defines), and the library's own lints.
