@@ -380,7 +380,9 @@ fn the_multi_name_types_recognize_exactly_the_names_of_the_specification() {
 /// It takes the *constructor* rather than a value, so the identity-derived constructor of a type and
 /// a probe that deliberately builds something else go through exactly the same code: the table and
 /// its probes cannot drift apart.
-fn check_constructed_element<T: SbmlObject>(construct: fn(Document) -> T) -> Result<(), String> {
+fn check_constructed_element<T: SbmlObject>(
+    construct: fn(Document) -> T,
+) -> Result<String, String> {
     let value = construct(document());
     let element = value.xml_element();
     let produced_name = element.tag_name();
@@ -406,7 +408,7 @@ fn check_constructed_element<T: SbmlObject>(construct: fn(Document) -> T) -> Res
             "the constructed <{produced_name}> is not an instance of its own type"
         ));
     }
-    Ok(())
+    Ok(produced_name)
 }
 
 /// One row per wrapper type: construct it, check the result, and probe the check with a planted
@@ -418,7 +420,7 @@ fn check_constructed_element<T: SbmlObject>(construct: fn(Document) -> T) -> Res
 /// asserts its arithmetic against the identity table.
 macro_rules! check_constructor_row {
     ($($type:ty),* $(,)?) => {{
-        let mut constructed: Vec<&'static str> = Vec::new();
+        let mut constructed: Vec<(&'static str, String)> = Vec::new();
         let mut omitted: Vec<&'static str> = Vec::new();
         let mut namespaces: BTreeMap<&'static str, usize> = BTreeMap::new();
         $(
@@ -426,10 +428,14 @@ macro_rules! check_constructor_row {
                 let type_name = stringify!($type);
                 match <$type as SbmlObject>::CONSTRUCT {
                     Some(construct) => {
-                        check_constructed_element::<$type>(construct).unwrap_or_else(|error| {
-                            panic!("The constructor of {type_name} builds the wrong element: {error}")
-                        });
-                        constructed.push(type_name);
+                        let produced = check_constructed_element::<$type>(construct)
+                            .unwrap_or_else(|error| {
+                                panic!(
+                                    "The constructor of {type_name} builds the wrong element: \
+                                     {error}"
+                                )
+                            });
+                        constructed.push((type_name, produced));
                         *namespaces
                             .entry(<$type as SbmlObject>::ELEMENT_NAMESPACE.1)
                             .or_insert(0) += 1;
@@ -547,6 +553,44 @@ fn every_constructor_builds_the_element_of_its_declared_identity() {
         "The derived omission set changed."
     );
 
+    // The local names the constructors produced, pinned against the two things this unit fixed:
+    // the five names the hand-written creation path used to write (none of which is an element of
+    // the layout package) and the five names the declarations prescribe instead.
+    let produced = constructed
+        .iter()
+        .map(|(_type_name, element_name)| element_name.as_str())
+        .collect::<Vec<_>>();
+    for wrong in [
+        "bounding_box",
+        "cubicBezier",
+        "graphObject",
+        "point",
+        "speciesRefGlyph",
+    ] {
+        assert!(
+            !produced.contains(&wrong),
+            "Some constructor still writes the element <{wrong}>."
+        );
+    }
+    for (type_name, element_name) in [
+        ("BoundingBox", "boundingBox"),
+        ("CubicBezier", "curveSegment"),
+        ("GraphicalObject", "graphicalObject"),
+        ("Point", "position"),
+        ("SpeciesReferenceGlyph", "speciesReferenceGlyph"),
+    ] {
+        assert!(
+            constructed
+                .iter()
+                .any(|(it, name)| *it == type_name && name == element_name),
+            "The constructor of {type_name} must produce <{element_name}>, produced: {:?}",
+            constructed
+                .iter()
+                .filter(|(it, _)| *it == type_name)
+                .collect::<Vec<_>>()
+        );
+    }
+
     // The namespace split. These counts follow from the modules the types live in, not from the
     // declarations, so a declaration that is *self-consistently* wrong about its namespace (a
     // layout type that declares and writes the core namespace) fails here: the constructor would
@@ -573,7 +617,7 @@ fn every_constructor_builds_the_element_of_its_declared_identity() {
         "GraphicalObject",
     ] {
         assert!(
-            constructed.contains(&type_name),
+            constructed.iter().any(|(it, _)| *it == type_name),
             "{type_name} must be covered by the constructor table."
         );
     }
