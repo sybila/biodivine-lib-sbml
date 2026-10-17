@@ -1,10 +1,10 @@
 use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
-use crate::math::Math;
+use crate::math::{Math, MathNode};
 use crate::xml::{
-    Document, OptionalChild, OptionalSbmlChild, RequiredSbmlProperty, RequiredXmlProperty,
-    XmlDefault, XmlElement, XmlList,
+    Document, OptionalChild, OptionalSbmlChild, OptionalXmlChild, RequiredSbmlProperty,
+    RequiredXmlProperty, XmlDefault, XmlElement, XmlList,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -76,6 +76,14 @@ impl Trigger {
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
     }
+
+    /// The MathML formula of this object as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a site is
+    /// `self.math().set(Math::new(document, node))`.
+    pub fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
+    }
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -92,6 +100,14 @@ impl Priority {
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
     }
+
+    /// The MathML formula of this object as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a site is
+    /// `self.math().set(Math::new(document, node))`.
+    pub fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
+    }
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
@@ -107,6 +123,14 @@ impl XmlDefault for Delay {
 impl Delay {
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
+    }
+
+    /// The MathML formula of this object as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a site is
+    /// `self.math().set(Math::new(document, node))`.
+    pub fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
     }
 }
 
@@ -127,5 +151,13 @@ impl EventAssignment {
 
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
+    }
+
+    /// The MathML formula of this object as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a site is
+    /// `self.math().set(Math::new(document, node))`.
+    pub fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
     }
 }

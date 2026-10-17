@@ -209,6 +209,30 @@ pub use units::SbmlUnits;
 pub struct Math(XmlElement);
 
 impl Math {
+    /// A new formula in `document` whose single expression is `expression`.
+    ///
+    /// This is the one-step form of [`Math::new_empty`] followed by [`Math::set_expression`], which
+    /// is what attaching a formula to one of the object model's formula sites looks like:
+    /// `kinetic_law.math().set(Math::new(document, node))`.
+    ///
+    /// ```rust
+    /// use biodivine_lib_sbml::math::*;
+    /// use biodivine_lib_sbml::xml::Document;
+    ///
+    /// let document = Document::parse_string("<?xml version=\"1.0\"?><probe/>")
+    ///     .expect("A well-formed document.");
+    /// let formula = Math::new(document.clone(), MathNode::ci(document, "x"));
+    /// assert_eq!(
+    ///     formula.to_string(),
+    ///     "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><ci>x</ci></math>"
+    /// );
+    /// ```
+    pub fn new(document: Document, expression: MathNode) -> Math {
+        let formula = Math::new_empty(document);
+        formula.set_expression(expression);
+        formula
+    }
+
     /// This formula as a typed node.
     ///
     /// The node is the root of the tree a caller navigates; it costs nothing, because it holds the

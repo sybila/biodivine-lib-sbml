@@ -24,11 +24,13 @@ use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
-use crate::constants::namespaces::{URL_MATHML, URL_SBML_CORE};
+use crate::constants::namespaces::{URL_MATHML, URL_PACKAGE_QUAL, URL_SBML_CORE};
+use crate::core::{Rule, RuleTypes};
 use crate::math::*;
+use crate::qual::FunctionTerm;
 use crate::xml::{
-    Document, OptionalXmlChild, OptionalXmlProperty, SbmlObject, XmlElement, XmlProperty,
-    XmlWrapper,
+    Document, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, SbmlObject, XmlElement,
+    XmlProperty, XmlWrapper,
 };
 use crate::Sbml;
 use std::collections::{BTreeSet, HashSet};
@@ -1110,4 +1112,309 @@ fn reading_units_matches_the_local_name() {
     };
     assert_eq!(ci.symbol(), "x");
     assert_eq!(ci.units(), None);
+}
+
+// ---------------------------------------------------------------------------------------------
+// The formula sites of the object model
+// ---------------------------------------------------------------------------------------------
+
+/// A document with a formula at every site of the object model that has one.
+///
+/// Each formula is a single `ci` whose text names its site, so the payload of a site identifies it:
+/// an accessor that answered with another site's formula (or with none) is visible in the collected
+/// `(site, payload)` pairs instead of passing silently.
+fn document_with_formulas() -> String {
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" xmlns:qual="{URL_PACKAGE_QUAL}"
+      level="3" version="2" qual:required="true">
+  <model id="m">
+    <listOfFunctionDefinitions>
+      <functionDefinition id="f"><math xmlns="{URL_MATHML}"><ci>functionDefinition</ci></math></functionDefinition>
+    </listOfFunctionDefinitions>
+    <listOfParameters><parameter id="p" constant="true"/></listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="p"><math xmlns="{URL_MATHML}"><ci>initialAssignment</ci></math></initialAssignment>
+    </listOfInitialAssignments>
+    <listOfRules>
+      <algebraicRule><math xmlns="{URL_MATHML}"><ci>algebraicRule</ci></math></algebraicRule>
+      <assignmentRule variable="p"><math xmlns="{URL_MATHML}"><ci>assignmentRule</ci></math></assignmentRule>
+      <rateRule variable="p"><math xmlns="{URL_MATHML}"><ci>rateRule</ci></math></rateRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="r"><listOfReactants/><listOfProducts/>
+        <kineticLaw><math xmlns="{URL_MATHML}"><ci>kineticLaw</ci></math></kineticLaw>
+      </reaction>
+    </listOfReactions>
+    <listOfConstraints>
+      <constraint><math xmlns="{URL_MATHML}"><ci>constraint</ci></math></constraint>
+    </listOfConstraints>
+    <listOfEvents>
+      <event id="e">
+        <trigger><math xmlns="{URL_MATHML}"><ci>trigger</ci></math></trigger>
+        <priority><math xmlns="{URL_MATHML}"><ci>priority</ci></math></priority>
+        <delay><math xmlns="{URL_MATHML}"><ci>delay</ci></math></delay>
+        <listOfEventAssignments>
+          <eventAssignment variable="p"><math xmlns="{URL_MATHML}"><ci>eventAssignment</ci></math></eventAssignment>
+        </listOfEventAssignments>
+      </event>
+    </listOfEvents>
+    <qual:listOfQualitativeSpecies>
+      <qual:qualitativeSpecies qual:id="q" qual:constant="false" qual:maxLevel="1"/>
+    </qual:listOfQualitativeSpecies>
+    <qual:listOfTransitions>
+      <qual:transition qual:id="t">
+        <qual:listOfOutputs>
+          <qual:output qual:id="o" qual:qualitativeSpecies="q" qual:transitionEffect="assignmentLevel"/>
+        </qual:listOfOutputs>
+        <qual:listOfFunctionTerms>
+          <qual:defaultTerm qual:resultLevel="0"/>
+          <qual:functionTerm qual:resultLevel="1"><math xmlns="{URL_MATHML}"><ci>functionTerm</ci></math></qual:functionTerm>
+        </qual:listOfFunctionTerms>
+      </qual:transition>
+    </qual:listOfTransitions>
+  </model>
+</sbml>"#
+    )
+}
+
+/// The same sites, with no formula anywhere.
+///
+/// Every one of them is optional in the content model except the qual `functionTerm`, so a site that
+/// has no `math` child is a document this layer has to read as "no formula" rather than as an error.
+fn document_without_formulas() -> String {
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" xmlns:qual="{URL_PACKAGE_QUAL}"
+      level="3" version="2" qual:required="true">
+  <model id="m">
+    <listOfFunctionDefinitions><functionDefinition id="f"/></listOfFunctionDefinitions>
+    <listOfParameters><parameter id="p" constant="true"/></listOfParameters>
+    <listOfInitialAssignments><initialAssignment symbol="p"/></listOfInitialAssignments>
+    <listOfRules>
+      <algebraicRule/>
+      <assignmentRule variable="p"/>
+      <rateRule variable="p"/>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="r"><listOfReactants/><listOfProducts/><kineticLaw/></reaction>
+    </listOfReactions>
+    <listOfConstraints><constraint/></listOfConstraints>
+    <listOfEvents>
+      <event id="e">
+        <trigger/><priority/><delay/>
+        <listOfEventAssignments><eventAssignment variable="p"/></listOfEventAssignments>
+      </event>
+    </listOfEvents>
+  </model>
+</sbml>"#
+    )
+}
+
+/// The identifier a site's formula refers to, which is the payload that identifies the site.
+fn payload_of(formula: &MathNode) -> String {
+    let expression = formula
+        .children()
+        .into_iter()
+        .next()
+        .expect("a formula has a top-level expression");
+    match expression {
+        MathNode::Ci(ci) => ci.symbol(),
+        other => panic!(
+            "the formulas of the probe are `ci` elements, found {}",
+            other.element_name()
+        ),
+    }
+}
+
+/// Every formula site of the object model exposes its formula as a typed node, and the raw `math()`
+/// accessor still describes the same element.
+#[test]
+fn every_formula_site_exposes_the_typed_node() {
+    let document = Sbml::read_str(&document_with_formulas()).expect("A readable document.");
+    let model = document.model().get().expect("The document has a model.");
+    let mut found = Vec::new();
+
+    let function_definition = model.function_definitions().get().unwrap().get(0);
+    let node = function_definition.math_node().expect("a formula");
+    assert_eq!(
+        function_definition.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("functionDefinition", payload_of(&node)));
+
+    let initial_assignment = model.initial_assignments().get().unwrap().get(0);
+    let node = initial_assignment.math_node().expect("a formula");
+    assert_eq!(
+        initial_assignment.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("initialAssignment", payload_of(&node)));
+
+    for rule in model.rules().get().unwrap().iter() {
+        let node = rule.math_node().expect("a formula");
+        assert_eq!(rule.math().get().unwrap().xml_element(), node.xml_element());
+        let site = match rule.cast() {
+            RuleTypes::Algebraic(_) => "algebraicRule",
+            RuleTypes::Assignment(_) => "assignmentRule",
+            RuleTypes::Rate(_) => "rateRule",
+            RuleTypes::Other(_) => panic!("the probe has no unknown rule kind"),
+        };
+        found.push((site, payload_of(&node)));
+    }
+
+    let kinetic_law = model
+        .reactions()
+        .get()
+        .unwrap()
+        .get(0)
+        .kinetic_law()
+        .get()
+        .unwrap();
+    let node = kinetic_law.math_node().expect("a formula");
+    assert_eq!(
+        kinetic_law.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("kineticLaw", payload_of(&node)));
+
+    let constraint = model.constraints().get().unwrap().get(0);
+    let node = constraint.math_node().expect("a formula");
+    assert_eq!(
+        constraint.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("constraint", payload_of(&node)));
+
+    let event = model.events().get().unwrap().get(0);
+    let trigger = event.trigger().get().unwrap();
+    let node = trigger.math_node().expect("a formula");
+    assert_eq!(
+        trigger.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("trigger", payload_of(&node)));
+
+    let priority = event.priority().get().unwrap();
+    let node = priority.math_node().expect("a formula");
+    assert_eq!(
+        priority.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("priority", payload_of(&node)));
+
+    let delay = event.delay().get().unwrap();
+    let node = delay.math_node().expect("a formula");
+    assert_eq!(
+        delay.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("delay", payload_of(&node)));
+
+    let assignment = event.event_assignments().get().unwrap().get(0);
+    let node = assignment.math_node().expect("a formula");
+    assert_eq!(
+        assignment.math().get().unwrap().xml_element(),
+        node.xml_element()
+    );
+    found.push(("eventAssignment", payload_of(&node)));
+
+    // The qual `functionTerm` is the one site whose formula is required, so its accessor yields the
+    // node itself: binding it to a `MathNode` is what makes the asymmetry a compile-time property.
+    let terms = model
+        .transitions()
+        .get()
+        .unwrap()
+        .get(0)
+        .function_terms()
+        .get();
+    let function_term = terms
+        .iter()
+        .find(|it| FunctionTerm::matches_element(it.xml_element()))
+        .map(|it| FunctionTerm::from(it.xml_element().clone()))
+        .expect("The probe has a function term.");
+    let node: MathNode = function_term.math_node();
+    assert_eq!(function_term.math().get().xml_element(), node.xml_element());
+    found.push(("functionTerm", payload_of(&node)));
+
+    // Every site had a distinct formula, and a site that answered with another site's formula (or
+    // did not answer at all) changes this comparison.
+    found.sort();
+    assert_eq!(
+        found,
+        vec![
+            ("algebraicRule", "algebraicRule".to_string()),
+            ("assignmentRule", "assignmentRule".to_string()),
+            ("constraint", "constraint".to_string()),
+            ("delay", "delay".to_string()),
+            ("eventAssignment", "eventAssignment".to_string()),
+            ("functionDefinition", "functionDefinition".to_string()),
+            ("functionTerm", "functionTerm".to_string()),
+            ("initialAssignment", "initialAssignment".to_string()),
+            ("kineticLaw", "kineticLaw".to_string()),
+            ("priority", "priority".to_string()),
+            ("rateRule", "rateRule".to_string()),
+            ("trigger", "trigger".to_string()),
+        ]
+    );
+}
+
+/// A site whose object has no `math` child answers `None` instead of failing.
+#[test]
+fn a_site_without_a_formula_answers_none() {
+    let document = Sbml::read_str(&document_without_formulas()).expect("A readable document.");
+    let model = document.model().get().expect("The document has a model.");
+
+    assert!(model
+        .function_definitions()
+        .get()
+        .unwrap()
+        .get(0)
+        .math_node()
+        .is_none());
+    assert!(model
+        .initial_assignments()
+        .get()
+        .unwrap()
+        .get(0)
+        .math_node()
+        .is_none());
+    for rule in model.rules().get().unwrap().iter() {
+        assert!(
+            rule.math_node().is_none(),
+            "a rule without a formula has no node"
+        );
+    }
+    let kinetic_law = model
+        .reactions()
+        .get()
+        .unwrap()
+        .get(0)
+        .kinetic_law()
+        .get()
+        .unwrap();
+    assert!(kinetic_law.math_node().is_none());
+    assert!(model
+        .constraints()
+        .get()
+        .unwrap()
+        .get(0)
+        .math_node()
+        .is_none());
+
+    let event = model.events().get().unwrap().get(0);
+    assert!(event.trigger().get().unwrap().math_node().is_none());
+    assert!(event.priority().get().unwrap().math_node().is_none());
+    assert!(event.delay().get().unwrap().math_node().is_none());
+    assert!(event
+        .event_assignments()
+        .get()
+        .unwrap()
+        .get(0)
+        .math_node()
+        .is_none());
+
+    // The ten *optional* sites above are the ones with an `Option`; the qual `functionTerm` is not
+    // among them, and a document that omits its `math` child is a document error rather than a
+    // `None` (rule 20411), which is why its accessor returns a `MathNode`.
 }

@@ -1,10 +1,10 @@
 use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{SBase, SId};
-use crate::math::Math;
+use crate::math::{Math, MathNode};
 use crate::xml::{
-    Document, OptionalChild, RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement,
-    XmlNamedSubtype, XmlSupertype,
+    Document, OptionalChild, OptionalXmlChild, RequiredSbmlProperty, RequiredXmlProperty,
+    XmlDefault, XmlElement, XmlNamedSubtype, XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -20,6 +20,14 @@ pub enum RuleTypes {
 pub trait Rule: SBase {
     fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
+    }
+
+    /// The MathML formula of this rule as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a rule is
+    /// `self.math().set(Math::new(document, node))`.
+    fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
     }
 }
 

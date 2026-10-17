@@ -1,6 +1,6 @@
 use crate::constants::namespaces::{NS_MATHML, NS_QUAL};
 use crate::core::sbase::SbmlUtils;
-use crate::math::Math;
+use crate::math::{Math, MathNode};
 use crate::xml::{
     Document, RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty,
     XmlElement, XmlNamedSubtype, XmlSupertype, XmlWrapper,
@@ -58,5 +58,14 @@ impl FunctionTerm {
 
     pub fn math(&self) -> RequiredChild<Math> {
         RequiredChild::new(self.xml_element(), "math", NS_MATHML)
+    }
+
+    /// The MathML formula of this term as a typed node.
+    ///
+    /// This is the one formula site whose `math` child the specification requires, so the accessor
+    /// returns the node rather than an `Option`; the other sites answer `None` when the child is
+    /// absent, which is the asymmetry the content models have.
+    pub fn math_node(&self) -> MathNode {
+        self.math().get().node()
     }
 }

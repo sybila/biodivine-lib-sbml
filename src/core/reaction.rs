@@ -1,7 +1,7 @@
 use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{SBase, SId};
-use crate::math::Math;
+use crate::math::{Math, MathNode};
 use crate::xml::{
     Document, OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlSupertype,
@@ -115,6 +115,14 @@ impl KineticLaw {
 
     pub fn math(&self) -> OptionalChild<Math> {
         self.optional_math_child("math")
+    }
+
+    /// The MathML formula of this object as a typed node, or `None` when it has no `math` child.
+    ///
+    /// [`math`](Self::math) gives the raw element instead; attaching a new formula to a site is
+    /// `self.math().set(Math::new(document, node))`.
+    pub fn math_node(&self) -> Option<MathNode> {
+        self.math().get().map(|it| it.node())
     }
 
     pub fn local_parameters(&self) -> OptionalSbmlChild<XmlList<LocalParameter>> {
