@@ -665,10 +665,6 @@ fn the_lookup_only_knows_the_wrapper_types() {
 
 /// The element names of the single-child accessors in `source`, as `(wrapper type, name)` pairs.
 ///
-/// Only the accessors whose child is a single object are considered: for an accessor that returns a
-/// list (`...SbmlChild<XmlList<T>>`) the literal names the *list container*, which is not the
-/// element name of any wrapper type, and the children of the list are covered by the creation scan
-/// and by the specification-cited rows of the table instead.
 /// Removes the line comments of a Rust source, including the documentation comments.
 ///
 /// The scan below looks for name literals in the *code*, and the documentation of this crate
@@ -685,6 +681,12 @@ fn strip_line_comments(source: &str) -> String {
         .join("\n")
 }
 
+/// The `(type, name)` pairs of the single-child accessors of a Rust source.
+///
+/// Only the accessors whose child is a single object are considered: for an accessor that returns a
+/// list (`...SbmlChild<XmlList<T>>`) the literal names the *list container*, which is not the
+/// element name of any wrapper type, and the children of the list are covered by the creation scan
+/// and by the specification-cited rows of the table instead.
 fn child_accessors(source: &str) -> Vec<(String, String)> {
     let mut result = Vec::new();
     // `pub fn x(&self) -> OptionalSbmlChild<T> { ...("name" ...) }`
