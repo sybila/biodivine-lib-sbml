@@ -66,8 +66,61 @@ pub(crate) fn apply_rule_10301(
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<SId>,
 ) {
+    // The rule names its classes explicitly, and it is not a rule about "every object with an id":
+    // a `UnitDefinition` has its own rule (10302), a `LocalParameter` has its own (10303), and an
+    // object of a class the list does not name is not covered by this rule at all. Reporting an id
+    // conflict on such an object is a false positive - the corpus has 30 of them, all of the shape
+    // "two unit definitions or two local parameters share an id" - so the class is checked first.
+    if !RULES_10301_CLASSES.contains(&xml_element.tag_name().as_str()) {
+        return;
+    }
     check_identifier_uniqueness("10301", "id", id, xml_element, issues, identifiers);
 }
+
+/// The classes whose `id` has to be unique across a model, as L3V2 rule 10301 names them.
+///
+/// The list is the rule text of the specification (the Level 3 Version 2 class list; the Level 3
+/// Version 1 text names a shorter one, which is a version difference for the versioning work). It
+/// contains the container classes as well as the object classes, because the rule names both, and
+/// it deliberately does not contain `UnitDefinition`, `LocalParameter` or `LocalSpeciesReference`:
+/// they have rules of their own (10302 and 10303) and are therefore not part of this one.
+const RULES_10301_CLASSES: &[&str] = &[
+    "algebraicRule",
+    "assignmentRule",
+    "compartment",
+    "constraint",
+    "delay",
+    "event",
+    "eventAssignment",
+    "functionDefinition",
+    "initialAssignment",
+    "kineticLaw",
+    "listOfCompartments",
+    "listOfConstraints",
+    "listOfEventAssignments",
+    "listOfEvents",
+    "listOfFunctionDefinitions",
+    "listOfInitialAssignments",
+    "listOfLocalParameters",
+    "listOfModifierSpeciesReferences",
+    "listOfParameters",
+    "listOfReactions",
+    "listOfRules",
+    "listOfSpecies",
+    "listOfSpeciesReferences",
+    "listOfUnitDefinitions",
+    "listOfUnits",
+    "model",
+    "modifierSpeciesReference",
+    "parameter",
+    "priority",
+    "rateRule",
+    "reaction",
+    "species",
+    "speciesReference",
+    "trigger",
+    "unit",
+];
 
 /// ### Rule 10307
 /// Every *metaid* attribute value must be unique across the set of all *metaid* values in a model.
@@ -182,5 +235,66 @@ pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIss
         } else {
             unique_namespaces.insert(namespace);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Sbml;
+    use std::collections::BTreeSet;
+
+    /// The rule ids of a report, so an assertion names the rule it is about.
+    fn rules_of(document: &str) -> BTreeSet<String> {
+        Sbml::read_str(document)
+            .expect("the document is well-formed XML")
+            .validate()
+            .expect("validation cannot be cancelled")
+            .into_iter()
+            .map(|issue| issue.rule().to_string())
+            .collect()
+    }
+
+    /// ### Rule 10301
+    /// All the identifiers of the model must be unique across the model, for the object classes the
+    /// rule names.
+    ///
+    /// ### Rule 10302
+    /// The identifier of a `UnitDefinition` must be unique within the model, and a `UnitDefinition`
+    /// is *not* in the class list of 10301 (it has its own rule), so two unit definitions that share
+    /// an identifier are a 10302 and never a 10301.
+    #[test]
+    fn two_unit_definitions_with_one_identifier_are_10302_and_not_10301() {
+        let document = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model>
+    <listOfUnitDefinitions>
+      <unitDefinition id="u"><listOfUnits><unit kind="second"/></listOfUnits></unitDefinition>
+      <unitDefinition id="u"><listOfUnits><unit kind="second"/></listOfUnits></unitDefinition>
+    </listOfUnitDefinitions>
+  </model>
+</sbml>"#;
+        let rules = rules_of(document);
+        assert!(rules.contains("10302"), "expected 10302 in {rules:?}");
+        assert!(
+            !rules.contains("10301"),
+            "10301 must not cover a UnitDefinition (rule 10302 owns it): {rules:?}"
+        );
+    }
+
+    /// Two compartments that share an identifier are a 10301: `Compartment` is one of the classes
+    /// the rule names, so the report has to be there.
+    #[test]
+    fn two_compartments_with_one_identifier_are_10301() {
+        let document = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model>
+    <listOfCompartments>
+      <compartment id="c" constant="true"/>
+      <compartment id="c" constant="true"/>
+    </listOfCompartments>
+  </model>
+</sbml>"#;
+        let rules = rules_of(document);
+        assert!(rules.contains("10301"), "expected 10301 in {rules:?}");
     }
 }

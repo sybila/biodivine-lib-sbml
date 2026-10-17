@@ -3,8 +3,26 @@
       1 10101/10101-fail-01-09-sev2-l3v2.xml|10101|Error
       1 10102/10102-fail-01-25-sev2-l3v1.xml|10102|Error
       1 10102/10102-fail-01-25-sev2-l3v1.xml|not-validated|Informational
+      1 10102/10102-fail-01-27-20517-sev2-l3v1.xml|10102|Error
+      1 10102/10102-fail-01-27-20517-sev2-l3v1.xml|20517|Error
+      1 10102/10102-fail-01-27-20517-sev2-l3v1.xml|not-validated|Informational
+      1 10102/10102-fail-01-28-20517-sev2-l3v1.xml|10102|Error
+      1 10102/10102-fail-01-28-20517-sev2-l3v1.xml|20517|Error
+      1 10102/10102-fail-01-28-20517-sev2-l3v1.xml|not-validated|Informational
+      1 10102/10102-fail-01-29-20517-sev2-l3v1.xml|10102|Error
+      1 10102/10102-fail-01-29-20517-sev2-l3v1.xml|20517|Error
+      1 10102/10102-fail-01-29-20517-sev2-l3v1.xml|not-validated|Informational
       1 10102/10102-fail-01-29-sev2-l3v2.xml|10102|Error
       1 10102/10102-fail-01-29-sev2-l3v2.xml|not-validated|Informational
+      1 10102/10102-fail-01-30-20517-sev2-l3v2.xml|10102|Error
+      1 10102/10102-fail-01-30-20517-sev2-l3v2.xml|20517|Error
+      1 10102/10102-fail-01-30-20517-sev2-l3v2.xml|not-validated|Informational
+      1 10102/10102-fail-01-31-20517-sev2-l3v2.xml|10102|Error
+      1 10102/10102-fail-01-31-20517-sev2-l3v2.xml|20517|Error
+      1 10102/10102-fail-01-31-20517-sev2-l3v2.xml|not-validated|Informational
+      1 10102/10102-fail-01-32-20517-sev2-l3v2.xml|10102|Error
+      1 10102/10102-fail-01-32-20517-sev2-l3v2.xml|20517|Error
+      1 10102/10102-fail-01-32-20517-sev2-l3v2.xml|not-validated|Informational
       1 10102/10102-fail-01-33-sev2-l3v1.xml|10102|Error
       1 10102/10102-fail-01-33-sev2-l3v1.xml|21110|Error
       1 10102/10102-fail-01-33-sev2-l3v1.xml|not-validated|Informational
@@ -124,19 +142,13 @@
       1 10301/10301-fail-01-25-sev2-l3v2.xml|10301|Error
       1 10301/10301-fail-01-26-sev2-l3v2.xml|10301|Error
       1 10301/10301-fail-01-27-sev2-l3v2.xml|10301|Error
-      1 10302/10302-fail-01-07-sev2-l3v1.xml|10301|Error
       1 10302/10302-fail-01-07-sev2-l3v1.xml|10302|Error
-      1 10302/10302-fail-01-09-sev2-l3v2.xml|10301|Error
       1 10302/10302-fail-01-09-sev2-l3v2.xml|10302|Error
-      1 10302/10302-pass-00-13-sev1-l3v1.xml|10301|Error
-      1 10302/10302-pass-00-16-sev1-l3v2.xml|10301|Error
       1 10303/10303-fail-01-07-sev2-l3v1.xml|21110|Error
       1 10303/10303-fail-01-07-sev2-l3v1.xml|not-validated|Informational
-      1 10303/10303-fail-01-09-sev2-l3v2.xml|10301|Error
       1 10303/10303-fail-01-09-sev2-l3v2.xml|10303|Error
       2 10303/10303-pass-00-07-sev1-l3v1.xml|21110|Error
       2 10303/10303-pass-00-07-sev1-l3v1.xml|not-validated|Informational
-      2 10303/10303-pass-00-09-sev1-l3v2.xml|10301|Error
       1 10304/10304-fail-01-08-sev2-l3v1.xml|10304|Error
       1 10304/10304-fail-01-10-sev2-l3v2.xml|10304|Error
       1 10305/10305-fail-01-05-sev2-l3v1.xml|10305|Error
@@ -234,7 +246,6 @@
       1 10313/10313-fail-01-10-sev2-l3v2.xml|10313|Error
       1 10313/10313-fail-01-11-sev2-l3v1.xml|21110|Error
       1 10313/10313-fail-01-11-sev2-l3v1.xml|not-validated|Informational
-      1 10313/10313-fail-01-12-sev2-l3v2.xml|10301|Error
       1 10313/10313-fail-01-12-sev2-l3v2.xml|10313|Error
       1 10313/10313-fail-01-13-sev2-l3v2.xml|10313|Error
       1 10313/10313-fail-01-14-sev2-l3v1.xml|10313|Error
@@ -278,10 +289,8 @@
       1 10404/10404-fail-01-04-sev2-l3v1.xml|not-validated|Informational
       1 10404/10404-fail-01-05-sev2-l3v2.xml|10404|Error
       1 10404/10404-fail-01-05-sev2-l3v2.xml|not-validated|Informational
-      2 10404/10404-fail-01-06-sev2-l3v2.xml|10301|Error
       1 10404/10404-fail-01-06-sev2-l3v2.xml|10404|Error
       1 10404/10404-fail-01-06-sev2-l3v2.xml|not-validated|Informational
-      2 10404/10404-fail-01-07-sev2-l3v2.xml|10301|Error
       1 10404/10404-fail-01-07-sev2-l3v2.xml|10404|Error
       1 10404/10404-fail-01-07-sev2-l3v2.xml|not-validated|Informational
       1 10404/10404-fail-01-08-sev2-l3v2.xml|10404|Error
@@ -289,18 +298,14 @@
       1 10501/10501-pass-00-77-l3v1.xml|unused-namespace|Informational
       3 10503/10503-fail-01-01-99507-sev1-l3v1.xml|21110|Error
       3 10503/10503-fail-01-01-99507-sev1-l3v1.xml|not-validated|Informational
-      2 10503/10503-fail-01-03-99507-sev1-l3v2.xml|10301|Error
       3 10503/10503-fail-02-01-99507-sev1-l3v1.xml|21110|Error
       3 10503/10503-fail-02-01-99507-sev1-l3v1.xml|not-validated|Informational
-      2 10503/10503-fail-02-04-99507-sev1-l3v2.xml|10301|Error
       3 10503/10503-pass-00-01-sev1-l3v1.xml|21110|Error
       3 10503/10503-pass-00-01-sev1-l3v1.xml|not-validated|Informational
       3 10503/10503-pass-00-02-sev1-l3v1.xml|21110|Error
       3 10503/10503-pass-00-02-sev1-l3v1.xml|not-validated|Informational
       1 10503/10503-pass-00-03-sev1-l3v1.xml|21110|Error
       1 10503/10503-pass-00-03-sev1-l3v1.xml|not-validated|Informational
-      2 10503/10503-pass-00-04-sev1-l3v2.xml|10301|Error
-      2 10503/10503-pass-00-05-sev1-l3v2.xml|10301|Error
       1 10514/10514-fail-01-01-sev1-l3v1.xml|21110|Error
       1 10514/10514-fail-01-01-sev1-l3v1.xml|not-validated|Informational
       1 10514/10514-fail-01-02-sev1-l3v1.xml|21110|Error
@@ -729,12 +734,6 @@
       1 20910/20910-fail-01-01-sev2-l3v1.xml|not-validated|Informational
       1 20910/20910-fail-01-03-sev2-l3v2.xml|20910|Error
       1 20910/20910-fail-01-03-sev2-l3v2.xml|not-validated|Informational
-      1 20912/20912-pass-00-07-sev1-l3v2.xml|10301|Error
-      1 20912/20912-pass-00-08-sev1-l3v2.xml|10301|Error
-      1 20912/20912-pass-00-09-sev1-l3v2.xml|10301|Error
-      1 20912/20912-pass-00-10-sev1-l3v2.xml|10301|Error
-      1 20912/20912-pass-00-11-sev1-l3v2.xml|10301|Error
-      1 20912/20912-pass-00-12-sev1-l3v2.xml|10301|Error
       1 21007/21007-fail-01-01-sev2-l3v1.xml|21007|Error
       1 21007/21007-fail-01-01-sev2-l3v1.xml|not-validated|Informational
       1 21007/21007-fail-01-03-sev2-l3v2.xml|21007|Error
@@ -885,7 +884,6 @@
       1 21121/21121-fail-01-07-sev2-l3v1.xml|not-validated|Informational
       1 21121/21121-pass-00-07-sev1-l3v1.xml|21110|Error
       1 21121/21121-pass-00-07-sev1-l3v1.xml|not-validated|Informational
-      1 21121/21121-pass-00-11-sev1-l3v2.xml|10301|Error
       1 21123/21123-fail-01-07-sev2-l3v1.xml|21110|Error
       1 21123/21123-fail-01-07-sev2-l3v1.xml|not-validated|Informational
       1 21123/21123-pass-00-07-sev1-l3v1.xml|21110|Error
@@ -958,13 +956,8 @@
       1 21172/21172-fail-01-04-sev2-l3v2.xml|not-validated|Informational
       1 21172/21172-pass-00-01-sev1-l3v1.xml|21110|Error
       1 21172/21172-pass-00-01-sev1-l3v1.xml|not-validated|Informational
-      1 21173/21173-fail-01-01-sev2-l3v2.xml|10301|Error
-      1 21173/21173-fail-01-02-sev2-l3v2.xml|10301|Error
-      1 21173/21173-fail-01-03-sev2-l3v2.xml|10301|Error
       1 21173/21173-fail-01-04-sev1-l3v1.xml|21110|Error
       1 21173/21173-fail-01-04-sev1-l3v1.xml|not-validated|Informational
-      1 21173/21173-pass-00-01-sev1-l3v2.xml|10301|Error
-      1 21173/21173-pass-00-03-l3v2.xml|10301|Error
       1 21201/21201-fail-01-05-sev2-l3v1.xml|21201|Error
       1 21201/21201-fail-01-05-sev2-l3v1.xml|not-validated|Informational
       1 21201/21201-fail-01-07-sev2-l3v2.xml|21201|Error
@@ -1048,6 +1041,10 @@
       1 80701/80701-fail-01-11-sev1-l3v1.xml|not-validated|Informational
       1 80702/80702-fail-01-02-sev1-l3v1.xml|21110|Error
       1 80702/80702-fail-01-02-sev1-l3v1.xml|not-validated|Informational
+      1 99107/99107-fail-01-04-10102-sev2-l3v1.xml|10102|Error
+      1 99107/99107-fail-01-04-10102-sev2-l3v1.xml|not-validated|Informational
+      1 99107/99107-fail-01-06-10102-sev2-l3v2.xml|10102|Error
+      1 99107/99107-fail-01-06-10102-sev2-l3v2.xml|not-validated|Informational
       1 99505/99505-pass-00-08-l3v1.xml|10218|Error
       1 99507/99507-fail-01-01-sev1-l3v1.xml|21110|Error
       1 99507/99507-fail-01-01-sev1-l3v1.xml|not-validated|Informational

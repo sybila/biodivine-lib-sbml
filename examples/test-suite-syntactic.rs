@@ -300,6 +300,51 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
                  refers to an entity the model does not define, which L3V2 rule 10215 forbids.",
     },
     KnownDifference {
+        rule: "10313",
+        document: "20206/20206-fail-01-02-sev2-l3v2.xml",
+        reason: "The document puts a stray <assignmentRule/> inside <listOfFunctionDefinitions>, \
+                 which the suite reports as 20206, and its <species> declares \
+                 `substanceUnits=\"substance\"` while the model defines no unit with that \
+                 identifier. L3V2 rule 10313 requires every unit identifier reference to name a \
+                 unit definition or a base unit, so the report is correct and the expectation file \
+                 (which lists only 20206) does not mention it.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20209/20209-fail-01-02-sev2-l3v2.xml",
+        reason: "Same shape as 20206-fail-01-02: a stray <assignmentRule/> inside \
+                 <listOfUnitDefinitions> (rule 20209), and a species whose \
+                 `substanceUnits=\"substance\"` names no unit definition of the model.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20214/20214-fail-01-02-sev2-l3v2.xml",
+        reason: "Same shape: a stray <assignmentRule/> inside <listOfReactions> (rule 20214), and a \
+                 species whose `substanceUnits=\"substance\"` names no unit definition of the \
+                 model.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20223/20223-fail-01-02-sev2-l3v2.xml",
+        reason: "Same shape: a stray <assignmentRule/> inside <listOfRules> (rule 20223), and a \
+                 species whose `substanceUnits=\"substance\"` names no unit definition of the \
+                 model.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20226/20226-fail-01-02-sev2-l3v2.xml",
+        reason: "Same shape: a stray <assignmentRule/> inside <listOfInitialAssignments> (rule \
+                 20226), and a species whose `substanceUnits=\"substance\"` and whose compartment's \
+                 `units=\"l\"` name no unit definition of the model.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20231/20231-fail-01-02-sev2-l3v2.xml",
+        reason: "Same shape: a stray <assignmentRule/> inside <listOfConstraints> (rule 20231), and \
+                 a species whose `substanceUnits=\"substance\"` names no unit definition of the \
+                 model.",
+    },
+    KnownDifference {
         rule: "10215",
         document: "21172/21172-fail-01-03-sev2-l3v2.xml",
         reason: "The kinetic law has one <localParameter> and it has no `id` (the suite reports \

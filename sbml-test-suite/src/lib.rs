@@ -283,7 +283,20 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                 for (rule_id, severity) in reported.iter() {
                     if filter_rule(rule_id.as_str()) && is_spec_rule(rule_id.as_str()) {
                         if let Some(entry) = expected.get_mut(rule_id) {
-                            entry.1 -= 1;
+                            // A report *beyond* what the suite expects is not a mismatch this
+                            // report can express (the expectation is satisfied), and subtracting
+                            // would underflow - in a release build it wrapped to a huge number and
+                            // turned into a fictitious "missed" line. The excess is printed so it
+                            // is visible in the run, and the issue dump records it in full.
+                            if entry.1 == 0 {
+                                println!(
+                                    " >> Reported {} more often than the expectation file lists \
+                                       it (the dump records the report).",
+                                    rule_id
+                                );
+                            } else {
+                                entry.1 -= 1;
+                            }
                         } else if let Some(index) = known_differences
                             .iter()
                             .position(|known| known.covers(rule_id, &document.id()))

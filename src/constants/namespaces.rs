@@ -125,6 +125,56 @@ pub(crate) fn qualified_name(
     .map_err(|it| it.to_string())
 }
 
+/// Whether a namespace URL is a *well-formed* SBML namespace: the core namespace of a level and
+/// version, a package namespace of a Level 3 package (`.../level3/versionN/<package>/versionM`), or
+/// one of the published document roots.
+///
+/// The distinction matters for rule 10102, which is about an element or attribute "in an SBML
+/// namespace" that no specification defines: a URL under the SBML tree that is *not* shaped like a
+/// namespace of the standard (for example `http://www.sbml.org/sbml/version1`, which the corpus
+/// uses) is exactly that case, while a package namespace this crate does not model (spatial, comp,
+/// multi, groups, fbc version 3, ...) is a namespace of the standard and its content is the
+/// package's business, not an error.
+pub(crate) fn is_well_formed_sbml_namespace(url: &str) -> bool {
+    if SBML_ROOT_NAMESPACES.contains(&url) || KNOWN_NAMESPACES.iter().any(|it| it.1 == url) {
+        return true;
+    }
+    // `http://www.sbml.org/sbml/level<level>/version<version>/core` for the core namespace, and
+    // `http://www.sbml.org/sbml/level<level>/version<version>/<package>/version<version>` for a
+    // package namespace. The crate does not model every package, but a URL of this shape is a
+    // namespace of the standard all the same, and what it may contain is that package's business.
+    let Some(rest) = url.strip_prefix("http://www.sbml.org/sbml/level") else {
+        return false;
+    };
+    let mut segments = rest.split('/');
+    let (Some(level), Some(version)) = (segments.next(), segments.next()) else {
+        return false;
+    };
+    if level.is_empty() || !version.starts_with("version") || version.len() == "version".len() {
+        return false;
+    }
+    match segments.next() {
+        Some("core") => segments.next().is_none(),
+        Some(package) if !package.is_empty() => {
+            let Some(package_version) = segments.next() else {
+                return false;
+            };
+            package_version.starts_with("version")
+                && package_version.len() > "version".len()
+                && segments.next().is_none()
+        }
+        _ => false,
+    }
+}
+
+/// Whether a namespace URL belongs to something that is not an SBML namespace at all, and whose
+/// content is therefore outside the scope of rule 10102: the XML Schema instance namespace, the
+/// XHTML namespace, MathML and RDF (the three namespaces an `annotation` or `notes` payload uses).
+pub(crate) fn is_foreign_namespace(url: &str) -> bool {
+    [URL_XSI, URL_HTML, URL_MATHML].contains(&url)
+        || url.starts_with("http://www.w3.org/1999/02/22-rdf-syntax-ns")
+}
+
 /// The namespaces this crate knows about, i.e. the SBML core namespace and the namespaces of the
 /// SBML packages with support in this crate.
 const KNOWN_NAMESPACES: [Namespace; 4] = [NS_SBML_CORE, NS_LAYOUT, NS_QUAL, NS_FBC];

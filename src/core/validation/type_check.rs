@@ -4,8 +4,8 @@ use crate::constants::element::{
     UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{
-    namespace_of_prefix, NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
-    URL_PACKAGE_QUAL, URL_SBML_CORE,
+    is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix, NS_SBML_CORE,
+    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE,
 };
 use crate::constraint::FbcType;
 use crate::core::SId;
@@ -207,6 +207,43 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck + SbmlObject>(
     Ok(())
 }
 
+/// Whether a namespace URL is one that no SBML specification defines, and whose content rule 10102
+/// therefore forbids on an SBML element.
+///
+/// A namespace of the standard is accepted whatever package it belongs to (see
+/// [`is_well_formed_sbml_namespace`]), and so is a foreign namespace whose content is outside the
+/// scope of the rule (the XML Schema instance namespace, XHTML, MathML and RDF - the namespaces an
+/// `annotation`, a `notes` object and an `xsi:type` attribute use). Everything else is an undefined
+/// SBML namespace: the corpus exercises both shapes, a URL under the SBML tree that is not shaped
+/// like a namespace of the standard (`http://www.sbml.org/sbml/version1`) and a URL that is not an
+/// SBML URL at all (`http://anything`).
+fn is_undefined_sbml_namespace(url: &str) -> bool {
+    !is_well_formed_sbml_namespace(url) && !is_foreign_namespace(url)
+}
+
+/// The namespace an attribute of an element is in, if it has one.
+///
+/// The attribute is named the way the tables name it (`prefix:local` or `local`), so the name is
+/// resolved against the namespace declarations that are in scope at the element - the same way the
+/// typed property layer resolves it.
+fn attribute_namespace(
+    xml_element: &XmlElement,
+    full_name: &str,
+) -> Option<biodivine_lib_xml_dom::Namespace> {
+    let (prefix, _local) = separate_prefix_name(full_name);
+    if prefix.is_empty() {
+        return None;
+    }
+    // The declarations in scope are reported as `(prefix, binding)` pairs, and the binding of a
+    // prefix is what the attribute name resolves to.
+    xml_element
+        .element()
+        .namespaces_in_scope()
+        .into_iter()
+        .find(|(declared, _binding)| declared.as_ref().map(|it| it.as_str()) == Some(prefix))
+        .and_then(|(_prefix, binding)| binding)
+}
+
 /// Splits an attribute or element name written as `prefix:local` into its prefix and local
 /// part. A name without a prefix is returned with an empty prefix.
 fn separate_prefix_name(name: &str) -> (&str, &str) {
@@ -286,13 +323,38 @@ pub fn validate_allowed_attributes(
         let (prefix, attr_name) = separate_prefix_name(full_name);
 
         if !prefix.is_empty() {
-            // According to the specification, the SBML core attributes should be placed in the
-            // default empty namespace, with any additional attributes (e.g. added by packages)
-            // placed in their respective namespaces. Hence, we can skip validating anything with
-            // a non-empty prefix, as this is likely a non-core attribute. however...
-            // TODO:
-            //      If we find an attribute that has the core namespace but uses a prefix,
-            //      we should report this as an error too, because it is technically out of spec.
+            // The SBML core attributes live in no namespace, and an attribute a package adds lives
+            // in that package's namespace, so an attribute with a prefix is not a core attribute
+            // and is not checked against the core attribute table.
+            //
+            // It is checked for the other half of rule 10102 instead: an attribute in a namespace
+            // that is neither a namespace of the standard nor one of the foreign namespaces an
+            // `annotation` or `notes` payload uses is an attribute in an *undefined* SBML
+            // namespace, and the rule forbids it. The report goes under the rule of the element
+            // when the tables have one for it (a compartment's attributes are rule 20517), and
+            // under 10102 otherwise.
+            //
+            // The attributes of the root are not checked here: they belong to whatever namespace
+            // the root declares, and the namespace of the root itself is what rules 20101 and
+            // 20102 are about. A root whose own namespace is foreign would otherwise turn every
+            // one of its attributes into an "undefined SBML namespace" report.
+            if element_name != "sbml" {
+                if let Some(namespace) = attribute_namespace(xml_element, full_name) {
+                    let url = namespace.uri();
+                    if is_undefined_sbml_namespace(url) {
+                        let message = format!(
+                            "The attribute [{attr_name}] of the element <{element_name}> is in \
+                             the namespace '{url}', which no SBML specification defines."
+                        );
+                        // The element's own attribute rule when the tables have one (an attribute
+                        // of a compartment is rule 20517), and the general rule of an undefined
+                        // element or attribute otherwise.
+                        let rule_id = tag_to_attribute_rule_id(element_name.as_str(), attr_name)
+                            .unwrap_or("10102");
+                        issues.push(SbmlIssue::new(rule_id, xml_element, message));
+                    }
+                }
+            }
             continue;
         }
 
@@ -331,6 +393,21 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
             issues.push(SbmlIssue::new("10201", xml_element, message));
+        } else if is_undefined_sbml_namespace(&child_namespace)
+            && is_well_formed_sbml_namespace(xml_element.namespace_url().as_str())
+        {
+            // The other half of rule 10102: a child element in a namespace that is neither a
+            // namespace of the standard nor a foreign one is an element in an *undefined* SBML
+            // namespace. A child of a package the crate does not model is not reported here (the
+            // namespace is a namespace of the standard; what it may contain is that package's
+            // business), and neither is a foreign element (the payload of an `annotation` or of a
+            // `notes` object).
+            let message = format!(
+                "An unknown child <{child_name}> of the element <{element_name}> found: the \
+                 namespace '{child_namespace}' is not one an SBML specification defines."
+            );
+            let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            issues.push(SbmlIssue::new(rule_id, xml_element, message));
         } else if child_namespace == URL_SBML_CORE
             || child_namespace == URL_PACKAGE_FBC
             || child_namespace == URL_PACKAGE_LAYOUT
@@ -635,5 +712,76 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         ("referenceGlyph", "boundingBox") => Some("layout-21103"),
         ("referenceGlyph", "curve") => Some("layout-21103"),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Sbml;
+    use std::collections::BTreeSet;
+
+    fn rules_of(document: &str) -> BTreeSet<String> {
+        Sbml::read_str(document)
+            .expect("the document is well-formed XML")
+            .validate()
+            .expect("validation cannot be cancelled")
+            .into_iter()
+            .map(|issue| issue.rule().to_string())
+            .collect()
+    }
+
+    /// ### Rule 10102
+    /// An SBML document must not contain undefined elements or attributes in the SBML Level 3 Core
+    /// namespace or in a SBML Level 3 package namespace.
+    ///
+    /// The corpus exercises two shapes of an *undefined* SBML namespace: a URL under the SBML tree
+    /// that is not shaped like a namespace of the standard, and a URL that is not an SBML URL at
+    /// all. Both are reported, the first under the rule of the element the attribute belongs to
+    /// (rule 20517 for a compartment) and the second as the general 10102.
+    #[test]
+    fn an_attribute_in_an_undefined_sbml_namespace_is_reported() {
+        let document = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"
+      xmlns:appear="http://www.sbml.org/sbml/version1">
+  <model>
+    <listOfCompartments>
+      <compartment id="c" constant="true" appear:shape="ellipse"/>
+    </listOfCompartments>
+  </model>
+</sbml>"#;
+        let rules = rules_of(document);
+        assert!(rules.contains("20517"), "expected 20517 in {rules:?}");
+    }
+
+    /// An element in an undefined SBML namespace is the same rule, and a *package* namespace the
+    /// crate does not model is not reported: the package's own rules are about its content.
+    #[test]
+    fn a_child_element_in_an_undefined_sbml_namespace_is_reported() {
+        let undefined = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"
+      xmlns:appear="http://anything">
+  <model>
+    <appear:listOfShapes/>
+  </model>
+</sbml>"#;
+        assert!(
+            rules_of(undefined).contains("10102"),
+            "an element in a namespace no specification defines is a 10102"
+        );
+
+        let known_package = r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"
+      xmlns:fbc="http://www.sbml.org/sbml/level3/version1/fbc/version2" fbc:required="false">
+  <model>
+    <listOfCompartments>
+      <compartment id="c" constant="true"/>
+    </listOfCompartments>
+  </model>
+</sbml>"#;
+        let rules = rules_of(known_package);
+        assert!(
+            !rules.contains("10102"),
+            "a well-formed package namespace is not an undefined namespace: {rules:?}"
+        );
     }
 }
