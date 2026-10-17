@@ -7,7 +7,7 @@
 //!    rules permit and rejects every name they do not, and the two tables it derives its operator
 //!    and constant sets from are pinned against the same constants. A drift between the typed layer
 //!    and the validator therefore fails the build;
-//!  * the **behavioural checks** of the layer: the element order of the construction helpers, the
+//!  * the **behavioral checks** of the layer: the element order of the construction helpers, the
 //!    navigation, the representability of the operators that are not built-in, the rendering of a
 //!    node, the namespace declaration a formula built from scratch carries, and the round trip of a
 //!    real document with a typed edit in it;
@@ -1541,7 +1541,7 @@ fn the_example_documents_are_covered_by_the_typed_layer() {
 /// permit, and a MathML name written in the SBML namespace (the rule 10201 documents, where the
 /// formula itself is in the wrong namespace).
 ///
-/// The figures count *recognised* formulas only: the walk starts from the elements that
+/// The figures count *recognized* formulas only: the walk starts from the elements that
 /// `Math::matches_element` accepts, so a document whose `<math>` is itself in another namespace (the
 /// `10201-fail-01-04/11` class, where the `<math>` carries the SBML namespace) is counted as a
 /// document but contributes no formula — which is why the set below has four entries and not six.

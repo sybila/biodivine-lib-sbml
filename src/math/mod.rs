@@ -168,7 +168,7 @@
 //!    `site.math().set(Math::new(document, node))` puts a newly built expression into a site of the
 //!    object model.
 //!  * [`MathNode`](crate::math::MathNode) — navigation ([`MathNode::children`](crate::math::MathNode::children), [`MathNode::parent`](crate::math::MathNode::parent)) and rendering.
-//!  * [`MathNode::apply`](crate::math::MathNode::apply) and its neighbours — building a formula, in the element order the
+//!  * [`MathNode::apply`](crate::math::MathNode::apply) and its neighbors — building a formula, in the element order the
 //!    specification fixes.
 //!  * The concrete element types (for example [`Apply`](crate::math::Apply), [`Cn`](crate::math::Cn), [`Lambda`](crate::math::Lambda)) — the accessors of a
 //!    node's content.
