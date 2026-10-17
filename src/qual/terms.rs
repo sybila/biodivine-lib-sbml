@@ -56,15 +56,31 @@ impl FunctionTerm {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 
+    /// The `math` child of this term.
+    ///
+    /// # Panics
+    ///
+    /// Reading the child ([`RequiredXmlChild::get`]) panics when
+    /// the element has none. A `functionTerm` without a formula is a document error (rule
+    /// `qual-20804` constrains how many `math` children the element may have, and the validation
+    /// layer reports a document that has more than one), and the typed layer deliberately keeps the
+    /// child required: use [`FunctionTerm::math_node`] for the typed form, which has the same
+    /// contract.
     pub fn math(&self) -> RequiredChild<Math> {
         RequiredChild::new(self.xml_element(), "math", NS_MATHML)
     }
 
     /// The MathML formula of this term as a typed node.
     ///
-    /// This is the one formula site whose `math` child the specification requires, so the accessor
-    /// returns the node rather than an `Option`; the other sites answer `None` when the child is
-    /// absent, which is the asymmetry the content models have.
+    /// This is the one formula site whose accessor is *not* optional — the asymmetry the content
+    /// models have, and a deliberate design choice of this crate rather than a mandate of the
+    /// specification: rule `qual-20804` limits the number of `math` children of a `functionTerm`
+    /// (a `functionTerm` may contain exactly one), while a term without one is a document the
+    /// validation layer reports through its own rules rather than through a missing child.
+    ///
+    /// # Panics
+    ///
+    /// Panics when the term has no `math` child, exactly as [`FunctionTerm::math`].
     pub fn math_node(&self) -> MathNode {
         self.math().get().node()
     }

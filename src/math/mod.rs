@@ -164,7 +164,9 @@
 //!
 //! # Where to go next
 //!
-//!  * [`Math`](crate::math::Math) — the formula root, and how to attach or replace a formula.
+//!  * [`Math`](crate::math::Math) — the formula root, and how to attach or replace a formula:
+//!    `site.math().set(Math::new(document, node))` puts a newly built expression into a site of the
+//!    object model.
 //!  * [`MathNode`](crate::math::MathNode) — navigation ([`MathNode::children`](crate::math::MathNode::children), [`MathNode::parent`](crate::math::MathNode::parent)) and rendering.
 //!  * [`MathNode::apply`](crate::math::MathNode::apply) and its neighbours — building a formula, in the element order the
 //!    specification fixes.

@@ -33,7 +33,7 @@ use crate::xml::{
     XmlProperty, XmlWrapper,
 };
 use crate::Sbml;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 /// An empty document to build formula roots in.
 fn probe() -> Document {
@@ -1417,4 +1417,283 @@ fn a_site_without_a_formula_answers_none() {
     // The ten *optional* sites above are the ones with an `Option`; the qual `functionTerm` is not
     // among them, and a document that omits its `math` child is a document error rather than a
     // `None` (rule 20411), which is why its accessor returns a `MathNode`.
+}
+
+// ---------------------------------------------------------------------------------------------
+// The typed layer against the documents of this repository
+// ---------------------------------------------------------------------------------------------
+
+/// What a walk over the formulas of a directory found.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct Sweep {
+    /// The documents whose text mentions a formula, i.e. the ones that were parsed.
+    documents_with_math: usize,
+    /// The documents that contain a formula but are not well-formed XML.
+    unreadable: Vec<String>,
+    /// The `math` elements that are formula roots.
+    formulas: usize,
+    /// The descendant elements of those formulas.
+    elements: usize,
+    /// The descendant elements that are *not* nodes of the typed layer, by `name [why]`.
+    outside: BTreeMap<String, usize>,
+}
+
+/// Walk every formula of every document below `root`.
+///
+/// The file is only parsed when its text mentions a `math` element, which keeps the walk over the
+/// whole test corpus cheap; a document that mentions one and does not parse is recorded as
+/// unreadable rather than silently skipped.
+fn sweep_math(root: &str) -> Sweep {
+    let mut sweep = Sweep::default();
+    let mut files = Vec::new();
+    collect_documents(root, &mut files);
+    files.sort();
+    for path in files {
+        let Ok(source) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        if !source.contains("<math") {
+            continue;
+        }
+        sweep.documents_with_math += 1;
+        let Ok(document) = Sbml::read_str(&source) else {
+            sweep.unreadable.push(path);
+            continue;
+        };
+        let formulas = document
+            .xml_element()
+            .recursive_child_elements_filtered(|it| Math::matches_element(it));
+        for formula in formulas {
+            sweep.formulas += 1;
+            walk_formula(&formula, &mut sweep);
+        }
+    }
+    sweep
+}
+
+/// Count the descendant elements of `formula`, recording the ones outside the typed layer.
+fn walk_formula(element: &XmlElement, sweep: &mut Sweep) {
+    for child in element.child_elements() {
+        sweep.elements += 1;
+        if MathNode::try_from_element(child.clone()).is_none() {
+            let reason = if child.namespace_url() == URL_MATHML {
+                "in the MathML namespace, not permitted by SBML".to_string()
+            } else {
+                format!("in the namespace '{}'", child.namespace_url())
+            };
+            let key = format!("{} [{}]", child.tag_name(), reason);
+            *sweep.outside.entry(key).or_default() += 1;
+        }
+        walk_formula(&child, sweep);
+    }
+}
+
+/// Every document of `root` with an `.xml` or `.sbml` extension.
+fn collect_documents(root: &str, result: &mut Vec<String>) {
+    let Ok(entries) = std::fs::read_dir(root) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_documents(&path.to_string_lossy(), result);
+        } else if path
+            .extension()
+            .is_some_and(|it| it == "xml" || it == "sbml")
+        {
+            result.push(path.to_string_lossy().to_string());
+        }
+    }
+}
+
+/// Every element of every formula of the example documents is a node of the typed layer.
+///
+/// This is the evidence that the subset the layer is pinned against is the subset real documents
+/// use: the example documents of this repository contain no MathML that the layer cannot describe,
+/// so there is no scope-out list to keep in sync (the module documentation says so, and this test
+/// shows it is true of the documents we ship).
+#[test]
+fn the_example_documents_are_covered_by_the_typed_layer() {
+    let sweep = sweep_math("test-inputs");
+    println!("{sweep:?}");
+    assert!(
+        sweep.documents_with_math >= 21 && sweep.formulas >= 300 && sweep.elements >= 3700,
+        "The example documents lost their formulas: {sweep:?}"
+    );
+    assert!(
+        sweep.unreadable.is_empty(),
+        "An example document that mentions a formula is not well-formed XML: {:?}",
+        sweep.unreadable
+    );
+    assert!(
+        sweep.outside.is_empty(),
+        "An example document uses MathML outside the SBML subset: {:?}",
+        sweep.outside
+    );
+}
+
+/// The MathML of the syntactic test corpus that is *not* a node of the typed layer is exactly the
+/// deliberate violation the corresponding test case is about.
+///
+/// The corpus is the collection of documents the validation layer is measured against, and it
+/// contains, on purpose, documents that break the MathML rules. Read through the typed layer they
+/// split into two classes, both measured here: an element of the MathML namespace that SBML does not
+/// permit, and a MathML name written in the SBML namespace (the rule 10201 documents, where the
+/// formula itself is in the wrong namespace).
+///
+/// The test skips (and passes) when the corpus is not unpacked, like the crate's other corpus gates.
+#[test]
+fn the_corpus_math_outside_the_subset_is_the_deliberate_violation() {
+    if !std::path::Path::new("syntactic").is_dir() {
+        println!("SKIP: the syntactic corpus is not unpacked in ./syntactic");
+        return;
+    }
+    let sweep = sweep_math("syntactic");
+    println!("{sweep:?}");
+    assert!(
+        sweep.documents_with_math >= 3600 && sweep.formulas >= 5000 && sweep.elements >= 25000,
+        "The corpus walk lost its documents: {sweep:?}"
+    );
+    // Seven documents of the corpus mention a formula and are *not* well-formed XML: they are the
+    // rule 01009/01011/01023 cases about XML that a parser refuses, so the walk cannot read them.
+    assert_eq!(
+        sweep.unreadable,
+        vec![
+            "syntactic/01009/01009-fail-01-02-sev2-l2v1.xml",
+            "syntactic/01009/01009-fail-01-03-sev2-l2v1.xml",
+            "syntactic/01009/01009-fail-01-05-sev2-l2v2.xml",
+            "syntactic/01009/01009-fail-01-06-sev2-l2v3.xml",
+            "syntactic/01009/01009-fail-01-07-sev2-l2v4.xml",
+            "syntactic/01011/01011-fail-01-01-sev2-l2v1.xml",
+            "syntactic/01023/01023-fail-01-01-sev2-l2v1.xml",
+        ]
+        .iter()
+        .map(|it| it.to_string())
+        .collect::<Vec<_>>(),
+        "The set of unparsable corpus documents changed."
+    );
+    assert_eq!(
+        sweep.outside,
+        BTreeMap::from([
+            (
+                "ci [in the namespace 'http://www.sbml.org/sbml/level2/version4']".to_string(),
+                1
+            ),
+            (
+                "ci [in the namespace 'http://www.sbml.org/sbml/level2/version5']".to_string(),
+                1
+            ),
+            (
+                "mean [in the MathML namespace, not permitted by SBML]".to_string(),
+                7
+            ),
+            (
+                "times [in the namespace 'http://www.sbml.org/sbml/level2/version4']".to_string(),
+                1
+            ),
+            (
+                "times [in the namespace 'http://www.sbml.org/sbml/level2/version5']".to_string(),
+                1
+            ),
+        ]),
+        "The MathML of the corpus that the typed layer rejects changed."
+    );
+}
+
+/// A description of the structure of a node: the element name of each node of its subtree, with the
+/// payload of the token elements.
+fn describe(node: &MathNode) -> String {
+    let children = node
+        .children()
+        .iter()
+        .map(describe)
+        .collect::<Vec<_>>()
+        .join(",");
+    let payload = match node {
+        MathNode::Ci(it) => format!("={}", it.symbol()),
+        MathNode::Cn(it) => format!("={}[{}]", it.payload(), it.number_type().name()),
+        MathNode::Csymbol(it) => format!("={}", it.symbol()),
+        _ => String::new(),
+    };
+    if children.is_empty() {
+        format!("{}{}", node.element_name(), payload)
+    } else {
+        format!("{}{}({})", node.element_name(), payload, children)
+    }
+}
+
+/// A formula built with the construction helpers, attached to a real document, written out and read
+/// back is the same structure — the end-to-end path a caller takes.
+#[test]
+fn a_built_formula_survives_a_real_document() {
+    let document =
+        Sbml::read_path("test-inputs/Mukandavire2020.xml").expect("The example document parses.");
+    let kinetic_law = document
+        .model()
+        .get()
+        .expect("The document has a model.")
+        .reactions()
+        .get()
+        .expect("The model has reactions.")
+        .get(0)
+        .kinetic_law()
+        .get()
+        .expect("The reaction has a kinetic law.");
+
+    // A piecewise expression, built in the document of the site it is attached to.
+    let handle = document.xml_element().document();
+    let built = Math::new(
+        handle.clone(),
+        MathNode::piecewise(
+            handle.clone(),
+            [(
+                MathNode::integer(handle.clone(), 1),
+                MathNode::apply(
+                    handle.clone(),
+                    MathOperator::Gt,
+                    [
+                        MathNode::ci(handle.clone(), "S"),
+                        MathNode::real(handle.clone(), 0.5),
+                    ],
+                ),
+            )],
+            Some(MathNode::real(handle.clone(), 0.0)),
+        ),
+    );
+    let before = describe(&built.node());
+    let written_formula = built.to_string();
+    assert_eq!(
+        mathml_declarations(&written_formula),
+        1,
+        "A built formula declares MathML once: {written_formula}"
+    );
+    assert_eq!(
+        before,
+        "math(piecewise(piece(cn=1[integer],apply(gt,ci=S,cn=0.5[real])),otherwise(cn=0[real])))"
+    );
+
+    kinetic_law.math().set(built);
+    let written = document.to_xml_string().expect("The document serializes.");
+    let reread = Sbml::read_str(&written).expect("What the library writes parses.");
+    let formula = reread
+        .model()
+        .get()
+        .expect("The written document has a model.")
+        .reactions()
+        .get()
+        .expect("It has reactions.")
+        .get(0)
+        .kinetic_law()
+        .get()
+        .expect("It has a kinetic law.")
+        .math()
+        .get()
+        .expect("It has the formula it was given.");
+
+    assert_eq!(describe(&formula.node()), before);
+    assert_eq!(
+        formula.to_string(),
+        written_formula,
+        "The formula survives the round trip through the document byte for byte."
+    );
 }
