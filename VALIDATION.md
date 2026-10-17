@@ -158,7 +158,7 @@ which rule changed without re-running the suite.
 
 #### Measuring the result
 
-The three report files the example compares are the input of four small tools in `scripts/`
+The three report files the example compares are the input of the small tools in `scripts/`
 that turn them into the numbers a change is reviewed against. They are plain `python3` with no
 dependencies and they never write to the repository, so they can be run against the report files
 of a run in progress or against the recorded snapshots.
@@ -180,6 +180,11 @@ of a run in progress or against the recorded snapshots.
     only the issue dump can see, ...) and reports, per rule, how many documents moved from
     "has a mismatch" to "clean". The shapes are what a reviewer checks; a comment or a commit
     message supplies the reason, and the two are different kinds of evidence.
-  * `scripts/corpus_lib.py` holds the shared parsing and the rule taxonomy that the three tools
-    above use: rule ids of a core specification, of an extension package, of libSBML (the
+  * `scripts/corpus_lib.py` holds the shared parsing and the rule taxonomy that the tools above
+    use: rule ids of a core specification, of an extension package, of libSBML (the
     `8xxxx`/`9xxxx` ranges, which no SBML specification defines), and the library's own lints.
+  * `scripts/corpus_type_check_denominator.py` counts the documents for which `validate` returns
+    before the object walk, from the output of a harness run that carries a one-line temporary
+    instrumentation of `Sbml::validate` (the script's documentation shows the line and the run).
+    It is the denominator of the guard discussed in `Sbml::validate`'s documentation, and it also
+    reports which of the mismatching documents of the recorded snapshots the walk cannot reach.
