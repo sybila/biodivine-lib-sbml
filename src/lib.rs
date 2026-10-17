@@ -477,6 +477,7 @@ mod tests {
         NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
         URL_SBML_CORE,
     };
+    use crate::constraint::FbcSpecies;
     use crate::core::sbase::SbmlUtils;
     use crate::core::validation::SbmlValidable;
     use crate::core::RuleTypes::Assignment;
@@ -1932,6 +1933,143 @@ mod tests {
         // (d) Not declared at all: not declared.
         let doc = Sbml::read_str(&format!(r#"<sbml xmlns="{core}"/>"#)).unwrap();
         assert!(doc.declared_package_prefix(NS_FBC).is_err());
+    }
+
+    /// Pins the package-name contract of the XML layer, which the whole-corpus gates cannot see:
+    /// **the reader resolves a package name by its namespace URI** (the prefix a document happens
+    /// to bind to that URI is irrelevant), while **the writer always introduces the conventional
+    /// prefix of the package** on the `<sbml>` element.
+    ///
+    /// No document of the SBML test corpus (or of `test-inputs/`) binds a package URL under a
+    /// non-conventional prefix, so `scripts/full_corpus_parity.sh` exercises neither half of this
+    /// contract; this test is its tripwire. It turns the write-path delta documented in
+    /// `notes/g2-report.md` (G2.3, section 4.3) into asserted behaviour: a later change that makes
+    /// the writer reuse the prefix found in the document fails here by design.
+    #[test]
+    pub fn test_package_read_path_is_prefix_agnostic() {
+        let core = URL_SBML_CORE;
+        let fbc = URL_PACKAGE_FBC;
+
+        // The document binds the FBC namespace URL under `fb` and never under the conventional
+        // `fbc`, so every FBC name below can only be found by comparing namespace URIs.
+        let doc = Sbml::read_str(&format!(
+            r#"<sbml xmlns="{core}" xmlns:fb="{fbc}" fb:required="false" level="3" version="1">
+  <model>
+    <listOfSpecies>
+      <species id="s" fb:charge="2"/>
+    </listOfSpecies>
+  </model>
+</sbml>"#
+        ))
+        .unwrap();
+
+        // Negative controls: the document really carries no `fbc` prefix, and the declaration
+        // predicate reports the prefix the document actually uses.
+        let root = doc.xml_element().element();
+        assert!(
+            !root
+                .namespace_declarations()
+                .into_iter()
+                .any(|(prefix, _)| prefix.as_ref().is_some_and(|it| it.as_str() == "fbc")),
+            "The test document must not declare a conventional `fbc` prefix."
+        );
+        assert_eq!(doc.declared_package_prefix(NS_FBC), Ok("fb".to_string()));
+
+        // READ: the package property resolves through the namespace URI alone.
+        let model = doc.model().get().unwrap();
+        let species = model.species().get().unwrap().get(0);
+        let fbc_species = species.try_downcast::<FbcSpecies>().unwrap();
+        assert_eq!(
+            fbc_species.charge().get(),
+            Some(2),
+            "A package property must be found even when the document uses a different prefix."
+        );
+
+        // (2) Reading is *not* gated by the package declaration: a document that binds the URL
+        // without a `required` attribute still resolves its package content. Whether the
+        // declaration is complete is the validation layer's business, not the reader's.
+        let undeclared = Sbml::read_str(&format!(
+            r#"<sbml xmlns="{core}" xmlns:fb="{fbc}" level="3" version="1">
+  <model>
+    <listOfSpecies>
+      <species id="s" fb:charge="4"/>
+    </listOfSpecies>
+  </model>
+</sbml>"#
+        ))
+        .unwrap();
+        assert!(undeclared.declared_package_prefix(NS_FBC).is_err());
+        let undeclared_species = undeclared
+            .model()
+            .get()
+            .unwrap()
+            .species()
+            .get()
+            .unwrap()
+            .get(0);
+        assert_eq!(
+            undeclared_species
+                .try_downcast::<FbcSpecies>()
+                .unwrap()
+                .charge()
+                .get(),
+            Some(4),
+            "The reader must resolve a package name by its namespace URI, not by the package \
+             declaration."
+        );
+
+        // (3) WRITE: the library introduces the conventional prefix on the `<sbml>` element and
+        // writes the property with it.
+        fbc_species.charge().set_some(&3);
+
+        let declaration = root
+            .namespace_declarations()
+            .into_iter()
+            .find(|(prefix, _)| prefix.as_ref().is_some_and(|it| it.as_str() == "fbc"))
+            .expect("The conventional `fbc` prefix must be declared on the `<sbml>` element.");
+        assert_eq!(
+            declaration.1.as_ref().map(|it| it.uri()),
+            Some(fbc),
+            "The `fbc` prefix must be bound to the FBC namespace URL."
+        );
+        // The declaration the document already had is added to, not rewritten.
+        assert!(
+            root.namespace_declarations()
+                .into_iter()
+                .any(|(prefix, _)| prefix.as_ref().is_some_and(|it| it.as_str() == "fb")),
+            "The `fb` declaration of the document must be preserved."
+        );
+
+        let required = crate::constants::namespaces::qualified_name(NS_FBC, "required").unwrap();
+        assert_eq!(
+            root.attributes().get(&required).map(|it| it.as_str()),
+            Some("false"),
+            "The introduced declaration must carry `fbc:required=\"false\"`."
+        );
+
+        let xml = doc.to_xml_string().unwrap();
+        assert!(
+            xml.contains("fbc:charge=\"3\""),
+            "The written property must use the conventional prefix: {xml}"
+        );
+        let reread = Sbml::read_str(xml.as_str()).unwrap();
+        let reread_species = reread
+            .model()
+            .get()
+            .unwrap()
+            .species()
+            .get()
+            .unwrap()
+            .get(0);
+        assert_eq!(
+            reread_species
+                .try_downcast::<FbcSpecies>()
+                .unwrap()
+                .charge()
+                .get(),
+            Some(3),
+            "The written value must survive a serialization round trip."
+        );
     }
 
     #[test]
