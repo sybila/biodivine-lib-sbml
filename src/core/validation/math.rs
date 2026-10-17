@@ -5,7 +5,9 @@ use crate::constants::element::{
     MATHML_ALLOWED_CHILDREN_BY_ATTR, MATHML_ALLOWED_DEFINITION_URLS, MATHML_ALLOWED_TYPES,
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
-use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
+use crate::core::validation::{
+    apply_rule_10313, get_allowed_children, is_level_3_version_1, matches_unit_sid_pattern,
+};
 use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Model, SId};
 use crate::math::Math;
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
@@ -77,9 +79,15 @@ impl Math {
         self.apply_rule_10219(issues);
         self.apply_rule_10220(issues);
         self.apply_rule_10221(issues);
-        self.apply_rule_10223(issues);
-        self.apply_rule_10224(issues);
-        self.apply_rule_10225(issues);
+        // The three `rateOf` rules are new in Level 3 Version 2 (the specification marks them with
+        // `\validationRuleVerTwo`), and no rule of the same number exists in Version 1, so a
+        // Version 1 document is not checked against them: the `rateOf` symbol itself is a Version 2
+        // addition, which is why the Version 1 specification has nothing to say about it.
+        if !is_level_3_version_1(self.xml_element()) {
+            self.apply_rule_10223(issues);
+            self.apply_rule_10224(issues);
+            self.apply_rule_10225(issues);
+        }
         self.apply_rule_10311(issues);
         self.apply_rule_10313(issues);
 

@@ -376,3 +376,57 @@ mod version_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod version_applicability_tests {
+    use crate::Sbml;
+    use std::collections::BTreeSet;
+
+    fn rules_of(document: &str) -> BTreeSet<String> {
+        Sbml::read_str(document)
+            .expect("the document is well-formed XML")
+            .validate()
+            .expect("validation cannot be cancelled")
+            .into_iter()
+            .map(|issue| issue.rule().to_string())
+            .collect()
+    }
+
+    /// ### Rules 10223, 10224, 10225 (new in Level 3 Version 2)
+    /// The specification marks the three `rateOf` rules with `\validationRuleVerTwo`, and no rule
+    /// of those numbers exists in the Version 1 specification: the `rateOf` csymbol itself is a
+    /// Version 2 addition. A Version 1 document is therefore not checked against them, and the same
+    /// document as Version 2 is.
+    #[test]
+    fn the_rate_of_rules_apply_to_a_version_2_document_only() {
+        let document_of_version = |version: &str| {
+            format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="{version}">
+  <model>
+    <listOfParameters>
+      <parameter id="p" constant="false"/>
+      <parameter id="q" constant="false"/>
+    </listOfParameters>
+    <listOfRules>
+      <rateRule variable="p"><math xmlns="http://www.w3.org/1998/Math/MathML">
+        <apply><csymbol definitionURL="http://www.sbml.org/sbml/symbols/rateOf"/>
+          <ci>p</ci><ci>q</ci></apply>
+      </math></rateRule>
+    </listOfRules>
+  </model>
+</sbml>"#
+            )
+        };
+        let version_2 = rules_of(&document_of_version("2"));
+        let version_1 = rules_of(&document_of_version("1"));
+        assert!(
+            version_2.contains("10223") || version_2.contains("10224"),
+            "the Version 2 document is checked against the rateOf rules: {version_2:?}"
+        );
+        assert!(
+            !version_1.contains("10223") && !version_1.contains("10224"),
+            "the Version 1 document is not checked against the rateOf rules: {version_1:?}"
+        );
+    }
+}
