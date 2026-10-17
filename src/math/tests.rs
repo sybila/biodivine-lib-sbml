@@ -904,9 +904,10 @@ fn a_prefixed_binding_gets_a_declaration_where_it_is_needed() {
 ///
 /// The library guarantees the *text* of a document, not its byte layout: the serializer writes the
 /// attributes of an element in a canonical order and re-wraps its declarations, so a document that
-/// was written by another tool is not necessarily reproduced byte for byte (of the forty-one
-/// documents in `test-inputs/`, none is: the ones that come closest differ in attribute order,
-/// quoting or line wrapping). What a formula is made of, on the other hand, is text and elements, so
+/// was written by another tool is not necessarily reproduced byte for byte (measured once over
+/// `test-inputs/`: 42 of its 43 documents are readable and **none** of them is reproduced byte for
+/// byte, the closest ones differing in attribute order, quoting or line wrapping). What a formula is
+/// made of, on the other hand, is text and elements, so
 /// the formula itself survives unchanged — which is what this test pins, on a document whose five
 /// formulas are all preserved. The whole-corpus counterpart of this check is the round-trip snapshot
 /// of `scripts/full_corpus_parity.sh` (`test_suite_roundtrip.txt`).

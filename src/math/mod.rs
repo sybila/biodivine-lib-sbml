@@ -126,10 +126,16 @@
 //!  * **It does not cover the whole of MathML.** The subset is what SBML permits; everything else
 //!    (an element of another version of MathML, a construct of a future revision) is outside the
 //!    *typed* layer. That is a type verdict, not a limitation of the reader: the element and its
-//!    content stay reachable, unchanged, through the raw [`XmlElement`] of
-//!    its parent ([`MathNode::raw_children`](crate::math::MathNode::raw_children)), and a document containing such an element round
-//!    trips through the library like any other. There is no scope-out list to keep in sync, because
-//!    the typed layer accepts every name the validation accepts.
+//!    content stay reachable, unchanged, through the raw element of its parent
+//!    ([`MathNode::raw_children`](crate::math::MathNode::raw_children) gives every child element of
+//!    a node and [`MathNode::xml_element`](crate::math::MathNode::xml_element) the element itself),
+//!    and a document containing such an element round trips through the library like any other.
+//!    There is no scope-out list to keep in sync, because the typed layer accepts every name the
+//!    validation accepts. One operation *is* destructive: replacing the content of a formula
+//!    ([`Math::set_expression`](crate::math::Math::set_expression) or
+//!    [`MathNode::set_children`](crate::math::MathNode::set_children)) detaches every child element
+//!    of the replaced region, including one this layer cannot describe, so a caller that wants to
+//!    keep such a child edits through the raw element instead.
 //!
 //! # Namespaces
 //!

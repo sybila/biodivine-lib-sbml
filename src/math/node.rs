@@ -585,7 +585,11 @@ impl MathNode {
     /// A `<cn type="real">` element.
     ///
     /// The value is written with the shortest representation that reads back as the same number,
-    /// which is what the `Display` implementation of `f64` produces.
+    /// which is what the `Display` implementation of `f64` produces. A value that is *not* a number
+    /// has no `<cn>` spelling in MathML: `NaN` and the infinities are the constant elements
+    /// [`MathConstant::NotANumber`] and
+    /// [`MathConstant::Infinity`], so a caller that means them
+    /// builds those nodes instead of calling this one.
     pub fn real(document: Document, value: f64) -> MathNode {
         Self::number_element(&document, CnType::Real, value.to_string())
     }
@@ -604,7 +608,8 @@ impl MathNode {
     /// `<cn type="e-notation">mantissa<sep/>exponent</cn>`.
     ///
     /// The exponent is the power of ten the mantissa is multiplied by, which is how MathML 2.0
-    /// defines `e-notation` (it is not the `1.2e-3` spelling of programming languages).
+    /// defines `e-notation` (it is not the `1.2e-3` spelling of programming languages). As
+    /// [`MathNode::real`] documents, a mantissa that is not a number has no `<cn>` spelling.
     pub fn e_notation(document: Document, mantissa: f64, exponent: i32) -> MathNode {
         Self::two_token_number(
             document,
