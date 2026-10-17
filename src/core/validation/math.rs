@@ -6,7 +6,8 @@ use crate::constants::element::{
     MATHML_BINARY_OPERATORS, MATHML_UNARY_OPERATORS,
 };
 use crate::core::validation::{apply_rule_10313, get_allowed_children, matches_unit_sid_pattern};
-use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Math, Model, SId};
+use crate::core::{BaseUnit, FunctionDefinition, KineticLaw, Model, SId};
+use crate::math::Math;
 use crate::xml::{RequiredXmlProperty, XmlElement, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;

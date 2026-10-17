@@ -48,6 +48,37 @@ impl XmlElement {
         element
     }
 
+    /// Create a new, detached element with the given local `name` in the given `namespace`,
+    /// **without** declaring that namespace on it.
+    ///
+    /// This is the sibling of [`XmlElement::new_qualified`] for the one situation in which
+    /// declaring the namespace on every created element is wrong: building a whole subtree at once,
+    /// where the namespace belongs on the *root* of the new subtree and would otherwise be repeated
+    /// on every node below it. The element's name still *is* the qualified name; only the
+    /// declaration is missing, and the caller is responsible for it.
+    ///
+    /// The declaration then comes from whichever of these applies:
+    ///
+    ///  * the subtree root is attached below an element that already makes the namespace visible
+    ///    (the usual case: a formula's `math` element declares MathML once), or
+    ///  * [`XmlElement::ensure_namespace`] is called on the subtree root, which is what
+    ///    `MathNode::push` does for a subtree that enters a live document and what a caller does for
+    ///    a subtree that is serialized on its own.
+    ///
+    /// # Panics
+    ///
+    /// As [`XmlElement::new_qualified`]: the name has to be a valid XML name and the namespace a
+    /// valid XML namespace, which the constant SBML namespaces always are.
+    pub(crate) fn new_qualified_undeclared(
+        document: Document,
+        name: &str,
+        namespace: crate::constants::namespaces::Namespace,
+    ) -> XmlElement {
+        let qualified_name = crate::constants::namespaces::qualified_name(namespace, name)
+            .expect("The provided element name is not a valid XML name.");
+        XmlElement(document.create_element(qualified_name))
+    }
+
     /// A reference to the underlying [biodivine_lib_xml_dom] element.
     pub fn element(&self) -> &Element {
         &self.0

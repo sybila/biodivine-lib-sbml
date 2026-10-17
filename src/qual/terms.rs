@@ -1,6 +1,6 @@
 use crate::constants::namespaces::{NS_MATHML, NS_QUAL};
 use crate::core::sbase::SbmlUtils;
-use crate::core::Math;
+use crate::math::Math;
 use crate::xml::{
     Document, RequiredChild, RequiredSbmlProperty, RequiredXmlChild, RequiredXmlProperty,
     XmlElement, XmlNamedSubtype, XmlSupertype, XmlWrapper,

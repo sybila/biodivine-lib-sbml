@@ -1,6 +1,7 @@
 use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
-use crate::core::{Math, SBase, SId};
+use crate::core::{SBase, SId};
+use crate::math::Math;
 use crate::xml::{
     Document, OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild,
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlSupertype,

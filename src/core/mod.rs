@@ -3,7 +3,6 @@ mod constraint;
 mod event;
 mod function_definition;
 mod initial_assignment;
-mod math;
 mod model;
 mod parameter;
 mod reaction;
@@ -19,7 +18,6 @@ pub use constraint::Constraint;
 pub use event::{Delay, Event, EventAssignment, Priority, Trigger};
 pub use function_definition::FunctionDefinition;
 pub use initial_assignment::InitialAssignment;
-pub use math::Math;
 pub use model::Model;
 pub use parameter::Parameter;
 pub use reaction::{

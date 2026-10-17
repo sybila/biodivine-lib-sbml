@@ -127,6 +127,11 @@ pub mod constraint;
 /// by the SBML core specification.
 pub mod core;
 pub mod layout;
+
+/// Defines [`Math`][math::Math], the typed layer over the MathML subset that SBML formulas use:
+/// [`MathNode`][math::MathNode], the declared element types of the subset, and the closed operator
+/// and constant sets.
+pub mod math;
 pub mod qual;
 
 /// Defines [`Document`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
@@ -619,12 +624,13 @@ mod tests {
     use crate::core::RuleTypes::Assignment;
     use crate::core::{
         AlgebraicRule, AssignmentRule, BaseUnit, Compartment, Constraint, Delay, Event,
-        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, Math,
-        MetaId, Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule,
-        RuleTypes, SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger,
-        Unit, UnitDefinition,
+        EventAssignment, FunctionDefinition, InitialAssignment, KineticLaw, LocalParameter, MetaId,
+        Model, ModifierSpeciesReference, Parameter, Priority, RateRule, Reaction, Rule, RuleTypes,
+        SBase, SId, SboTerm, SimpleSpeciesReference, Species, SpeciesReference, Trigger, Unit,
+        UnitDefinition,
     };
     use crate::layout::GeneralGlyph;
+    use crate::math::Math;
     use crate::xml::{
         Document, OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild,
         RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty, SbmlObject, XmlChild,
