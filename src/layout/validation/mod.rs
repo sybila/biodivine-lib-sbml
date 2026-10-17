@@ -1,8 +1,8 @@
 use crate::cancellation::CancellationCheck;
 use crate::core::sbase::SbmlUtils;
-use crate::core::validation::sbase::{apply_rule_10309, apply_rule_10310, validate_sbase};
-use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
-use crate::core::validation::{validate_list_of_objects, SbmlValidable};
+use crate::core::validation::sbase::{apply_rule_10310, validate_sbase};
+use crate::core::validation::type_check::{type_check_of_list, type_check_problems, CanTypeCheck};
+use crate::core::validation::{matches_xml_id_pattern, validate_list_of_objects, SbmlValidable};
 use crate::core::{Compartment, MetaId, Reaction, SBase, SId, Species, SpeciesReference};
 use crate::layout::{
     CompartmentGlyph, GeneralGlyph, GraphicalObject, Layout, ReactionGlyph, ReferenceGlyph,
@@ -17,7 +17,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 mod bounding_box;
-mod curve;
+pub(crate) mod curve;
 mod dimensions;
 mod point;
 
@@ -25,7 +25,7 @@ mod point;
 mod tests;
 
 impl SbmlValidable for Layout {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -93,6 +93,7 @@ impl CanTypeCheck for Layout {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
+        issues.extend(type_check_problems(self.xml_element()));
         if self.dimensions().get_raw().is_some() {
             self.dimensions().get().type_check(issues, check)?;
         }
@@ -121,7 +122,7 @@ impl CanTypeCheck for Layout {
 }
 
 impl SbmlValidable for CompartmentGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -143,8 +144,8 @@ impl SbmlValidable for CompartmentGlyph {
 
         apply_glyph_rules(&metaid_ref, &compartment, self, issues);
 
-        if self.compartment().is_set() {
-            let element = self.find_by_sid::<Compartment>(&compartment.get().unwrap());
+        if let Some(compartment) = compartment.get() {
+            let element = self.find_by_sid::<Compartment>(&compartment);
 
             if element.is_none()
                 || element.clone().unwrap().xml_element().full_name() != "compartment"
@@ -169,7 +170,7 @@ impl CanTypeCheck for CompartmentGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -179,7 +180,7 @@ impl CanTypeCheck for CompartmentGlyph {
 }
 
 impl SbmlValidable for SpeciesGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -201,8 +202,8 @@ impl SbmlValidable for SpeciesGlyph {
 
         apply_glyph_rules(&metaid_ref, &species, self, issues);
 
-        if self.species().is_set() {
-            let element = self.find_by_sid::<Species>(&species.get().unwrap());
+        if let Some(species) = species.get() {
+            let element = self.find_by_sid::<Species>(&species);
 
             if element.is_none() {
                 let message = "Attribute [species] does not refer to an existing Species element!";
@@ -224,7 +225,7 @@ impl CanTypeCheck for SpeciesGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -234,7 +235,7 @@ impl CanTypeCheck for SpeciesGlyph {
 }
 
 impl SbmlValidable for ReactionGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -260,8 +261,8 @@ impl SbmlValidable for ReactionGlyph {
 
         apply_glyph_rules(&metaid_ref, &reaction, self, issues);
 
-        if self.reaction().is_set() {
-            let element = self.find_by_sid::<Reaction>(&reaction.get().unwrap());
+        if let Some(reaction) = reaction.get() {
+            let element = self.find_by_sid::<Reaction>(&reaction);
 
             if element.is_none() || element.clone().unwrap().xml_element().full_name() != "reaction"
             {
@@ -293,7 +294,7 @@ impl CanTypeCheck for ReactionGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -311,7 +312,7 @@ impl CanTypeCheck for ReactionGlyph {
 }
 
 impl SbmlValidable for SpeciesReferenceGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -338,8 +339,8 @@ impl SbmlValidable for SpeciesReferenceGlyph {
 
         apply_glyph_rules(&metaid_ref, &species_ref, self, issues);
 
-        if self.species_reference().is_set() {
-            let element = self.find_by_sid::<SpeciesReference>(&species_ref.get().unwrap());
+        if let Some(species_reference) = species_ref.get() {
+            let element = self.find_by_sid::<SpeciesReference>(&species_reference);
 
             if element.is_none()
                 || element.clone().unwrap().xml_element().full_name() != "speciesReference"
@@ -352,7 +353,12 @@ impl SbmlValidable for SpeciesReferenceGlyph {
                 apply_rule_20509(&element, metaid_ref, self.xml_element(), issues);
             }
         }
-        let element = self.find_by_sid::<SpeciesGlyph>(&species_glyph.get());
+        // A missing or unparsable `speciesGlyph` is reported by the type check of this element, so
+        // the reference is only resolved when it is readable.
+        let element = XmlProperty::get_checked(&species_glyph)
+            .ok()
+            .flatten()
+            .and_then(|species_glyph| self.find_by_sid::<SpeciesGlyph>(&species_glyph));
         if element.is_none()
             || element.clone().unwrap().xml_element().full_name() != "layout:speciesGlyph"
         {
@@ -371,7 +377,7 @@ impl CanTypeCheck for SpeciesReferenceGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -385,7 +391,7 @@ impl CanTypeCheck for SpeciesReferenceGlyph {
 }
 
 impl SbmlValidable for GeneralGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -412,13 +418,8 @@ impl SbmlValidable for GeneralGlyph {
         apply_glyph_rules(&metaid_ref, &reference, self, issues);
         apply_rule_20808(reference.get(), self, issues);
 
-        if self.meta_id_ref().is_set() && self.reference().is_set() {
-            apply_rule_20809(
-                self,
-                metaid_ref.get().unwrap(),
-                reference.get().unwrap(),
-                issues,
-            );
+        if let (Some(metaid_ref), Some(reference)) = (metaid_ref.get(), reference.get()) {
+            apply_rule_20809(self, metaid_ref, reference, issues);
         }
 
         if let Some(list_of_sub_glyphs) = self.sub_glyphs().get() {
@@ -445,7 +446,7 @@ impl CanTypeCheck for GeneralGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -467,7 +468,7 @@ impl CanTypeCheck for GeneralGlyph {
 }
 
 impl SbmlValidable for ReferenceGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -495,13 +496,8 @@ impl SbmlValidable for ReferenceGlyph {
         apply_glyph_rules(&metaid_ref, &reference, self, issues);
         apply_rule_20808(reference.get(), self, issues);
 
-        if self.meta_id_ref().is_set() && self.reference().is_set() {
-            apply_rule_20809(
-                self,
-                metaid_ref.get().unwrap(),
-                reference.get().unwrap(),
-                issues,
-            );
+        if let (Some(metaid_ref), Some(reference)) = (metaid_ref.get(), reference.get()) {
+            apply_rule_20809(self, metaid_ref, reference, issues);
         }
 
         if self.find_by_sid::<GraphicalObject>(&glyph.get()).is_none() {
@@ -520,7 +516,7 @@ impl CanTypeCheck for ReferenceGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -534,7 +530,7 @@ impl CanTypeCheck for ReferenceGlyph {
 }
 
 impl SbmlValidable for TextGlyph {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -558,8 +554,8 @@ impl SbmlValidable for TextGlyph {
         apply_glyph_rules(&metaid_ref, &origin_of_text, self, issues);
         apply_rule_20808(origin_of_text.get(), self, issues);
 
-        if graphical_object.is_set() {
-            let element = self.find_by_sid::<GraphicalObject>(&graphical_object.get().unwrap());
+        if let Some(graphical_object) = graphical_object.get() {
+            let element = self.find_by_sid::<GraphicalObject>(&graphical_object);
 
             if element.is_none() {
                 let message = "Attribute [graphicalObject] does not refer to an existing element!";
@@ -567,13 +563,8 @@ impl SbmlValidable for TextGlyph {
             }
         }
 
-        if self.meta_id_ref().is_set() && self.origin_of_text().is_set() {
-            apply_rule_20809(
-                self,
-                metaid_ref.get().unwrap(),
-                origin_of_text.get().unwrap(),
-                issues,
-            );
+        if let (Some(metaid_ref), Some(origin_of_text)) = (metaid_ref.get(), origin_of_text.get()) {
+            apply_rule_20809(self, metaid_ref, origin_of_text, issues);
         }
         Ok(())
     }
@@ -586,7 +577,7 @@ impl CanTypeCheck for TextGlyph {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         if self.bounding_box().is_set() {
             let bb = self.bounding_box().get().unwrap();
             bb.type_check(issues, check)?;
@@ -596,7 +587,7 @@ impl CanTypeCheck for TextGlyph {
 }
 
 impl SbmlValidable for GraphicalObject {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -604,32 +595,41 @@ impl SbmlValidable for GraphicalObject {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        validate_sbase(self, issues, identifiers, meta_ids);
 
-        self.bounding_box()
-            .get()
-            .validate(issues, identifiers, meta_ids, check)?;
-
-        apply_rule_10309(self.meta_id_ref().get_raw(), self.xml_element(), issues);
-
+        // Exactly one of the variants matches, and each of them validates its own element (they are
+        // the same XML element seen through a narrower wrapper), so the walk of an element is
+        // handed to its variant and the base-class walk below runs only for the element that has no
+        // variant: a bare `<layout:graphicalObject>`. Validating both would report every issue of the
+        // element twice, and the second id of an element would be reported as a duplicate.
         if let Some(glyph) = GeneralGlyph::try_cast_from_super(self) {
-            glyph.validate(issues, identifiers, meta_ids, check)?;
+            return glyph.validate(issues, identifiers, meta_ids, check);
         }
-
         if let Some(glyph) = TextGlyph::try_cast_from_super(self) {
-            glyph.validate(issues, identifiers, meta_ids, check)?;
+            return glyph.validate(issues, identifiers, meta_ids, check);
         }
-
         if let Some(glyph) = CompartmentGlyph::try_cast_from_super(self) {
-            glyph.validate(issues, identifiers, meta_ids, check)?;
+            return glyph.validate(issues, identifiers, meta_ids, check);
         }
-
         if let Some(glyph) = SpeciesGlyph::try_cast_from_super(self) {
-            glyph.validate(issues, identifiers, meta_ids, check)?;
+            return glyph.validate(issues, identifiers, meta_ids, check);
+        }
+        if let Some(glyph) = ReactionGlyph::try_cast_from_super(self) {
+            return glyph.validate(issues, identifiers, meta_ids, check);
+        }
+        if let Some(glyph) = ReferenceGlyph::try_cast_from_super(self) {
+            return glyph.validate(issues, identifiers, meta_ids, check);
         }
 
-        if let Some(glyph) = ReactionGlyph::try_cast_from_super(self) {
-            glyph.validate(issues, identifiers, meta_ids, check)?;
+        validate_sbase(self, issues, identifiers, meta_ids);
+        apply_rule_layout_20405(self.meta_id_ref().get_raw(), self.xml_element(), issues);
+
+        // The bounding box is required (rule `layout-20407`), but a document that violates the
+        // requirement must not make the walk panic: the missing child is reported by the type
+        // check, and the guard here keeps the walk working on the object itself.
+        if self.bounding_box().get_raw().is_some() {
+            self.bounding_box()
+                .get()
+                .validate(issues, identifiers, meta_ids, check)?;
         }
         Ok(())
     }
@@ -646,26 +646,46 @@ impl CanTypeCheck for GraphicalObject {
             self.bounding_box().get().type_check(issues, check)?;
         }
 
+        // Every typed variant of this element runs the element check itself (they are the same
+        // XML element seen through a narrower wrapper), so running it here as well would report
+        // the same element twice. The case that has no typed variant is a bare
+        // `<layout:graphicalObject>` - the item of `listOfSubGlyphs` and of
+        // `listOfAdditionalGraphicalObjects` - and its own rows of the element tables are inert
+        // without this call.
         if let Some(glyph) = GeneralGlyph::try_cast_from_super(self) {
             glyph.type_check(issues, check)?;
-        }
-
-        if let Some(glyph) = TextGlyph::try_cast_from_super(self) {
+        } else if let Some(glyph) = TextGlyph::try_cast_from_super(self) {
             glyph.type_check(issues, check)?;
-        }
-
-        if let Some(glyph) = CompartmentGlyph::try_cast_from_super(self) {
+        } else if let Some(glyph) = CompartmentGlyph::try_cast_from_super(self) {
             glyph.type_check(issues, check)?;
-        }
-
-        if let Some(glyph) = SpeciesGlyph::try_cast_from_super(self) {
+        } else if let Some(glyph) = SpeciesGlyph::try_cast_from_super(self) {
             glyph.type_check(issues, check)?;
-        }
-
-        if let Some(glyph) = ReactionGlyph::try_cast_from_super(self) {
+        } else if let Some(glyph) = ReactionGlyph::try_cast_from_super(self) {
             glyph.type_check(issues, check)?;
+        } else {
+            issues.extend(type_check_problems(self.xml_element()));
         }
         Ok(())
+    }
+}
+
+/// ### Rule 20405
+/// The attribute *layout:metaidRef* of a GraphicalObject must be of the data type **IDREF**.
+///
+/// The rule is the reason a `metaidRef` value is checked against the XML `ID` lexical space at all:
+/// the two datatypes share it, and the core rule `10309` that would otherwise be used describes the
+/// `metaid` attribute of an SBML object, not this reference.
+pub(crate) fn apply_rule_layout_20405(
+    value: Option<String>,
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    if !matches_xml_id_pattern(&value) {
+        let message = format!(
+            "The [metaidRef] attribute value ('{0}') does not conform to the syntax of the IDREF data type.",
+            value.unwrap()
+        );
+        issues.push(SbmlIssue::new("layout-20405", xml_element, message))
     }
 }
 
@@ -761,7 +781,7 @@ pub fn apply_glyph_rules<T: SBase>(
     element: &T,
     issues: &mut Vec<SbmlIssue>,
 ) {
-    apply_rule_10309(metaid_ref.get_raw(), element.xml_element(), issues);
+    apply_rule_layout_20405(metaid_ref.get_raw(), element.xml_element(), issues);
     apply_rule_20406(metaid_ref.get(), element, issues, element.xml_element());
     apply_rule_10310(sid_ref.get_raw(), element.xml_element(), issues);
 }

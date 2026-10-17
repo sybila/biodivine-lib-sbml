@@ -1,16 +1,16 @@
 use crate::cancellation::CancellationCheck;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::CanTypeCheck;
+use crate::core::validation::type_check::{type_check_problems, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
 use crate::layout::bounding_box::BoundingBox;
-use crate::xml::{RequiredXmlChild, XmlChild, XmlProperty};
+use crate::xml::{RequiredXmlChild, XmlChild, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for BoundingBox {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -42,6 +42,7 @@ impl CanTypeCheck for BoundingBox {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
+        issues.extend(type_check_problems(self.xml_element()));
         if self.position().get_raw().is_some() {
             let point = self.position().get();
             point.type_check(issues, check)?;

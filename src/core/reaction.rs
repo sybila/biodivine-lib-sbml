@@ -4,7 +4,8 @@ use crate::core::{SBase, SId};
 use crate::math::{Math, MathNode};
 use crate::xml::{
     Document, OptionalChild, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild,
-    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlSupertype,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlProperty,
+    XmlSupertype,
 };
 use sbml_macros::{SBase, XmlWrapper};
 
@@ -133,7 +134,7 @@ impl KineticLaw {
         if let Some(local_parameters) = self.local_parameters().get() {
             local_parameters
                 .iter()
-                .map(|param| param.id().get())
+                .filter_map(|param| XmlProperty::get_checked(&param.id()).ok().flatten())
                 .collect()
         } else {
             Vec::new()

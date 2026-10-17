@@ -12,7 +12,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Association {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -58,7 +58,7 @@ impl CanTypeCheck for Association {
 }
 
 impl SbmlValidable for GeneProductRef {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -76,7 +76,7 @@ impl SbmlValidable for GeneProductRef {
 impl CanTypeCheck for GeneProductRef {}
 
 impl SbmlValidable for And {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -92,7 +92,7 @@ impl SbmlValidable for And {
 impl CanTypeCheck for And {}
 
 impl SbmlValidable for Or {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,

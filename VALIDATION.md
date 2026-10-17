@@ -112,6 +112,20 @@ where a change to the `SANITY_CHECK` diagnostics or to `unused-namespace` is vis
 snapshot diff. If a lint ever needs its own census-like snapshot, the cheap extension is a
 separate report file next to `test_suite_issues.txt` rather than a second filtering rule.
 
+The `not-validated` lint is the third diagnostic of the library, and it is how a caller detects
+that a part of a document was not validated. `Sbml::validate` runs the type check, then the
+`unused-namespace` lint, then the walk of the object model; the walk visits every object whose own
+element is type-consistent and, for the objects whose element is not, reports one `not-validated`
+issue (severity `Info`) that names the element and the rule the type check rejected it with, and
+does not descend into it. A report without such an issue therefore means that every object of the
+document was walked, and the element an issue is attached to is the root of the subtree that was
+skipped. The typed accessors stay unsafe on an element with a type-check issue - the type check is
+still the gate for typed access, it is only no longer a gate for the walk - so a caller that wants
+to read a document through the typed API has to see no type-check issue at all (`SANITY_CHECK` and
+the specification rules the type check maps to, for example `10102` or `20517`). The issue dump
+records one line per `not-validated` note, which is what makes a change to the set of skipped
+subtrees visible in a snapshot.
+
 The `unused-namespace` lint fires on six documents of the corpus, and each of them is a
 declaration that binds an SBML namespace nothing in scope uses: `10403/10403-pass-00-04-l3v1.xml`
 and `10403/10403-pass-00-06-l3v2.xml` (a Level 2 core namespace inside the RDF of an annotation),
@@ -188,3 +202,9 @@ of a run in progress or against the recorded snapshots.
     instrumentation of `Sbml::validate` (the script's documentation shows the line and the run).
     It is the denominator of the guard discussed in `Sbml::validate`'s documentation, and it also
     reports which of the mismatching documents of the recorded snapshots the walk cannot reach.
+  * `scripts/corpus_panic_inventory.py` counts the documents whose validation *panics*, from the
+    output of a harness run in its `--report-panics` mode (which turns a panic inside the
+    validation of one document into one `PANICKED|<message>` line and keeps the run going, so the
+    whole corpus can be measured instead of stopping at the first broken document). The walk guard
+    exists so that this list is empty, so the tool is the evidence for that claim: run it against
+    a corpus and expect zero documents, and use the messages it prints when it is not zero.

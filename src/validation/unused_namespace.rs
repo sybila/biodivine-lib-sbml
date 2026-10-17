@@ -144,18 +144,19 @@ mod tests {
     use crate::validation::{RuleKind, RuleSet};
     use crate::{Sbml, SbmlIssueSeverity};
 
-    /// The lint issues of a document, in the order the document reports them.
+    /// The `unused-namespace` issues of a document, in the order the document reports them.
     ///
-    /// The tests of this module are about the lint, so they filter by kind: a synthetic document
-    /// may well violate specification rules as well (its elements are minimal on purpose), and
-    /// that must not decide whether the lint is reported.
+    /// The tests of this module are about this lint, so they filter by rule id: a synthetic
+    /// document may well violate specification rules as well (its elements are minimal on purpose),
+    /// and it may report the other library lint too (a document whose part is not type-consistent
+    /// is reported as `not-validated`), and neither must decide whether the lint is reported.
     fn lint_issues(document: &str) -> Vec<SbmlIssue> {
         Sbml::read_str(document)
             .expect("The test document is well formed.")
             .validate()
             .unwrap()
             .into_iter()
-            .filter(|issue| issue.kind() == RuleKind::LibraryLint)
+            .filter(|issue| issue.rule() == "unused-namespace")
             .collect()
     }
 

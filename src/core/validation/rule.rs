@@ -3,13 +3,13 @@ use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
 use crate::core::{AbstractRule, MetaId, Rule, RuleTypes, SId};
-use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlList, XmlWrapper};
+use crate::xml::{OptionalXmlChild, XmlList, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for AbstractRule {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -41,10 +41,15 @@ impl AbstractRule {
         let mut variables: HashSet<SId> = HashSet::new();
 
         for rule in list_of_rules.as_vec() {
+            // A rule whose `variable` is missing or unparsable is reported by the type check of
+            // its own element, so this aggregation only compares the rules that have one.
             let variable = match rule.clone().cast() {
-                RuleTypes::Assignment(rule) => rule.variable().get(),
-                RuleTypes::Rate(rule) => rule.variable().get(),
+                RuleTypes::Assignment(rule) => XmlProperty::get_checked(&rule.variable()),
+                RuleTypes::Rate(rule) => XmlProperty::get_checked(&rule.variable()),
                 _ => continue,
+            };
+            let Ok(Some(variable)) = variable else {
+                continue;
             };
 
             if variables.contains(&variable) {

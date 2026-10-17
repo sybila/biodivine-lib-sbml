@@ -1,7 +1,7 @@
 use crate::cancellation::CancellationCheck;
 use crate::constraint::gene_product_association::GeneProductAssociation;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_of_list, type_check_problems, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{MetaId, SId};
 use crate::xml::{OptionalXmlChild, XmlWrapper};
@@ -10,7 +10,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for GeneProductAssociation {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -52,7 +52,7 @@ impl CanTypeCheck for GeneProductAssociation {
         }
 
         if let Some(gene_product) = self.gene_product_ref().get() {
-            internal_type_check(self.xml_element(), issues);
+            issues.extend(type_check_problems(self.xml_element()));
             gene_product.type_check(issues, check)?
         }
 

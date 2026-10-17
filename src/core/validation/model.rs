@@ -1,6 +1,6 @@
 use crate::cancellation::CancellationCheck;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_of_list, type_check_problems, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
@@ -11,7 +11,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Model {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -101,7 +101,7 @@ impl CanTypeCheck for Model {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
 
         if let Some(list_of_function_definition) = self.function_definitions().get() {
             type_check_of_list(&list_of_function_definition, issues, check)?;

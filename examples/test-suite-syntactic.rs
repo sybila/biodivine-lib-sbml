@@ -22,6 +22,9 @@ use std::collections::HashSet;
 ///    Level 3 Version 1 documents, whose issues the mismatch reports ignore). Unlike the mismatch
 ///    reports, this file is not filtered to specification rules, so it is the only report that
 ///    covers the library's own diagnostics (its lints).
+///  - `--report-panics` keeps the run going when the validation of a document panics and prints
+///    one `PANICKED|<message>` line for it, so `scripts/corpus_panic_inventory.py` can report which
+///    documents of the corpus cannot be validated at all.
 ///  - `--check-roundtrip` writes `test_suite_roundtrip.txt`, which lists every corpus document
 ///    whose text does not survive a read -> write -> read cycle unchanged.
 ///
@@ -36,9 +39,12 @@ fn main() {
     let dump_issues = args.iter().any(|it| it == "--dump-issues");
     let check_roundtrip = args.iter().any(|it| it == "--check-roundtrip");
     if args.iter().any(|it| it == "--help" || it == "-h") {
-        println!("usage: test-suite-syntactic [--dump-issues] [--check-roundtrip] [RULE ...]");
+        println!(
+            "usage: test-suite-syntactic [--dump-issues] [--check-roundtrip] [--report-panics] [RULE ...]"
+        );
         return;
     }
+    let report_panics = args.iter().any(|it| it == "--report-panics");
     let rules = args
         .into_iter()
         .filter(|it| !it.starts_with("--"))
@@ -49,12 +55,37 @@ fn main() {
         Some(HashSet::from_iter(rules))
     };
 
+    // `--report-panics` is a diagnostic mode: it turns a panic inside the validation of one
+    // document into one `PANICKED|<message>` line on standard output (attributed to the document by
+    // the ` > Testing` line before it) and keeps the walk going, so that the whole corpus can be
+    // measured instead of stopping at the first broken document.
     let result = test_helper(
         "./syntactic",
         filter,
         true,
         |id| RuleSet::CORE.is_spec_rule(id),
-        test_document,
+        move |document| {
+            if !report_panics {
+                return test_document(document);
+            }
+            let previous = std::panic::take_hook();
+            std::panic::set_hook(Box::new(|_| {}));
+            let owned = document.to_string();
+            let outcome = std::panic::catch_unwind(move || test_document(&owned));
+            std::panic::set_hook(previous);
+            match outcome {
+                Ok(issues) => issues,
+                Err(payload) => {
+                    let message = payload
+                        .downcast_ref::<String>()
+                        .cloned()
+                        .or_else(|| payload.downcast_ref::<&str>().map(|it| it.to_string()))
+                        .unwrap_or_else(|| "unknown panic".to_string());
+                    println!("PANICKED|{message}");
+                    vec![]
+                }
+            }
+        },
     );
 
     let error_problems = result.error.clone();

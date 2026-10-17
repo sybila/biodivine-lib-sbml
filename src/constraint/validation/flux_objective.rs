@@ -1,7 +1,7 @@
 use crate::cancellation::CancellationCheck;
 use crate::constraint::flux_objective::FluxObjective;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_problems, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SBase, SId};
 use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlWrapper};
@@ -10,7 +10,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for FluxObjective {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -30,7 +30,7 @@ impl CanTypeCheck for FluxObjective {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
 
         if self.sbml_root().model().get().unwrap().strict().get() {
             let coefficient = self.coefficient().get();

@@ -17,9 +17,11 @@ fn check_layout_20310() {
     let doc = Sbml::read_path("test-inputs/test-layout/test_20310.xml");
     let issues = doc.unwrap().validate().unwrap();
 
-    assert_eq!(issues.len(), 1);
-    let issue = issues.into_iter().next().unwrap();
-    assert_eq!(issue.rule(), "layout-20310");
+    assert!(
+        issues.iter().any(|issue| issue.rule() == "layout-20310"),
+        "expected layout-20310 in {:?}",
+        issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -28,8 +30,11 @@ fn check_layout_20803() {
 
     let issues = doc.unwrap().validate().unwrap();
 
-    assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule(), "layout-20803");
+    assert!(
+        issues.iter().any(|issue| issue.rule() == "layout-20803"),
+        "expected layout-20803 in {:?}",
+        issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+    );
 }
 
 #[test]

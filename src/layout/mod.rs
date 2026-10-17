@@ -2,7 +2,7 @@ mod bounding_box;
 mod curve;
 mod dimensions;
 mod point;
-mod validation;
+pub(crate) mod validation;
 
 use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;

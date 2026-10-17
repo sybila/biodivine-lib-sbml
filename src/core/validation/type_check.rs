@@ -11,8 +11,8 @@ use crate::constraint::FbcType;
 use crate::core::SId;
 use crate::qual::{Sign, TransitionInputEffect, TransitionOutputEffect};
 use crate::xml::{
-    OptionalSbmlProperty, SbmlProperty, XmlElement, XmlList, XmlProperty, XmlPropertyType,
-    XmlWrapper,
+    OptionalSbmlProperty, SbmlObject, SbmlProperty, XmlElement, XmlList, XmlProperty,
+    XmlPropertyType, XmlWrapper,
 };
 use crate::SbmlResult;
 use crate::{Sbml, SbmlIssue};
@@ -43,7 +43,7 @@ pub(crate) trait CanTypeCheck: XmlWrapper {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
         Ok(())
     }
 }
@@ -145,6 +145,20 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     }
 }
 
+/// The element-local findings of [`internal_type_check`], as a value instead of a report.
+///
+/// The walk of the object model asks this question before it reads an object's typed properties:
+/// a type-check problem means the typed view of that object is unusable, so the walk skips the
+/// object and reports that it did instead of panicking inside a property read. The probe runs the
+/// very same checks as the type-check pass (into a report of its own, so it cannot add the same
+/// finding to the caller's report twice) - a check that exists for one purpose exists for the other.
+pub(crate) fn type_check_problems(xml_element: &XmlElement) -> Vec<SbmlIssue> {
+    let mut probe = Vec::new();
+    internal_type_check(xml_element, &mut probe);
+    crate::layout::validation::curve::check_curve_segment_element(xml_element, &mut probe);
+    probe
+}
+
 /// A utility function to perform a type check on an [XmlList] instance and all its valid
 /// child elements.
 ///
@@ -156,7 +170,7 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
 ///
 /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
 /// current thread has fired.
-pub(crate) fn type_check_of_list<T: CanTypeCheck>(
+pub(crate) fn type_check_of_list<T: CanTypeCheck + SbmlObject>(
     xml_list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     check: &mut CancellationCheck,
@@ -164,7 +178,7 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
     check.tick()?;
     let element = xml_list.xml_element();
     let name = element.tag_name();
-    internal_type_check(element, issues);
+    issues.extend(type_check_problems(element));
 
     if let Some(allowed) = ALLOWED_CHILDREN.get(name.as_str()) {
         // Only sanity-check the allowed children. The rest is going to be reported as an
@@ -173,6 +187,12 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
             if !allowed.contains(&object.xml_element().tag_name().as_str()) {
                 // This is a linear-time check, which is not great, but the list of allowed
                 // children is typically very short anyway.
+                continue;
+            }
+            if !T::matches_element(object.xml_element()) {
+                // An SBase payload the container permits, or a stray element: it is not an item of
+                // this list, so the item's own checks do not describe it (the container reports the
+                // element it does not permit, and the payloads are checked by `SBase` itself).
                 continue;
             }
             object.type_check(issues, check)?;
@@ -543,9 +563,12 @@ fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
         "textGlyph" => Some("layout-20903"),
         "boundingBox" => Some("layout-21303"),
         "curve" => Some("layout-21403"),
-        "lineSegment" => Some("layout-21503"),
-        "cubicBezier" => Some("layout-21603"),
         "listOfFunctionTerms" => Some("qual-20409"),
+        // The required children of a curve segment are not in this table: the two variants require
+        // different points, and only the discriminator says which variant an element is. The check
+        // in `layout::validation::curve` owns them and reports the variant's rule id
+        // (`layout-21503` or `layout-21603`).
+        "functionTerm" => Some("qual-20804"),
         _ => None,
     }
 }
@@ -592,6 +615,9 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         | ("transition", "listOfInputs")
         | ("transition", "listOfOutputs") => Some("qual-20405"),
         ("listOfFunctionTerms", "defaultTerm") => Some("qual-20409"),
+        // A function term carries exactly one formula, and the rule that says so is the same one
+        // that requires it in the first place.
+        ("functionTerm", "math") => Some("qual-20804"),
         ("layout", _) => Some("layout-20303"),
         ("graphicalObject", "boundingBox") => Some("layout-20403"),
         ("compartmentGlyph", "boundingBox") => Some("layout-20503"),

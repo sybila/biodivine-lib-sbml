@@ -1,15 +1,15 @@
 use crate::cancellation::CancellationCheck;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_of_list, type_check_problems, CanTypeCheck};
 use crate::core::validation::{validate_list_of_objects, SbmlValidable};
 use crate::core::{Delay, Event, EventAssignment, MetaId, Model, Priority, SId, Trigger};
-use crate::xml::{OptionalXmlChild, RequiredXmlProperty, XmlList, XmlWrapper};
+use crate::xml::{OptionalXmlChild, XmlList, XmlProperty, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Event {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -50,7 +50,7 @@ impl CanTypeCheck for Event {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
 
         if let Some(trigger) = self.trigger().get() {
             trigger.type_check(issues, check)?;
@@ -81,7 +81,13 @@ impl Event {
         let mut variables: HashSet<SId> = HashSet::new();
 
         for event_assignment in list_of_event_assignments.iter() {
-            let variable = event_assignment.variable().get();
+            // A missing or unparsable `variable` is reported by the type check of the element.
+            let Some(variable) = XmlProperty::get_checked(&event_assignment.variable())
+                .ok()
+                .flatten()
+            else {
+                continue;
+            };
             if variables.contains(&variable) {
                 let message = format!(
                     "The variable ('{variable}') of <eventAssignment> is \
@@ -107,7 +113,12 @@ impl Event {
         let assignment_rule_variables = model.assignment_rule_variables();
 
         for event_assignment in list_of_event_assignments.iter() {
-            let value = event_assignment.variable().get();
+            let Some(value) = XmlProperty::get_checked(&event_assignment.variable())
+                .ok()
+                .flatten()
+            else {
+                continue;
+            };
             if assignment_rule_variables.contains(&value) {
                 let message = format!(
                     "The variable ('{value}') of <eventAssignment> found \
@@ -120,7 +131,7 @@ impl Event {
 }
 
 impl SbmlValidable for Trigger {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -139,7 +150,7 @@ impl SbmlValidable for Trigger {
 impl CanTypeCheck for Trigger {}
 
 impl SbmlValidable for Priority {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -158,7 +169,7 @@ impl SbmlValidable for Priority {
 impl CanTypeCheck for Priority {}
 
 impl SbmlValidable for Delay {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -177,7 +188,7 @@ impl SbmlValidable for Delay {
 impl CanTypeCheck for Delay {}
 
 impl SbmlValidable for EventAssignment {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,

@@ -221,12 +221,20 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfSpeciesReferenceGlyphs" => &["speciesReferenceGlyph"],
     "listOfReferenceGlyphs" => &["referenceGlyph"],
     "listOfSubGlyphs" => &["graphicalObject"],
+    // A glyph that carries its geometry as a bounding box has to have one: the rule of the class
+    // says so ("must contain exactly one BoundingBox object"), and the schema agrees (the
+    // `graphicalObjectBB` datatype is not optional). The glyph classes whose schema *chooses*
+    // between a bounding box and a curve (generalGlyph, reactionGlyph, speciesReferenceGlyph,
+    // referenceGlyph) have no such requirement and are absent here.
+    "graphicalObject" => &["boundingBox"],
+    "textGlyph" => &["boundingBox"],
     "boundingBox" => &["position", "dimensions"],
     "curve" => &["listOfCurveSegments"],
     "listOfCurveSegments" => &["curveSegment"],
-    "curveSegment" => &["start", "end"],
-    "lineSegment" => &["start", "end"],
-    "cubicBezier" => &["start", "basePoint1", "basePoint2", "end"],
+    // The required children of a curve segment are not here: the two variants require different
+    // points and only the `xsi:type` discriminator says which variant an element is, so the check
+    // in `layout::validation::curve` owns them and reports the variant's rule id
+    // (`layout-21503` or `layout-21603`) instead of the generic one.
     //fbc package
     "listOfObjectives" => &["objective"],
     "listOfGeneProducts" => &["geneProduct"],
@@ -235,7 +243,7 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfTransitions" => &["transition"],
     "listOfQualitativeSpecies" => &["qualitativeSpecies"],
     "transition" => &["listOfFunctionTerms"],
-    "functionTerms" => &["math"],
+    "functionTerm" => &["math"],
     "listOfFunctionTerms" => &["defaultTerm"],
     "listOfInputs" => &["input"],
     "listOfOutputs" => &["output"],
@@ -287,7 +295,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfCompartmentGlyphs" => extended_sbase_children!("compartmentGlyph"),
     "listOfSpeciesGlyphs" => extended_sbase_children!("speciesGlyph"),
     "listOfReactionGlyphs" => extended_sbase_children!("reactionGlyph"),
-    "listOfAdditionalGraphicalObjects" => extended_sbase_children!("graphicalObjects", "generalGlyph"),
+    "listOfAdditionalGraphicalObjects" => extended_sbase_children!("graphicalObject", "generalGlyph"),
     "listOfTextGlyphs" => extended_sbase_children!("textGlyph"),
     "graphicalObject" => extended_sbase_children!("boundingBox"),
     "compartmentGlyph" => extended_sbase_children!("boundingBox"),
@@ -341,7 +349,7 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
 /// elements can obviously repeat.
 pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "sbml" => extended_sbase_children!("model"),
-    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfTransitions", "listOfQualitativeSpecies"),
+    "model" => extended_sbase_children!("listOfFunctionDefinitions", "listOfUnitDefinitions", "listOfCompartments", "listOfSpecies", "listOfParameters", "listOfInitialAssignments", "listOfRules", "listOfConstraints", "listOfReactions", "listOfEvents", "listOfLayouts", "listOfGeneProducts", "listOfObjectives", "listOfTransitions", "listOfQualitativeSpecies"),
     "listOfFunctionDefinitions" => extended_sbase_children!(),
     "functionDefinition" => extended_sbase_children!("math"),
     "listOfUnitDefinitions" => extended_sbase_children!(),
@@ -393,7 +401,7 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "generalGlyph" => extended_sbase_children!("boundingBox", "curve", "listOfReferenceGlyphs", "listOfSubGlyphs"),
     "speciesReferenceGlyph" => extended_sbase_children!("boundingBox", "curve"),
     "referenceGlyph" => extended_sbase_children!("boundingBox", "curve"),
-    "reactionGlyph" => extended_sbase_children!("boundingBox", "cure", "listOfSpeciesReferenceGlyphs"),
+    "reactionGlyph" => extended_sbase_children!("boundingBox", "curve", "listOfSpeciesReferenceGlyphs"),
     "textGlyph" => extended_sbase_children!("boundingBox"),
     "listOfSpeciesReferenceGlyphs" => ALLOWED_SBASE_CHILDREN,
     "listOfReferenceGlyphs" => ALLOWED_SBASE_CHILDREN,
@@ -406,7 +414,10 @@ pub const UNIQUE_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "boundingBox" => extended_sbase_children!("position", "dimensions"),
     "curve" => extended_sbase_children!("listOfCurveSegments"),
     "listOfCurveSegments" => extended_sbase_children!(),
-    "curveSegment" => extended_sbase_children!("start", "end", "basePoint1", "basePoint2"),
+    // The points of a curve segment are listed in ALLOWED_CHILDREN (the union of the two variants)
+    // but not marked unique here: which points a segment must have exactly once depends on its
+    // `xsi:type`, so `layout::validation::curve` checks their count and reports the variant's rule
+    // id (`layout-21503` or `layout-21603`).
     "dimensions" => ALLOWED_SBASE_CHILDREN,
     //fbc package
     "objective" => extended_sbase_children!("listOfFluxObjectives"),

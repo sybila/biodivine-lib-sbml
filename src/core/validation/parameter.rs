@@ -9,7 +9,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Parameter {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,

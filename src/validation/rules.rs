@@ -189,9 +189,10 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "qual-20609", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "When the value of the attribute qual:transitionEffect of a Output object is set to the value production the attribute …" },
     RuleDescriptor { id: "qual-20703", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A DefaultTerm object must have the required attributes qual:resultLevel" },
     RuleDescriptor { id: "qual-20803", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A FunctionTerm object must have the required attributes qual:resultLevel" },
-    RuleDescriptor { id: "qual-20804", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A FunctionTerm object may contain exactly one MathML qual:math element" },
+    RuleDescriptor { id: "qual-20804", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A functionTerm object may contain exactly one MathML math element, and an element from the Qualitative Models namespace is only permitted where the specification names one." },
 
     // specification rules: layout
+    RuleDescriptor { id: "layout-10401", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The attribute xsi:type must be present on all lineSegment and cubicBezier objects" },
     RuleDescriptor { id: "layout-10402", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the xsi:type attribute must be either LineSegment or CubicBezier appropriate to the object where it is located" },
     RuleDescriptor { id: "layout-20302", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A LayoutClass object may have the optional SBML Level 3 Core attributes metaid and sboTerm" },
     RuleDescriptor { id: "layout-20303", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of each of the following ListOf kinds of objects within a LayoutClass object …" },
@@ -209,6 +210,7 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "layout-20317", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "Apart from the general notes and annotation subobjects permitted on all SBML objects, a ListOfTextGlyphs container object may …" },
     RuleDescriptor { id: "layout-20403", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of a BoundingBox object on a GraphicalObject" },
     RuleDescriptor { id: "layout-20404", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A GraphicalObject object must have the required attribute layout:id and may have the optional attribute layout:metaidRef" },
+    RuleDescriptor { id: "layout-20405", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The attribute layout:metaidRef of a GraphicalObject must be of the data type IDREF" },
     RuleDescriptor { id: "layout-20406", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of a layout:metaidRef attribute of a GraphicalObject must be of the metaid of an existing element in the Model" },
     RuleDescriptor { id: "layout-20407", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A GraphicalObject object must contain exactly one BoundingBox object" },
     RuleDescriptor { id: "layout-20503", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of an BoundingBox object on a CompartmentGlyph" },
@@ -258,5 +260,6 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     // though no rule of the standard requires the check (SANITY_CHECK), while a lint about a
     // valid-but-dead part of the document is Info (unused-namespace).
     RuleDescriptor { id: "SANITY_CHECK", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Error, summary: "An attribute value or the default namespace of the document is missing where a typed read requires it." },
+    RuleDescriptor { id: "not-validated", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Info, summary: "An object was not validated, because a type check of its own element reported a problem" },
     RuleDescriptor { id: "unused-namespace", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Info, summary: "A declared SBML namespace is not used by any element or attribute in its scope." },
 ];

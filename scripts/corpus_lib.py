@@ -56,6 +56,10 @@ SORTED = re.compile(r"^\s*(?P<count>\d+) (?P<line>.*)$")
 PACKAGE_ID = re.compile(r"^(?P<package>[a-z]+)-(?P<number>\d+)$")
 
 
+#: The line the harness prints before it reads and validates one document.
+TESTING_LINE = re.compile(r'^ > Testing (?:translated )?"(?P<path>[^"]+)"')
+
+
 def scope_of(rule: str) -> str:
     """The specification a rule id belongs to.
 

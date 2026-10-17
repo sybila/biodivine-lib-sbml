@@ -12,7 +12,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualInput {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -41,8 +41,15 @@ fn apply_rule_qual_20509_and_20508(element: &QualInput, issues: &mut Vec<SbmlIss
         return;
     }
 
+    // `qual:constant` is required by the rule of a qualitative species, and a species without it
+    // is reported by the type check of that element, so the check below only uses a readable value.
+    let is_constant = XmlProperty::get_checked(&qual_species.unwrap().constant())
+        .ok()
+        .flatten()
+        .unwrap_or(false);
+
     if element.transition_effect().get_raw().is_some()
-        && qual_species.unwrap().constant().get()
+        && is_constant
         && element.transition_effect().get() == TransitionInputEffect::Consumption
     {
         let message = "When qualitativeSpecies attribute const is set to true the transitionEffect attribute can not be set to consumption!".to_string();

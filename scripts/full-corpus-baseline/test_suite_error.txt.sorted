@@ -10,6 +10,8 @@
       1 Test 10303/10303-fail-01-09-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       2 Test 10303/10303-pass-00-09-sev1-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       1 Test 10313/10313-fail-01-12-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").
+      2 Test 10404/10404-fail-01-06-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").
+      2 Test 10404/10404-fail-01-07-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       2 Test 10503/10503-fail-01-03-99507-sev1-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       2 Test 10503/10503-fail-02-04-99507-sev1-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       2 Test 10503/10503-pass-00-04-sev1-l3v2.xml: Found unexpected issue 10301 (severity "Error").
@@ -21,7 +23,15 @@
       1 Test 10801/10801-fail-01-18-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
       1 Test 20101/20101-fail-01-08-sev2-l3v2.xml: Missed issue 20101 (severity "Error").
       1 Test 20101/20101-fail-01-09-sev2-l3v2.xml: Missed issue 20101 (severity "Error").
+      1 Test 20206/20206-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
+      1 Test 20209/20209-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
+      1 Test 20212/20212-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10215 (severity "Error").
+      1 Test 20214/20214-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
       1 Test 20216/20216-fail-01-02-sev2-l3v2.xml: Missed issue 20216 (severity "Error").
+      1 Test 20223/20223-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
+      1 Test 20226/20226-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
+      1 Test 20229/20229-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10215 (severity "Error").
+      1 Test 20231/20231-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10313 (severity "Error").
       1 Test 20301/20301-fail-01-14-sev2-l3v2.xml: Missed issue 20301 (severity "Error").
       1 Test 20301/20301-fail-01-15-sev2-l3v2.xml: Missed issue 20301 (severity "Error").
       1 Test 20303/20303-fail-01-11-sev2-l3v2.xml: Missed issue 20303 (severity "Error").
@@ -104,6 +114,7 @@
       1 Test 21111/21111-fail-01-25-sev2-l3v2.xml: Missed issue 21111 (severity "Error").
       1 Test 21121/21121-fail-01-09-sev2-l3v2.xml: Missed issue 21121 (severity "Error").
       1 Test 21121/21121-pass-00-11-sev1-l3v2.xml: Found unexpected issue 10301 (severity "Error").
+      1 Test 21172/21172-fail-01-03-sev2-l3v2.xml: Found unexpected issue 10215 (severity "Error").
       1 Test 21173/21173-fail-01-01-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").
       1 Test 21173/21173-fail-01-01-sev2-l3v2.xml: Missed issue 21173 (severity "Error").
       1 Test 21173/21173-fail-01-02-sev2-l3v2.xml: Found unexpected issue 10301 (severity "Error").

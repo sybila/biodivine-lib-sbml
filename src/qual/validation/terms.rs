@@ -10,7 +10,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for AbstractTerm {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -44,7 +44,7 @@ impl CanTypeCheck for AbstractTerm {
 }
 
 impl SbmlValidable for DefaultTerm {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -60,7 +60,7 @@ impl SbmlValidable for DefaultTerm {
 impl CanTypeCheck for DefaultTerm {}
 
 impl SbmlValidable for FunctionTerm {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         _identifiers: &mut HashSet<SId>,

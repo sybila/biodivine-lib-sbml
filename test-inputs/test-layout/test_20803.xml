@@ -125,14 +125,54 @@
                 </layout:reactionGlyph>
             </layout:listOfReactionGlyphs>
             <layout:listOfTextGlyphs>
-                <layout:textGlyph layout:id="tg0" layout:graphicalObject="sg0" layout:text="L"/>
-                <layout:textGlyph layout:id="tg1" layout:graphicalObject="sg1" layout:text="R"/>
-                <layout:textGlyph layout:id="tg2" layout:graphicalObject="sg2" layout:text="flip"/>
-                <layout:textGlyph layout:id="tg3" layout:graphicalObject="sg3" layout:text="C8"/>
-                <layout:textGlyph layout:id="tg4" layout:graphicalObject="sg4" layout:text="BAR"/>
-                <layout:textGlyph layout:id="tg5" layout:graphicalObject="sg5" layout:text="Apaf"/>
-                <layout:textGlyph layout:id="tg6" layout:graphicalObject="sg6" layout:text="C3"/>
-                <layout:textGlyph layout:id="tg7" layout:graphicalObject="sg7" layout:text="C6"/>
+                <layout:textGlyph layout:id="tg0" layout:graphicalObject="sg0" layout:text="L">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg1" layout:graphicalObject="sg1" layout:text="R">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg2" layout:graphicalObject="sg2" layout:text="flip">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg3" layout:graphicalObject="sg3" layout:text="C8">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg4" layout:graphicalObject="sg4" layout:text="BAR">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg5" layout:graphicalObject="sg5" layout:text="Apaf">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg6" layout:graphicalObject="sg6" layout:text="C3">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
+                <layout:textGlyph layout:id="tg7" layout:graphicalObject="sg7" layout:text="C6">
+                    <layout:boundingBox>
+                        <layout:position layout:x="0" layout:y="0"/>
+                        <layout:dimensions layout:width="40" layout:height="20"/>
+                    </layout:boundingBox>
+                </layout:textGlyph>
             </layout:listOfTextGlyphs>
             <layout:listOfAdditionalGraphicalObjects>
                 <layout:generalGlyph layout:id="gg0" layout:reference="sg0">

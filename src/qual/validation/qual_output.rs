@@ -11,7 +11,7 @@ use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for QualOutput {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -52,7 +52,14 @@ fn apply_rule_qual_20607_and_20608(
         return;
     }
 
-    if qual_species.unwrap().constant().get() {
+    // `qual:constant` is required by the rule of a qualitative species, and a species without a
+    // readable one is reported by the type check of that element.
+    let is_constant = XmlProperty::get_checked(&qual_species.unwrap().constant())
+        .ok()
+        .flatten()
+        .unwrap_or(false);
+
+    if is_constant {
         let message = "The value of [constant] attribute of the [qualitativeSpecies] element has to be se to false!"
             .to_string();
         issues.push(SbmlIssue::new("qual-20608", element, message));

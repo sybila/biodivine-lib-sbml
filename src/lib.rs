@@ -116,7 +116,7 @@ use xml::RequiredProperty;
 use crate::cancellation::CancellationCheck;
 use crate::constants::namespaces::Namespace;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_problems, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
 use crate::xml::{OptionalSbmlChild, OptionalXmlChild, SbmlObject, XmlElement, XmlWrapper};
@@ -382,13 +382,14 @@ impl Sbml {
         self.xml.write_string().map_err(sbml_error)
     }
 
-    /// Perform a basic type checking procedure. If this procedure passes without issues,
-    /// the document is safe to work with. If some issues are found, working with the document
-    /// can cause the program to panic.
+    /// Perform a basic type checking procedure, one check per element of the document.
     ///
-    /// Note that [Sbml::validate] internally also performs a type check before running the full
-    /// validation. Hence, a document is also safe to work with if [Sbml::validate] completes
-    /// with no issues.
+    /// The type check is the oracle of the typed API: it decides whether the *typed reads* of an
+    /// element are usable. A type-check issue on an element means that reading one of its properties
+    /// or children through the typed accessors can panic (an attribute value that does not parse,
+    /// a required child that is not there), which is why [Sbml::validate] consults the same checks
+    /// before it walks an object (see [Sbml::validate] for the contract, and
+    /// [`SbmlValidable`](crate::validation) for the guard itself).
     ///
     /// The pass accounts for every element it visits, so a cancellation request that arrives
     /// while it is running stops it.
@@ -412,7 +413,7 @@ impl Sbml {
             issues.push(SbmlIssue::new("10102", &self.sbml_root, message));
         }
 
-        internal_type_check(&self.sbml_root, issues);
+        issues.extend(type_check_problems(&self.sbml_root));
 
         let element = self.sbml_root.element();
         if element.local_name().as_str() == "sbml"
@@ -450,13 +451,44 @@ impl Sbml {
     ///    document is unavailable ([`SbmlIssue::kind`] tells the two kinds apart).
     ///
     /// Both kinds are reported here, and the lints are reported for every document: they are
-    /// appended after the type check but before the early return that skips the object walk, so a
-    /// document whose typed view is unusable still reports its lints, while a fatal problem stays
-    /// the first issue of the report. Only the specification rules are compared against the SBML
-    /// test suite's expectations, because those list specification rule ids.
+    /// appended after the type check, so a document whose typed view is unusable still reports its
+    /// lints, while a fatal problem stays the first issue of the report. Only the specification
+    /// rules are compared against the SBML test suite's expectations, because those list
+    /// specification rule ids.
     ///
     /// The [rule table](RuleSet::CORE) is where a rule id acquires its kind and severity, so an
     /// issue cannot be reported with a severity that its rule does not have.
+    ///
+    /// ## What this call guarantees, and what a type-check issue means for the walk
+    ///
+    /// The call always produces a report; it never panics on a document, however broken. What it
+    /// *reaches* is decided per object, in four steps:
+    ///
+    ///  1. the type check of the whole document, which reports one issue per element that is not
+    ///     type-consistent;
+    ///  2. the `unused-namespace` lint;
+    ///  3. the walk of the object model, which visits every object whose own element is
+    ///     type-consistent and, for the objects whose element is not, reports **one
+    ///     `not-validated` issue** (a library lint of `Info` severity) that names the element and
+    ///     the rule that rejected it, and does not descend into it;
+    ///  4. nothing else: a type-check issue no longer suppresses the walk of the rest of the
+    ///     document, so a document with one broken compartment is still validated everywhere else.
+    ///
+    /// So a caller detects that part of a document was *not* validated by looking for a
+    /// `not-validated` issue ([`SbmlIssue::rule`] is `not-validated`, and
+    /// [`SbmlIssue::kind`] is [`RuleKind::LibraryLint`]); the element it is attached to is the root
+    /// of the subtree that was skipped, and its message names the first rule the type check
+    /// reported for that element. A report without such an issue means that every object of the
+    /// document was walked.
+    ///
+    /// **The typed accessors remain unsafe on an element with a type-check issue.** The type check
+    /// is no longer a gate for the walk, but it is still the gate for typed access: reading a
+    /// property or child of an element whose type check failed can panic. A document is safe to
+    /// work with *through the typed API* exactly when the report contains no issue whose element
+    /// has a type-check problem - the `SANITY_CHECK` diagnostics and the specification rules the
+    /// type check maps to (for example `10102`, `20517`). To edit such a document, fix the reported
+    /// problems (the crate allows editing a document that is invalid in other ways) and validate
+    /// again before reading it through the typed API.
     ///
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as writing
@@ -484,7 +516,8 @@ impl Sbml {
     ///     at all;
     ///  2. the type check of the document, one step per element;
     ///  3. the `unused-namespace` lint pass, one step per element;
-    ///  4. the rule-by-rule walk of the object model, one step per object.
+    ///  4. the rule-by-rule walk of the object model, one step per object (the guard of the walk
+    ///     accounts for the object before the object's own checks do).
     ///
     /// The trigger is consulted once every 1024 steps rather than on every step, and every phase
     /// shares the same countdown, so a caller that cancels a large document is delayed by at most a
@@ -507,16 +540,16 @@ impl Sbml {
 
         self.type_check(&mut issues, &mut check)?;
 
-        // The library lints are reported for every document, before the early return below: a
-        // document whose typed view is unusable still has a dead namespace declaration to report,
-        // and a lint must not depend on the type check's outcome. They are appended after the type
-        // check so that a fatal problem stays the first issue of the report.
+        // The library lints are reported for every document: a document whose typed view is
+        // unusable still has a dead namespace declaration to report, and a lint must not depend on
+        // the type check's outcome. They are appended after the type check so that a fatal problem
+        // stays the first issue of the report.
         validation::validate_unused_namespaces(&self.sbml_root, &mut issues, &mut check)?;
 
-        if !issues.is_empty() {
-            return Ok(issues);
-        }
-
+        // The walk runs for every document. What a type-check problem means for it is decided per
+        // object by the guard of `SbmlValidable::validate`: the object whose element is not
+        // type-consistent is skipped and reported as `not-validated`, instead of a type-check
+        // problem anywhere in the document suppressing the walk of the whole document.
         let mut identifiers: HashSet<SId> = HashSet::new();
         let mut meta_ids: HashSet<MetaId> = HashSet::new();
 
@@ -631,12 +664,14 @@ mod tests {
     };
     use crate::layout::GeneralGlyph;
     use crate::math::Math;
+    use crate::validation::RuleKind;
     use crate::xml::{
         Document, OptionalXmlChild, OptionalXmlProperty, RequiredDynamicChild,
         RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty, SbmlObject, XmlChild,
         XmlChildDefault, XmlDefault, XmlElement, XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
-    use crate::Sbml;
+    use crate::{Sbml, SbmlIssueSeverity};
+    use std::path::Path;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
 
@@ -1095,6 +1130,161 @@ mod tests {
         }
         document.push_str("</listOfParameters></model></sbml>");
         document
+    }
+
+    /// A document with a type-check issue *inside* its model is validated, not skipped: `validate`
+    /// returns a report instead of panicking, and the report names the element it could not walk.
+    ///
+    /// The documents are the two FBC documents of the corpus the architecture note names, read the
+    /// way the test-suite harness reads a Level 3 Version 1 document (by lifting its core namespace
+    /// to Version 2).
+    #[test]
+    pub fn test_a_type_check_issue_does_not_skip_the_document() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("syntactic");
+        for name in [
+            "fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml",
+            "fbc-20908/fbc-20908-fail-01-01-sev2-l3v1.xml",
+        ] {
+            let path = root.join(name);
+            let source = std::fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("cannot read {}: {error}", path.display()));
+            let source = source.replace(
+                "http://www.sbml.org/sbml/level3/version1/core",
+                "http://www.sbml.org/sbml/level3/version2/core",
+            );
+            let document = Sbml::read_str(&source)
+                .unwrap_or_else(|error| panic!("cannot read {name}: {error}"));
+            // The call has to return a report: reaching the next line is the panic-freedom half of
+            // the contract.
+            let issues = document
+                .validate()
+                .unwrap_or_else(|error| panic!("cannot validate {name}: {error}"));
+
+            let note = issues
+                .iter()
+                .find(|issue| issue.rule() == "not-validated")
+                .unwrap_or_else(|| {
+                    panic!(
+                        "{name} must name the subtree it did not validate: {:?}",
+                        issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+                    )
+                });
+            assert_eq!(note.kind(), RuleKind::LibraryLint);
+            assert_eq!(note.severity(), SbmlIssueSeverity::Info);
+            assert!(
+                note.message().contains("was not validated"),
+                "the note has to say what happened: {}",
+                note.message()
+            );
+        }
+    }
+
+    /// A type-check issue on the *root* element leaves the walk of the model intact: the report
+    /// carries the type-check diagnostic and no `not-validated` note, because nothing was skipped.
+    ///
+    /// The two documents are the only documents of the corpus whose walk the early return used to
+    /// suppress, so this is the case the architecture change was about.
+    #[test]
+    pub fn test_a_type_check_issue_on_the_root_leaves_the_walk_intact() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("syntactic");
+        for name in [
+            "20101/20101-fail-01-08-sev2-l3v2.xml",
+            "20101/20101-fail-01-09-sev2-l3v2.xml",
+        ] {
+            let document = Sbml::read_path(root.join(name).to_str().expect("a path"))
+                .unwrap_or_else(|error| panic!("cannot read {name}: {error}"));
+            let issues = document
+                .validate()
+                .unwrap_or_else(|error| panic!("cannot validate {name}: {error}"));
+            assert!(
+                issues.iter().any(|issue| issue.rule() == "SANITY_CHECK"),
+                "{name} has a type-check problem on its root: {:?}",
+                issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+            );
+            assert!(
+                !issues.iter().any(|issue| issue.rule() == "not-validated"),
+                "the walk of the model is not skipped, so nothing is named as not validated: {:?}",
+                issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+            );
+        }
+    }
+
+    /// The documented detection works, and the guard is per element rather than per document: a
+    /// broken element is named and skipped, while the walk of its siblings still runs.
+    ///
+    /// The document has a compartment without an `id` (a type-check issue: `id` is required), a
+    /// second compartment that is fine, and two compartments that share an id - the last pair is a
+    /// rule of the *walk*, so its report is the proof that the walk ran.
+    #[test]
+    pub fn test_the_walk_reports_what_it_skipped_and_keeps_going() {
+        let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+            <model>
+                <listOfCompartments>
+                    <compartment constant="true"/>
+                    <compartment id="good" constant="true"/>
+                    <compartment id="twin" constant="true"/>
+                    <compartment id="twin" constant="true"/>
+                </listOfCompartments>
+            </model>
+        </sbml>"#;
+        let document = Sbml::read_str(source).expect("The document is well formed XML.");
+        let issues = document
+            .validate()
+            .expect("Validation cannot be cancelled here.");
+        let rules = issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>();
+
+        // The type check reports the missing `id` of the first compartment...
+        assert!(rules.contains(&"20517"), "{rules:?}");
+        // ... the walk names the element it did not validate ...
+        let note = issues
+            .iter()
+            .find(|issue| issue.rule() == "not-validated")
+            .unwrap_or_else(|| panic!("the skipped element is named: {rules:?}"));
+        assert_eq!(note.kind(), RuleKind::LibraryLint);
+        assert_eq!(note.severity(), SbmlIssueSeverity::Info);
+        assert!(
+            note.message().contains("<compartment>"),
+            "the note has to name the element: {}",
+            note.message()
+        );
+        // ... and the walk of the rest of the model still runs, which the duplicate `id` proves.
+        assert!(rules.contains(&"10301"), "{rules:?}");
+
+        // The other half of the contract: the typed view of the broken element is unusable. The
+        // test asserts that documented behaviour instead of relying on it silently.
+        let model = document.model().get().expect("The document has a model.");
+        let broken = model
+            .compartments()
+            .get()
+            .expect("The model has compartments")
+            .get(0);
+        let read = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = broken.id().get();
+        }));
+        assert!(
+            read.is_err(),
+            "the typed read of a type-inconsistent element has to be unusable"
+        );
+        // The sibling that is type-consistent is readable: the guard is per element.
+        let good = model
+            .compartments()
+            .get()
+            .expect("The model has compartments")
+            .get(1);
+        assert_eq!(good.id().get_checked(), Ok(Some(sid("good"))));
+    }
+
+    /// The other direction: a document with no type-check issue reports no `not-validated` note, so
+    /// the note cannot be mistaken for a normal report.
+    #[test]
+    pub fn test_a_clean_document_reports_no_not_validated_note() {
+        let document = Sbml::read_path("test-inputs/model.sbml").expect("readable");
+        let issues = document.validate().expect("not cancelled");
+        assert!(
+            !issues.iter().any(|issue| issue.rule() == "not-validated"),
+            "{:?}",
+            issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+        );
     }
 
     /// Validation honours the same `cancel-this` triggers as reading: a trigger that has already

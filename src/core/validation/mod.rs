@@ -11,7 +11,7 @@ use crate::core::validation::sbase::validate_sbase;
 use crate::core::{BaseUnit, MetaId, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
-use crate::xml::XmlWrapper;
+use crate::xml::{SbmlObject, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;
 
@@ -27,6 +27,8 @@ mod reaction;
 mod rule;
 pub(crate) mod sbase;
 mod species;
+use crate::core::validation::type_check::type_check_problems;
+
 /// This module implements basic integrity checks that are necessary to enable full validation.
 /// In general, these should ensure that our XML abstractions work as expected and the model
 /// is safe to work with. In particular:
@@ -50,18 +52,62 @@ mod xml_definitions;
 /// Denotes an element that can be (and should be) validated against the SBML
 /// validation rules.
 pub(crate) trait SbmlValidable: XmlWrapper {
-    /// Check this object and its SBML children against the rules of the specification.
+    /// Walk this object and its SBML children, unless its typed view is unusable.
+    ///
+    /// This method is the one entry point of the object walk, and it is a *guard*: it asks the
+    /// element-local type check of [`type_check_problems`] whether the object's own element has a
+    /// problem - the type check is what tells the walk which typed reads are safe - and, if it has,
+    /// it reports one `not-validated` issue for the object and returns without descending. The
+    /// check is not skipped for the whole document any more: the walk of a document reaches every
+    /// object whose own element is type-consistent, and the objects it does not reach are named in
+    /// the report.
     ///
     /// A `check` is handed down explicitly rather than read from a thread-local, so that the
-    /// countdown of a document walk cannot be reset by a nested walk; the implementation accounts
-    /// for itself (and every object it visits) with
-    /// [`CancellationCheck::tick`](crate::cancellation::CancellationCheck::tick).
+    /// countdown of a document walk cannot be reset by a nested walk; the guard accounts for the
+    /// object with [`CancellationCheck::tick`](crate::cancellation::CancellationCheck::tick) (and
+    /// every implementation accounts for itself again, which is harmless).
     ///
     /// # Errors
     ///
     /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of
     /// the current thread has fired.
     fn validate(
+        &self,
+        issues: &mut Vec<SbmlIssue>,
+        identifiers: &mut HashSet<SId>,
+        meta_ids: &mut HashSet<MetaId>,
+        check: &mut CancellationCheck,
+    ) -> SbmlResult<()> {
+        check.tick()?;
+        let problems = type_check_problems(self.xml_element());
+        if !problems.is_empty() {
+            let element = self.xml_element().tag_name();
+            let count = problems.len();
+            let first = problems
+                .first()
+                .map(|issue| issue.rule())
+                .unwrap_or("type check");
+            let message = format!(
+                "The element <{element}> was not validated, together with the elements below it: \
+                 its type check reported {count} problem(s), the first of them rule {first}. Fix \
+                 the report of that rule to have this part of the document validated."
+            );
+            issues.push(SbmlIssue::new("not-validated", self.xml_element(), message));
+            return Ok(());
+        }
+        self.validate_object(issues, identifiers, meta_ids, check)
+    }
+
+    /// Check this object and its SBML children against the rules of the specification.
+    ///
+    /// The implementations of this method are the walk itself; a caller outside the walk uses
+    /// [`SbmlValidable::validate`], which is what guards them.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of
+    /// the current thread has fired.
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -80,7 +126,7 @@ pub(crate) trait SbmlValidable: XmlWrapper {
 ///
 /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if a cancellation trigger of the
 /// current thread has fired.
-pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
+pub(crate) fn validate_list_of_objects<T: SbmlValidable + SbmlObject>(
     list: &XmlList<T>,
     issues: &mut Vec<SbmlIssue>,
     identifiers: &mut HashSet<SId>,
@@ -92,7 +138,14 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
 
     let allowed = get_allowed_children(list.xml_element());
     for object in list.as_vec() {
-        if allowed.contains(&object.xml_element().tag_name().as_str()) {
+        // Two filters, because either of them alone would hand an element to a wrapper that does
+        // not describe it: the allowed-child table of the container (a child the container permits)
+        // and the identity of the item type (the wrapper the container declares. The SBase payloads
+        // `notes` and `annotation` pass the first test - every container permits them - but they are
+        // not items, so validating them as one would read properties they cannot have.
+        if allowed.contains(&object.xml_element().tag_name().as_str())
+            && T::matches_element(object.xml_element())
+        {
             object.validate(issues, identifiers, meta_ids, check)?;
         }
     }

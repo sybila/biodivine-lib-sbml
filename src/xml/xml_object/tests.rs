@@ -1190,13 +1190,15 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
     );
     // The scans must actually have found the sites they are supposed to check, otherwise they would
     // pass vacuously.
-    assert!(
-        read_pairs >= 8,
-        "The child-accessor scan found only {read_pairs} sites."
+    // The counts are pinned rather than floored: the scan has to see every site it is supposed to
+    // check, and a floor of 8 (or 45) would stay green if a refactor dropped most of them.
+    assert_eq!(
+        read_pairs, 30,
+        "The child-accessor scan found {read_pairs} sites instead of 30: a changed count is either          a new accessor (add it to the pins and to the identity table) or a lost one."
     );
-    assert!(
-        identity_sites >= 45,
-        "The creation scan found only {identity_sites} identity-derived creation sites."
+    assert_eq!(
+        identity_sites, 50,
+        "The creation scan found {identity_sites} identity-derived creation sites instead of 50: a          changed count is either a new constructor or a site that stopped deriving its element          from its identity."
     );
 }
 
@@ -1434,6 +1436,17 @@ fn list_item_candidates(list: &str) -> BTreeSet<String> {
 /// completeness rule must not require is that they be unique.
 const REPEATABLE_CHILD_KEYS: &[&str] = &["and", "or"];
 
+/// The elements whose child *cardinality* is decided by a dedicated check instead of by
+/// `UNIQUE_CHILDREN`, with the check that owns it.
+///
+/// A curve segment is the one entry, and the reason is structural: which of its points it must
+/// have exactly once depends on its `xsi:type` (a line segment has `start` and `end`, a cubic
+/// bezier also has the two base points), so a single `UNIQUE_CHILDREN` row cannot express it.
+/// `layout::validation::curve` reads the discriminator and reports the rule of the variant
+/// (`layout-21503` or `layout-21603`), which is why the completeness rule must not demand the row
+/// here. Keeping the list explicit keeps the rule strict everywhere else.
+const CHILD_CARDINALITY_BY_DEDICATED_RULE: &[&str] = &["curveSegment"];
+
 /// A name in one of the element tables that the scan cannot resolve, with its evidence and the goal
 /// that owns the fix.
 ///
@@ -1464,96 +1477,16 @@ struct NameFinding {
 /// `listOfCurveSegments` (a container does not constrain its items) and the `listOfObjectives`
 /// self-entry of `listOfObjectives`. Each of those fixes was applied only after
 /// `scripts/full_corpus_parity.sh` reported the whole corpus byte-identical with it in place.
-const ELEMENT_NAME_EXCEPTIONS: &[NameFinding] = &[
-    NameFinding {
-        table: "REQUIRED_CHILDREN",
-        key: "lineSegment",
-        name: "<key>",
-        reason: "the key names no element: both curve segment variants are written as \
-                 `<layout:curveSegment>` and told apart by `xsi:type`, so the entry can never be \
-                 looked up (no `<lineSegment>` element exists in the layout schema, and the corpus \
-                 contains none)",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "REQUIRED_CHILDREN",
-        key: "cubicBezier",
-        name: "<key>",
-        reason: "the key names no element for the same reason as `lineSegment`; the variant's extra \
-                 required points belong to an `xsi:type`-aware rule, which is G4's work",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "REQUIRED_CHILDREN",
-        key: "functionTerms",
-        name: "<key>",
-        reason: "the key names no element: the container is `listOfFunctionTerms`, which is a key of \
-                 all three tables; the corpus contains no `<functionTerms>` element",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "REQUIRED_CHILDREN",
-        key: "objective",
-        name: "listOfFluxObjectives",
-        reason: "a real list container (a key of ALLOWED_CHILDREN and UNIQUE_CHILDREN) that is not a \
+const ELEMENT_NAME_EXCEPTIONS: &[NameFinding] = &[NameFinding {
+    table: "REQUIRED_CHILDREN",
+    key: "objective",
+    name: "listOfFluxObjectives",
+    reason: "a real list container (a key of ALLOWED_CHILDREN and UNIQUE_CHILDREN) that is not a \
                  key of *this* table; the scan deliberately accepts a container value only when it \
                  is a key of the same table, so the strict rule measures it instead of assuming it \
                  (239 corpus elements are `<objective>` children of it)",
-        owner: "scan rule, not a defect of the table",
-    },
-    NameFinding {
-        table: "ALLOWED_CHILDREN",
-        key: "listOfAdditionalGraphicalObjects",
-        name: "graphicalObjects",
-        reason: "the plural is not an element: the layout schema lists `layout:graphicalObject` and \
-                 `layout:generalGlyph` here, so the row both names a phantom and omits the singular \
-                 `graphicalObject`; the 10 legitimate `<graphicalObject>` children in the corpus are \
-                 reported as unknown (`layout-20304` fires exactly 10 times in the baseline), so \
-                 fixing it moves the frozen snapshot",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "UNIQUE_CHILDREN",
-        key: "reactionGlyph",
-        name: "cure",
-        reason: "a typo for `curve`: the layout schema allows `boundingBox`, `curve` and \
-                 `listOfSpeciesReferenceGlyphs` here, and 162 corpus elements are `<reactionGlyph>` \
-                 children, one of which has two `<curve>` children, so renaming it reports a new \
-                 issue and moves the frozen snapshot",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "ALLOWED_CHILDREN",
-        key: "reactionGlyph",
-        name: "curve",
-        reason: "the completeness view of the same typo: `curve` is allowed in a reaction glyph but \
-                 not unique there, because `UNIQUE_CHILDREN[\"reactionGlyph\"]` spells it `cure`",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "ALLOWED_CHILDREN",
-        key: "model",
-        name: "listOfLayouts",
-        reason: "allowed but not unique: a model with two of these lists is not reported. The corpus \
-                 has one such model (247 models carry the container), so adding the entry moves the \
-                 frozen snapshot",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "ALLOWED_CHILDREN",
-        key: "model",
-        name: "listOfGeneProducts",
-        reason: "allowed but not unique: two corpus models carry two such lists (103 carry one)",
-        owner: "G4",
-    },
-    NameFinding {
-        table: "ALLOWED_CHILDREN",
-        key: "model",
-        name: "listOfObjectives",
-        reason: "allowed but not unique: two corpus models carry two such lists (257 carry one)",
-        owner: "G4",
-    },
-];
+    owner: "scan rule, not a defect of the table",
+}];
 
 /// The names a wrapper type of this crate recognizes, plus the name of the document root.
 fn element_name_universe() -> BTreeSet<&'static str> {
@@ -1697,6 +1630,7 @@ fn scan_element_names() -> (Vec<NameScanFinding>, usize, NameScanCounts) {
         if table == "ALLOWED_CHILDREN"
             && !key.starts_with("listOf")
             && !REPEATABLE_CHILD_KEYS.contains(&key)
+            && !CHILD_CARDINALITY_BY_DEDICATED_RULE.contains(&key)
         {
             let unique_here = unique.get(key);
             for child in values.iter() {
@@ -1741,17 +1675,43 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
     // MathML content dictionary rather than the object model. So the counts and the findings are
     // unchanged, and a delta here would mean a MathML name leaked into an SBML table.
     assert_eq!(
-        checked, 777,
-        "The element-name scan checked {checked} names instead of 777."
+        checked, 766,
+        "The element-name scan checked {checked} names instead of 766."
     );
     assert_eq!(
         counts,
         BTreeMap::from([
-            ("REQUIRED_CHILDREN", (26, 32)),
+            ("REQUIRED_CHILDREN", (25, 26)),
             ("ALLOWED_CHILDREN", (88, 294)),
-            ("UNIQUE_CHILDREN", (88, 249)),
+            ("UNIQUE_CHILDREN", (87, 246)),
         ]),
         "The per-table key/value counts changed."
+    );
+
+    // The container rule: a list key describes its members, so at least one member name the list
+    // rule derives from the key has to be a name the universe knows. A container row with an empty
+    // value list, or with values that describe another list, would otherwise pass the scan by
+    // describing nothing.
+    let universe = element_name_universe();
+    let mut containers = 0usize;
+    for (table, key, _values) in element_name_tables() {
+        if !key.starts_with("listOf") {
+            continue;
+        }
+        containers += 1;
+        let mut candidates = list_item_candidates(key);
+        candidates.extend(multi_kind_list_members(key).iter().map(|it| it.to_string()));
+        assert!(
+            candidates
+                .iter()
+                .any(|candidate| universe.contains(candidate.as_str())),
+            "The container [{table}][\"{key}\"] yields no item candidate the universe knows: \
+             {candidates:?}"
+        );
+    }
+    assert_eq!(
+        containers, 84,
+        "The container rule saw {containers} `listOf*` keys instead of 84."
     );
 
     let found = findings
@@ -1772,6 +1732,22 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
             .collect::<Vec<_>>()
             .join("\n")
     );
+
+    // The keys whose cardinality a dedicated check owns have to be keys of the table the
+    // completeness rule reads, and the list is pinned so that a second one cannot be added without
+    // saying which check owns it.
+    let allowed_keys = element_name_tables()
+        .into_iter()
+        .filter(|(table, _, _)| *table == "ALLOWED_CHILDREN")
+        .map(|(_, key, _)| key)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(CHILD_CARDINALITY_BY_DEDICATED_RULE, &["curveSegment"]);
+    for key in CHILD_CARDINALITY_BY_DEDICATED_RULE {
+        assert!(
+            allowed_keys.contains(key),
+            "The key {key} is not a key of ALLOWED_CHILDREN."
+        );
+    }
 
     // Every exception has to say who owns it, so a later reader knows where to look.
     for exception in ELEMENT_NAME_EXCEPTIONS {

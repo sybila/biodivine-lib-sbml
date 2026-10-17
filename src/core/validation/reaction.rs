@@ -2,7 +2,7 @@ use crate::cancellation::CancellationCheck;
 use crate::constants::namespaces::NS_FBC;
 use crate::constraint::FbcReaction;
 use crate::core::validation::sbase::validate_sbase;
-use crate::core::validation::type_check::{internal_type_check, type_check_of_list, CanTypeCheck};
+use crate::core::validation::type_check::{type_check_of_list, type_check_problems, CanTypeCheck};
 use crate::core::validation::{
     apply_rule_10311, apply_rule_10313, validate_list_of_objects, SbmlValidable,
 };
@@ -11,15 +11,14 @@ use crate::core::{
     SpeciesReference,
 };
 use crate::xml::{
-    OptionalXmlChild, OptionalXmlProperty, RequiredXmlProperty, XmlList, XmlProperty, XmlSubtype,
-    XmlWrapper,
+    OptionalXmlChild, OptionalXmlProperty, XmlList, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
 use crate::SbmlResult;
 use std::collections::HashSet;
 
 impl SbmlValidable for Reaction {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -56,7 +55,7 @@ impl CanTypeCheck for Reaction {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
 
         if let Some(list_of_reactants) = self.reactants().get() {
             type_check_of_list(&list_of_reactants, issues, check)?;
@@ -80,7 +79,7 @@ impl CanTypeCheck for Reaction {
 }
 
 impl SbmlValidable for SpeciesReference {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -96,7 +95,7 @@ impl SbmlValidable for SpeciesReference {
 impl CanTypeCheck for SpeciesReference {}
 
 impl SbmlValidable for ModifierSpeciesReference {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -112,7 +111,7 @@ impl SbmlValidable for ModifierSpeciesReference {
 impl CanTypeCheck for ModifierSpeciesReference {}
 
 impl SbmlValidable for KineticLaw {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,
@@ -146,7 +145,7 @@ impl CanTypeCheck for KineticLaw {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
-        internal_type_check(self.xml_element(), issues);
+        issues.extend(type_check_problems(self.xml_element()));
 
         if let Some(list_of_local_parameters) = self.local_parameters().get() {
             type_check_of_list(&list_of_local_parameters, issues, check)?;
@@ -167,7 +166,14 @@ impl KineticLaw {
         let mut identifiers: HashSet<SId> = HashSet::new();
 
         for local_parameter in list_of_local_parameters.as_vec() {
-            let id = local_parameter.id().get();
+            // A missing or unparsable `id` is reported by the type check of the element itself, so
+            // the aggregation skips it instead of reading it as a required value.
+            let Some(id) = XmlProperty::get_checked(&local_parameter.id())
+                .ok()
+                .flatten()
+            else {
+                continue;
+            };
             if identifiers.contains(&id) {
                 let message = format!(
                     "The identifier ('{id}') of <localParameter> is \
@@ -182,7 +188,7 @@ impl KineticLaw {
 }
 
 impl SbmlValidable for LocalParameter {
-    fn validate(
+    fn validate_object(
         &self,
         issues: &mut Vec<SbmlIssue>,
         identifiers: &mut HashSet<SId>,

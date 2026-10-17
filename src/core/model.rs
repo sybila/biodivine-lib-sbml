@@ -11,8 +11,8 @@ use crate::layout::Layout;
 use crate::qual::{get_outputs_from_transition, QualOutput, QualitativeSpecies, Transition};
 use crate::xml::{
     Document, OptionalSbmlChild, OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty,
-    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlPropertyType,
-    XmlSupertype, XmlWrapper,
+    RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlProperty,
+    XmlPropertyType, XmlSupertype, XmlWrapper,
 };
 use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
@@ -410,7 +410,11 @@ impl Model {
                 .get()
                 .and_then(|law| law.local_parameters().get());
             if let Some(local_parameters) = local_parameters {
-                identifiers.extend(local_parameters.iter().map(|param| param.id().get()));
+                identifiers.extend(
+                    local_parameters
+                        .iter()
+                        .filter_map(|param| XmlProperty::get_checked(&param.id()).ok().flatten()),
+                );
             }
         }
 
@@ -470,7 +474,9 @@ impl Model {
         if let Some(reactions) = self.reactions().get() {
             reactions
                 .iter()
-                .map(|reaction| reaction.id().get())
+                // The `id` of a reaction is optional in the specification, so a reaction without
+                // one is skipped here (the attribute table of the element reports nothing for it).
+                .filter_map(|reaction| XmlProperty::get_checked(&reaction.id()).ok().flatten())
                 .collect::<Vec<SId>>()
         } else {
             Vec::new()
@@ -483,7 +489,7 @@ impl Model {
             rules
                 .iter()
                 .filter_map(|rule| rule.try_downcast::<AssignmentRule>())
-                .map(|assignment_rule| assignment_rule.variable().get())
+                .filter_map(|rule| XmlProperty::get_checked(&rule.variable()).ok().flatten())
                 .collect::<Vec<SId>>()
         } else {
             Vec::new()
