@@ -7,6 +7,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
+#[sbml_object(name = "fluxObjective", namespace = NS_FBC)]
 pub struct FluxObjective(XmlElement);
 
 impl FluxObjective {

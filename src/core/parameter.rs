@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
@@ -7,6 +8,7 @@ use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual parameter definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "parameter", namespace = NS_SBML_CORE)]
 pub struct Parameter(XmlElement);
 
 impl Parameter {

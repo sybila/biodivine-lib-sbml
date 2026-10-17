@@ -7,6 +7,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
+#[sbml_object(name = "geneProduct", namespace = NS_FBC)]
 pub struct GeneProduct(XmlElement);
 
 impl GeneProduct {

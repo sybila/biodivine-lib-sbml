@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::constants::namespaces::{NS_FBC, NS_LAYOUT, NS_QUAL};
 use crate::constraint::{GeneProduct, Objective};
 use crate::core::sbase::{SId, SbmlUtils};
@@ -224,6 +225,7 @@ use sbml_macros::{SBase, XmlWrapper};
 ///
 #[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "model", namespace = NS_SBML_CORE)]
 pub struct Model(XmlElement);
 
 impl XmlDefault for Model {

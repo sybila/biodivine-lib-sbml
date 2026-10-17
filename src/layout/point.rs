@@ -7,6 +7,10 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(
+    names = ["position", "start", "end", "basePoint1", "basePoint2"],
+    namespace = NS_LAYOUT
+)]
 pub struct Point(XmlElement);
 
 impl Point {

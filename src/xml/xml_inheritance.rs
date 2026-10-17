@@ -1,4 +1,4 @@
-use crate::xml::XmlWrapper;
+use crate::xml::{SbmlObject, XmlWrapper};
 
 /// Implemented by [XmlWrapper] instances that represent a variant of a more generic `Super` type.
 ///
@@ -68,8 +68,17 @@ pub trait XmlSupertype: XmlWrapper {
 
 /// A "helper" trait that provides a default implementation for [XmlSubtype] as long as the
 /// type is only determined by the name of the XML tag and the name is known at compile time.
-pub trait XmlNamedSubtype<Super: XmlSupertype>: XmlSubtype<Super> {
-    fn expected_tag_name() -> &'static str;
+///
+/// The name is not spelled out again here: it is the type's declared
+/// [SbmlObject::ELEMENT_NAME], so a subtype and the element it recognizes cannot drift apart. The
+/// trait therefore has no members of its own and its implementations are empty; it exists to mark
+/// *which* element name a subtype is discriminated by (as opposed to [XmlSubtype], whose
+/// implementations are hand-written when the discrimination needs more than a name).
+pub trait XmlNamedSubtype<Super: XmlSupertype>: XmlSubtype<Super> + SbmlObject {
+    /// The local name of the element this type recognizes.
+    fn expected_tag_name() -> &'static str {
+        <Self as SbmlObject>::ELEMENT_NAME
+    }
 }
 
 impl<Super: XmlSupertype, Sub: XmlNamedSubtype<Super>> XmlSubtype<Super> for Sub {

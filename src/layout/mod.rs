@@ -7,18 +7,20 @@ mod validation;
 use crate::constants::namespaces::NS_LAYOUT;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{MetaId, SId};
-use crate::layout::bounding_box::BoundingBox;
-use crate::layout::curve::Curve;
-use crate::layout::dimensions::Dimensions;
 use crate::xml::{
     Document, OptionalSbmlChild, OptionalSbmlProperty, RequiredSbmlChild, RequiredSbmlProperty,
     RequiredXmlChild, RequiredXmlProperty, XmlElement, XmlList, XmlNamedSubtype, XmlPropertyType,
     XmlSupertype,
 };
+pub use bounding_box::BoundingBox;
+pub use curve::{CubicBezier, Curve, LineSegment, XsiType};
+pub use dimensions::Dimensions;
+pub use point::Point;
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "layout", namespace = NS_LAYOUT)]
 pub struct Layout(XmlElement);
 
 impl Layout {
@@ -56,6 +58,19 @@ impl Layout {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(
+    names = [
+        "graphicalObject",
+        "compartmentGlyph",
+        "generalGlyph",
+        "reactionGlyph",
+        "referenceGlyph",
+        "speciesGlyph",
+        "speciesReferenceGlyph",
+        "textGlyph"
+    ],
+    namespace = NS_LAYOUT
+)]
 pub struct GraphicalObject(XmlElement);
 
 impl XmlSupertype for GraphicalObject {}
@@ -81,13 +96,10 @@ impl GraphicalObject {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "compartmentGlyph", namespace = NS_LAYOUT)]
 pub struct CompartmentGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for CompartmentGlyph {
-    fn expected_tag_name() -> &'static str {
-        "compartmentGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for CompartmentGlyph {}
 
 impl CompartmentGlyph {
     pub fn new(document: Document, id: SId) -> Self {
@@ -115,13 +127,10 @@ impl CompartmentGlyph {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "speciesGlyph", namespace = NS_LAYOUT)]
 pub struct SpeciesGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for SpeciesGlyph {
-    fn expected_tag_name() -> &'static str {
-        "speciesGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for SpeciesGlyph {}
 
 impl SpeciesGlyph {
     pub fn new(document: Document, id: SId) -> Self {
@@ -146,13 +155,10 @@ impl SpeciesGlyph {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "reactionGlyph", namespace = NS_LAYOUT)]
 pub struct ReactionGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {
-    fn expected_tag_name() -> &'static str {
-        "reactionGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {}
 
 impl ReactionGlyph {
     pub fn new(document: Document, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
@@ -184,13 +190,10 @@ impl ReactionGlyph {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "speciesReferenceGlyph", namespace = NS_LAYOUT)]
 pub struct SpeciesReferenceGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {
-    fn expected_tag_name() -> &'static str {
-        "speciesReferenceGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {}
 
 impl SpeciesReferenceGlyph {
     pub fn new(document: Document, id: SId, glyph: SId) -> Self {
@@ -288,13 +291,10 @@ impl XmlPropertyType for Role {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "generalGlyph", namespace = NS_LAYOUT)]
 pub struct GeneralGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for GeneralGlyph {
-    fn expected_tag_name() -> &'static str {
-        "generalGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for GeneralGlyph {}
 
 impl GeneralGlyph {
     pub fn new(document: Document, id: SId) -> Self {
@@ -328,13 +328,10 @@ impl GeneralGlyph {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "referenceGlyph", namespace = NS_LAYOUT)]
 pub struct ReferenceGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for ReferenceGlyph {
-    fn expected_tag_name() -> &'static str {
-        "referenceGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for ReferenceGlyph {}
 
 impl ReferenceGlyph {
     pub fn new(document: Document, id: SId, glyph: SId) -> Self {
@@ -369,13 +366,10 @@ impl ReferenceGlyph {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "textGlyph", namespace = NS_LAYOUT)]
 pub struct TextGlyph(XmlElement);
 
-impl XmlNamedSubtype<GraphicalObject> for TextGlyph {
-    fn expected_tag_name() -> &'static str {
-        "textGlyph"
-    }
-}
+impl XmlNamedSubtype<GraphicalObject> for TextGlyph {}
 
 impl TextGlyph {
     pub fn new(document: Document, id: SId) -> Self {

@@ -9,6 +9,7 @@ use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "input", namespace = NS_QUAL)]
 pub struct QualInput(XmlElement);
 
 impl QualInput {

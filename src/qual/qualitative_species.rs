@@ -7,6 +7,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "qualitativeSpecies", namespace = NS_QUAL)]
 pub struct QualitativeSpecies(XmlElement);
 
 impl QualitativeSpecies {

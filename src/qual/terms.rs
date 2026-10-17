@@ -8,6 +8,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(names = ["defaultTerm", "functionTerm"], namespace = NS_QUAL)]
 pub struct AbstractTerm(XmlElement);
 
 impl XmlSupertype for AbstractTerm {}
@@ -15,13 +16,10 @@ impl XmlSupertype for AbstractTerm {}
 impl AbstractTerm {}
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "defaultTerm", namespace = NS_QUAL)]
 pub struct DefaultTerm(XmlElement);
 
-impl XmlNamedSubtype<AbstractTerm> for DefaultTerm {
-    fn expected_tag_name() -> &'static str {
-        "defaultTerm"
-    }
-}
+impl XmlNamedSubtype<AbstractTerm> for DefaultTerm {}
 
 impl DefaultTerm {
     pub fn new(document: Document, result_level: u32) -> DefaultTerm {
@@ -36,13 +34,10 @@ impl DefaultTerm {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "functionTerm", namespace = NS_QUAL)]
 pub struct FunctionTerm(XmlElement);
 
-impl XmlNamedSubtype<AbstractTerm> for FunctionTerm {
-    fn expected_tag_name() -> &'static str {
-        "functionTerm"
-    }
-}
+impl XmlNamedSubtype<AbstractTerm> for FunctionTerm {}
 
 impl FunctionTerm {
     pub fn new(document: Document, result_level: u32, math: Math) -> FunctionTerm {

@@ -10,6 +10,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "transition", namespace = NS_QUAL)]
 pub struct Transition(XmlElement);
 
 impl Transition {

@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
@@ -8,6 +9,7 @@ use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual specie definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "species", namespace = NS_SBML_CORE)]
 pub struct Species(XmlElement);
 
 impl XmlSupertype for Species {}

@@ -7,9 +7,12 @@ mod gene_product_association;
 mod objective;
 mod validation;
 
+pub use association::{And, Association, GeneProductRef, Or};
 pub use fbc_reaction::FbcReaction;
 pub use fbc_species::FbcSpecies;
+pub use flux_objective::FluxObjective;
 pub use gene_product::GeneProduct;
+pub use gene_product_association::GeneProductAssociation;
 pub use objective::FbcType;
 pub use objective::Objective;
 

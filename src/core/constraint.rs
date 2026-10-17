@@ -1,9 +1,11 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
 use crate::xml::{Document, OptionalChild, XmlDefault, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "constraint", namespace = NS_SBML_CORE)]
 pub struct Constraint(XmlElement);
 
 impl XmlDefault for Constraint {

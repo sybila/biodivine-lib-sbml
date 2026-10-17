@@ -5,6 +5,7 @@ use sbml_macros::XmlWrapper;
 /// A [Math] element represents an [XmlElement] related to MathML which is
 /// separated from SBML specification.
 #[derive(Clone, Debug, XmlWrapper)]
+#[sbml_object(name = "math", namespace = NS_MATHML)]
 pub struct Math(XmlElement);
 
 impl XmlDefault for Math {

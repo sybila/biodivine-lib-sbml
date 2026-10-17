@@ -8,18 +8,16 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(names = ["geneProductRef", "and", "or"], namespace = NS_FBC)]
 pub struct Association(XmlElement);
 
 impl XmlSupertype for Association {}
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "geneProductRef", namespace = NS_FBC)]
 pub struct GeneProductRef(XmlElement);
 
-impl XmlNamedSubtype<Association> for GeneProductRef {
-    fn expected_tag_name() -> &'static str {
-        "geneProductRef"
-    }
-}
+impl XmlNamedSubtype<Association> for GeneProductRef {}
 
 impl GeneProductRef {
     pub fn new(document: Document, gene_product: SId) -> Self {
@@ -39,13 +37,10 @@ impl GeneProductRef {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "and", namespace = NS_FBC)]
 pub struct And(XmlElement);
 
-impl XmlNamedSubtype<Association> for And {
-    fn expected_tag_name() -> &'static str {
-        "and"
-    }
-}
+impl XmlNamedSubtype<Association> for And {}
 
 impl And {
     pub fn and(&self) -> OptionalSbmlChild<XmlList<Association>> {
@@ -54,13 +49,10 @@ impl And {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "or", namespace = NS_FBC)]
 pub struct Or(XmlElement);
 
-impl XmlNamedSubtype<Association> for Or {
-    fn expected_tag_name() -> &'static str {
-        "or"
-    }
-}
+impl XmlNamedSubtype<Association> for Or {}
 
 impl Or {
     pub fn or(&self) -> RequiredSbmlChild<XmlList<Association>> {

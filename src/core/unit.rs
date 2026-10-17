@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::SId;
 use crate::xml::{
@@ -9,6 +10,7 @@ use strum_macros::{Display, EnumString};
 
 /// Unit representation
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "unit", namespace = NS_SBML_CORE)]
 pub struct Unit(XmlElement);
 
 impl Unit {

@@ -7,6 +7,7 @@ use crate::xml::{Document, OptionalSbmlProperty, RequiredSbmlChild, RequiredXmlC
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, SBase, XmlWrapper)]
+#[sbml_object(name = "boundingBox", namespace = NS_LAYOUT)]
 pub struct BoundingBox(XmlElement);
 
 impl BoundingBox {

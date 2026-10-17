@@ -59,6 +59,7 @@ impl XmlPropertyType for FbcType {
     }
 }
 #[derive(Clone, Debug, SBase, XmlWrapper)]
+#[sbml_object(name = "objective", namespace = NS_FBC)]
 pub struct Objective(XmlElement);
 
 impl Objective {

@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::Math;
 use crate::xml::{Document, OptionalChild, XmlDefault, XmlElement};
@@ -5,6 +6,7 @@ use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual function definition
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "functionDefinition", namespace = NS_SBML_CORE)]
 pub struct FunctionDefinition(XmlElement);
 
 impl FunctionDefinition {

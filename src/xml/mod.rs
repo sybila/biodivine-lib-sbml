@@ -25,6 +25,9 @@ mod xml_element;
 /// Declaration of the [XmlWrapper] and [XmlDefault] traits.
 mod xml_wrapper;
 
+/// Implementation of the [SbmlObject] trait: the declared XML identity of an SBML object type.
+mod xml_object;
+
 /// Declaration of the [XmlPropertyType] trait.
 mod xml_property_type;
 
@@ -80,10 +83,20 @@ pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild, Xm
 pub use crate::xml::xml_element::XmlElement;
 pub use crate::xml::xml_inheritance::{XmlNamedSubtype, XmlSubtype, XmlSupertype};
 pub use crate::xml::xml_list::XmlList;
+pub use crate::xml::xml_object::SbmlObject;
 pub use crate::xml::xml_property::{OptionalXmlProperty, RequiredXmlProperty, XmlProperty};
 pub use crate::xml::xml_property_type::XmlPropertyType;
 pub use crate::xml::xml_wrapper::XmlDefault;
 pub use crate::xml::xml_wrapper::XmlWrapper;
+
+/// A namespace as this crate names it: the conventional prefix a new declaration is written with,
+/// and the URL that identifies the namespace itself.
+///
+/// Names are compared by URL, so the prefix only decides how the crate *writes* a name; a document
+/// that binds the URL under another prefix is read the same way. The type is a pair rather than a
+/// struct so that a namespace constant is a `const` value (see
+/// [`SbmlObject::ELEMENT_NAMESPACE`]).
+pub use crate::constants::namespaces::Namespace;
 
 /// The XML document type used by the SBML object model.
 ///

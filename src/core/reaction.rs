@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
@@ -7,6 +8,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "reaction", namespace = NS_SBML_CORE)]
 pub struct Reaction(XmlElement);
 
 impl XmlSupertype for Reaction {}
@@ -54,6 +56,7 @@ pub trait SimpleSpeciesReference: SBase {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "speciesReference", namespace = NS_SBML_CORE)]
 pub struct SpeciesReference(XmlElement);
 
 impl SimpleSpeciesReference for SpeciesReference {}
@@ -76,6 +79,7 @@ impl SpeciesReference {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "modifierSpeciesReference", namespace = NS_SBML_CORE)]
 pub struct ModifierSpeciesReference(XmlElement);
 
 impl SimpleSpeciesReference for ModifierSpeciesReference {}
@@ -89,6 +93,7 @@ impl ModifierSpeciesReference {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "kineticLaw", namespace = NS_SBML_CORE)]
 pub struct KineticLaw(XmlElement);
 
 impl XmlDefault for KineticLaw {
@@ -128,6 +133,7 @@ impl KineticLaw {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "localParameter", namespace = NS_SBML_CORE)]
 pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {

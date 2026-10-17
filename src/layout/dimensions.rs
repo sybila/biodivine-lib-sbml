@@ -7,6 +7,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "dimensions", namespace = NS_LAYOUT)]
 pub struct Dimensions(XmlElement);
 
 impl Dimensions {

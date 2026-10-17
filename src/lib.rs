@@ -100,6 +100,12 @@
 //! ```
 //!
 
+// The derive macros of `sbml-macros` generate absolute paths into this crate, so that a type
+// declared *outside* it — an SBML extension, in particular — can use them as well: a macro that
+// emitted `crate::..` would mean "the crate that invokes the macro", which is the wrong crate for
+// an extension. The alias below is what makes the absolute path name this crate from within itself.
+extern crate self as biodivine_lib_sbml;
+
 use std::collections::HashSet;
 
 use biodivine_lib_xml_dom::Document;

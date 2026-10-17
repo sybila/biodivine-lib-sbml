@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SId};
 use crate::xml::{
@@ -7,6 +8,7 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "event", namespace = NS_SBML_CORE)]
 pub struct Event(XmlElement);
 
 impl XmlDefault for Event {
@@ -45,6 +47,7 @@ impl Event {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "trigger", namespace = NS_SBML_CORE)]
 pub struct Trigger(XmlElement);
 
 impl XmlDefault for Trigger {
@@ -75,6 +78,7 @@ impl Trigger {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "priority", namespace = NS_SBML_CORE)]
 pub struct Priority(XmlElement);
 
 impl XmlDefault for Priority {
@@ -90,6 +94,7 @@ impl Priority {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "delay", namespace = NS_SBML_CORE)]
 pub struct Delay(XmlElement);
 
 impl XmlDefault for Delay {
@@ -105,6 +110,7 @@ impl Delay {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "eventAssignment", namespace = NS_SBML_CORE)]
 pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {

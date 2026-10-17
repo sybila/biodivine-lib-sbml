@@ -10,6 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
+#[sbml_object(name = "curve", namespace = NS_LAYOUT)]
 pub struct Curve(XmlElement);
 
 impl Curve {
@@ -75,6 +76,7 @@ impl XmlPropertyType for XsiType {
 }
 
 #[derive(Debug, Clone, XmlWrapper, SBase)]
+#[sbml_object(name = "curveSegment", namespace = NS_LAYOUT)]
 pub struct LineSegment(XmlElement);
 
 impl XmlSupertype for LineSegment {}
@@ -110,6 +112,7 @@ impl LineSegment {
 }
 
 #[derive(Debug, Clone, SBase, XmlWrapper)]
+#[sbml_object(name = "curveSegment", namespace = NS_LAYOUT, xsi_type = "CubicBezier")]
 pub struct CubicBezier(XmlElement);
 
 impl XmlSubtype<LineSegment> for CubicBezier {

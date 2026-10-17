@@ -1,3 +1,4 @@
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::core::{Math, SBase, SId};
 use crate::xml::{
@@ -22,6 +23,10 @@ pub trait Rule: SBase {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(
+    names = ["algebraicRule", "assignmentRule", "rateRule"],
+    namespace = NS_SBML_CORE
+)]
 pub struct AbstractRule(XmlElement);
 
 impl Rule for AbstractRule {}
@@ -46,6 +51,7 @@ impl AbstractRule {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "algebraicRule", namespace = NS_SBML_CORE)]
 pub struct AlgebraicRule(XmlElement);
 
 impl Rule for AlgebraicRule {}
@@ -56,22 +62,15 @@ impl XmlDefault for AlgebraicRule {
     }
 }
 
-impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {
-    fn expected_tag_name() -> &'static str {
-        "algebraicRule"
-    }
-}
+impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {}
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "assignmentRule", namespace = NS_SBML_CORE)]
 pub struct AssignmentRule(XmlElement);
 
 impl Rule for AssignmentRule {}
 
-impl XmlNamedSubtype<AbstractRule> for AssignmentRule {
-    fn expected_tag_name() -> &'static str {
-        "assignmentRule"
-    }
-}
+impl XmlNamedSubtype<AbstractRule> for AssignmentRule {}
 
 impl AssignmentRule {
     pub fn new(document: Document, variable: &SId) -> Self {
@@ -86,15 +85,12 @@ impl AssignmentRule {
 }
 
 #[derive(Clone, Debug, XmlWrapper, SBase)]
+#[sbml_object(name = "rateRule", namespace = NS_SBML_CORE)]
 pub struct RateRule(XmlElement);
 
 impl Rule for RateRule {}
 
-impl XmlNamedSubtype<AbstractRule> for RateRule {
-    fn expected_tag_name() -> &'static str {
-        "rateRule"
-    }
-}
+impl XmlNamedSubtype<AbstractRule> for RateRule {}
 
 impl RateRule {
     pub fn new(document: Document, variable: &SId) -> Self {
