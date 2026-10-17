@@ -1,9 +1,10 @@
 use crate::constants::element::{
-    namespace_for_prefix, ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES,
-    REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
+    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
+    UNIQUE_CHILDREN,
 };
 use crate::constants::namespaces::{
-    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE,
+    namespace_of_prefix, NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
+    URL_PACKAGE_QUAL, URL_SBML_CORE,
 };
 use crate::constraint::FbcType;
 use crate::core::SId;
@@ -60,13 +61,13 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
         for req_attr in required.iter() {
             let (prefix, name) = separate_prefix_name(req_attr);
-            let namespace = namespace_for_prefix(prefix);
+            let namespace = namespace_of_prefix(prefix);
             let property = SbmlProperty::<String>::new(xml_element, name, namespace, namespace);
 
             if namespace != NS_SBML_CORE {
                 let package_declaration = Sbml::try_for_child(xml_element)
                     .unwrap()
-                    .find_sbml_package(namespace);
+                    .declared_package_prefix(namespace);
                 if package_declaration.is_err() {
                     // This package is not declared, hence it's required attributes are not relevant.
                     continue;
@@ -138,7 +139,7 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck>(
         // Only sanity-check the allowed children. The rest is going to be reported as an
         // error and is probably malformed anyway.
         for object in xml_list.iter() {
-            if !allowed.contains(&object.tag_name().as_str()) {
+            if !allowed.contains(&object.xml_element().tag_name().as_str()) {
                 // This is a linear-time check, which is not great, but the list of allowed
                 // children is typically very short anyway.
                 continue;
@@ -170,10 +171,10 @@ fn type_check_of_property<T: XmlPropertyType>(
     issues: &mut Vec<SbmlIssue>,
 ) {
     let (prefix, name) = separate_prefix_name(attribute_name);
-    let namespace = namespace_for_prefix(prefix);
+    let namespace = namespace_of_prefix(prefix);
     let package_declaration = Sbml::try_for_child(xml_element)
         .unwrap()
-        .find_sbml_package(namespace);
+        .declared_package_prefix(namespace);
     if package_declaration.is_err() {
         // This package is not declared, hence it's required attributes are not relevant.
         return;

@@ -6,7 +6,7 @@
 //!  - [XmlElement]: a thin newtype over a [biodivine_lib_xml_dom] element with explicit
 //!    accessors (and no implicit dereference).
 //!  - [XmlWrapper]: the trait implemented by every SBML object; it provides access to the
-//!    underlying [XmlElement] plus a handful of forwarding conveniences.
+//!    underlying [XmlElement], which is the canonical accessor surface for element data.
 //!  - [XmlProperty] (with the [OptionalXmlProperty] and [RequiredXmlProperty] variants):
 //!    type-safe access to a single attribute of an element.
 //!  - [XmlChild] (with the [OptionalXmlChild], [RequiredXmlChild] and [XmlChildDefault]
@@ -47,6 +47,11 @@ mod impl_xml_child;
 
 /// Implementation of the SBML-package-aware child abstraction.
 mod impl_sbml_child;
+
+/// Declaration of the SBML packages used by a document: which prefix a package is declared with,
+/// and how a declaration is introduced when the object model writes into a package the document
+/// does not declare yet.
+mod impl_sbml_package;
 
 /// Some primitive [XmlPropertyType] implementations, as declared in SBML
 /// specification Section 3.1.

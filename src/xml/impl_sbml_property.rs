@@ -1,4 +1,4 @@
-use crate::constants::namespaces::{prefixed_qualified_name, Namespace, URL_SBML_CORE};
+use crate::constants::namespaces::{qualified_name, Namespace, URL_SBML_CORE};
 use crate::xml::{XmlElement, XmlPropertyType};
 use crate::Sbml;
 use biodivine_lib_xml_dom::QualifiedName;
@@ -21,6 +21,10 @@ use std::marker::PhantomData;
 ///       without a prefix (either is fine). If both (or none) are declared, the one *with*
 ///       the namespace prefix is preferred. This last preference is a convention of this crate;
 ///       the SBML specification does not mandate it.
+///
+/// Reading is namespace-aware, so the prefix that a document binds to the package URL does not
+/// matter; writing always uses the conventional prefix of the package, which the declaration
+/// machinery of this module introduces on the `<sbml>` element.
 pub struct SbmlProperty<'a, T: XmlPropertyType> {
     element: &'a XmlElement,
     name: &'static str,
@@ -96,16 +100,6 @@ impl<'a, T: XmlPropertyType> RequiredSbmlProperty<'a, T> {
     }
 }
 
-/// Build the expanded name of a package attribute from its namespace URL and the prefix that
-/// the document actually binds to that URL.
-fn package_property_name(
-    namespace: Namespace,
-    name: &str,
-    prefix: &str,
-) -> Result<QualifiedName, String> {
-    prefixed_qualified_name(namespace.1, prefix, name)
-}
-
 impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for SbmlProperty<'_, T> {
     fn element(&self) -> &XmlElement {
         self.element
@@ -135,13 +129,14 @@ impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for SbmlProperty<'_, T> {
             ));
         };
 
-        let prefix = if write_doc {
-            sbml_root.ensure_sbml_package(self.property_namespace, false)?
-        } else {
-            sbml_root.find_sbml_package(self.property_namespace)?
-        };
+        if write_doc {
+            // A written name has to be usable: its prefix must be in scope for the whole document,
+            // which is what declaring the package on the `<sbml>` element achieves. Reading needs
+            // no declaration, because the lookup below compares namespaces, not prefixes.
+            sbml_root.activate_package(self.property_namespace)?;
+        }
 
-        let prefixed = package_property_name(self.property_namespace, self.name, prefix.as_str())?;
+        let prefixed = qualified_name(self.property_namespace, self.name)?;
 
         if !self.is_the_same_package_as_element() {
             // In an element from a different package (or core), a package property must

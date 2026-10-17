@@ -128,6 +128,11 @@ impl XmlElement {
     /// *interpreted* as an SBML value (typically an identifier inside a `ci` or `bvar` element).
     /// The document keeps the original text: use [XmlElement::text_content] to read the payload
     /// verbatim.
+    ///
+    /// This is the XML Schema `collapse` facet as far as the SBML attribute types need it: only
+    /// the whitespace *surrounding* the value is removed, because every SBML attribute type is a
+    /// single token. A value whose meaning depends on whitespace *inside* it (a sequence of
+    /// tokens such as the MathML `cn` payload) is not collapsed here.
     pub(crate) fn interpreted_text(&self) -> String {
         self.text_content().trim().to_string()
     }

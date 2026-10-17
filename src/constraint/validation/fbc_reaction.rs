@@ -146,7 +146,7 @@ impl CanTypeCheck for FbcReaction {
 pub fn apply_rule_fbc_20705(element: &FbcReaction, issues: &mut Vec<SbmlIssue>, sid_ref: SId) {
     let found = element.find_by_sid::<Parameter>(&sid_ref);
 
-    if found.is_none() || found.unwrap().tag_name() != "parameter" {
+    if found.is_none() || found.unwrap().xml_element().tag_name() != "parameter" {
         let message =
             "Attribute of Flux Bound does not refer to the existing Parameter element!".to_string();
         issues.push(SbmlIssue::new_error(

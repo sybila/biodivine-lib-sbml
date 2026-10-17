@@ -1,4 +1,4 @@
-use crate::constants::namespaces::{to_xml_namespace, Namespace, NS_SBML_CORE};
+use crate::constants::namespaces::{qualified_name, to_xml_namespace, Namespace, NS_SBML_CORE};
 use crate::xml::{OptionalXmlChild, RequiredXmlChild, XmlChild, XmlElement, XmlWrapper};
 use crate::Sbml;
 use biodivine_lib_xml_dom::QualifiedName;
@@ -110,19 +110,13 @@ impl<'a, T: XmlWrapper> XmlChild<T> for SbmlChild<'a, T> {
             ));
         };
 
-        let prefix = if write_doc {
-            sbml_root.ensure_sbml_package(self.element_namespace, false)?
-        } else {
-            sbml_root.find_sbml_package(self.element_namespace)?
-        };
-
-        let namespace = if prefix.is_empty() {
-            biodivine_lib_xml_dom::Namespace::without_prefix(self.element_namespace.1)
-        } else {
-            biodivine_lib_xml_dom::Namespace::prefixed(self.element_namespace.1, prefix.as_str())
+        if write_doc {
+            // A written name has to be usable: its prefix must be in scope for the whole document,
+            // which is what declaring the package on the `<sbml>` element achieves. Reading needs
+            // no declaration, because the lookup below compares namespaces, not prefixes.
+            sbml_root.activate_package(self.element_namespace)?;
         }
-        .map_err(|it| it.to_string())?;
 
-        QualifiedName::with_namespace(self.name, &namespace).map_err(|it| it.to_string())
+        qualified_name(self.element_namespace, self.name)
     }
 }

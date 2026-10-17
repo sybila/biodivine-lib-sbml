@@ -59,6 +59,12 @@ pub trait XmlPropertyType: Sized {
     ///
     /// This is deliberately not a property of the *document*: the text of an element that is not
     /// a value (a `notes`, `annotation` or MathML payload) is never rewritten.
+    ///
+    /// The removal is the XML Schema `collapse` facet applied to the two ends of the value, which
+    /// is what the single-valued SBML attribute types require. It does not cover values that are
+    /// white-space separated token lists (for example the MathML `cn` payload, or an attribute
+    /// whose type is a list): such a value is handed to the implementation with its internal
+    /// whitespace intact.
     fn trims_whitespace() -> bool {
         true
     }

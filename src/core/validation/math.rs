@@ -80,7 +80,7 @@ impl Math {
     pub(crate) fn apply_rule_10202(&self, issues: &mut Vec<SbmlIssue>) {
         let allowed_children = get_allowed_children(self.xml_element());
 
-        for child in self.recursive_child_elements() {
+        for child in self.xml_element().recursive_child_elements() {
             let child_tag_name = child.tag_name();
             if !allowed_children.contains(&child_tag_name.as_str()) {
                 let message = format!("Unknown child <{child_tag_name}> of element <math>.");
@@ -98,8 +98,9 @@ impl Math {
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10203(&self, issues: &mut Vec<SbmlIssue>) {
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["encoding"];
-        let relevant_children =
-            self.recursive_child_elements_filtered(|it| it.has_attribute("encoding"));
+        let relevant_children = self
+            .xml_element()
+            .recursive_child_elements_filtered(|it| it.has_attribute("encoding"));
 
         for child in relevant_children {
             let name = child.tag_name();
@@ -122,8 +123,9 @@ impl Math {
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10204(&self, issues: &mut Vec<SbmlIssue>) {
         let allowed = MATHML_ALLOWED_CHILDREN_BY_ATTR["definitionURL"];
-        let relevant_children =
-            self.recursive_child_elements_filtered(|it| it.has_attribute("definitionURL"));
+        let relevant_children = self
+            .xml_element()
+            .recursive_child_elements_filtered(|it| it.has_attribute("definitionURL"));
 
         for child in relevant_children {
             let name = child.tag_name();
@@ -147,9 +149,11 @@ impl Math {
     /// definitionURL attribute of a csymbol, and if so, the package must define **required="true"**
     /// on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "csymbol" && child.has_attribute("definitionURL")
-        });
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "csymbol" && child.has_attribute("definitionURL")
+            });
 
         for child in children_of_interest {
             // Unwrap is safe, because we only consider children where the attribute is set.
@@ -172,8 +176,9 @@ impl Math {
     /// the type attribute on other elements, and if so, the package must define **required="true"**
     /// on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10206(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest =
-            self.recursive_child_elements_filtered(|child| child.has_attribute("type"));
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.has_attribute("type"));
 
         for child in children_of_interest {
             let name = child.tag_name();
@@ -194,8 +199,9 @@ impl Math {
     /// allow new values for the type attribute, and if so, the package must define
     /// **required="true"** on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10207(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest =
-            self.recursive_child_elements_filtered(|child| child.has_attribute("type"));
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.has_attribute("type"));
 
         for child in children_of_interest {
             let value = child.get_attribute("type").unwrap();
@@ -220,8 +226,9 @@ impl Math {
     /// elements on other elements, and if so, the package must define **required="true"** on the
     /// SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10208(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest =
-            self.recursive_child_elements_filtered(|child| child.tag_name() == "lambda");
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "lambda");
 
         for child in children_of_interest {
             // The parent must exist, because these are children of this math element.
@@ -287,17 +294,19 @@ impl Math {
     /// the set of identifiers of [FunctionDefinition] objects defined in the enclosing
     /// SBML [Model] object.
     pub(crate) fn apply_rule_10214(&self, issues: &mut Vec<SbmlIssue>) {
-        let parent_name = self.parent().unwrap().tag_name();
+        let parent_name = self.xml_element().parent().unwrap().tag_name();
 
         if parent_name != "functionDefinition" {
-            let children_of_interest = self.recursive_child_elements_filtered(|child| {
-                child.tag_name() == "apply" && {
-                    child
-                        .get_child_at(0)
-                        .map(|it| it.tag_name() == "ci")
-                        .unwrap_or(false)
-                }
-            });
+            let children_of_interest =
+                self.xml_element()
+                    .recursive_child_elements_filtered(|child| {
+                        child.tag_name() == "apply" && {
+                            child
+                                .get_child_at(0)
+                                .map(|it| it.tag_name() == "ci")
+                                .unwrap_or(false)
+                        }
+                    });
 
             let identifiers = Model::for_child_element(self.xml_element())
                 .unwrap()
@@ -351,8 +360,9 @@ impl Math {
         ]
         .concat();
 
-        let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
+        let apply_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
             let ci_elements = apply
@@ -397,6 +407,7 @@ impl Math {
 
         // TODO: Should be check that all bvar elements contain a valid sid? (as a separate rule?)
         let b_variables = self
+            .xml_element()
             .recursive_child_elements()
             .into_iter()
             .filter(|child| child.tag_name() == "bvar")
@@ -404,7 +415,9 @@ impl Math {
             .filter_map(|it| SId::try_from(it).ok())
             .collect::<Vec<SId>>();
 
-        let ci_elements = self.recursive_child_elements_filtered(|child| child.tag_name() == "ci");
+        let ci_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "ci");
 
         for ci in ci_elements {
             let value = ci.interpreted_text();
@@ -425,8 +438,9 @@ impl Math {
     /// ### Rule 10218
     /// A MathML operator must be supplied the number of arguments appropriate for that operator.
     pub(crate) fn apply_rule_10218(&self, issues: &mut Vec<SbmlIssue>) {
-        let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
+        let apply_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
             let children = apply.child_elements();
@@ -467,8 +481,9 @@ impl Math {
             }
         }
 
-        let piecewise_elements =
-            self.recursive_child_elements_filtered(|child| child.tag_name() == "piecewise");
+        let piecewise_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "piecewise");
 
         for e in piecewise_elements {
             // Explicitly handle the piecewise operator that is technically n-ary, but must
@@ -492,8 +507,9 @@ impl Math {
     pub(crate) fn apply_rule_10219(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
 
-        let apply_elements =
-            self.recursive_child_elements_filtered(|child| child.tag_name() == "apply");
+        let apply_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.tag_name() == "apply");
 
         for apply in apply_elements {
             let children = apply.child_elements();
@@ -535,8 +551,9 @@ impl Math {
     /// on other elements, and if so, the package must define **required="true"** on the SBML container
     /// element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10220(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest =
-            self.recursive_child_elements_filtered(|child| child.has_attribute("units"));
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| child.has_attribute("units"));
 
         for child in children_of_interest {
             let name = child.tag_name();
@@ -558,9 +575,11 @@ impl Math {
         let unit_identifiers = Model::for_child_element(self.xml_element())
             .unwrap()
             .unit_definition_identifiers();
-        let cn_elements = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "cn" && child.has_attribute("units")
-        });
+        let cn_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "cn" && child.has_attribute("units")
+            });
 
         for cn in cn_elements {
             // We can unwrap because we selected only elements where `units` attribute is set.
@@ -585,17 +604,19 @@ impl Math {
     /// ### Rule 10223
     /// The single argument for the *rateOf* **csymbol** function must be a **ci** element.
     pub(crate) fn apply_rule_10223(&self, issues: &mut Vec<SbmlIssue>) {
-        let children_of_interest = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "apply" && {
-                if let Some(first_child) = child.get_child_at(0) {
-                    first_child
-                        .get_attribute("definitionURL")
-                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
-                } else {
-                    false
+        let children_of_interest = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "apply" && {
+                    if let Some(first_child) = child.get_child_at(0) {
+                        first_child
+                            .get_attribute("definitionURL")
+                            .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf")
+                    } else {
+                        false
+                    }
                 }
-            }
-        });
+            });
 
         for child in children_of_interest {
             let apply_children = child.child_elements();
@@ -628,22 +649,24 @@ impl Math {
     /// [AlgebraicRule](crate::core::rule::AlgebraicRule).
     pub(crate) fn apply_rule_10224(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
-        let apply_elements = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "apply" && {
-                let children = child.child_elements();
-                if children.len() < 2 {
-                    false
-                } else {
-                    let fst = &children[0];
-                    let snd = &children[1];
-                    let is_rate_of = fst
-                        .get_attribute("definitionURL")
-                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
-                    let is_ci = snd.tag_name() == "ci";
-                    is_ci && is_rate_of
+        let apply_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "apply" && {
+                    let children = child.child_elements();
+                    if children.len() < 2 {
+                        false
+                    } else {
+                        let fst = &children[0];
+                        let snd = &children[1];
+                        let is_rate_of = fst
+                            .get_attribute("definitionURL")
+                            .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
+                        let is_ci = snd.tag_name() == "ci";
+                        is_ci && is_rate_of
+                    }
                 }
-            }
-        });
+            });
         let assignment_rule_variables = model.assignment_rule_variables();
         let algebraic_rule_parameters = model.algebraic_rule_ci_variables();
 
@@ -681,22 +704,24 @@ impl Math {
         let model = Model::for_child_element(self.xml_element()).unwrap();
         let assignment_rule_variables = model.assignment_rule_variables();
         let algebraic_ci_values = model.algebraic_rule_ci_variables();
-        let apply_elements = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "apply" && {
-                let children = child.child_elements();
-                if children.len() < 2 {
-                    false
-                } else {
-                    let fst = &children[0];
-                    let snd = &children[1];
-                    let is_rate_of = fst
-                        .get_attribute("definitionURL")
-                        .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
-                    let is_ci = snd.tag_name() == "ci";
-                    is_ci && is_rate_of
+        let apply_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "apply" && {
+                    let children = child.child_elements();
+                    if children.len() < 2 {
+                        false
+                    } else {
+                        let fst = &children[0];
+                        let snd = &children[1];
+                        let is_rate_of = fst
+                            .get_attribute("definitionURL")
+                            .is_some_and(|url| url == "http://www.sbml.org/sbml/symbols/rateOf");
+                        let is_ci = snd.tag_name() == "ci";
+                        is_ci && is_rate_of
+                    }
                 }
-            }
-        });
+            });
 
         for apply in apply_elements {
             let ci = apply.child_elements()[1].clone(); // This is safe due to the filter expression.
@@ -732,9 +757,11 @@ impl Math {
     /// The SBML *units* attribute on MathML **cn** elements must always conform to the syntax of the
     /// SBML data type **UnitSId**. Full description of the rule [here](crate::core::validation::apply_rule_10311).
     pub(crate) fn apply_rule_10311(&self, issues: &mut Vec<SbmlIssue>) {
-        let cn_elements = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "cn" && child.has_attribute("units")
-        });
+        let cn_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "cn" && child.has_attribute("units")
+            });
 
         for cn in cn_elements {
             let value = cn.get_attribute("units");
@@ -754,9 +781,11 @@ impl Math {
     /// [UnitDefinition](crate::core::unit_definition::UnitDefinition) in the [Model], or the
     /// identifier of a predefined unit in SBML. Full description of the rule [here](apply_rule_10313);
     pub(crate) fn apply_rule_10313(&self, issues: &mut Vec<SbmlIssue>) {
-        let ci_elements = self.recursive_child_elements_filtered(|child| {
-            child.tag_name() == "ci" && child.has_attribute("units")
-        });
+        let ci_elements = self
+            .xml_element()
+            .recursive_child_elements_filtered(|child| {
+                child.tag_name() == "ci" && child.has_attribute("units")
+            });
 
         for ci in ci_elements {
             // TODO: Should we have a separate rule that all ci elements contain valid and used SIds?

@@ -39,7 +39,9 @@ fn apply_rule_qual_20607_and_20608(
 ) {
     let qual_species = element.find_by_sid::<QualitativeSpecies>(&qualitative_species);
 
-    if qual_species.is_none() || qual_species.clone().unwrap().tag_name() != "qualitativeSpecies" {
+    if qual_species.is_none()
+        || qual_species.clone().unwrap().xml_element().tag_name() != "qualitativeSpecies"
+    {
         let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
         issues.push(SbmlIssue::new_error("qual-20607", element, message));
         return;

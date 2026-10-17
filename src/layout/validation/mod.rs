@@ -109,7 +109,9 @@ impl SbmlValidable for CompartmentGlyph {
         if self.compartment().is_set() {
             let element = self.find_by_sid::<Compartment>(&compartment.get().unwrap());
 
-            if element.is_none() || element.clone().unwrap().full_name() != "compartment" {
+            if element.is_none()
+                || element.clone().unwrap().xml_element().full_name() != "compartment"
+            {
                 let message =
                     "Attribute [compartment] does not refer to an existing Compartment element!";
                 issues.push(SbmlIssue::new_error(
@@ -214,7 +216,8 @@ impl SbmlValidable for ReactionGlyph {
         if self.reaction().is_set() {
             let element = self.find_by_sid::<Reaction>(&reaction.get().unwrap());
 
-            if element.is_none() || element.clone().unwrap().full_name() != "reaction" {
+            if element.is_none() || element.clone().unwrap().xml_element().full_name() != "reaction"
+            {
                 let message =
                     "Attribute [reaction] does not refer to an existing Reaction element!";
                 issues.push(SbmlIssue::new_error(
@@ -285,7 +288,9 @@ impl SbmlValidable for SpeciesReferenceGlyph {
         if self.species_reference().is_set() {
             let element = self.find_by_sid::<SpeciesReference>(&species_ref.get().unwrap());
 
-            if element.is_none() || element.clone().unwrap().full_name() != "speciesReference" {
+            if element.is_none()
+                || element.clone().unwrap().xml_element().full_name() != "speciesReference"
+            {
                 let message = "Attribute [speciesReference] does not refer to an existing SpeciesReference element!";
                 issues.push(SbmlIssue::new_error(
                     "layout-21008",
@@ -299,7 +304,9 @@ impl SbmlValidable for SpeciesReferenceGlyph {
             }
         }
         let element = self.find_by_sid::<SpeciesGlyph>(&species_glyph.get());
-        if element.is_none() || element.clone().unwrap().full_name() != "layout:speciesGlyph" {
+        if element.is_none()
+            || element.clone().unwrap().xml_element().full_name() != "layout:speciesGlyph"
+        {
             let message =
                 "Attribute [speciesGlyph] does not refer to an existing SpeciesGlyph element!";
             issues.push(SbmlIssue::new_error(

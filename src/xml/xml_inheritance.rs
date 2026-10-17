@@ -74,7 +74,7 @@ pub trait XmlNamedSubtype<Super: XmlSupertype>: XmlSubtype<Super> {
 
 impl<Super: XmlSupertype, Sub: XmlNamedSubtype<Super>> XmlSubtype<Super> for Sub {
     fn try_cast_from_super(value: &Super) -> Option<Self> {
-        if value.tag_name() == Self::expected_tag_name() {
+        if value.xml_element().tag_name() == Self::expected_tag_name() {
             Some(Self::from(value.xml_element().clone()))
         } else {
             None

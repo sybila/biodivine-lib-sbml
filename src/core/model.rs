@@ -368,6 +368,7 @@ impl Model {
         // And this function has its `math` element with a `lambda` child element specified.
         let math = function.math().get()?;
         let lambda = math
+            .xml_element()
             .recursive_child_elements()
             .into_iter()
             .find(|it| it.tag_name() == "lambda")?;
@@ -500,7 +501,8 @@ impl Model {
                 .filter_map(|rule| rule.try_downcast::<AlgebraicRule>())
                 .filter_map(|algebraic_rule| algebraic_rule.math().get())
                 .flat_map(|math| {
-                    math.recursive_child_elements()
+                    math.xml_element()
+                        .recursive_child_elements()
                         .into_iter()
                         .filter(|child| {
                             if child.tag_name() == "ci" {

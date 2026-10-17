@@ -74,22 +74,29 @@ pub(crate) fn qualified_name(
     .map_err(|it| it.to_string())
 }
 
-/// Build an expanded name in the namespace identified by `url`, using the concrete namespace
-/// `prefix` that a particular document binds to that URL.
+/// The namespaces this crate knows about, i.e. the SBML core namespace and the namespaces of the
+/// SBML packages with support in this crate.
+const KNOWN_NAMESPACES: [Namespace; 4] = [NS_SBML_CORE, NS_LAYOUT, NS_QUAL, NS_FBC];
+
+/// The namespace whose conventional prefix is `prefix`.
 ///
-/// An empty `prefix` produces a name in the default namespace, which is meaningful for element
-/// names but is not how a namespaced attribute can be written.
-pub(crate) fn prefixed_qualified_name(
-    url: &str,
-    prefix: &str,
-    name: &str,
-) -> Result<biodivine_lib_xml_dom::QualifiedName, String> {
-    let namespace = if prefix.is_empty() {
-        biodivine_lib_xml_dom::Namespace::without_prefix(url)
-    } else {
-        biodivine_lib_xml_dom::Namespace::prefixed(url, prefix)
-    }
-    .map_err(|it| it.to_string())?;
-    biodivine_lib_xml_dom::QualifiedName::with_namespace(name, &namespace)
-        .map_err(|it| it.to_string())
+/// The static rule tables name elements and attributes with a `prefix:local` string (for example
+/// `fbc:strict`), and the validation code needs the namespace that such a prefix denotes. The
+/// lookup is derived from [KNOWN_NAMESPACES], so a namespace and its conventional prefix cannot
+/// drift apart.
+///
+/// The table is keyed by the conventional prefix of a namespace, one namespace per prefix, so a
+/// package version with its own namespace URL takes its own entry next to its constant (`NS_FBC`
+/// denotes the `version2` URL of the FBC package).
+///
+/// # Panics
+///
+/// Panics for a prefix that is not the conventional prefix of one of the namespaces in
+/// [KNOWN_NAMESPACES]. The tables that reach this function use no other prefixes.
+pub(crate) fn namespace_of_prefix(prefix: &str) -> Namespace {
+    KNOWN_NAMESPACES
+        .iter()
+        .copied()
+        .find(|it| it.0 == prefix)
+        .unwrap_or_else(|| panic!("Unknown SBML namespace prefix `{prefix}`."))
 }

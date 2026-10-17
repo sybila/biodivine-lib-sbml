@@ -1,4 +1,3 @@
-use crate::constants::namespaces::{Namespace, NS_FBC, NS_LAYOUT, NS_QUAL, NS_SBML_CORE};
 use phf::{phf_map, Map};
 
 macro_rules! extended_sbase_attributes {
@@ -140,21 +139,6 @@ pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
     "position" => phf_map! { "layout:x" => "double", "layout:y" => "double", "layout:z" => "double" },
     "dimensions" => phf_map! { "layout:width" => "double", "layout:height" => "double", "layout:depth" => "double" },
 };
-
-pub const KNOWN_DEFAULT_PREFIX: Map<&str, Namespace> = phf_map! {
-    "" => NS_SBML_CORE,
-    "layout" => NS_LAYOUT,
-    "fbc" => NS_FBC,
-    "qual" => NS_QUAL,
-};
-
-/// Retrieves namespace information for a given default prefix. Note that in actual SBML files,
-/// packages can use different namespace prefixes as well.
-pub fn namespace_for_prefix(prefix: &str) -> Namespace {
-    *KNOWN_DEFAULT_PREFIX
-        .get(prefix)
-        .expect("Default prefix not found")
-}
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
     "sbml" => &["level", "version"],

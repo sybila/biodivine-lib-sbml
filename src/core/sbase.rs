@@ -357,7 +357,7 @@ pub(crate) trait SbmlUtils: SBase {
     }
 
     fn find_element_by_sid(&self, id: &SId) -> Option<XmlElement> {
-        let root = self.document().root()?;
+        let root = self.xml_element().document().root()?;
 
         for child in root.descendants() {
             let Some(child) = child.as_element() else {
@@ -381,7 +381,7 @@ pub(crate) trait SbmlUtils: SBase {
     }
 
     fn find_element_by_meta_id(&self, id: &MetaId) -> Option<XmlElement> {
-        let root = self.document().root()?;
+        let root = self.xml_element().document().root()?;
 
         for child in root.descendants() {
             let Some(child) = child.as_element() else {

@@ -85,7 +85,7 @@ fn main() {
     // For example, here, we are reading the list of qualitative species defined
     // in the sbml-qual package as a "generic" list of `XmlElement` objects.
     let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
-        model.optional_child("listOfQualitativeSpecies");
+        OptionalDynamicChild::new(model.xml_element(), "listOfQualitativeSpecies");
     println!(
         "This model has {} qualitative species.",
         qual_species.get_or_create().len(),
@@ -96,7 +96,7 @@ fn main() {
     // First, create a new instance of a `Species` object.
     let species_id = SId::try_from("sp_1").unwrap();
     let compartment_id = compartments.get(0).id().get();
-    let s = Species::new(model.document(), &species_id, &compartment_id);
+    let s = Species::new(model.xml_element().document(), &species_id, &compartment_id);
     let species_name = "MySpecies".to_string();
     s.name().set_some(&species_name);
 

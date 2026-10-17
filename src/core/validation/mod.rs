@@ -67,7 +67,7 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable>(
 
     let allowed = get_allowed_children(list.xml_element());
     for object in list.as_vec() {
-        if allowed.contains(&object.tag_name().as_str()) {
+        if allowed.contains(&object.xml_element().tag_name().as_str()) {
             object.validate(issues, identifiers, meta_ids);
         }
     }

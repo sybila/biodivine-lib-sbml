@@ -43,7 +43,7 @@ impl AbstractRule {
             };
 
             if variables.contains(&variable) {
-                let tag_name = rule.tag_name();
+                let tag_name = rule.xml_element().tag_name();
                 let message = format!(
                     "The variable ('{variable}') of <{tag_name}> is already present in the set of \
                         <assignmentRule> and <rateRule> objects."

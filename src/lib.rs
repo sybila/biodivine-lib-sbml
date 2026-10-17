@@ -68,7 +68,7 @@
 //! // For example, here, we are reading the list of qualitative species defined
 //! // in the sbml-qual package as a "generic" list of `XmlElement` objects.
 //! let qual_species: OptionalDynamicChild<XmlList<XmlElement>> =
-//!     model.optional_child("listOfQualitativeSpecies");
+//!     OptionalDynamicChild::new(model.xml_element(), "listOfQualitativeSpecies");
 //! println!(
 //!     "This model has {} qualitative species.",
 //!     qual_species.get_or_create().len(),
@@ -79,7 +79,7 @@
 //! // First, create a new instance of a `Species` object.
 //! let species_id = SId::try_from("sp_1").unwrap();
 //! let compartment_id = compartments.get(0).id().get();
-//! let s = Species::new(model.document(), &species_id, &compartment_id);
+//! let s = Species::new(model.xml_element().document(), &species_id, &compartment_id);
 //! let species_name = "MySpecies".to_string();
 //! s.name().set_some(&species_name);
 //!
@@ -97,14 +97,12 @@
 
 use std::collections::HashSet;
 
-use biodivine_lib_xml_dom::{Document, Element, QualifiedName};
+use biodivine_lib_xml_dom::{Document, Element};
 use embed_doc_image::embed_doc_image;
 
 use xml::RequiredProperty;
 
-use crate::constants::namespaces::{
-    prefixed_qualified_name, to_xml_namespace, Namespace, NS_SBML_CORE,
-};
+use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{internal_type_check, CanTypeCheck};
 use crate::core::validation::SbmlValidable;
@@ -396,99 +394,6 @@ impl Sbml {
 
         issues
     }
-
-    /// Ensure that the SBML package specified by the given `Namespace` is declared on the
-    /// `<sbml>` element.
-    ///
-    /// If the package is already declared, its prefix is returned. If it does not exist, it is
-    /// created with the default prefix of `package`, and the corresponding `required`
-    /// attribute is set as well.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the package namespace cannot be represented as an XML namespace.
-    pub fn ensure_sbml_package(
-        &self,
-        package: Namespace,
-        required: bool,
-    ) -> Result<String, String> {
-        let element = self.sbml_root.element();
-        let existing_prefix = element
-            .namespace_declarations()
-            .into_iter()
-            .find(|(_prefix, binding)| binding.as_ref().is_some_and(|it| it.uri() == package.1))
-            .map(|(prefix, _binding)| prefix.map(|it| it.as_str().to_string()).unwrap_or_default());
-
-        let prefix = match existing_prefix {
-            Some(prefix) => prefix,
-            None => {
-                // The package is not declared. We have to create it with the default prefix.
-                let namespace = to_xml_namespace(package).ok_or_else(|| {
-                    format!(
-                        "Namespace of SBML package {} cannot be declared.",
-                        package.1
-                    )
-                })?;
-                element.declare_namespace(namespace);
-                package.0.to_string()
-            }
-        };
-
-        // Find if the required attribute already exists, if not create it. Also make sure that
-        // its value is not "lower" than the given `required` value.
-        let required_name = package_attribute_name(package, prefix.as_str())?;
-        if element
-            .attribute(&required_name)
-            .is_some_and(|it| it.as_str() == "true")
-        {
-            // If the package is already required, we can't make it "more required".
-            Ok(prefix)
-        } else {
-            let value = if required { "true" } else { "false" };
-            element
-                .set_attribute_checked(required_name, value)
-                .map_err(|it| it.to_string())?;
-            Ok(prefix)
-        }
-    }
-
-    /// Retrieve a namespace prefix which is used with the given `package_url`, if such prefix
-    /// exists.
-    ///
-    /// # Errors
-    ///
-    /// The function returns an error if the package namespace is not declared, or when the
-    /// corresponding `required` attribute is not specified (i.e. it is not a valid SBML
-    /// package declaration).
-    pub fn find_sbml_package(&self, package: Namespace) -> Result<String, String> {
-        let element = self.sbml_root.element();
-        let Some((prefix, _binding)) = element
-            .namespace_declarations()
-            .into_iter()
-            .find(|(_prefix, binding)| binding.as_ref().is_some_and(|it| it.uri() == package.1))
-        else {
-            return Err(format!(
-                "Namespace for SBML package {} does not exist.",
-                package.1
-            ));
-        };
-
-        let prefix = prefix.map(|it| it.as_str().to_string()).unwrap_or_default();
-        let required_name = package_attribute_name(package, prefix.as_str())?;
-        if element.attribute(&required_name).is_none() {
-            return Err(format!(
-                "Namespace of SBML package {} does not have a `required` attribute on the `<sbml>` element.", package.1
-            ));
-        }
-
-        Ok(prefix)
-    }
-}
-
-/// Build the expanded name of the `required` attribute of a package namespace, using the
-/// concrete prefix that the document binds to the package URL.
-fn package_attribute_name(package: Namespace, prefix: &str) -> Result<QualifiedName, String> {
-    prefixed_qualified_name(package.1, prefix, "required")
 }
 
 impl Default for Sbml {
@@ -568,7 +473,10 @@ pub enum SbmlIssueSeverity {
 
 #[cfg(test)]
 mod tests {
-    use crate::constants::namespaces::{NS_EMPTY, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_SBML_CORE};
+    use crate::constants::namespaces::{
+        NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_SBML_CORE, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
+        URL_SBML_CORE,
+    };
     use crate::core::sbase::SbmlUtils;
     use crate::core::validation::SbmlValidable;
     use crate::core::RuleTypes::Assignment;
@@ -698,7 +606,7 @@ mod tests {
 
         // create a new required property
         let property: RequiredDynamicProperty<'_, String> =
-            model.required_property("required_property");
+            RequiredDynamicProperty::new(model.xml_element(), "required_property");
         assert!(
             !property.is_set(),
             "Required property shouldn't be set at this point."
@@ -772,7 +680,8 @@ mod tests {
         assert!(!notes.is_set(), "Notes are still present after clear.");
 
         // set child
-        let xml_element = XmlElement::new_qualified(model.document(), "notes", NS_SBML_CORE);
+        let xml_element =
+            XmlElement::new_qualified(model.xml_element().document(), "notes", NS_SBML_CORE);
         let notes_elem = notes.set(xml_element);
         assert!(notes_elem.is_none(), "Old Notes should be empty.");
         assert!(notes.is_set(), "Notes should be set.");
@@ -786,14 +695,16 @@ mod tests {
         let model = doc.model().get().unwrap();
 
         // get child
-        let req_child: RequiredDynamicChild<'_, XmlElement> = model.required_child("required");
+        let req_child: RequiredDynamicChild<'_, XmlElement> =
+            RequiredDynamicChild::new(model.xml_element(), "required");
         assert!(req_child.get_raw().is_none());
         assert_eq!(req_child.simple_name(), "required");
         assert_eq!(
             req_child.parent().xml_element().element(),
             model.xml_element().element()
         );
-        let xml_element = XmlElement::new_qualified(model.document(), "required", NS_EMPTY);
+        let xml_element =
+            XmlElement::new_qualified(model.xml_element().document(), "required", NS_EMPTY);
         let inner_element = xml_element.element().clone();
         // set child
         req_child.set_raw(xml_element.clone());
@@ -831,7 +742,7 @@ mod tests {
         let compartment1 = content.get(0);
         assert!(compartment1.constant().get());
         assert_eq!(compartment1.id().get().as_str(), "comp1");
-        let compartment2: Compartment = Compartment::default(compartment1.document());
+        let compartment2: Compartment = Compartment::default(compartment1.xml_element().document());
         compartment2
             .constant()
             .set_raw("false".to_string())
@@ -886,12 +797,12 @@ mod tests {
             .set_some(&SboTerm::try_from("SBO:0003204").unwrap());
         model.meta_id().set_some(&mid("MT-TEST-MODEL-NO1"));
         model.notes().set(XmlElement::new_qualified(
-            model.document(),
+            model.xml_element().document(),
             "notes",
             NS_SBML_CORE,
         ));
         model.annotation().set(XmlElement::new_qualified(
-            model.document(),
+            model.xml_element().document(),
             "annotation",
             NS_SBML_CORE,
         ));
@@ -950,7 +861,7 @@ mod tests {
         let model = doc.model().get().unwrap();
         model.name().set_some(&"round trip model".to_string());
         model.notes().set(XmlElement::new_qualified(
-            model.document(),
+            model.xml_element().document(),
             "notes",
             NS_SBML_CORE,
         ));
@@ -1053,6 +964,7 @@ mod tests {
             .get()
             .unwrap();
         let ci = math
+            .xml_element()
             .recursive_child_elements_filtered(|it| it.tag_name() == "ci")
             .pop()
             .unwrap();
@@ -1171,9 +1083,9 @@ mod tests {
         function_defs_list
             .name()
             .set_some(&"FunDefsListNAME".to_string());
-        function_defs_list.push(FunctionDefinition::default(model.document()));
-        function_defs_list.push(FunctionDefinition::default(model.document()));
-        function_defs_list.push(FunctionDefinition::default(model.document()));
+        function_defs_list.push(FunctionDefinition::default(model.xml_element().document()));
+        function_defs_list.push(FunctionDefinition::default(model.xml_element().document()));
+        function_defs_list.push(FunctionDefinition::default(model.xml_element().document()));
 
         function_defs_list
             .get(0)
@@ -1185,7 +1097,9 @@ mod tests {
             .set_some(&sid("functionDef2"));
         let fd_top = function_defs_list.top();
         fd_top.id().set_some(&sid("functionDef3"));
-        fd_top.math().set(Math::default(model.document()));
+        fd_top
+            .math()
+            .set(Math::default(model.xml_element().document()));
     }
 
     fn build_unit_defs(model: &Model) {
@@ -1197,9 +1111,9 @@ mod tests {
         unit_defs_list
             .name()
             .set_some(&"UnitDefsListNAME".to_string());
-        unit_defs_list.push(UnitDefinition::default(model.document()));
-        unit_defs_list.push(UnitDefinition::default(model.document()));
-        unit_defs_list.push(UnitDefinition::default(model.document()));
+        unit_defs_list.push(UnitDefinition::default(model.xml_element().document()));
+        unit_defs_list.push(UnitDefinition::default(model.xml_element().document()));
+        unit_defs_list.push(UnitDefinition::default(model.xml_element().document()));
 
         unit_defs_list.get(0).id().set_some(&sid("unitDef1"));
         unit_defs_list.get(1).id().set_some(&sid("unitDef2"));
@@ -1210,7 +1124,7 @@ mod tests {
         // set default list of units for unit definition
         ud_top.units().ensure();
         let units_list = ud_top.units().get().unwrap();
-        units_list.push(Unit::default(model.document()));
+        units_list.push(Unit::default(model.xml_element().document()));
 
         let unit = units_list.top();
         unit.kind().set(&BaseUnit::Metre);
@@ -1223,9 +1137,9 @@ mod tests {
         let compartments = compartments.get().unwrap();
         compartments.id().set_some(&sid("CompsListID"));
         compartments.name().set_some(&"CompsListNAME".to_string());
-        compartments.push(Compartment::default(model.document()));
-        compartments.push(Compartment::default(model.document()));
-        compartments.push(Compartment::default(model.document()));
+        compartments.push(Compartment::default(model.xml_element().document()));
+        compartments.push(Compartment::default(model.xml_element().document()));
+        compartments.push(Compartment::default(model.xml_element().document()));
 
         compartments.get(0).id().set(&sid("compartment1"));
         compartments.get(0).constant().set(&false);
@@ -1248,17 +1162,17 @@ mod tests {
         species.id().set_some(&sid("Species"));
         species.name().set_some(&"SpeciesListNAME".to_string());
         species.push(Species::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species1"),
             &sid("compartment1"),
         ));
         species.push(Species::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species2"),
             &sid("compartment2"),
         ));
         species.push(Species::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species3"),
             &sid("compartment3"),
         ));
@@ -1282,8 +1196,16 @@ mod tests {
         let parameters = parameters.get().unwrap();
         parameters.id().set_some(&sid("ParamsListID"));
         parameters.name().set_some(&"ParamsListNAME".to_string());
-        parameters.push(Parameter::new(model.document(), &sid("param1"), true));
-        parameters.push(Parameter::new(model.document(), &sid("param2"), true));
+        parameters.push(Parameter::new(
+            model.xml_element().document(),
+            &sid("param1"),
+            true,
+        ));
+        parameters.push(Parameter::new(
+            model.xml_element().document(),
+            &sid("param2"),
+            true,
+        ));
 
         let param_top = parameters.top();
         param_top.value().set_some(&15.0);
@@ -1299,8 +1221,14 @@ mod tests {
         assignments
             .name()
             .set_some(&"InitialAssignmentsListNAME".to_string());
-        assignments.push(InitialAssignment::new(model.document(), &sid("x")));
-        assignments.push(InitialAssignment::new(model.document(), &sid("x")));
+        assignments.push(InitialAssignment::new(
+            model.xml_element().document(),
+            &sid("x"),
+        ));
+        assignments.push(InitialAssignment::new(
+            model.xml_element().document(),
+            &sid("x"),
+        ));
 
         assignments.get(0).math().ensure();
         assignments.get(1).math().ensure();
@@ -1313,9 +1241,9 @@ mod tests {
         let rules = rules.get().unwrap();
         rules.id().set_some(&sid("RulesListID"));
         rules.name().set_some(&"RulesListNAME".to_string());
-        rules.push(AlgebraicRule::default(model.document()).upcast());
-        rules.push(AssignmentRule::new(model.document(), &sid("z")).upcast());
-        rules.push(RateRule::new(model.document(), &sid("r")).upcast());
+        rules.push(AlgebraicRule::default(model.xml_element().document()).upcast());
+        rules.push(AssignmentRule::new(model.xml_element().document(), &sid("z")).upcast());
+        rules.push(RateRule::new(model.xml_element().document(), &sid("r")).upcast());
 
         let algebraic: AlgebraicRule = rules.get(0).downcast();
         algebraic.id().set_some(&sid("rule1"));
@@ -1339,15 +1267,15 @@ mod tests {
         constraints
             .name()
             .set_some(&"ConstraintsListNAME".to_string());
-        constraints.push(Constraint::default(model.document()));
-        constraints.push(Constraint::default(model.document()));
+        constraints.push(Constraint::default(model.xml_element().document()));
+        constraints.push(Constraint::default(model.xml_element().document()));
 
         constraints.get(0).id().set_some(&sid("constraint1"));
         constraints.get(1).id().set_some(&sid("constraint2"));
 
         let constraint_top = constraints.top();
         constraint_top.message().set(XmlElement::new_qualified(
-            model.document(),
+            model.xml_element().document(),
             "message",
             NS_HTML,
         ));
@@ -1361,7 +1289,11 @@ mod tests {
         let reactions = reactions.get().unwrap();
         reactions.id().set_some(&sid("ReactionsListID"));
         reactions.name().set_some(&"ReactionsListNAME".to_string());
-        reactions.push(Reaction::new(model.document(), &sid("reaction1"), true));
+        reactions.push(Reaction::new(
+            model.xml_element().document(),
+            &sid("reaction1"),
+            true,
+        ));
 
         let reaction = reactions.top();
         reaction.compartment().set_some(&sid("compartment1"));
@@ -1371,7 +1303,7 @@ mod tests {
         let reactants = reactants.get().unwrap();
         reactants.id().set_some(&sid("ReactantsListID"));
         reactants.push(SpeciesReference::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species1"),
             true,
         ));
@@ -1383,7 +1315,7 @@ mod tests {
         let products = products.get().unwrap();
         products.id().set_some(&sid("ProductsListID"));
         products.push(SpeciesReference::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species1"),
             true,
         ));
@@ -1395,18 +1327,21 @@ mod tests {
         let modifiers = modifiers.get().unwrap();
         modifiers.id().set_some(&sid("ModifiersListID"));
         modifiers.push(ModifierSpeciesReference::new(
-            model.document(),
+            model.xml_element().document(),
             &sid("species2"),
         ));
 
         let kinetic_law = reaction.kinetic_law();
-        kinetic_law.set(KineticLaw::default(model.document()));
+        kinetic_law.set(KineticLaw::default(model.xml_element().document()));
         kinetic_law.get().unwrap().math().ensure();
         let kinetic_law = kinetic_law.get().unwrap();
         let local_params = kinetic_law.local_parameters();
         local_params.ensure();
         let local_params = local_params.get().unwrap();
-        local_params.push(LocalParameter::new(model.document(), &sid("localParamID")));
+        local_params.push(LocalParameter::new(
+            model.xml_element().document(),
+            &sid("localParamID"),
+        ));
         let param = local_params.top();
         param.value().set_some(&42.0);
         param.units().set_some(&sid("meter"));
@@ -1418,25 +1353,31 @@ mod tests {
 
         let events = events.get().unwrap();
         events.id().set_some(&sid("EventsListID"));
-        events.push(Event::default(model.document()));
-        events.push(Event::default(model.document()));
+        events.push(Event::default(model.xml_element().document()));
+        events.push(Event::default(model.xml_element().document()));
 
         events.get(0).use_values_from_trigger_time().set(&true);
         events.get(1).use_values_from_trigger_time().set(&false);
 
         let event = events.top();
 
-        event.trigger().set(Trigger::default(model.document()));
+        event
+            .trigger()
+            .set(Trigger::default(model.xml_element().document()));
         let trigger = event.trigger().get().unwrap();
         trigger.initial_value().set(&true);
         trigger.persistent().set(&true);
         trigger.math().ensure();
 
-        event.priority().set(Priority::default(model.document()));
+        event
+            .priority()
+            .set(Priority::default(model.xml_element().document()));
         let priority = event.priority().get().unwrap();
         priority.math().ensure();
 
-        event.delay().set(Delay::default(model.document()));
+        event
+            .delay()
+            .set(Delay::default(model.xml_element().document()));
         let delay = event.delay().get().unwrap();
         delay.math().ensure();
 
@@ -1446,7 +1387,10 @@ mod tests {
         event_assignments
             .id()
             .set_some(&sid("EventAssignmentsListID"));
-        event_assignments.push(EventAssignment::new(model.document(), &sid("evt")));
+        event_assignments.push(EventAssignment::new(
+            model.xml_element().document(),
+            &sid("evt"),
+        ));
         let assignment = event_assignments.top();
         assignment.math().ensure();
     }
@@ -1853,9 +1797,9 @@ mod tests {
         assert!(!constraints.annotation().is_set());
         assert!(!constraints.notes().is_set());
         assert!(!constraints.meta_id().is_set());
-        assert_eq!(constraints.namespace_url(), URL_SBML_CORE);
+        assert_eq!(constraints.xml_element().namespace_url(), URL_SBML_CORE);
 
-        let single = Constraint::default(model.document());
+        let single = Constraint::default(model.xml_element().document());
         constraints.push(single.clone());
         assert!(!constraints.is_empty());
         assert_eq!(constraints.len(), 1);
@@ -1868,8 +1812,8 @@ mod tests {
         assert!(!single.math().is_set());
         assert!(!single.message().is_set());
 
-        let math_el = Math::default(model.document());
-        let msg_el = XmlElement::new_qualified(model.document(), "message", NS_HTML);
+        let math_el = Math::default(model.xml_element().document());
+        let msg_el = XmlElement::new_qualified(model.xml_element().document(), "message", NS_HTML);
         msg_el.set_text_content("Warning: Unsatisfied constraint.");
         single.math().set(math_el);
         single.message().set(msg_el);
@@ -1920,15 +1864,74 @@ mod tests {
         assert_eq!(obj.reference().get().unwrap().as_str(), "csa2");
     }
 
+    /// Creating a package element in a document that does not declare the package declares it:
+    /// the conventional prefix of the package appears on the `<sbml>` element itself, together
+    /// with the `<prefix>:required` attribute that the library writes as `false`.
     #[test]
     pub fn test_package_created() {
         let doc = Sbml::default();
         let model = doc.model().get_or_create();
         let _ = model.layouts().get_or_create();
+
+        let root = doc.xml_element().element();
+        let declarations = root.namespace_declarations();
+        let declaration = declarations
+            .into_iter()
+            .find(|(_prefix, binding)| {
+                binding
+                    .as_ref()
+                    .is_some_and(|it| it.uri() == URL_PACKAGE_LAYOUT)
+            })
+            .expect("The layout package namespace is declared on the <sbml> element.");
         assert_eq!(
-            doc.find_sbml_package(NS_LAYOUT).unwrap().as_str(),
-            NS_LAYOUT.0
+            declaration.0.map(|it| it.as_str().to_string()),
+            Some(NS_LAYOUT.0.to_string()),
+            "The layout package must be declared with its conventional prefix."
         );
+
+        let required = crate::constants::namespaces::qualified_name(NS_LAYOUT, "required").unwrap();
+        let attributes = root.attributes();
+        let attribute = attributes
+            .iter()
+            .find(|(name, _value)| **name == required)
+            .expect("The layout package declaration must have a `required` attribute.");
+        assert_eq!(attribute.0.to_string(), "layout:required");
+        assert_eq!(attribute.1.as_str(), "false");
+    }
+
+    /// Pins the two package-declaration predicates: the conventional-prefix comparison that the
+    /// package-aware validation of species and reactions uses, and the prefix-agnostic `is_err`
+    /// check that the type check uses. A package counts as declared only when its namespace URL is
+    /// bound on the `<sbml>` element *and* the corresponding `required` attribute is present.
+    #[test]
+    pub fn test_package_declaration_predicates() {
+        let core = URL_SBML_CORE;
+        let fbc = URL_PACKAGE_FBC;
+
+        // (a) The conventional prefix, with the `required` attribute: declared.
+        let doc = Sbml::read_str(&format!(
+            r#"<sbml xmlns="{core}" xmlns:fbc="{fbc}" fbc:required="false"/>"#
+        ))
+        .unwrap();
+        assert_eq!(doc.declared_package_prefix(NS_FBC), Ok("fbc".to_string()));
+
+        // (b) The conventional prefix, without the `required` attribute: not declared.
+        let doc = Sbml::read_str(&format!(r#"<sbml xmlns="{core}" xmlns:fbc="{fbc}"/>"#)).unwrap();
+        assert!(doc.declared_package_prefix(NS_FBC).is_err());
+
+        // (c) A non-conventional prefix, with the `required` attribute: declared, but the
+        // conventional-prefix comparison does not match while the prefix-agnostic check does.
+        let doc = Sbml::read_str(&format!(
+            r#"<sbml xmlns="{core}" xmlns:fb="{fbc}" fb:required="false"/>"#
+        ))
+        .unwrap();
+        assert_eq!(doc.declared_package_prefix(NS_FBC), Ok("fb".to_string()));
+        assert_ne!(doc.declared_package_prefix(NS_FBC), Ok("fbc".to_string()));
+        assert!(!doc.declared_package_prefix(NS_FBC).is_err());
+
+        // (d) Not declared at all: not declared.
+        let doc = Sbml::read_str(&format!(r#"<sbml xmlns="{core}"/>"#)).unwrap();
+        assert!(doc.declared_package_prefix(NS_FBC).is_err());
     }
 
     #[test]

@@ -32,7 +32,7 @@ pub fn apply_rule_qual_20308(
 ) {
     let comp = element.find_by_sid::<Compartment>(&compartment);
 
-    if comp.is_none() || comp.unwrap().tag_name() != "compartment" {
+    if comp.is_none() || comp.unwrap().xml_element().tag_name() != "compartment" {
         let message = "Attribute [compartment] does not refer to an existing Compartment element!";
         issues.push(SbmlIssue::new_error("qual-20308", element, message));
     }
