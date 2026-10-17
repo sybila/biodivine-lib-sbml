@@ -14,7 +14,9 @@
 //!
 //! The summaries are adapted from the SBML specification; see the crate documentation for the
 //! attribution. They are the first sentence of the rule text, so they are a pointer to the
-//! rule, not a replacement for it.
+//! rule, not a replacement for it. A rule whose first sentence is longer than one line is cut
+//! short and ends with `…` (108 of the 216 specification rules); the summary of such a rule is
+//! a pointer to the specification, and the full text is the place to read the requirement.
 
 use crate::validation::{RuleDescriptor, RuleKind};
 use crate::SbmlIssueSeverity;

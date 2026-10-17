@@ -6,9 +6,9 @@
 //! through. It holds three things:
 //!
 //!  * [`RuleDescriptor`] — the metadata of one rule: its id, its kind, the severity of the issues
-//!    it produces and a one-line summary. The descriptors of this crate are the table in
-//!    [`rules`], so a rule id is written down once instead of at every call site that can report
-//!    it.
+//!    it produces and a one-line summary. The descriptors of this crate are the table in the
+//!    crate-private `rules` submodule behind [`RuleSet::CORE`], so a rule id is written down
+//!    once instead of at every call site that can report it.
 //!  * [`RuleSet`] — a lookup from a rule id to its descriptor, with [`RuleSet::CORE`] as the table
 //!    of this crate. A rule set is a value rather than a global, so an SBML extension can
 //!    contribute its own rules next to the built-in ones and pass the result to
@@ -71,6 +71,10 @@ pub struct RuleDescriptor {
     /// The severity of every issue this rule produces.
     pub severity: SbmlIssueSeverity,
     /// A one-line summary of what the rule requires, adapted from the SBML specification.
+    ///
+    /// A rule whose first sentence does not fit on one line is cut short; such a summary ends
+    /// with `…`, so the trailing marker is the signal that the summary points at the rule
+    /// rather than quoting it in full.
     pub summary: &'static str,
 }
 
