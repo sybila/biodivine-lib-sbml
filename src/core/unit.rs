@@ -33,7 +33,7 @@ impl Unit {
 
 impl XmlDefault for Unit {
     fn default(document: Document) -> Self {
-        let unit = Unit::new_empty(document, "unit");
+        let unit = Unit::new_empty(document);
 
         unit.kind().set(&BaseUnit::Dimensionless);
         unit.multiplier().set(&1.0);

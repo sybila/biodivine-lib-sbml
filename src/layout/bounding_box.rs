@@ -12,7 +12,7 @@ pub struct BoundingBox(XmlElement);
 
 impl BoundingBox {
     pub fn new(document: Document, position: Point, dimensions: Dimensions) -> Self {
-        let b_box = BoundingBox::new_empty(document, "bounding_box");
+        let b_box = BoundingBox::new_empty(document);
         b_box.position().set(position);
         b_box.dimensions().set(dimensions);
         b_box

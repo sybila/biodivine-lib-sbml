@@ -83,7 +83,7 @@ pub use crate::xml::xml_child::{OptionalXmlChild, RequiredXmlChild, XmlChild, Xm
 pub use crate::xml::xml_element::XmlElement;
 pub use crate::xml::xml_inheritance::{XmlNamedSubtype, XmlSubtype, XmlSupertype};
 pub use crate::xml::xml_list::XmlList;
-pub use crate::xml::xml_object::SbmlObject;
+pub use crate::xml::xml_object::{set_xsi_type, SbmlObject};
 pub use crate::xml::xml_property::{OptionalXmlProperty, RequiredXmlProperty, XmlProperty};
 pub use crate::xml::xml_property_type::XmlPropertyType;
 pub use crate::xml::xml_wrapper::XmlDefault;

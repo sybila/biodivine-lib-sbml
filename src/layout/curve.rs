@@ -15,7 +15,7 @@ pub struct Curve(XmlElement);
 
 impl Curve {
     pub fn new(document: Document, segments: XmlList<LineSegment>) -> Self {
-        let curve = Curve::new_empty(document, "curve");
+        let curve = Curve::new_empty(document);
         curve.curve_segments().set(segments);
         curve
     }
@@ -83,8 +83,10 @@ impl XmlSupertype for LineSegment {}
 
 impl LineSegment {
     pub fn new(document: Document, start: Point, end: Point) -> Self {
-        let line = LineSegment::new_empty(document, "curveSegment");
+        let line = LineSegment::new_empty(document);
 
+        // `LineSegment` deliberately declares no `xsi:type` of its own: it is the supertype that
+        // also accepts a `CubicBezier` element, so the variant attribute is written here.
         line.xsi_type().set(&XsiType::LineSegment);
         line.start().set(start);
         line.end().set(end);
@@ -134,9 +136,10 @@ impl CubicBezier {
         base_point1: Point,
         base_point2: Point,
     ) -> Self {
-        let cub = CubicBezier::new_empty(document, "cubicBezier");
+        // `new_empty` writes the `xsi:type` attribute of the declared identity, which is what
+        // tells a cubic bezier apart from a plain line segment.
+        let cub = CubicBezier::new_empty(document);
 
-        cub.xsi_type().set(&XsiType::CubicBezier);
         cub.start().set(start);
         cub.end().set(end);
         cub.base_point1().set(base_point1);

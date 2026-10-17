@@ -19,7 +19,7 @@ impl XmlDefault for Event {
 
 impl Event {
     pub fn new(document: Document, use_values_from_trigger_time: bool) -> Self {
-        let obj = Event::new_empty(document, "event");
+        let obj = Event::new_empty(document);
         obj.use_values_from_trigger_time()
             .set(&use_values_from_trigger_time);
         obj
@@ -58,7 +58,7 @@ impl XmlDefault for Trigger {
 
 impl Trigger {
     pub fn new(document: Document, persistent: bool, initial_value: bool) -> Self {
-        let obj = Trigger::new_empty(document, "trigger");
+        let obj = Trigger::new_empty(document);
         obj.persistent().set(&persistent);
         obj.initial_value().set(&initial_value);
         obj
@@ -83,7 +83,7 @@ pub struct Priority(XmlElement);
 
 impl XmlDefault for Priority {
     fn default(document: Document) -> Self {
-        Priority::new_empty(document, "priority")
+        Priority::new_empty(document)
     }
 }
 
@@ -99,7 +99,7 @@ pub struct Delay(XmlElement);
 
 impl XmlDefault for Delay {
     fn default(document: Document) -> Self {
-        Delay::new_empty(document, "delay")
+        Delay::new_empty(document)
     }
 }
 
@@ -115,7 +115,7 @@ pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
     pub fn new(document: Document, variable: &SId) -> Self {
-        let obj = EventAssignment::new_empty(document, "eventAssignment");
+        let obj = EventAssignment::new_empty(document);
         obj.variable().set(variable);
         obj
     }

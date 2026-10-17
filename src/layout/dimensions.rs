@@ -12,7 +12,7 @@ pub struct Dimensions(XmlElement);
 
 impl Dimensions {
     pub fn new(document: Document, width: f64, height: f64) -> Self {
-        let dim = Dimensions::new_empty(document, "dimensions");
+        let dim = Dimensions::new_empty(document);
         dim.width().set(&width);
         dim.height().set(&height);
         dim

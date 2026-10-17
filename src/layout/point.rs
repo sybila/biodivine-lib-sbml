@@ -15,7 +15,7 @@ pub struct Point(XmlElement);
 
 impl Point {
     pub fn new(document: Document, x: f64, y: f64) -> Self {
-        let obj = Point::new_empty(document, "point");
+        let obj = Point::new_empty(document);
         obj.x().set(&x);
         obj.y().set(&y);
         obj

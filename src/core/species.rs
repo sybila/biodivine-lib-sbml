@@ -16,7 +16,7 @@ impl XmlSupertype for Species {}
 
 impl Species {
     pub fn new(document: Document, id: &SId, compartment: &SId) -> Self {
-        let obj = Species::new_empty(document, "species");
+        let obj = Species::new_empty(document);
         obj.id().set(id);
         obj.compartment().set(compartment);
         obj.has_only_substance_units().set(&false);

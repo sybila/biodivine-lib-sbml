@@ -13,7 +13,7 @@ pub struct Parameter(XmlElement);
 
 impl Parameter {
     pub fn new(document: Document, id: &SId, constant: bool) -> Self {
-        let obj = Parameter::new_empty(document, "parameter");
+        let obj = Parameter::new_empty(document);
         obj.id().set(id);
         obj.constant().set(&constant);
         obj

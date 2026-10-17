@@ -14,7 +14,7 @@ pub struct Reaction(XmlElement);
 impl XmlSupertype for Reaction {}
 impl Reaction {
     pub fn new(document: Document, id: &SId, reversible: bool) -> Self {
-        let obj = Reaction::new_empty(document, "reaction");
+        let obj = Reaction::new_empty(document);
         obj.id().set(id);
         obj.reversible().set(&reversible);
         obj
@@ -63,7 +63,7 @@ impl SimpleSpeciesReference for SpeciesReference {}
 
 impl SpeciesReference {
     pub fn new(document: Document, species: &SId, constant: bool) -> Self {
-        let obj = SpeciesReference::new_empty(document, "speciesReference");
+        let obj = SpeciesReference::new_empty(document);
         obj.species().set(species);
         obj.constant().set(&constant);
         obj
@@ -86,7 +86,7 @@ impl SimpleSpeciesReference for ModifierSpeciesReference {}
 
 impl ModifierSpeciesReference {
     pub fn new(document: Document, species: &SId) -> Self {
-        let obj = ModifierSpeciesReference::new_empty(document, "modifierSpeciesReference");
+        let obj = ModifierSpeciesReference::new_empty(document);
         obj.species().set(species);
         obj
     }
@@ -98,7 +98,7 @@ pub struct KineticLaw(XmlElement);
 
 impl XmlDefault for KineticLaw {
     fn default(document: Document) -> Self {
-        KineticLaw::new_empty(document, "kineticLaw")
+        KineticLaw::new_empty(document)
     }
 }
 
@@ -138,7 +138,7 @@ pub struct LocalParameter(XmlElement);
 
 impl LocalParameter {
     pub fn new(document: Document, id: &SId) -> Self {
-        let obj = LocalParameter::new_empty(document, "localParameter");
+        let obj = LocalParameter::new_empty(document);
         obj.id().set(id);
         obj
     }

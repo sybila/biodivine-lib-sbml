@@ -15,7 +15,7 @@ pub struct Transition(XmlElement);
 
 impl Transition {
     pub fn new(document: Document, function_terms: XmlList<AbstractTerm>) -> Transition {
-        let obj = Transition::new_empty(document, "transition");
+        let obj = Transition::new_empty(document);
         obj.function_terms().set(function_terms);
         obj
     }

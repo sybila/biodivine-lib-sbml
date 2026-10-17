@@ -20,7 +20,7 @@ impl XmlDefault for Compartment {
 
 impl Compartment {
     pub fn new(document: Document, is_constant: bool) -> Self {
-        let cmp = Compartment::new_empty(document, "compartment");
+        let cmp = Compartment::new_empty(document);
         cmp.constant().set(&is_constant);
         cmp
     }

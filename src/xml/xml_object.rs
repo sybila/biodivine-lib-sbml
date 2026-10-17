@@ -17,7 +17,7 @@
 //! `XmlWrapper` derive, which is why the names cannot drift from the wrappers they describe.
 
 use crate::constants::namespaces::Namespace;
-use crate::xml::{XmlElement, XmlWrapper};
+use crate::xml::{Document, XmlElement, XmlWrapper};
 
 /// A wrapper type that declares which XML element it stands for.
 ///
@@ -28,7 +28,7 @@ use crate::xml::{XmlElement, XmlWrapper};
 ///
 /// ```
 /// use biodivine_lib_sbml::core::Species;
-/// use biodivine_lib_sbml::xml::{SbmlObject, XmlElement};
+/// use biodivine_lib_sbml::xml::{Document, SbmlObject, XmlElement, XmlWrapper};
 /// use sbml_macros::XmlWrapper;
 ///
 /// // A wrapper of this crate (or of an extension) declares the element it stands for.
@@ -38,6 +38,16 @@ use crate::xml::{XmlElement, XmlWrapper};
 ///
 /// assert_eq!(<MySpecies as SbmlObject>::ELEMENT_NAME, "mySpecies");
 /// assert_eq!(<MySpecies as SbmlObject>::element_names(), &["mySpecies"]);
+///
+/// // The declaration also provides the constructor, so the element a value is created from and
+/// // the element the type recognizes are the same by construction.
+/// let document = Document::parse_string("<?xml version=\"1.0\"?><probe/>").unwrap();
+/// let species = MySpecies::new_empty(document);
+/// assert!(MySpecies::matches_element(species.xml_element()));
+/// assert!(species.is_element());
+/// // ... and the constructor is reachable generically, which is what `CONSTRUCT` is for:
+/// let construct = <MySpecies as SbmlObject>::CONSTRUCT.expect("The type declares a constructor.");
+/// assert!(construct(Document::parse_string("<?xml version=\"1.0\"?><probe/>").unwrap()).is_element());
 /// ```
 ///
 /// The namespace of a type is the pair of its conventional prefix and the URL that identifies the
@@ -118,7 +128,33 @@ pub trait SbmlObject: XmlWrapper {
     /// `None`. The exception in this crate is [`CubicBezier`](crate::layout::CubicBezier): it and
     /// [`LineSegment`](crate::layout::LineSegment) are both written as
     /// `<layout:curveSegment>`, and only the `xsi:type` attribute says which is which.
+    ///
+    /// The value is the *written* value of the attribute, not a QName resolved against the
+    /// element's namespaces: the SBML documents in the wild write the unprefixed class name (the
+    /// SBML syntactic test suite has 605 `xsi:type="CubicBezier"` and 523
+    /// `xsi:type="LineSegment"` attributes), and this crate writes and reads that same spelling.
     const XSI_TYPE: Option<&'static str> = None;
+
+    /// The constructor that builds a new, empty element of this type, if the type has one.
+    ///
+    /// Every wrapper type whose declaration names an element of its own (that is, every type except
+    /// the three whose [`SbmlObject::ELEMENT_NAME`] is the name of a concrete sibling:
+    /// [`AbstractRule`](crate::core::AbstractRule),
+    /// [`AbstractTerm`](crate::qual::AbstractTerm) and
+    /// [`Association`](crate::constraint::Association)) gets an inherent
+    /// `new_empty(document)` from its `#[sbml_object(..)]` declaration, and this constant is that
+    /// same method as a function pointer. It is what makes the identity usable generically: a
+    /// caller that only knows the type `T` can build an element of it, and the existence of the
+    /// constructor is a property of the declaration rather than of a list maintained elsewhere.
+    ///
+    /// The function pointer is a *Rust* convenience, not a bindable value: a binding layer (the
+    /// PyO3 one included) exposes the inherent `new_empty` of each type instead, because a function
+    /// pointer has no direct counterpart in most foreign type systems.
+    ///
+    /// The element the constructor returns is detached and is not guaranteed to be valid: required
+    /// attributes and children are not filled in. See [`SbmlObject::matches_element`] for the check
+    /// that the element really is of this type.
+    const CONSTRUCT: Option<fn(Document) -> Self> = None;
 
     /// Every local name this type recognizes.
     ///
@@ -180,6 +216,35 @@ fn xsi_type_of(element: &XmlElement) -> Option<String> {
         .element()
         .attribute(&name)
         .map(|it| it.as_str().to_string())
+}
+
+/// Write the `xsi:type` attribute of `element`, declaring the XML Schema instance namespace on the
+/// element when it is not in scope yet.
+///
+/// This is the write half of [`SbmlObject::XSI_TYPE`], and the identity-derived constructor of a
+/// type that declares that value calls it: `XmlElement::new_qualified` guarantees the namespace of
+/// the *element*, but `xsi:type` belongs to another namespace, whose prefix the new element does
+/// not bind yet. Without the declaration the attribute name cannot be resolved, and the element
+/// would neither serialize into a document a reader can classify nor satisfy
+/// [`SbmlObject::matches_element`] in memory.
+///
+/// # Panics
+///
+/// Panics if `value` cannot be written as an XML attribute value. Every value of a
+/// `#[sbml_object(..)]` declaration is a plain class name, so this cannot happen for the
+/// declarations of this crate.
+#[track_caller]
+pub fn set_xsi_type(element: &XmlElement, value: &str) {
+    let namespace =
+        crate::constants::namespaces::to_xml_namespace(crate::constants::namespaces::NS_XSI)
+            .expect("The XML Schema instance namespace is a valid XML namespace.");
+    element.ensure_namespace(&namespace);
+    let name = biodivine_lib_xml_dom::QualifiedName::with_namespace("type", &namespace)
+        .expect("`type` is a valid XML name.");
+    element
+        .element()
+        .set_attribute_checked(name, value)
+        .expect("`value` is written as an XML attribute value.");
 }
 
 #[cfg(test)]

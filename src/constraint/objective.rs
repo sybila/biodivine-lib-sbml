@@ -64,7 +64,7 @@ pub struct Objective(XmlElement);
 
 impl Objective {
     pub fn new(document: Document, id: SId, bound_type: FbcType) -> Objective {
-        let obj = Objective::new_empty(document, "objective");
+        let obj = Objective::new_empty(document);
         obj.id().set(&id);
         obj.bound_type().set(&bound_type);
         obj

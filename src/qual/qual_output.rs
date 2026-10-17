@@ -18,7 +18,7 @@ impl QualOutput {
         qualitative_species: SId,
         transition_effect: TransitionOutputEffect,
     ) -> QualOutput {
-        let obj = QualOutput::new_empty(document, "output");
+        let obj = QualOutput::new_empty(document);
         obj.qualitative_species().set(&qualitative_species);
         obj.transition_effect().set(&transition_effect);
         obj

@@ -16,6 +16,14 @@ pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
 /// The URL of the MathML namespace.
 pub const URL_MATHML: &str = "http://www.w3.org/1998/Math/MathML";
 
+/// The URL of the XML Schema instance namespace.
+///
+/// This is the namespace of the `xsi:type` attribute, which discriminates the variants of the
+/// layout `curveSegment` element (`LineSegment` and `CubicBezier`) from one another. It is an XML
+/// Schema namespace, not an SBML one, so it is written with the conventional `xsi` prefix and never
+/// declares an SBML package.
+pub const URL_XSI: &str = "http://www.w3.org/2001/XMLSchema-instance";
+
 /// The URL of the "default" empty namespace.
 pub const URL_EMPTY: &str = "";
 
@@ -33,6 +41,10 @@ pub const NS_HTML: Namespace = ("", URL_HTML);
 
 /// The MathML namespace. Default prefix for this namespace is empty.
 pub const NS_MATHML: (&str, &str) = ("", URL_MATHML);
+
+/// The XML Schema instance namespace, whose `xsi:type` attribute discriminates the variants of the
+/// layout `curveSegment` element.
+pub const NS_XSI: Namespace = ("xsi", URL_XSI);
 
 /// The "default" empty namespace. Default prefix for this namespace is empty.
 pub const NS_EMPTY: (&str, &str) = ("", URL_EMPTY);

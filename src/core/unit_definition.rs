@@ -17,6 +17,6 @@ impl UnitDefinition {
 
 impl XmlDefault for UnitDefinition {
     fn default(document: Document) -> Self {
-        UnitDefinition::new_empty(document, "unitDefinition")
+        UnitDefinition::new_empty(document)
     }
 }

@@ -18,7 +18,7 @@ impl QualInput {
         qualitative_species: SId,
         transition_effect: TransitionInputEffect,
     ) -> QualInput {
-        let obj = QualInput::new_empty(document, "input");
+        let obj = QualInput::new_empty(document);
         obj.qualitative_species().set(&qualitative_species);
         obj.transition_effect().set(&transition_effect);
         obj

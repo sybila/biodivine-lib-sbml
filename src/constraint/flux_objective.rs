@@ -12,7 +12,7 @@ pub struct FluxObjective(XmlElement);
 
 impl FluxObjective {
     pub fn new(document: Document, reaction: SId, coefficient: f64) -> FluxObjective {
-        let obj = FluxObjective::new_empty(document, "fluxObjective");
+        let obj = FluxObjective::new_empty(document);
         obj.reaction().set(&reaction);
         obj.coefficient().set(&coefficient);
         obj

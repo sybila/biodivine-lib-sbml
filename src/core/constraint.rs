@@ -10,7 +10,7 @@ pub struct Constraint(XmlElement);
 
 impl XmlDefault for Constraint {
     fn default(document: Document) -> Self {
-        Constraint::new_empty(document, "constraint")
+        Constraint::new_empty(document)
     }
 }
 

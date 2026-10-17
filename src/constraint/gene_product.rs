@@ -12,7 +12,7 @@ pub struct GeneProduct(XmlElement);
 
 impl GeneProduct {
     pub fn new(document: Document, id: SId, label: String) -> GeneProduct {
-        let obj = GeneProduct::new_empty(document, "geneProduct");
+        let obj = GeneProduct::new_empty(document);
         obj.id().set(&id);
         obj.label().set(&label);
         obj

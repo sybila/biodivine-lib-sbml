@@ -17,7 +17,7 @@ impl QualitativeSpecies {
         compartment: SId,
         constant: bool,
     ) -> QualitativeSpecies {
-        let obj = QualitativeSpecies::new_empty(document, "qualitativeSpecies");
+        let obj = QualitativeSpecies::new_empty(document);
         obj.id().set(&id);
         obj.compartment().set(&compartment);
         obj.constant().set(&constant);

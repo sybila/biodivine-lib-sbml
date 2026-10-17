@@ -25,7 +25,7 @@ pub struct Layout(XmlElement);
 
 impl Layout {
     pub fn new(document: Document, id: SId, dimensions: Dimensions) -> Self {
-        let layout = Layout::new_empty(document, "layout");
+        let layout = Layout::new_empty(document);
         layout.id().set(&id);
         layout.dimensions().set(dimensions);
         layout
@@ -77,7 +77,7 @@ impl XmlSupertype for GraphicalObject {}
 
 impl GraphicalObject {
     pub fn new(document: Document, id: SId, bounding_box: BoundingBox) -> Self {
-        let obj = GraphicalObject::new_empty(document, "graphObject");
+        let obj = GraphicalObject::new_empty(document);
 
         obj.id().set(&id);
         obj.bounding_box().set(bounding_box);
@@ -103,7 +103,7 @@ impl XmlNamedSubtype<GraphicalObject> for CompartmentGlyph {}
 
 impl CompartmentGlyph {
     pub fn new(document: Document, id: SId) -> Self {
-        let glyph = CompartmentGlyph::new_empty(document, "compartmentGlyph");
+        let glyph = CompartmentGlyph::new_empty(document);
         glyph.id().set(&id);
         glyph
     }
@@ -134,7 +134,7 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesGlyph {}
 
 impl SpeciesGlyph {
     pub fn new(document: Document, id: SId) -> Self {
-        let glyph = SpeciesGlyph::new_empty(document, "speciesGlyph");
+        let glyph = SpeciesGlyph::new_empty(document);
         glyph.id().set(&id);
         glyph
     }
@@ -162,7 +162,7 @@ impl XmlNamedSubtype<GraphicalObject> for ReactionGlyph {}
 
 impl ReactionGlyph {
     pub fn new(document: Document, id: SId, list: XmlList<SpeciesReferenceGlyph>) -> Self {
-        let glyph = ReactionGlyph::new_empty(document, "reactionGlyph");
+        let glyph = ReactionGlyph::new_empty(document);
         glyph.id().set(&id);
         glyph.species_reference_glyphs().set(list);
         glyph
@@ -197,7 +197,7 @@ impl XmlNamedSubtype<GraphicalObject> for SpeciesReferenceGlyph {}
 
 impl SpeciesReferenceGlyph {
     pub fn new(document: Document, id: SId, glyph: SId) -> Self {
-        let srg = SpeciesReferenceGlyph::new_empty(document, "speciesRefGlyph");
+        let srg = SpeciesReferenceGlyph::new_empty(document);
         srg.species_glyph().set(&glyph);
         srg.id().set(&id);
         srg
@@ -298,7 +298,7 @@ impl XmlNamedSubtype<GraphicalObject> for GeneralGlyph {}
 
 impl GeneralGlyph {
     pub fn new(document: Document, id: SId) -> Self {
-        let gen = GeneralGlyph::new_empty(document, "generalGlyph");
+        let gen = GeneralGlyph::new_empty(document);
         gen.id().set(&id);
         gen
     }
@@ -335,7 +335,7 @@ impl XmlNamedSubtype<GraphicalObject> for ReferenceGlyph {}
 
 impl ReferenceGlyph {
     pub fn new(document: Document, id: SId, glyph: SId) -> Self {
-        let ref_g = ReferenceGlyph::new_empty(document, "referenceGlyph");
+        let ref_g = ReferenceGlyph::new_empty(document);
         ref_g.id().set(&id);
         ref_g.glyph().set(&glyph);
         ref_g
@@ -373,7 +373,7 @@ impl XmlNamedSubtype<GraphicalObject> for TextGlyph {}
 
 impl TextGlyph {
     pub fn new(document: Document, id: SId) -> Self {
-        let txt = TextGlyph::new_empty(document, "textGlyph");
+        let txt = TextGlyph::new_empty(document);
         txt.id().set(&id);
         txt
     }

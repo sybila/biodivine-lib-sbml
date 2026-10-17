@@ -25,6 +25,6 @@ impl FunctionDefinition {
 
 impl XmlDefault for FunctionDefinition {
     fn default(document: Document) -> Self {
-        FunctionDefinition::new_empty(document, "functionDefinition")
+        FunctionDefinition::new_empty(document)
     }
 }

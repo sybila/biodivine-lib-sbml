@@ -10,7 +10,7 @@ pub struct InitialAssignment(XmlElement);
 
 impl InitialAssignment {
     pub fn new(document: Document, symbol: &SId) -> Self {
-        let obj = InitialAssignment::new_empty(document, "initialAssignment");
+        let obj = InitialAssignment::new_empty(document);
         obj.symbol().set(symbol);
         obj
     }

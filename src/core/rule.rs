@@ -22,10 +22,19 @@ pub trait Rule: SBase {
     }
 }
 
+/// A rule of any kind: an `algebraicRule`, an `assignmentRule` or a `rateRule`.
+///
+/// The three kinds are declared as three types ([`AlgebraicRule`], [`AssignmentRule`], [`RateRule`])
+/// that all recognize the element name of this supertype, and the *first* of these names belongs to
+/// one of them. The identity-derived constructor is therefore suppressed: `new_empty(document)`
+/// here would silently build an `<algebraicRule>`, which is what [`AlgebraicRule::new_empty`] is
+/// for. A rule whose kind the caller chooses is built through [`AbstractRule::default`], which
+/// takes the element name explicitly.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(
     names = ["algebraicRule", "assignmentRule", "rateRule"],
-    namespace = NS_SBML_CORE
+    namespace = NS_SBML_CORE,
+    constructor = false
 )]
 pub struct AbstractRule(XmlElement);
 
@@ -46,7 +55,7 @@ impl AbstractRule {
     }
 
     pub fn default(document: Document, tag_name: &str) -> Self {
-        AbstractRule::new_empty(document, tag_name)
+        AbstractRule::new_empty_named(document, tag_name)
     }
 }
 
@@ -58,7 +67,7 @@ impl Rule for AlgebraicRule {}
 
 impl XmlDefault for AlgebraicRule {
     fn default(document: Document) -> Self {
-        AlgebraicRule::new_empty(document, "algebraicRule")
+        AlgebraicRule::new_empty(document)
     }
 }
 
@@ -74,7 +83,7 @@ impl XmlNamedSubtype<AbstractRule> for AssignmentRule {}
 
 impl AssignmentRule {
     pub fn new(document: Document, variable: &SId) -> Self {
-        let obj = AssignmentRule::new_empty(document, "assignmentRule");
+        let obj = AssignmentRule::new_empty(document);
         obj.variable().set(variable);
         obj
     }
@@ -94,7 +103,7 @@ impl XmlNamedSubtype<AbstractRule> for RateRule {}
 
 impl RateRule {
     pub fn new(document: Document, variable: &SId) -> Self {
-        let obj = RateRule::new_empty(document, "rateRule");
+        let obj = RateRule::new_empty(document);
         obj.variable().set(variable);
         obj
     }

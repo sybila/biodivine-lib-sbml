@@ -266,10 +266,17 @@ pub(crate) trait SbmlUtils: SBase {
     /// Create a new instance of `Self` which is just an empty tag with the given `tag_name`
     /// and using SBML namespace.
     ///
+    /// This is the *named* form of the creation path: it is what a supertype uses when the element
+    /// name is chosen by its caller (a rule is created as an `algebraicRule`, an `assignmentRule` or
+    /// a `rateRule`), which is exactly the case in which the type cannot have an identity-derived
+    /// constructor (see [`crate::xml::SbmlObject::CONSTRUCT`]). Every other type is created through
+    /// its own inherent `new_empty(document)`, which takes the name and the namespace from the
+    /// declaration instead of a literal.
+    ///
     /// Warning: Depending on the specific contract of the underlying type, this can create
     /// an element that is not in a valid state (e.g., missing certain required attributes).
     #[inline(always)]
-    fn new_empty(document: Document, tag_name: &str) -> Self {
+    fn new_empty_named(document: Document, tag_name: &str) -> Self {
         let element = XmlElement::new_qualified(document, tag_name, NS_SBML_CORE);
         Self::from(element)
     }

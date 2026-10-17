@@ -230,7 +230,7 @@ pub struct Model(XmlElement);
 
 impl XmlDefault for Model {
     fn default(document: Document) -> Self {
-        Model::new_empty(document, "model")
+        Model::new_empty(document)
     }
 }
 

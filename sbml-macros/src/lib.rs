@@ -50,6 +50,9 @@ struct SbmlObjectArgs {
     namespace: Option<syn::Expr>,
     /// The `xsi_type = "…"` argument.
     xsi_type: Option<LitStr>,
+    /// The `constructor = <bool>` argument; `true` (the default) means that the declaration
+    /// generates an inherent `new_empty(document)`.
+    constructor: Option<syn::LitBool>,
 }
 
 impl Parse for SbmlObjectArgs {
@@ -72,12 +75,13 @@ impl Parse for SbmlObjectArgs {
                 }
                 "namespace" => args.namespace = Some(input.parse()?),
                 "xsi_type" => args.xsi_type = Some(input.parse()?),
+                "constructor" => args.constructor = Some(input.parse()?),
                 other => {
                     return Err(syn::Error::new(
                         key.span(),
                         format!(
                             "unknown `sbml_object` argument `{other}`; expected `name`, `names`, \
-                             `namespace` or `xsi_type`"
+                             `namespace`, `xsi_type` or `constructor`"
                         ),
                     ))
                 }
@@ -110,7 +114,8 @@ fn read_sbml_object_attribute(ast: &syn::DeriveInput) -> syn::Result<Option<Sbml
     Ok(found)
 }
 
-/// Builds the `SbmlObject` implementation for a type from its parsed attribute.
+/// Builds the `SbmlObject` implementation for a type from its parsed attribute, together with (unless
+/// the declaration opts out with `constructor = false`) its inherent identity-derived constructor.
 fn sbml_object_impl(
     wrapper_type: &syn::Ident,
     args: SbmlObjectArgs,
@@ -160,9 +165,56 @@ fn sbml_object_impl(
     } else {
         quote! {}
     };
-    let xsi_type = match args.xsi_type {
+    let xsi_type = args.xsi_type;
+    let xsi_type_const = match &xsi_type {
         Some(xsi_type) => quote! { const XSI_TYPE: Option<&'static str> = Some(#xsi_type); },
         None => quote! {},
+    };
+
+    // The identity-derived constructor. A declaration opts out with `constructor = false` when
+    // `names[0]` is the element name of a concrete sibling instead of an element of its own, so
+    // that no caller can accidentally create the sibling's element through this type; such a type
+    // is constructed through its named form (`SbmlUtils::new_empty_named`) or through a subtype.
+    let generate_constructor = args.constructor.map(|it| it.value()).unwrap_or(true);
+    let (constructor, construct_const) = if generate_constructor {
+        // A type discriminated by `xsi:type` (the cubic bezier variant of a layout curve segment)
+        // needs the attribute on the new element, or it would not be recognized as itself:
+        // `xsi:type` lives in the XML Schema instance namespace, which a fresh element does not
+        // bind, so the declaration is written on the element as well.
+        let set_xsi_type = match &xsi_type {
+            Some(xsi_type) => quote! { #library::xml::set_xsi_type(&element, #xsi_type); },
+            None => quote! {},
+        };
+        let constructor = quote! {
+            impl #wrapper_type {
+                /// Create a new, empty element of this type in the given document.
+                ///
+                /// The element is built from the declared identity of the type — its element name,
+                /// its namespace and, for a type that is discriminated that way, its `xsi:type`
+                /// attribute — and it is detached (it has no parent).
+                ///
+                /// The element is **not** guaranteed to be valid: the required attributes and
+                /// children of the type are not filled in, and an identifier is not assigned. Use
+                /// the typed constructor of the type (for example `Species::new`) to build a
+                /// complete object, and [`SbmlObject`](::biodivine_lib_sbml::xml::SbmlObject) to
+                /// check that an existing element really is an instance of the type.
+                pub fn new_empty(document: #library::xml::Document) -> Self {
+                    let element = #library::xml::XmlElement::new_qualified(
+                        document,
+                        <Self as #library::xml::SbmlObject>::ELEMENT_NAME,
+                        <Self as #library::xml::SbmlObject>::ELEMENT_NAMESPACE,
+                    );
+                    #set_xsi_type
+                    Self::from(element)
+                }
+            }
+        };
+        let construct_const = quote! {
+            const CONSTRUCT: Option<fn(#library::xml::Document) -> Self> = Some(Self::new_empty);
+        };
+        (constructor, construct_const)
+    } else {
+        (quote! {}, quote! {})
     };
 
     Ok(quote! {
@@ -170,8 +222,10 @@ fn sbml_object_impl(
             const ELEMENT_NAME: &'static str = #primary;
             const ELEMENT_NAMESPACE: #library::xml::Namespace = #namespace;
             #element_names
-            #xsi_type
+            #xsi_type_const
+            #construct_const
         }
+        #constructor
     })
 }
 
@@ -187,8 +241,13 @@ fn sbml_object_impl(
 /// The optional `#[sbml_object(name = "…", namespace = …)]` attribute declares which element of
 /// which namespace the type stands for; see the documentation of `SbmlObject` for what the
 /// declaration is used for. A type whose element has several names (a supertype) writes
-/// `names = ["…", "…"]` instead of `name`, and a type whose element is told apart from its
-/// sibling by `xsi:type` rather than by its local name adds `xsi_type = "…"`.
+/// `names = ["…", "…"]` instead of `name`, a type whose element is told apart from its sibling by
+/// `xsi:type` rather than by its local name adds `xsi_type = "…"`, and a supertype whose first name
+/// belongs to a *concrete* sibling writes `constructor = false` to suppress the identity-derived
+/// `new_empty` constructor (the named form and the subtypes stay available).
+///
+/// The attribute also generates an inherent `new_empty(document)` constructor for every type that
+/// does not opt out, so that an object is always created as the declaration says it should be.
 #[proc_macro_derive(XmlWrapper, attributes(sbml_object))]
 pub fn derive_xml_wrapper(item: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = syn::parse(item).unwrap();
