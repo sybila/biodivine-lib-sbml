@@ -226,3 +226,49 @@ of a run in progress or against the recorded snapshots.
     whole corpus can be measured instead of stopping at the first broken document). The walk guard
     exists so that this list is empty, so the tool is the evidence for that claim: run it against
     a corpus and expect zero documents, and use the messages it prints when it is not zero.
+
+#### What the object model resolves, and what it does not
+
+The object model is keyed on the **core namespace of Level 3 Version 2**
+(`http://www.sbml.org/sbml/level3/version2/core`). A document that declares one of the other
+published core namespaces (Level 3 Version 1, Level 2 any version, Level 1 any version) is read
+successfully — `Sbml::read_str`/`read_path` parse it and its `level` and `version` attributes are
+readable — but the elements of its model are not resolved:
+
+```rust
+use biodivine_lib_sbml::Sbml;
+use biodivine_lib_sbml::xml::OptionalXmlChild;
+
+let source = std::fs::read_to_string("syntactic/fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml")?;
+let document = Sbml::read_str(&source)?;
+assert!(document.model().get().is_none());   // the model does not resolve
+assert!(document.validate()?.is_empty());    // and so nothing is checked
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Rewriting that document's core namespace to the Version 2 one is what makes the three checks of
+that test case report (`21110`, `not-validated`, `fbc-21207`). The same holds for the `l2v4` and
+`l1v1` cases of the corpus: they resolve no model and report nothing.
+
+Two consequences are worth stating plainly.
+
+  * The **harness translates namespaces**, it is not the library. The syntactic example rewrites
+    the core namespace of the older cases onto the Level 3 Version 2 one before validating them, so
+    the `l3v1` lines of a dump describe *translated* documents. A version-dependent check of the
+    library (the Level 3 Version 1 MathML subset, the `10301` class list, the `rateOf` guards) is
+    therefore reachable in a run only because the harness performed that translation; on a real
+    Version 1 document the library resolves no model at all.
+  * Reading an older level, and validating it, is the work of the level modules: an object model
+    (or a translation layer) that resolves the older core namespaces, not a new entry in the
+    constant that lists the accepted roots.
+
+##### `not-validated` is a regression signal
+
+`Sbml::validate` reports one `not-validated` issue (a library lint of `Info` severity) for every
+object whose own element fails the element-local type check, and skips that object and the
+subtree below it; the rest of the document is still walked. The count is a useful signal: a jump
+in it means a new check made elements type-inconsistent, not that the documents got worse. At the
+recorded baseline the whole corpus carries **1791** of them over **923** documents
+(`awk -F'|' '$2=="not-validated"{s+=$1} END{print s}' scripts/full-corpus-baseline/test_suite_issues.txt.sorted`),
+and the guard exists so that the panic inventory
+(`scripts/corpus_panic_inventory.py`) is empty.
