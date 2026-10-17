@@ -112,12 +112,37 @@ where a change to the `SANITY_CHECK` diagnostics or to `unused-namespace` is vis
 snapshot diff. If a lint ever needs its own census-like snapshot, the cheap extension is a
 separate report file next to `test_suite_issues.txt` rather than a second filtering rule.
 
+The `unused-namespace` lint fires on six documents of the corpus, and each of them is a
+declaration that binds an SBML namespace nothing in scope uses: `10403/10403-pass-00-04-l3v1.xml`
+and `10403/10403-pass-00-06-l3v2.xml` (a Level 2 core namespace inside the RDF of an annotation),
+`10501/10501-pass-00-77-l3v1.xml` (the SBML core namespace inside a MathML element),
+`20101/20101-fail-01-06-sev2-l3v1.xml` and `20101/20101-fail-01-09-sev2-l3v2.xml` (a second
+binding of the core namespace on a root that is itself in another namespace) and
+`spatial-20101/spatial-20101-fail-01-01-sev2-l3v1.xml` (the Spatial namespace on a document
+without spatial content). The lint runs for every document that is validated, independently of the
+rest of the validation: the two `20101` documents report a `SANITY_CHECK` error as well, and their
+lint line exists because the lint is not skipped when the type check fails. The number is recorded
+in the snapshot, so a change to it is either a change of the corpus or a change of the lint, and
+should be reviewed as one of the two.
+
+This lint covers the *declared-but-unused* half of namespace handling. The other half — a name
+whose namespace is not declared in scope, and a declaration that binds a used prefix to the wrong
+namespace — is decided by the XML layer and reported as a specification rule.
+
 The rule table is checked against the specification by `python3 scripts/check_rule_ids.py`
 (`make rules`): every rule the table calls a specification rule must be a rule the
 specification defines, so a rule id cannot be invented (a typo in the table would be
 invisible otherwise, because a rule that never fires looks exactly like a rule that does
 not exist). Library lints are exempt by kind. The check reads the rule table only, skips
 successfully when `spec-coverage/rules.csv` is absent, and is part of `scripts/verify.sh`.
+
+The other direction is `python3 scripts/check_emitted_ids.py`: it collects every rule id the
+sources can pass to the issue constructor (resolving a rule id that a helper computes, and
+refusing to pass when it cannot follow one) and fails when an id is missing from the rule
+table, because the constructor panics for an unregistered id. That panic is the intended
+behaviour — an id without a descriptor has no defined severity — so the check exists to make
+it a failure of this gate rather than of the one document that reaches the path. Both
+checks are part of `scripts/verify.sh` and of `make rules`.
 
 The gate is part of `make verify` and of `scripts/verify.sh` whenever `./syntactic` is
 present, and it skips successfully when the test suite is not unpacked. It overwrites the

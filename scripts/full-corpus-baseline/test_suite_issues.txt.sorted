@@ -211,6 +211,8 @@
       1 10402/10402-fail-01-14-sev2-l3v2.xml|10402|Error
       1 10402/10402-fail-01-15-sev2-l3v2.xml|10402|Error
       1 10402/10402-fail-01-16-sev2-l3v2.xml|10402|Error
+      1 10403/10403-pass-00-04-l3v1.xml|unused-namespace|Informational
+      1 10403/10403-pass-00-06-l3v2.xml|unused-namespace|Informational
       1 10404/10404-fail-01-01-sev2-l3v1.xml|10404|Error
       1 10404/10404-fail-01-02-sev2-l3v1.xml|10404|Error
       2 10404/10404-fail-01-02-sev2-l3v1.xml|21110|Error
@@ -221,6 +223,7 @@
       1 10404/10404-fail-01-06-sev2-l3v2.xml|10404|Error
       1 10404/10404-fail-01-07-sev2-l3v2.xml|10404|Error
       1 10404/10404-fail-01-08-sev2-l3v2.xml|10404|Error
+      1 10501/10501-pass-00-77-l3v1.xml|unused-namespace|Informational
       3 10503/10503-fail-01-01-99507-sev1-l3v1.xml|21110|Error
       2 10503/10503-fail-01-03-99507-sev1-l3v2.xml|10301|Error
       3 10503/10503-fail-02-01-99507-sev1-l3v1.xml|21110|Error
@@ -289,8 +292,10 @@
       1 10805/10805-fail-01-02-sev2-l3v2.xml|10805|Error
       1 20101/20101-fail-01-04-sev2-l3v1.xml|SANITY_CHECK|Error
       1 20101/20101-fail-01-06-sev2-l3v1.xml|SANITY_CHECK|Error
+      1 20101/20101-fail-01-06-sev2-l3v1.xml|unused-namespace|Informational
       1 20101/20101-fail-01-08-sev2-l3v2.xml|SANITY_CHECK|Error
       1 20101/20101-fail-01-09-sev2-l3v2.xml|SANITY_CHECK|Error
+      1 20101/20101-fail-01-09-sev2-l3v2.xml|unused-namespace|Informational
       1 20101/20101-pass-00-11-l3v1.xml|SANITY_CHECK|Error
       1 20102/20102-fail-01-05-sev2-l3v1.xml|20102|Error
       1 20103/20103-fail-01-08-sev2-l3v2.xml|20103|Error
@@ -1357,6 +1362,7 @@
       1 qual-20804/qual-20804-fail-01-01-sev2-l3v1.xml|10102|Error
       1 qual-20805/qual-20805-fail-01-01-sev2-l3v1.xml|SANITY_CHECK|Error
       1 qual-20806/qual-20806-fail-01-01-20414-sev2-l3v1.xml|SANITY_CHECK|Error
+      1 spatial-20101/spatial-20101-fail-01-01-sev2-l3v1.xml|unused-namespace|Informational
       1 spatial-20601/spatial-20601-fail-01-01-sev2-l3v1.xml|21110|Error
       1 spatial-20601/spatial-20601-fail-01-02-sev2-l3v1.xml|21110|Error
       1 spatial-20602/spatial-20602-fail-01-01-sev2-l3v1.xml|21110|Error

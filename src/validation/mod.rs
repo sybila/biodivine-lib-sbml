@@ -40,8 +40,11 @@ use crate::SbmlIssueSeverity;
 
 mod issue;
 mod rules;
+mod unused_namespace;
 
 pub use issue::SbmlIssue;
+
+pub(crate) use unused_namespace::validate_unused_namespaces;
 
 /// What an issue means: a rule of the SBML standard, or a diagnostic of this library.
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]

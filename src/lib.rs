@@ -385,7 +385,10 @@ impl Sbml {
     ///    id, and its severity is `Info` unless the diagnostic means that the typed view of the
     ///    document is unavailable ([`SbmlIssue::kind`] tells the two kinds apart).
     ///
-    /// Both kinds are reported here; only the specification rules are compared against the SBML
+    /// Both kinds are reported here, and the lints are reported for every document: they are
+    /// appended after the type check but before the early return that skips the object walk, so a
+    /// document whose typed view is unusable still reports its lints, while a fatal problem stays
+    /// the first issue of the report. Only the specification rules are compared against the SBML
     /// test suite's expectations, because those list specification rule ids.
     ///
     /// The [rule table](RuleSet::CORE) is where a rule id acquires its kind and severity, so an
@@ -403,6 +406,12 @@ impl Sbml {
     pub fn validate(&self) -> Vec<SbmlIssue> {
         let mut issues: Vec<SbmlIssue> = vec![];
         self.type_check(&mut issues);
+
+        // The library lints are reported for every document, before the early return below: a
+        // document whose typed view is unusable still has a dead namespace declaration to report,
+        // and a lint must not depend on the type check's outcome. They are appended after the type
+        // check so that a fatal problem stays the first issue of the report.
+        validation::validate_unused_namespaces(&self.sbml_root, &mut issues);
 
         if !issues.is_empty() {
             return issues;

@@ -7,6 +7,11 @@
 //! parser: it fails when a specification rule here is not a rule id of the SBML specification
 //! checkout, and it fails when the table cannot be parsed at all.
 //!
+//! The other direction is checked by `scripts/check_emitted_ids.py`, which collects every rule
+//! id the sources can pass to the issue constructor and fails when one of them is missing
+//! here: `SbmlIssue::new` panics for an unregistered id, and that panic would otherwise wait
+//! for the path that reports it. Both checks run in `make rules` and `scripts/verify.sh`.
+//!
 //! The summaries are adapted from the SBML specification; see the crate documentation for the
 //! attribution. They are the first sentence of the rule text, so they are a pointer to the
 //! rule, not a replacement for it.

@@ -62,8 +62,11 @@ run env RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --document-private-items
 
 # --- rule table -------------------------------------------------------------------------------
 # Every specification rule id of the crate's rule table must be a rule of the specification; the
-# check skips successfully when `spec-coverage/rules.csv` is absent.
+# check skips successfully when `spec-coverage/rules.csv` is absent. The second check is the other
+# direction: every rule id the sources can emit must be in the table, or the issue constructor
+# would panic on that path at runtime.
 run "$PYTHON" scripts/check_rule_ids.py
+run "$PYTHON" scripts/check_emitted_ids.py
 
 # --- specification coverage matrix ------------------------------------------------------------
 if [ -d "$SPEC" ]; then
