@@ -1545,7 +1545,14 @@ fn the_example_documents_are_covered_by_the_typed_layer() {
 #[test]
 fn the_corpus_math_outside_the_subset_is_the_deliberate_violation() {
     if !std::path::Path::new("syntactic").is_dir() {
-        println!("SKIP: the syntactic corpus is not unpacked in ./syntactic");
+        // The corpus is git-ignored, so this test has to be green on a checkout without it (the
+        // crate's other corpus gates skip the same way); it says so instead of passing silently.
+        println!(
+            "SKIP: the syntactic test suite is not unpacked in ./syntactic, so the corpus sweep \
+             has nothing to walk (download a release from \
+             https://github.com/sbmlteam/sbml-test-suite/releases and extract its syntactic subset \
+             there)."
+        );
         return;
     }
     let sweep = sweep_math("syntactic");
@@ -1572,6 +1579,14 @@ fn the_corpus_math_outside_the_subset_is_the_deliberate_violation() {
         .collect::<Vec<_>>(),
         "The set of unparsable corpus documents changed."
     );
+    // Each entry is a *document* that breaks the specification, not a gap of the typed layer:
+    //
+    //  * `mean` is a MathML 2.0 element that SBML does not permit — the negative side of the
+    //    73-name subset, exercised by the seven `10202-fail-01-01..07` cases (rule 10202).
+    //  * `ci` and `times` are inside a correctly namespaced `math` whose children the document
+    //    writes in the SBML namespace instead (the default namespace of the document is SBML) —
+    //    the `10201-fail-01-09/10/15/16` cases, where rule 10201 requires the formula's content to
+    //    be placed within the MathML namespace. The typed layer rejects them for that reason alone.
     assert_eq!(
         sweep.outside,
         BTreeMap::from([
