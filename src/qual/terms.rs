@@ -58,25 +58,36 @@ impl FunctionTerm {
 
     /// The `math` child of this term.
     ///
+    /// A `functionTerm` is the one formula site whose accessor is *not* optional. Two things are
+    /// worth knowing about that:
+    ///
+    ///  * **What the validation layer checks** is how *many* `math` children the element has: a
+    ///    second one is a uniqueness violation of the type check
+    ///    (`UNIQUE_CHILDREN["functionTerm"]`), which is the cardinality rule `qual-20804`
+    ///    describes.
+    ///  * **No rule of this crate reports a term that has none.** The table row that would have to
+    ///    do it (`REQUIRED_CHILDREN`) is keyed `functionTerms`, a name no element carries, and is one
+    ///    of the known table exceptions owned by the validation work; whether a `functionTerm` must
+    ///    carry a formula at all is a specification question (rule `qual-20804` says the element
+    ///    "may contain exactly one" `math` element) which the typed layer does not decide.
+    ///
+    /// The non-optional accessor is therefore a design choice of this crate — it keeps the content
+    /// models' asymmetry visible — and the panic below is its own contract, not something a document
+    /// check protects the caller from. Use [`FunctionTerm::math_node`] for the typed form, which has
+    /// the same contract.
+    ///
     /// # Panics
     ///
-    /// Reading the child ([`RequiredXmlChild::get`]) panics when
-    /// the element has none. A `functionTerm` without a formula is a document error (rule
-    /// `qual-20804` constrains how many `math` children the element may have, and the validation
-    /// layer reports a document that has more than one), and the typed layer deliberately keeps the
-    /// child required: use [`FunctionTerm::math_node`] for the typed form, which has the same
-    /// contract.
+    /// Reading the child ([`RequiredXmlChild::get`]) panics when the element has none.
     pub fn math(&self) -> RequiredChild<Math> {
         RequiredChild::new(self.xml_element(), "math", NS_MATHML)
     }
 
     /// The MathML formula of this term as a typed node.
     ///
-    /// This is the one formula site whose accessor is *not* optional — the asymmetry the content
-    /// models have, and a deliberate design choice of this crate rather than a mandate of the
-    /// specification: rule `qual-20804` limits the number of `math` children of a `functionTerm`
-    /// (a `functionTerm` may contain exactly one), while a term without one is a document the
-    /// validation layer reports through its own rules rather than through a missing child.
+    /// This is the one formula site whose accessor is *not* optional; [`FunctionTerm::math`]
+    /// explains what the validation layer does and does not check about that, and why the choice of
+    /// a mandatory accessor is this crate's rather than the specification's.
     ///
     /// # Panics
     ///

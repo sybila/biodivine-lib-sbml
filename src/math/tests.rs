@@ -1541,6 +1541,11 @@ fn the_example_documents_are_covered_by_the_typed_layer() {
 /// permit, and a MathML name written in the SBML namespace (the rule 10201 documents, where the
 /// formula itself is in the wrong namespace).
 ///
+/// The figures count *recognised* formulas only: the walk starts from the elements that
+/// `Math::matches_element` accepts, so a document whose `<math>` is itself in another namespace (the
+/// `10201-fail-01-04/11` class, where the `<math>` carries the SBML namespace) is counted as a
+/// document but contributes no formula — which is why the set below has four entries and not six.
+///
 /// The test skips (and passes) when the corpus is not unpacked, like the crate's other corpus gates.
 #[test]
 fn the_corpus_math_outside_the_subset_is_the_deliberate_violation() {
