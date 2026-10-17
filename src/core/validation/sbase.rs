@@ -94,7 +94,7 @@ pub(crate) fn apply_rule_10308(
             "The [sboTerm] attribute value ('{0}') does not conform to the syntax of SBOTerm data type.",
             sbo_term.unwrap()
         );
-        issues.push(SbmlIssue::new_error("10308", xml_element, message))
+        issues.push(SbmlIssue::new("10308", xml_element, message))
     }
 }
 
@@ -110,7 +110,7 @@ pub(crate) fn apply_rule_10309(
             "The [metaId] attribute value ('{0}') does not conform to the syntax of XML 1.0 ID data type.",
             meta_id.unwrap()
         );
-        issues.push(SbmlIssue::new_error("10309", xml_element, message))
+        issues.push(SbmlIssue::new("10309", xml_element, message))
     }
 }
 
@@ -126,7 +126,7 @@ pub(crate) fn apply_rule_10310(
             "The [id] attribute value ('{0}') does not conform to the syntax of SId data type.",
             id.unwrap()
         );
-        issues.push(SbmlIssue::new_error("10310", xml_element, message))
+        issues.push(SbmlIssue::new("10310", xml_element, message))
     }
 }
 
@@ -142,7 +142,7 @@ pub(crate) fn apply_rule_10312(
             "The [name] attribute value ('{0}') does not conform to the syntax of XML 1.0 string data type.",
             name.unwrap()
         );
-        issues.push(SbmlIssue::new_error("10312", xml_element, message))
+        issues.push(SbmlIssue::new("10312", xml_element, message))
     }
 }
 
@@ -158,11 +158,7 @@ pub(crate) fn apply_rule_10401(annotation: &XmlElement, issues: &mut Vec<SbmlIss
                 "XML namespace not declared for '{0}' in annotation.",
                 element.full_name()
             );
-            issues.push(SbmlIssue::new_error(
-                "10401",
-                element.xml_element(),
-                message,
-            ))
+            issues.push(SbmlIssue::new("10401", element.xml_element(), message))
         }
     }
 }
@@ -182,7 +178,7 @@ pub(crate) fn apply_rule_10402(annotation: &XmlElement, issues: &mut Vec<SbmlIss
             let message = format!(
                 "XML namespace '{namespace}' found in multiple top-level elements of <annotation>."
             );
-            issues.push(SbmlIssue::new_error("10402", &element, message));
+            issues.push(SbmlIssue::new("10402", &element, message));
         } else {
             unique_namespaces.insert(namespace);
         }

@@ -84,7 +84,7 @@ impl Math {
             let child_tag_name = child.tag_name();
             if !allowed_children.contains(&child_tag_name.as_str()) {
                 let message = format!("Unknown child <{child_tag_name}> of element <math>.");
-                issues.push(SbmlIssue::new_error("10202", &child, message));
+                issues.push(SbmlIssue::new("10202", &child, message));
             }
         }
     }
@@ -109,7 +109,7 @@ impl Math {
                     "Attribute [encoding] found on element <{name}>, which is forbidden. \
                         Attribute [encoding] is only permitted on <csymbol>, <annotation> and <annotation-xml>."
                 );
-                issues.push(SbmlIssue::new_error("10203", &child, message));
+                issues.push(SbmlIssue::new("10203", &child, message));
             }
         }
     }
@@ -134,7 +134,7 @@ impl Math {
                     "Attribute [definitionURL] found on element <{name}>, which is forbidden. \
                         Attribute [definitionURL] is only permitted on <ci>, <csymbol> and <semantics>."
                 );
-                issues.push(SbmlIssue::new_error("10204", &child, message));
+                issues.push(SbmlIssue::new("10204", &child, message));
             }
         }
     }
@@ -163,7 +163,7 @@ impl Math {
                     "Invalid definitionURL value found '{}'. Permitted values are: {:?}",
                     value, MATHML_ALLOWED_DEFINITION_URLS
                 );
-                issues.push(SbmlIssue::new_error("10205", &child, message));
+                issues.push(SbmlIssue::new("10205", &child, message));
             }
         }
     }
@@ -187,7 +187,7 @@ impl Math {
                     "Attribute [type] found on element <{name}>, which is forbidden. \
                         Attribute [type] is only permitted on <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10206", &child, message));
+                issues.push(SbmlIssue::new("10206", &child, message));
             }
         }
     }
@@ -211,7 +211,7 @@ impl Math {
                     "Invalid type value found '{value}'. Permitted values are: \
                     'e-notation', 'real', 'integer' and 'rational'"
                 );
-                issues.push(SbmlIssue::new_error("10207", &child, message));
+                issues.push(SbmlIssue::new("10207", &child, message));
             }
         }
     }
@@ -251,7 +251,7 @@ impl Math {
                     "Invalid immediate parent of <lambda>. Only <math> and <semantics> are \
                         valid immediate parents. Actual parent: <{parent_name}>"
                 );
-                issues.push(SbmlIssue::new_error("10208", &child, message));
+                issues.push(SbmlIssue::new("10208", &child, message));
             }
         }
     }
@@ -272,7 +272,7 @@ impl Math {
                 "A <lambda> found in invalid scope of <{toplevel_parent}>. \
                 The <lambda> can be located only within <functionDefinition> (in <math>)."
             );
-            issues.push(SbmlIssue::new_error("10208", &child, message));
+            issues.push(SbmlIssue::new("10208", &child, message));
             return;
         }
 
@@ -284,7 +284,7 @@ impl Math {
         if !is_first_child {
             // the <lambda> must be the first child inside <math> (or <semantics>)
             let message = "The <lambda> must be the first element within <math>.".to_string();
-            issues.push(SbmlIssue::new_error("10208", &child, message));
+            issues.push(SbmlIssue::new("10208", &child, message));
         }
     }
 
@@ -326,7 +326,7 @@ impl Math {
                             Function referred by <ci> must be defined in <functionDefinition> object \
                             with relevant identifier (id)."
                     );
-                    issues.push(SbmlIssue::new_error("10214", &child, message));
+                    issues.push(SbmlIssue::new("10214", &child, message));
                 }
             }
         }
@@ -383,7 +383,7 @@ impl Math {
                     let message = format!(
                         "Invalid identifier value '{value_id}' in <ci>. Identifier not found."
                     );
-                    issues.push(SbmlIssue::new_error("10215", &ci, message));
+                    issues.push(SbmlIssue::new("10215", &ci, message));
                 }
             }
         }
@@ -430,7 +430,7 @@ impl Math {
                 && !scoped_local_param_ids.contains(&value_id)
             {
                 let message = format!("A <localParameter> identifier '{value_id}' found out of scope of its <KineticLaw>");
-                issues.push(SbmlIssue::new_error("10216", &ci, message));
+                issues.push(SbmlIssue::new("10216", &ci, message));
             }
         }
     }
@@ -446,7 +446,7 @@ impl Math {
             let children = apply.child_elements();
             if children.is_empty() {
                 let message = "No operator specified in <apply>.".to_string();
-                issues.push(SbmlIssue::new_error("10218", &apply, message));
+                issues.push(SbmlIssue::new("10218", &apply, message));
                 continue;
             }
             let arg_count = children.len() - 1;
@@ -459,12 +459,12 @@ impl Math {
                         "Invalid number ({arg_count}) of arguments for operator <minus>. \
                                 The operator <minus> can take either 1 or 2 arguments."
                     );
-                    issues.push(SbmlIssue::new_error("10218", &apply, message));
+                    issues.push(SbmlIssue::new("10218", &apply, message));
                 } else if operator != "minus" && arg_count != 1 {
                     let message = format!(
                         "Invalid number ({arg_count}) of arguments for unary operator <{operator}>"
                     );
-                    issues.push(SbmlIssue::new_error("10218", &apply, message));
+                    issues.push(SbmlIssue::new("10218", &apply, message));
                 }
             } else if MATHML_BINARY_OPERATORS.contains(&operator.as_str()) {
                 // root is allowed to have 1 OR 2 arguments
@@ -473,10 +473,10 @@ impl Math {
                         "Invalid number ({arg_count}) of arguments for operator <root>. \
                                 The operator <root> can take either 1 or 2 arguments."
                     );
-                    issues.push(SbmlIssue::new_error("10218", &apply, message));
+                    issues.push(SbmlIssue::new("10218", &apply, message));
                 } else if operator != "root" && arg_count != 2 {
                     let message = format!("Invalid number ({arg_count}) of arguments for binary operator <{operator}>.");
-                    issues.push(SbmlIssue::new_error("10218", &apply, message));
+                    issues.push(SbmlIssue::new("10218", &apply, message));
                 }
             }
         }
@@ -494,7 +494,7 @@ impl Math {
                     "Invalid number ({arg_count}) of arguments for the operator <piecewise>. \
                         The operator <piecewise> must contain at least one <piece> or <otherwise> element."
                 );
-                issues.push(SbmlIssue::new_error("10218", &e, message));
+                issues.push(SbmlIssue::new("10218", &e, message));
             }
         }
     }
@@ -537,7 +537,7 @@ impl Math {
                             "Invalid number of arguments ({arg_count}) provided for function '{id}'. \
                                 The function '{id}' takes {expected_args} arguments."
                         );
-                        issues.push(SbmlIssue::new_error("10219", function_call, message));
+                        issues.push(SbmlIssue::new("10219", function_call, message));
                     }
                 }
             }
@@ -563,7 +563,7 @@ impl Math {
                     "Attribute [units] found on element <{name}>, which is forbidden. \
                         Attribute [units] is only permitted on <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10220", &child, message));
+                issues.push(SbmlIssue::new("10220", &child, message));
             }
         }
     }
@@ -596,7 +596,7 @@ impl Math {
                     "Invalid unit identifier '{value_id}' found. \
                         Only identifiers of <unitDefinition> objects and base units can be used in <cn>."
                 );
-                issues.push(SbmlIssue::new_error("10221", &cn, message));
+                issues.push(SbmlIssue::new("10221", &cn, message));
             }
         }
     }
@@ -627,7 +627,7 @@ impl Math {
                          The call of rateOf <csymbol> must have precisely one argument.",
                     apply_children.len() - 1
                 );
-                issues.push(SbmlIssue::new_error("10223", &child, message));
+                issues.push(SbmlIssue::new("10223", &child, message));
             } else {
                 // This unwrap is ok because we only selected elements with at least one child.
                 let argument_name = apply_children.last().unwrap().tag_name();
@@ -637,7 +637,7 @@ impl Math {
                         "Invalid argument <{argument_name}> provided for <csymbol>.\
                              The rateOf <csymbol> must have <ci> as its only argument."
                     );
-                    issues.push(SbmlIssue::new_error("10223", &child, message));
+                    issues.push(SbmlIssue::new("10223", &child, message));
                 }
             }
         }
@@ -684,13 +684,13 @@ impl Math {
                     "The value of target ('{value_id}') of rateOf <csymbol> \
                 found as a variable of <assignmentRule>."
                 );
-                issues.push(SbmlIssue::new_error("10224", &ci, message));
+                issues.push(SbmlIssue::new("10224", &ci, message));
             } else if !is_target_constant && algebraic_rule_parameters.contains(&value_id) {
                 let message = format!(
                     "The value of target ('{value_id}') of rateOf <csymbol> \
                 determined by an <algebraicRule>."
                 );
-                issues.push(SbmlIssue::new_error("10224", &ci, message));
+                issues.push(SbmlIssue::new("10224", &ci, message));
             }
         }
     }
@@ -744,11 +744,11 @@ impl Math {
 
             if assignment_rule_variables.contains(&compartment_id) {
                 let message = format!("The <compartment> with id '{compartment_id}' found as the [variable] of an <assignmentRule>.");
-                issues.push(SbmlIssue::new_error("10225", &ci, message));
+                issues.push(SbmlIssue::new("10225", &ci, message));
             } else if !compartment.constant().get() && algebraic_ci_values.contains(&compartment_id)
             {
                 let message = format!("The <compartment>'s size with id '{compartment_id}' is possible to determine by an <algebraicRule>.");
-                issues.push(SbmlIssue::new_error("10225", &ci, message));
+                issues.push(SbmlIssue::new("10225", &ci, message));
             }
         }
     }
@@ -771,7 +771,7 @@ impl Math {
                     "The [units] value ('{0}') does not conform to the syntax of UnitSId data type.",
                     value.unwrap()
                 );
-                issues.push(SbmlIssue::new_error("10311", self.xml_element(), message))
+                issues.push(SbmlIssue::new("10311", self.xml_element(), message))
             }
         }
     }

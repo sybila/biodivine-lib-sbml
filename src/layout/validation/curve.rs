@@ -47,7 +47,7 @@ impl SbmlValidable for LineSegment {
             segment.validate(issues, identifiers, meta_ids);
         } else if self.xsi_type().get() != XsiType::LineSegment {
             let message = "Attribute [xsi:type] has to be of value LineSegment";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         }
     }
 }
@@ -64,11 +64,11 @@ impl CanTypeCheck for LineSegment {
         if self.base_point1().is_set() {
             let message =
                 "Sanity check failed: unknown child element [basePoint1] on <curveSegment>";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         } else if self.base_point2().is_set() {
             let message =
                 "Sanity check failed: unknown child element [basePoint2] on <curveSegment>";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         }
 
         internal_type_check(element, issues);
@@ -93,10 +93,10 @@ impl SbmlValidable for CubicBezier {
         if !self.base_point1().is_set() {
             let message =
                 "Sanity check failed: missing required child element [basePoint1] on <curveSegment>";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         } else if !self.base_point2().is_set() {
             let message = "Sanity check failed: missing required child element [basePoint2] on <curveSegment>";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         } else {
             self.base_point1()
                 .get()
@@ -110,7 +110,7 @@ impl SbmlValidable for CubicBezier {
 
         if self.xsi_type().get() != XsiType::CubicBezier {
             let message = "Attribute [xsi:type] has to be of value CubicBezier";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         }
     }
 }
@@ -122,7 +122,7 @@ impl CanTypeCheck for CubicBezier {
         if !self.base_point1().is_set() || !self.base_point2().is_set() {
             let message =
                 "Missing elements of [basePoint1] or [basePoint2] on element [curveSegment]";
-            issues.push(SbmlIssue::new_error("layout-10402", self, message));
+            issues.push(SbmlIssue::new("layout-10402", self, message));
         } else {
             self.base_point1().get().unwrap().type_check(issues);
             self.base_point2().get().unwrap().type_check(issues);

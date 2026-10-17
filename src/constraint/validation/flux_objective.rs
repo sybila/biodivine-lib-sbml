@@ -29,7 +29,7 @@ impl CanTypeCheck for FluxObjective {
                 || (coefficient.is_infinite() && coefficient.is_sign_negative())
             {
                 let message = "When attribute [strict] on the element of <model> is se to true [coefficient] can not be non-finite".to_string();
-                issues.push(SbmlIssue::new_error("fbc-20608", self, message))
+                issues.push(SbmlIssue::new("fbc-20608", self, message))
             }
         }
     }

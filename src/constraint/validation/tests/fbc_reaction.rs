@@ -7,7 +7,7 @@ fn check_fbc_20716() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20716")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20716")
 }
 
 #[test]
@@ -18,7 +18,7 @@ fn check_fbc_20705() {
 
     println!("{:?}", issues);
 
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20705")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20705")
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn check_fbc_20707() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20707")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20707")
 }
 #[test]
 fn check_fbc_20708() {
@@ -37,7 +37,7 @@ fn check_fbc_20708() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20708")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20708")
 }
 #[test]
 fn check_fbc_20709() {
@@ -46,7 +46,7 @@ fn check_fbc_20709() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20709")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20709")
 }
 #[test]
 fn check_fbc_207011() {
@@ -55,7 +55,7 @@ fn check_fbc_207011() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20711")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20711")
 }
 #[test]
 fn check_fbc_207012() {
@@ -64,7 +64,7 @@ fn check_fbc_207012() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20712")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20712")
 }
 #[test]
 fn check_fbc_207013() {
@@ -73,7 +73,7 @@ fn check_fbc_207013() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20713")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20713")
 }
 #[test]
 fn check_fbc_207010() {
@@ -82,5 +82,5 @@ fn check_fbc_207010() {
     let issues = doc.validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule, "fbc-20710")
+    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20710")
 }

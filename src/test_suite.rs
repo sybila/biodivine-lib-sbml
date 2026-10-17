@@ -1,4 +1,4 @@
-use crate::{Sbml, SbmlIssueSeverity};
+use crate::{RuleSet, Sbml, SbmlIssueSeverity};
 use sbml_test_suite::test_helper;
 
 /// Allows us to run a "simplified" version of the test when using `cargo test --all-features`.
@@ -10,7 +10,13 @@ use sbml_test_suite::test_helper;
 #[test]
 #[cfg_attr(not(feature = "sbml_test_suite"), ignore)]
 fn sbml_test_suite_syntactic() {
-    test_helper("./syntactic", None, true, test_document);
+    test_helper(
+        "./syntactic",
+        None,
+        true,
+        |id| RuleSet::CORE.is_spec_rule(id),
+        test_document,
+    );
 }
 
 /// A method that can be passed to `test_helper` to validate a document.
@@ -20,12 +26,12 @@ pub fn test_document(document: &str) -> Vec<(String, String)> {
             .validate()
             .into_iter()
             .map(|issue| {
-                let severity = match issue.severity {
+                let severity = match issue.severity() {
                     SbmlIssueSeverity::Error => "Error",
                     SbmlIssueSeverity::Warning => "Warning",
                     SbmlIssueSeverity::Info => "Informational",
                 };
-                (issue.rule, severity.to_string())
+                (issue.rule().to_string(), severity.to_string())
             })
             .collect(),
         Err(_e) => {

@@ -15,7 +15,12 @@ pub struct TestResults {
     /// One `document|rule|severity` line for *every* issue the library reported, for every
     /// document that was read.
     ///
-    /// This includes the Level 3 Version 1 documents, whose issues the mismatch reports
+    /// This report is deliberately *not* filtered by the `is_spec_rule` predicate of
+    /// [`test_helper`]: the mismatch reports cover the specification rules only (they compare
+    /// against the suite's expectation files, which list specification rule ids), so a library
+    /// lint appears here and nowhere else. The diagnostic of a lint has no other coverage.
+    ///
+    /// This also includes the Level 3 Version 1 documents, whose issues the mismatch reports
     /// deliberately ignore: the translated half of the corpus is invisible to every gate that
     /// compares the mismatch reports, so a dump of every reported issue is the only way to see a
     /// regression there. The list is unsorted; callers that compare it should sort it.
@@ -141,12 +146,20 @@ pub fn corpus_documents(dir_path: &str, all_versions: bool) -> Vec<CorpusRule> {
 /// should return a vector of pairs `(rule_id, severity)` indicating all issues that were found
 /// in the document.
 ///
+/// The mismatch reports compare against the specification rule ids of the suite's expectation
+/// files, so they must not contain an issue that no rule of the standard requires. The caller
+/// therefore supplies `is_spec_rule`, which classifies a reported rule id; only issues the
+/// predicate accepts take part in the comparison. The complete issue list of
+/// [`TestResults::issues`] is *not* filtered, because it is the only coverage that diagnostics
+/// outside the specification have.
+///
 /// Besides the mismatch reports, the result carries a line for every reported issue of every
 /// document (see [`TestResults::issues`]).
 pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
     dir_path: &str,
     filter: Option<HashSet<String>>,
     all_versions: bool,
+    is_spec_rule: impl Fn(&str) -> bool,
     read_document: F,
 ) -> TestResults {
     if let Some(filter) = filter.as_ref() {
@@ -218,7 +231,7 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                 let reported = read_document(document.content.as_str());
 
                 for (rule_id, severity) in reported.iter() {
-                    if filter_rule(rule_id.as_str()) {
+                    if filter_rule(rule_id.as_str()) && is_spec_rule(rule_id.as_str()) {
                         if let Some(entry) = expected.get_mut(rule_id) {
                             entry.1 -= 1;
                         } else {
@@ -245,7 +258,7 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                         // All issues of this type have been discovered.
                         continue;
                     }
-                    if filter_rule(id.as_str()) {
+                    if filter_rule(id.as_str()) && is_spec_rule(id.as_str()) {
                         println!(" >> Missed expected issue {}.", id);
                         let report = format!(
                             "Test {}/{}: Missed issue {} (severity {:?}).",

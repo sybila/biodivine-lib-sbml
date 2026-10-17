@@ -93,6 +93,6 @@ pub fn apply_rule_fbc_20908(element: &GeneProductRef, issues: &mut Vec<SbmlIssue
     if found.is_none() || found.unwrap().xml_element().tag_name() != "geneProduct" {
         let message = "Attribute [geneProduct] does not refer to an existing GeneProduct element!"
             .to_string();
-        issues.push(SbmlIssue::new_error("fbc-20908", element, message))
+        issues.push(SbmlIssue::new("fbc-20908", element, message))
     }
 }

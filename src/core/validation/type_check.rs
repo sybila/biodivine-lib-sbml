@@ -80,7 +80,7 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
                 );
                 let rule_id = tag_to_attribute_rule_id(element_name.as_str(), req_attr)
                     .unwrap_or("SANITY_CHECK");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+                issues.push(SbmlIssue::new(rule_id, xml_element, message));
             }
         }
     }
@@ -188,7 +188,7 @@ fn type_check_of_property<T: XmlPropertyType>(
             "Sanity check failed: {0} On the attribute [{1}].",
             err, attribute_name
         );
-        issues.push(SbmlIssue::new_error("SANITY_CHECK", xml_element, message));
+        issues.push(SbmlIssue::new("SANITY_CHECK", xml_element, message));
     }
 }
 
@@ -251,7 +251,7 @@ pub fn validate_allowed_attributes(
 
             let rule_id =
                 tag_to_attribute_rule_id(element_name.as_str(), attr_name).unwrap_or("10102");
-            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+            issues.push(SbmlIssue::new(rule_id, xml_element, message));
         }
     }
 }
@@ -277,7 +277,7 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             // the proper MathML namespace. This only works if we are actually expecting a `math`
             // element at this position.
             let message = "Found a <math> element without the proper MathML namespace.".to_string();
-            issues.push(SbmlIssue::new_error("10201", xml_element, message));
+            issues.push(SbmlIssue::new("10201", xml_element, message));
         } else if child_namespace == URL_SBML_CORE
             || child_namespace == URL_PACKAGE_FBC
             || child_namespace == URL_PACKAGE_LAYOUT
@@ -291,7 +291,7 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
                 );
                 let rule_id =
                     tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+                issues.push(SbmlIssue::new(rule_id, xml_element, message));
             }
         }
     }
@@ -317,7 +317,7 @@ pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut 
             );
             // TODO: Check if these rule IDs are ok.
             let rule_id = tag_to_required_child_rule_id(element_name.as_str()).unwrap_or("10102");
-            issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+            issues.push(SbmlIssue::new(rule_id, xml_element, message));
         }
     }
 }
@@ -357,7 +357,7 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
                 );
                 let rule_id =
                     tag_to_unique_child_rule_id(element_name.as_str(), name).unwrap_or("10102");
-                issues.push(SbmlIssue::new_error(rule_id, xml_element, message));
+                issues.push(SbmlIssue::new(rule_id, xml_element, message));
             }
         }
     }
@@ -418,7 +418,7 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "priority" => Some("21232"),
         //fbc package
         "objective" => Some("fbc-20503"),
-        "geneProductAssociation" => Some("fbc-2803"),
+        "geneProductAssociation" => Some("fbc-20803"),
         "fluxObjective" => Some("fbc-20603"),
         "geneProductRef" => Some("fbc-20903"),
         "geneProduct" => Some("fbc-21203"),
@@ -505,7 +505,7 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
 
 fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
     match tag_name {
-        "layout" => Some("layout-20015"),
+        "layout" => Some("layout-20315"),
         "graphicalObject" => Some("layout-20407"),
         "textGlyph" => Some("layout-20903"),
         "boundingBox" => Some("layout-21303"),

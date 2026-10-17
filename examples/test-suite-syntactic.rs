@@ -1,4 +1,4 @@
-use biodivine_lib_sbml::{Sbml, SbmlIssueSeverity};
+use biodivine_lib_sbml::{RuleSet, Sbml, SbmlIssueSeverity};
 use biodivine_lib_xml_dom::Document;
 use sbml_test_suite::{corpus_documents, test_helper};
 use std::collections::HashSet;
@@ -19,12 +19,18 @@ use std::collections::HashSet;
 ///
 ///  - `--dump-issues` writes `test_suite_issues.txt`, one `document|rule|severity` line for
 ///    every issue the library reports for every document of the corpus (including the translated
-///    Level 3 Version 1 documents, whose issues the mismatch reports ignore).
+///    Level 3 Version 1 documents, whose issues the mismatch reports ignore). Unlike the mismatch
+///    reports, this file is not filtered to specification rules, so it is the only report that
+///    covers the library's own diagnostics (its lints).
 ///  - `--check-roundtrip` writes `test_suite_roundtrip.txt`, which lists every corpus document
 ///    whose text does not survive a read -> write -> read cycle unchanged.
 ///
 /// The flags are removed from the rule filter, so `--dump-issues` on its own still runs the whole
 /// corpus. A run without either flag leaves neither file behind.
+///
+/// The three mismatch reports cover specification rules only: a reported issue whose rule id the
+/// crate's rule table calls a library lint is not compared against the suite's expectations, which
+/// list rule ids of the specification.
 fn main() {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     let dump_issues = args.iter().any(|it| it == "--dump-issues");
@@ -43,7 +49,13 @@ fn main() {
         Some(HashSet::from_iter(rules))
     };
 
-    let result = test_helper("./syntactic", filter, true, test_document);
+    let result = test_helper(
+        "./syntactic",
+        filter,
+        true,
+        |id| RuleSet::CORE.is_spec_rule(id),
+        test_document,
+    );
 
     let error_problems = result.error.clone();
     let warning_problems = result.warning.clone();
@@ -186,12 +198,12 @@ pub fn test_document(document: &str) -> Vec<(String, String)> {
             .validate()
             .into_iter()
             .map(|issue| {
-                let severity = match issue.severity {
+                let severity = match issue.severity() {
                     SbmlIssueSeverity::Error => "Error",
                     SbmlIssueSeverity::Warning => "Warning",
                     SbmlIssueSeverity::Info => "Informational",
                 };
-                (issue.rule, severity.to_string())
+                (issue.rule().to_string(), severity.to_string())
             })
             .collect(),
         Err(_e) => {

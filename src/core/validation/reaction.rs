@@ -141,7 +141,7 @@ impl KineticLaw {
                     "The identifier ('{id}') of <localParameter> is \
                 already present in the <listOfLocalParameters>."
                 );
-                issues.push(SbmlIssue::new_error("10303", &local_parameter, message));
+                issues.push(SbmlIssue::new("10303", &local_parameter, message));
             } else {
                 identifiers.insert(id);
             }

@@ -101,7 +101,7 @@ fn check_identifier_uniqueness<ID: Eq + Hash + Display>(
             let message = format!(
                 "The {attr_name} ('{identifier}') of <{tag_name}> is already present in the <model>."
             );
-            issues.push(SbmlIssue::new_error(rule, xml_element, message));
+            issues.push(SbmlIssue::new(rule, xml_element, message));
         } else {
             identifiers.insert(identifier);
         }
@@ -178,7 +178,7 @@ pub(crate) fn apply_rule_10311(
             "The [{attr_name}] attribute value ('{0}') does not conform to the syntax of UnitSId data type.",
             unit_sid.unwrap()
         );
-        issues.push(SbmlIssue::new_error("10311", xml_element, message))
+        issues.push(SbmlIssue::new("10311", xml_element, message))
     }
 }
 
@@ -213,6 +213,6 @@ pub(crate) fn apply_rule_10313(
             "The [{attr_name}] attribute value ('{unit_ref}') is not a \
         known <unitDefinition> identifier nor a valid base unit."
         );
-        issues.push(SbmlIssue::new_error("10313", xml_element, message));
+        issues.push(SbmlIssue::new("10313", xml_element, message));
     }
 }

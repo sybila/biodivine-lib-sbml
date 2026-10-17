@@ -49,7 +49,7 @@ impl UnitDefinition {
 
             if identifiers.contains(&id) {
                 let message = format!("The identifier ('{id}') of <unitDefinition> is already present in the <listOfUnitDefinitions>.");
-                issues.push(SbmlIssue::new_error("10302", &unit_definition, message));
+                issues.push(SbmlIssue::new("10302", &unit_definition, message));
             } else {
                 identifiers.insert(id);
             }

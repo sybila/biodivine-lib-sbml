@@ -70,7 +70,7 @@ impl Event {
                     "The variable ('{variable}') of <eventAssignment> is \
                 already present in the <listOfEventAssignments>."
                 );
-                issues.push(SbmlIssue::new_error("10305", &event_assignment, message));
+                issues.push(SbmlIssue::new("10305", &event_assignment, message));
             } else {
                 variables.insert(variable);
             }
@@ -96,7 +96,7 @@ impl Event {
                     "The variable ('{value}') of <eventAssignment> found \
                 as a variable of <assignmentRule>."
                 );
-                issues.push(SbmlIssue::new_error("10306", &event_assignment, message));
+                issues.push(SbmlIssue::new("10306", &event_assignment, message));
             }
         }
     }

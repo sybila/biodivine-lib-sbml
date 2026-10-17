@@ -19,7 +19,7 @@ fn check_layout_20310() {
 
     assert_eq!(issues.len(), 1);
     let issue = issues.into_iter().next().unwrap();
-    assert_eq!(issue.rule.as_str(), "layout-20310");
+    assert_eq!(issue.rule(), "layout-20310");
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn check_layout_20803() {
     let issues = doc.unwrap().validate();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule.as_str(), "layout-20803");
+    assert_eq!(issues.get(0).unwrap().rule(), "layout-20803");
 }
 
 #[test]
@@ -39,8 +39,8 @@ fn check_compartment_glyph() {
     let issues = doc.unwrap().validate();
 
     assert_eq!(issues.len(), 2);
-    assert_eq!(issues.get(0).unwrap().rule.as_str(), "layout-20509");
-    assert_eq!(issues.get(1).unwrap().rule.as_str(), "layout-20508");
+    assert_eq!(issues.get(0).unwrap().rule(), "layout-20509");
+    assert_eq!(issues.get(1).unwrap().rule(), "layout-20508");
 }
 
 #[test]

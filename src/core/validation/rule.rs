@@ -48,7 +48,7 @@ impl AbstractRule {
                     "The variable ('{variable}') of <{tag_name}> is already present in the set of \
                         <assignmentRule> and <rateRule> objects."
                 );
-                issues.push(SbmlIssue::new_error("10304", &rule, message));
+                issues.push(SbmlIssue::new("10304", &rule, message));
             } else {
                 variables.insert(variable);
             }

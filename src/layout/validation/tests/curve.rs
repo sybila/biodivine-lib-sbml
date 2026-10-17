@@ -7,5 +7,5 @@ fn check_layout_10402() {
 
     assert_eq!(issues.len(), 1);
     let issue = issues.iter().next().unwrap();
-    assert_eq!(issue.rule.as_str(), "layout-10402");
+    assert_eq!(issue.rule(), "layout-10402");
 }

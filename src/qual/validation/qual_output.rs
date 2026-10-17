@@ -25,7 +25,7 @@ impl SbmlValidable for QualOutput {
             let message =
                 "TransitionEffect attribute is set to 'production' but the outputLevel is not set."
                     .to_string();
-            issues.push(SbmlIssue::new_error("qual-20609", self, message))
+            issues.push(SbmlIssue::new("qual-20609", self, message))
         }
     }
 }
@@ -43,13 +43,13 @@ fn apply_rule_qual_20607_and_20608(
         || qual_species.clone().unwrap().xml_element().tag_name() != "qualitativeSpecies"
     {
         let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
-        issues.push(SbmlIssue::new_error("qual-20607", element, message));
+        issues.push(SbmlIssue::new("qual-20607", element, message));
         return;
     }
 
     if qual_species.unwrap().constant().get() {
         let message = "The value of [constant] attribute of the [qualitativeSpecies] element has to be se to false!"
             .to_string();
-        issues.push(SbmlIssue::new_error("qual-20608", element, message));
+        issues.push(SbmlIssue::new("qual-20608", element, message));
     }
 }

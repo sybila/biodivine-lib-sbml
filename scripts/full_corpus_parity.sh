@@ -18,13 +18,20 @@
 # before the example's own asserts fire. It is therefore the contract between the example and this
 # script, so an edit to the example's output strings has to keep it.
 #
-# The same run also produces two stronger snapshots, because the mismatch report alone cannot see
-# everything:
+# The mismatch reports compare against the expectation files of the test suite, which list rule ids
+# of the specification. The example therefore classifies every rule id it reports through the
+# crate's rule table (`RuleSet::CORE::is_spec_rule`) and keeps a library lint out of the three
+# mismatch reports: a lint is not a rule of the standard, so it would turn a document the suite
+# expects to pass into a fictitious mismatch. The same run also produces two stronger snapshots,
+# because the mismatch report alone cannot see everything:
 #
 #   * `test_suite_issues.txt` (`--dump-issues`) holds one `document|rule|severity` line for every
 #     issue the library reports for every document of the corpus, including the translated Level 3
-#     Version 1 documents. The mismatch report cannot see an issue that is added or removed where
-#     the suite already expects that rule, nor anything in the translated half of the corpus.
+#     Version 1 documents. It is deliberately *not* filtered, so it is the only snapshot that
+#     covers a library lint (for example the `unused-namespace` lint or the internal
+#     `SANITY_CHECK` diagnostics). The mismatch report cannot see an issue that is added or
+#     removed where the suite already expects that rule, nor anything in the translated half of
+#     the corpus.
 #   * `test_suite_roundtrip.txt` (`--check-roundtrip`) lists every document whose text does not
 #     survive `Sbml::read_str` -> serialization -> parse unchanged. The mismatch report never
 #     serializes, so a rewrite of the document text is invisible to it.

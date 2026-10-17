@@ -97,7 +97,7 @@
 
 use std::collections::HashSet;
 
-use biodivine_lib_xml_dom::{Document, Element};
+use biodivine_lib_xml_dom::Document;
 use embed_doc_image::embed_doc_image;
 
 use xml::RequiredProperty;
@@ -121,6 +121,11 @@ pub mod qual;
 /// [`XmlChild`][xml::XmlChild] and other utility types or traits that can be used to safely
 /// manipulate the underlying XML document.
 pub mod xml;
+
+/// The rules this crate reports: their ids, kinds, severities and summaries, and the
+/// [`SbmlIssue`] a failed check produces.
+mod validation;
+pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 
 /// **(internal)** An internal module which defines constant values relevant for SBML, such as
 /// namespace URLs or mappings assigning elements their allowed attributes.
@@ -342,7 +347,7 @@ impl Sbml {
         let root_element = self.sbml_root.xml_element();
         if root_element.tag_name() != "sbml" {
             let message = format!("Invalid root element <{}> found.", root_element.tag_name());
-            issues.push(SbmlIssue::new_error("10102", &self.sbml_root, message));
+            issues.push(SbmlIssue::new("10102", &self.sbml_root, message));
         }
 
         internal_type_check(&self.sbml_root, issues);
@@ -351,7 +356,7 @@ impl Sbml {
         if element.local_name().as_str() == "sbml"
             && !element.namespace_declarations().contains_key(&None)
         {
-            issues.push(SbmlIssue::new_error(
+            issues.push(SbmlIssue::new(
                 "SANITY_CHECK",
                 &self.sbml_root,
                 "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
@@ -363,9 +368,29 @@ impl Sbml {
         }
     }
 
-    /// Validates the document against validation rules specified in the
+    /// Validates the document against the validation rules specified in the
     /// [specification](https://sbml.org/specifications/sbml-level-3/version-2/core/release-2/sbml-level-3-version-2-release-2-core.pdf).
     /// Eventual issues are returned in the vector. Empty vector represents a valid document.
+    ///
+    /// Each issue names the rule that found it ([`SbmlIssue::rule`]), the [kind](RuleKind) of that
+    /// rule, the [severity](SbmlIssue::severity) the rule assigns to it, the element it was found
+    /// on and a message that explains it:
+    ///
+    ///  * an issue of a [`RuleKind::SpecRule`] is a violation of a rule of the SBML standard, and
+    ///    its id is the id the specification gives that rule (`10301`, `fbc-21207`, ...). Its
+    ///    severity is `Error` for a rule the standard requires and `Warning` or `Info` for a rule
+    ///    it recommends.
+    ///  * an issue of a [`RuleKind::LibraryLint`] is a diagnostic of this library, not a rule of
+    ///    the standard: the document is valid SBML without it. Its id is not a specification rule
+    ///    id, and its severity is `Info` unless the diagnostic means that the typed view of the
+    ///    document is unavailable ([`SbmlIssue::kind`] tells the two kinds apart).
+    ///
+    /// Both kinds are reported here; only the specification rules are compared against the SBML
+    /// test suite's expectations, because those list specification rule ids.
+    ///
+    /// The [rule table](RuleSet::CORE) is where a rule id acquires its kind and severity, so an
+    /// issue cannot be reported with a severity that its rule does not have.
+    ///
     /// ### Rule 10101
     /// is already satisfied implicitly by the use of the package *biodivine-lib-xml-dom* as writing
     /// is done only in UTF-8 and reading produces an error if the declared encoding is anything
@@ -434,28 +459,6 @@ impl From<XmlElement> for Sbml {
 }
 
 impl SBase for Sbml {}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct SbmlIssue {
-    /// Refers to the "raw" XML element where the issue occurred.
-    pub element: Element,
-    pub severity: SbmlIssueSeverity,
-    pub rule: String,
-    pub message: String,
-}
-
-impl SbmlIssue {
-    /// A helper method to more easily create an [SbmlIssue] with [SbmlIssueSeverity::Error]
-    /// severity.
-    pub fn new_error<S: ToString, E: XmlWrapper>(rule: &str, element: &E, message: S) -> SbmlIssue {
-        SbmlIssue {
-            element: element.xml_element().element().clone(),
-            severity: SbmlIssueSeverity::Error,
-            rule: rule.to_string(),
-            message: message.to_string(),
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum SbmlIssueSeverity {
@@ -847,7 +850,7 @@ mod tests {
     fn sorted_issues(issues: &[crate::SbmlIssue]) -> Vec<String> {
         let mut summary = issues
             .iter()
-            .map(|it| format!("{}|{:?}|{}", it.rule, it.severity, it.message))
+            .map(|it| format!("{}|{:?}|{}", it.rule(), it.severity(), it.message()))
             .collect::<Vec<_>>();
         summary.sort();
         summary

@@ -34,7 +34,7 @@ pub fn apply_rule_qual_20308(
 
     if comp.is_none() || comp.unwrap().xml_element().tag_name() != "compartment" {
         let message = "Attribute [compartment] does not refer to an existing Compartment element!";
-        issues.push(SbmlIssue::new_error("qual-20308", element, message));
+        issues.push(SbmlIssue::new("qual-20308", element, message));
     }
 }
 
@@ -44,7 +44,7 @@ pub fn apply_rule_qual_20309(element: &QualitativeSpecies, issues: &mut Vec<Sbml
 
     if initial.is_some() && max_level.is_some() && initial.unwrap() > max_level.unwrap() {
         let message = "Value of attribute [initialLevel] can not be greater than value of attribute [maximumLevel]!";
-        issues.push(SbmlIssue::new_error("qual-20309", element, message));
+        issues.push(SbmlIssue::new("qual-20309", element, message));
     }
 }
 
@@ -59,11 +59,7 @@ pub fn apply_rule_qual_20310(element: &QualitativeSpecies, issues: &mut Vec<Sbml
     for output in outputs {
         if output.qualitative_species().get() == element.id().get() {
             let message = "When the [constant] element is set to true, qualitativeSpecies element can not be referenced by output!".to_string();
-            issues.push(SbmlIssue::new_error(
-                "qual-20310",
-                element.xml_element(),
-                message,
-            ));
+            issues.push(SbmlIssue::new("qual-20310", element.xml_element(), message));
         }
     }
 }

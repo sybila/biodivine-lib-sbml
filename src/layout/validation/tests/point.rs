@@ -7,5 +7,5 @@ fn check_21204() {
 
     assert_eq!(issues.len(), 1);
     let issue = issues.into_iter().next().unwrap();
-    assert_eq!(issue.rule.as_str(), "layout-21204");
+    assert_eq!(issue.rule(), "layout-21204");
 }

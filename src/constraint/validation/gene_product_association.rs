@@ -37,11 +37,7 @@ impl CanTypeCheck for GeneProductAssociation {
             || (self.and().is_set() && self.or().is_set())
         {
             let message = "Only one of GeneProductRef, Or, And elements can be set.";
-            issues.push(SbmlIssue::new_error(
-                "fbc-20805",
-                self.xml_element(),
-                message,
-            ));
+            issues.push(SbmlIssue::new("fbc-20805", self.xml_element(), message));
             return;
         }
 
@@ -53,7 +49,7 @@ impl CanTypeCheck for GeneProductAssociation {
         if let Some(and) = self.and().get() {
             if and.len() < 2 {
                 let message = "And object must have at least two concrete Association objects.";
-                issues.push(SbmlIssue::new_error("fbc-21003", self, message))
+                issues.push(SbmlIssue::new("fbc-21003", self, message))
             } else {
                 type_check_of_list(&and, issues)
             }
@@ -62,7 +58,7 @@ impl CanTypeCheck for GeneProductAssociation {
         if let Some(or) = self.or().get() {
             if or.len() < 2 {
                 let message = "And object must have at least two concrete Association objects.";
-                issues.push(SbmlIssue::new_error("fbc-21103", self, message))
+                issues.push(SbmlIssue::new("fbc-21103", self, message))
             } else {
                 type_check_of_list(&or, issues)
             }

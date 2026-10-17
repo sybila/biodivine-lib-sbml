@@ -31,7 +31,7 @@ impl SbmlValidable for FbcReaction {
             let mut initial_assignments_sid: HashSet<SId> = HashSet::new();
             if !self.lower_flux_bound().is_set() || !self.upper_flux_bound().is_set() {
                 let message = "When attribute [strict] is se to true [lowerFluxBound] and [upperFluxBound] has to be set".to_string();
-                issues.push(SbmlIssue::new_error("fbc-20707", self, message))
+                issues.push(SbmlIssue::new("fbc-20707", self, message))
             } else {
                 let lower_bound_parameter = self
                     .find_by_sid::<Parameter>(&self.lower_flux_bound().get().unwrap())
@@ -44,7 +44,7 @@ impl SbmlValidable for FbcReaction {
                     || !upper_bound_parameter.constant().get()
                 {
                     let message = "When attribute [strict] is se to true bounds parameters have to be constant".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20708", self, message))
+                    issues.push(SbmlIssue::new("fbc-20708", self, message))
                 }
 
                 if !lower_bound_parameter.value().is_set()
@@ -53,10 +53,10 @@ impl SbmlValidable for FbcReaction {
                         || upper_bound_parameter.value().get().unwrap().is_nan())
                 {
                     let message = "When attribute [strict] is se to true <Parameter> elements referenced by bounds have to be set and can not be NaN".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20709", self, message))
+                    issues.push(SbmlIssue::new("fbc-20709", self, message))
                 } else if lower_bound_parameter.value().get().unwrap().is_infinite() {
                     let message = "When attribute [strict] is se to true [lowerFluxBound] value can not be INF".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20711", self, message))
+                    issues.push(SbmlIssue::new("fbc-20711", self, message))
                 } else if upper_bound_parameter.value().get().unwrap().is_infinite()
                     && upper_bound_parameter
                         .value()
@@ -65,12 +65,12 @@ impl SbmlValidable for FbcReaction {
                         .is_sign_negative()
                 {
                     let message = "When attribute [strict] is se to true [upperFluxBound] value can not be -INF]".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20712", self, message))
+                    issues.push(SbmlIssue::new("fbc-20712", self, message))
                 } else if lower_bound_parameter.value().get().unwrap()
                     > upper_bound_parameter.value().get().unwrap()
                 {
                     let message = "When attribute [strict] is se to true [lowerFluxBound] parameter value must be less or equal to [upperFluxBound] parameter value].".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20713", self, message))
+                    issues.push(SbmlIssue::new("fbc-20713", self, message))
                 } else {
                     let model = self.sbml_root().model().get().unwrap();
                     let initial_assignments = model.initial_assignments().get();
@@ -84,7 +84,7 @@ impl SbmlValidable for FbcReaction {
 
                         if is_initial {
                             let message = "When attribute [strict] is se to true [Parameter] elements referenced by flux bounds can not be referenced by initial assignment.".to_string();
-                            issues.push(SbmlIssue::new_error("fbc-20710", self, message))
+                            issues.push(SbmlIssue::new("fbc-20710", self, message))
                         }
                     }
                 }
@@ -107,7 +107,7 @@ impl SbmlValidable for FbcReaction {
 
                 if is_invalid {
                     let message = "When attribute [strict] is se to true the [constant] attribute of <speciesReference> elements have to be set to true and [stoichiometry] can not be non-finite.".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20714", self, message))
+                    issues.push(SbmlIssue::new("fbc-20714", self, message))
                 }
             }
 
@@ -126,7 +126,7 @@ impl SbmlValidable for FbcReaction {
 
                 if is_invalid {
                     let message = "When attribute [strict] is se to true the [constant] attribute of <speciesReference> elements have to be set to true and [stoichiometry] can not be non-finite.".to_string();
-                    issues.push(SbmlIssue::new_error("fbc-20714", self, message))
+                    issues.push(SbmlIssue::new("fbc-20714", self, message))
                 }
             }
         }
@@ -149,11 +149,7 @@ pub fn apply_rule_fbc_20705(element: &FbcReaction, issues: &mut Vec<SbmlIssue>, 
     if found.is_none() || found.unwrap().xml_element().tag_name() != "parameter" {
         let message =
             "Attribute of Flux Bound does not refer to the existing Parameter element!".to_string();
-        issues.push(SbmlIssue::new_error(
-            "fbc-20705",
-            element.xml_element(),
-            message,
-        ))
+        issues.push(SbmlIssue::new("fbc-20705", element.xml_element(), message))
     }
 }
 
@@ -164,10 +160,6 @@ fn apply_rule_fbc_20716(
 ) {
     if initial_sid.contains(&element.species().get()) {
         let message = "When attribute [strict] is se to true [SpeciesReference] can not be referenced by initial assignment.".to_string();
-        issues.push(SbmlIssue::new_error(
-            "fbc-20716",
-            element.xml_element(),
-            message,
-        ))
+        issues.push(SbmlIssue::new("fbc-20716", element.xml_element(), message))
     }
 }

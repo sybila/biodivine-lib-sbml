@@ -82,6 +82,43 @@ The two flags are removed from the rule filter, so `--dump-issues` on its own st
 the whole corpus; a run without either flag writes neither extra file, and the three
 mismatch reports are byte-identical in both modes.
 
+#### Specification rules and library lints
+
+The library reports two kinds of issue, and the snapshots above treat them differently:
+
+  * a **specification rule** is a rule of the SBML standard, identified by the
+    specification's own rule id (`10301`, `fbc-21207`, ...). These are the ids the suite's
+    expectation files list, and they are the only ids the mismatch census compares.
+  * a **library lint** is a diagnostic the library raises on its own initiative: no rule of
+    the standard requires it, its id is not a specification rule id, and its severity is
+    `Info` unless the diagnostic means that a typed read of the document is impossible.
+    The library lints are `SANITY_CHECK` (the document cannot be read as typed SBML, for
+    example because an attribute value does not parse; severity `Error`, because the typed
+    view of the document is unavailable) and `unused-namespace` (an SBML namespace is
+    declared on an element that does not use it, so the declaration is dead; severity
+    `Info`, because the document is perfectly valid SBML without it).
+
+The classification is data: every issue carries the kind of the rule that produced it
+(`SbmlIssue::kind`), and every rule id is described once in the crate's rule table
+(`src/validation/rules.rs`), which is where its kind and severity live.
+
+Because a lint is not a rule of the standard, it can never produce a mismatch in the
+census: the comparison is against the suite's expectation files, which list specification
+rule ids only, and a lint would turn a document the suite expects to pass into a
+fictitious failure. The census is therefore filtered to specification rules, while
+`test_suite_issues.txt` is deliberately *not* filtered and keeps every reported issue.
+That makes the dump the only gate with coverage of a lint's behaviour, and the only place
+where a change to the `SANITY_CHECK` diagnostics or to `unused-namespace` is visible as a
+snapshot diff. If a lint ever needs its own census-like snapshot, the cheap extension is a
+separate report file next to `test_suite_issues.txt` rather than a second filtering rule.
+
+The rule table is checked against the specification by `python3 scripts/check_rule_ids.py`
+(`make rules`): every rule the table calls a specification rule must be a rule the
+specification defines, so a rule id cannot be invented (a typo in the table would be
+invisible otherwise, because a rule that never fires looks exactly like a rule that does
+not exist). Library lints are exempt by kind. The check reads the rule table only, skips
+successfully when `spec-coverage/rules.csv` is absent, and is part of `scripts/verify.sh`.
+
 The gate is part of `make verify` and of `scripts/verify.sh` whenever `./syntactic` is
 present, and it skips successfully when the test suite is not unpacked. It overwrites the
 example's `test_suite_*.txt` files and restores their previous contents on exit.

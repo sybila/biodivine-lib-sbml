@@ -31,7 +31,7 @@ fn apply_rule_qual_20509_and_20508(element: &QualInput, issues: &mut Vec<SbmlIss
         || qual_species.clone().unwrap().xml_element().tag_name() != "qualitativeSpecies"
     {
         let message = "Attribute [qualitativeSpecies] does not refer to an existing QualitativeSpecies element!";
-        issues.push(SbmlIssue::new_error("qual-20508", element, message));
+        issues.push(SbmlIssue::new("qual-20508", element, message));
         return;
     }
 
@@ -40,6 +40,6 @@ fn apply_rule_qual_20509_and_20508(element: &QualInput, issues: &mut Vec<SbmlIss
         && element.transition_effect().get() == TransitionInputEffect::Consumption
     {
         let message = "When qualitativeSpecies attribute const is set to true the transitionEffect attribute can not be set to consumption!".to_string();
-        issues.push(SbmlIssue::new_error("qual-20509", element, message));
+        issues.push(SbmlIssue::new("qual-20509", element, message));
     }
 }

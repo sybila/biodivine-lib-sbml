@@ -1,9 +1,11 @@
 # Convenience entry points for building and checking this repository. Everything here is also
 # runnable by hand; `make verify` runs every gate and prints each command with its exit code.
-.PHONY: help build test lint docs examples coverage full-corpus verify
+.PHONY: help build test lint docs examples rules coverage full-corpus verify
 
 help:
 	@echo "make build       build the crate (and the workspace member crates)"
+	@echo "make rules       check that every specification rule id in src/validation/rules.rs"
+	@echo "                 is a real rule of the specification"
 	@echo "make test        run the Rust test suite"
 	@echo "make lint        cargo fmt --check and cargo clippy (warnings denied)"
 	@echo "make docs        build rustdoc with warnings denied"
@@ -32,6 +34,12 @@ examples:
 	@for example in $$(ls examples/*.rs | sed 's|examples/||; s|\.rs||'); do \
 		echo "== $$example"; cargo run --quiet --example $$example >/dev/null || exit 1; \
 	done
+
+# Check the crate's rule table against the specification rule list of the coverage matrix: every
+# descriptor whose kind is `RuleKind::SpecRule` must name a rule the specification defines. The
+# check skips successfully when the coverage matrix is absent.
+rules:
+	python3 scripts/check_rule_ids.py
 
 # Regenerate the coverage matrix from the SBML specification sources. Pass the checkout with
 # SPEC=/path/to/sbml-specifications.

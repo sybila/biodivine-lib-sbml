@@ -60,6 +60,11 @@ run cargo build --examples
 # --- documentation ----------------------------------------------------------------------------
 run env RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --document-private-items
 
+# --- rule table -------------------------------------------------------------------------------
+# Every specification rule id of the crate's rule table must be a rule of the specification; the
+# check skips successfully when `spec-coverage/rules.csv` is absent.
+run "$PYTHON" scripts/check_rule_ids.py
+
 # --- specification coverage matrix ------------------------------------------------------------
 if [ -d "$SPEC" ]; then
     run "$PYTHON" scripts/spec_coverage.py --spec "$SPEC" --check

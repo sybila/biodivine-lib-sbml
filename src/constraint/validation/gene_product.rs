@@ -32,6 +32,6 @@ pub fn apply_rule_fbc_21207(element: &GeneProduct, issues: &mut Vec<SbmlIssue>, 
         let message =
             "Attribute [associatedSpecies] does not refer to an existing Species element!"
                 .to_string();
-        issues.push(SbmlIssue::new_error("fbc:20908", element, message))
+        issues.push(SbmlIssue::new("fbc-21207", element, message))
     }
 }
