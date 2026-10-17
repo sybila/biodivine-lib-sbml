@@ -938,9 +938,12 @@ fn strip_test_modules(source: &str) -> String {
         .join("\n")
 }
 
-/// The `T::new_empty(document)` sites of a source, as the names of the types they construct.
+/// The `T::new_empty(<document>)` sites of a source, as the names of the types they construct.
+///
+/// The argument is matched as an identifier rather than as the literal `document`, because a caller
+/// that clones a document handle into a local name would otherwise slip past this scan unseen.
 fn identity_creation_sites(source: &str) -> Vec<String> {
-    let pattern = regex::Regex::new(r#"(\w+)::new_empty\(\s*document\s*\)"#)
+    let pattern = regex::Regex::new(r#"(\w+)::new_empty\(\s*[A-Za-z_][A-Za-z0-9_]*\s*\)"#)
         .expect("The identity-creation pattern is a valid regular expression.");
     pattern
         .captures_iter(source)
@@ -954,7 +957,7 @@ fn identity_creation_sites(source: &str) -> Vec<String> {
 /// site that takes it from its caller; both shapes are reported, so neither can hide.
 fn named_creation_sites(source: &str) -> Vec<(String, Option<String>)> {
     let pattern = regex::Regex::new(
-        r#"(\w+)::new_empty_named\(\s*document\s*,\s*(?:"([^"]+)"|([^)\s,]+))\s*\)"#,
+        r#"(\w+)::new_empty_named\(\s*[A-Za-z_][A-Za-z0-9_]*\s*,\s*(?:"([^"]+)"|([^)\s,]+))\s*\)"#,
     )
     .expect("The named-creation pattern is a valid regular expression.");
     pattern
@@ -1159,6 +1162,23 @@ fn the_creation_scanners_reject_planted_sites() {
         let e = XmlElement::new_qualified(document, "species", NS_SBML_CORE);
     "#;
 
+    // A document handle under another name must be seen as well, or a caller could step around the
+    // scan by renaming the argument.
+    let renamed = r#"
+        let other = document.clone();
+        let f = GraphicalObject::new_empty(other);
+        let g = GraphicalObject::new_empty_named(other, "graphObject");
+    "#;
+    assert_eq!(identity_creation_sites(renamed), ["GraphicalObject"]);
+    assert_eq!(
+        named_creation_sites(renamed),
+        vec![(
+            "GraphicalObject".to_string(),
+            Some("graphObject".to_string())
+        )]
+    );
+    assert!(named_creation_defect("GraphicalObject", Some("graphObject")).is_some());
+
     assert_eq!(identity_creation_sites(planted), ["Species", "NotAType"]);
     assert_eq!(
         named_creation_sites(planted),
@@ -1269,4 +1289,446 @@ fn child_accessors(source: &str) -> Vec<(String, String)> {
         ));
     }
     result
+}
+
+// ---------------------------------------------------------------------------------------------
+// The element-name scan
+// ---------------------------------------------------------------------------------------------
+
+/// The element names that the object model deliberately has no wrapper for: the SBase payloads are
+/// carried as a raw [`XmlElement`], and `message` is the body of a constraint's message.
+///
+/// Every table entry is written with `extended_sbase_children!(..)`, which prepends `notes` and
+/// `annotation`, so these names appear in nearly every row and have to be part of the universe.
+const ELEMENT_NAMES_WITHOUT_A_WRAPPER: &[&str] = &["notes", "annotation", "message"];
+
+/// The lists whose members are legitimately several element kinds, so the item name derived from the
+/// list's key does not describe them.
+///
+/// Each entry cites where the member set comes from. These are not exceptions to the scan: they are
+/// the input of its list-item rule, and a member that is *not* in the cited set is still reported.
+fn multi_kind_list_members(list: &str) -> &'static [&'static str] {
+    match list {
+        // sbml-layout.rng, `listOfSubGlyphs.datatype`: graphicalObject | speciesGlyph |
+        // compartmentGlyph | textGlyph | generalGlyph | reactionGlyph | referenceGlyph |
+        // speciesReferenceGlyph.
+        "listOfSubGlyphs" => &[
+            "graphicalObject",
+            "speciesGlyph",
+            "compartmentGlyph",
+            "textGlyph",
+            "generalGlyph",
+            "reactionGlyph",
+            "referenceGlyph",
+            "speciesReferenceGlyph",
+        ],
+        // sbml-layout.rng, `listOfAdditionalGraphicalObjects.datatype`: graphicalObject |
+        // generalGlyph.
+        "listOfAdditionalGraphicalObjects" => &["graphicalObject", "generalGlyph"],
+        // SBML L3V2 core, `listOfRules`: one of algebraicRule | assignmentRule | rateRule.
+        "listOfRules" => &["algebraicRule", "assignmentRule", "rateRule"],
+        // SBML L3V2 core, `listOfReactants` / `listOfProducts`: speciesReference.
+        "listOfReactants" | "listOfProducts" => &["speciesReference"],
+        // SBML L3V2 core, `listOfModifiers`: modifierSpeciesReference.
+        "listOfModifiers" => &["modifierSpeciesReference"],
+        // qual specification, `listOfFunctionTerms`: functionTerm* plus exactly one defaultTerm.
+        "listOfFunctionTerms" => &["functionTerm", "defaultTerm"],
+        _ => &[],
+    }
+}
+
+/// The element names a `listOfX` key is expected to contain: the singular item the specification
+/// derives from the key (`listOfTextGlyphs` -> `textGlyph`, `listOfSpecies` -> `species`).
+fn list_item_candidates(list: &str) -> BTreeSet<String> {
+    let Some(base) = list.strip_prefix("listOf") else {
+        return BTreeSet::new();
+    };
+    let mut candidates = BTreeSet::new();
+    for candidate in [base, base.strip_suffix("s").unwrap_or(base)] {
+        if let Some((first, rest)) = candidate.split_at_checked(1) {
+            let mut lowered = first.to_lowercase();
+            lowered.push_str(rest);
+            candidates.insert(lowered);
+        }
+    }
+    candidates
+}
+
+/// The keys whose children may repeat *without* a list container, so the allowed/unique completeness
+/// rule below does not apply to them.
+///
+/// The fbc specification writes a nested gene product association as `<and>`/`<or>` elements directly
+/// inside their parent, so an `<and>` element legitimately holds several `<and>` children and must
+/// not be listed as unique.
+const REPEATABLE_CHILD_KEYS: &[&str] = &["and", "or"];
+
+/// A name in one of the element tables that the scan cannot resolve, with its evidence and the goal
+/// that owns the fix.
+///
+/// The set is asserted for **equality** against what the scan finds: fixing an entry here without
+/// removing it fails, and a new unresolved name fails until it is either fixed or listed with
+/// evidence. Every entry names G4 as its owner unless the surviving name is not a defect of the
+/// table at all.
+#[derive(Debug)]
+struct NameFinding {
+    /// The table the name was found in.
+    table: &'static str,
+    /// The key of the table row.
+    key: &'static str,
+    /// The name (`<key>` for the key itself).
+    name: &'static str,
+    /// Why it is not in the universe.
+    reason: &'static str,
+    /// Who owns the fix.
+    owner: &'static str,
+}
+
+/// The element names of the three tables that the universe does not accept, enumerated.
+///
+/// Four names that were on this list when the scan was written are *fixed* in this unit, and are
+/// therefore gone from the tables rather than listed here: `dimension` -> `dimensions` in the
+/// `layout` row (the required child is `<layout:dimensions>`), `point` -> `position` in both
+/// `boundingBox` rows (a point of a bounding box is `<position>`), the `curveSegments` entry of
+/// `listOfCurveSegments` (a container does not constrain its items) and the `listOfObjectives`
+/// self-entry of `listOfObjectives`. Each of those fixes was applied only after
+/// `scripts/full_corpus_parity.sh` reported the whole corpus byte-identical with it in place.
+const ELEMENT_NAME_EXCEPTIONS: &[NameFinding] = &[
+    NameFinding {
+        table: "REQUIRED_CHILDREN",
+        key: "lineSegment",
+        name: "<key>",
+        reason: "the key names no element: both curve segment variants are written as \
+                 `<layout:curveSegment>` and told apart by `xsi:type`, so the entry can never be \
+                 looked up (no `<lineSegment>` element exists in the layout schema, and the corpus \
+                 contains none)",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "REQUIRED_CHILDREN",
+        key: "cubicBezier",
+        name: "<key>",
+        reason: "the key names no element for the same reason as `lineSegment`; the variant's extra \
+                 required points belong to an `xsi:type`-aware rule, which is G4's work",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "REQUIRED_CHILDREN",
+        key: "functionTerms",
+        name: "<key>",
+        reason: "the key names no element: the container is `listOfFunctionTerms`, which is a key of \
+                 all three tables; the corpus contains no `<functionTerms>` element",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "REQUIRED_CHILDREN",
+        key: "objective",
+        name: "listOfFluxObjectives",
+        reason: "a real list container (a key of ALLOWED_CHILDREN and UNIQUE_CHILDREN) that is not a \
+                 key of *this* table; the scan deliberately accepts a container value only when it \
+                 is a key of the same table, so the strict rule measures it instead of assuming it \
+                 (239 corpus elements are `<objective>` children of it)",
+        owner: "scan rule, not a defect of the table",
+    },
+    NameFinding {
+        table: "ALLOWED_CHILDREN",
+        key: "listOfAdditionalGraphicalObjects",
+        name: "graphicalObjects",
+        reason: "the plural is not an element: the layout schema lists `layout:graphicalObject` and \
+                 `layout:generalGlyph` here, so the row both names a phantom and omits the singular \
+                 `graphicalObject`; the 10 legitimate `<graphicalObject>` children in the corpus are \
+                 reported as unknown (`layout-20304` fires exactly 10 times in the baseline), so \
+                 fixing it moves the frozen snapshot",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "UNIQUE_CHILDREN",
+        key: "reactionGlyph",
+        name: "cure",
+        reason: "a typo for `curve`: the layout schema allows `boundingBox`, `curve` and \
+                 `listOfSpeciesReferenceGlyphs` here, and 162 corpus elements are `<reactionGlyph>` \
+                 children, one of which has two `<curve>` children, so renaming it reports a new \
+                 issue and moves the frozen snapshot",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "ALLOWED_CHILDREN",
+        key: "reactionGlyph",
+        name: "curve",
+        reason: "the completeness view of the same typo: `curve` is allowed in a reaction glyph but \
+                 not unique there, because `UNIQUE_CHILDREN[\"reactionGlyph\"]` spells it `cure`",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "ALLOWED_CHILDREN",
+        key: "model",
+        name: "listOfLayouts",
+        reason: "allowed but not unique: a model with two of these lists is not reported. The corpus \
+                 has one such model (247 models carry the container), so adding the entry moves the \
+                 frozen snapshot",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "ALLOWED_CHILDREN",
+        key: "model",
+        name: "listOfGeneProducts",
+        reason: "allowed but not unique: two corpus models carry two such lists (103 carry one)",
+        owner: "G4",
+    },
+    NameFinding {
+        table: "ALLOWED_CHILDREN",
+        key: "model",
+        name: "listOfObjectives",
+        reason: "allowed but not unique: two corpus models carry two such lists (257 carry one)",
+        owner: "G4",
+    },
+];
+
+/// The names a wrapper type of this crate recognizes, plus the name of the document root.
+fn element_name_universe() -> BTreeSet<&'static str> {
+    let mut result = BTreeSet::new();
+    for (_type_name, _primary, names, _namespace) in identities() {
+        result.extend(names.iter().copied());
+    }
+    // The root is a hand-written identity, so it is not a row of the table above.
+    result.insert(<Sbml as SbmlObject>::ELEMENT_NAME);
+    result
+}
+
+/// The three element-name tables of `src/constants/element.rs`, as `(table, key, values)` rows.
+fn element_name_tables() -> Vec<(&'static str, &'static str, Vec<&'static str>)> {
+    use crate::constants::element::{ALLOWED_CHILDREN, REQUIRED_CHILDREN, UNIQUE_CHILDREN};
+    let mut result = Vec::new();
+    for (table, entries) in [
+        (
+            "REQUIRED_CHILDREN",
+            REQUIRED_CHILDREN
+                .entries()
+                .map(|(key, values)| (*key, values.to_vec()))
+                .collect::<Vec<_>>(),
+        ),
+        (
+            "ALLOWED_CHILDREN",
+            ALLOWED_CHILDREN
+                .entries()
+                .map(|(key, values)| (*key, values.to_vec()))
+                .collect::<Vec<_>>(),
+        ),
+        (
+            "UNIQUE_CHILDREN",
+            UNIQUE_CHILDREN
+                .entries()
+                .map(|(key, values)| (*key, values.to_vec()))
+                .collect::<Vec<_>>(),
+        ),
+    ] {
+        for (key, values) in entries {
+            result.push((table, key, values));
+        }
+    }
+    result
+}
+
+/// One finding of the element-name scan: the table, the row key, the name and the reason.
+type NameScanFinding = (&'static str, &'static str, &'static str, &'static str);
+
+/// The numbers of a scan over one table: how many keys and how many values it looked at.
+type NameScanCounts = BTreeMap<&'static str, (usize, usize)>;
+
+/// The scan itself: every key and every value of the three tables against the universe, plus the
+/// list-item rule and the allowed/unique completeness rule.
+///
+/// Returns the findings, the number of checks it made and the per-table counts, so the test can
+/// assert all three.
+fn scan_element_names() -> (Vec<NameScanFinding>, usize, NameScanCounts) {
+    let universe = element_name_universe();
+    let tables = element_name_tables();
+    let unique: BTreeMap<&str, Vec<&str>> = tables
+        .iter()
+        .filter(|(table, ..)| *table == "UNIQUE_CHILDREN")
+        .map(|(_, key, values)| (*key, values.clone()))
+        .collect();
+
+    let mut findings = Vec::new();
+    let mut checked = 0usize;
+    let mut counts: BTreeMap<&'static str, (usize, usize)> = BTreeMap::new();
+    for (table, key, values) in &tables {
+        let (table, key, values) = (*table, *key, values.clone());
+        let keys_of_table = tables
+            .iter()
+            .filter(|(other, ..)| *other == table)
+            .map(|(_, key, _)| *key)
+            .collect::<BTreeSet<_>>();
+        let entry = counts.entry(table).or_default();
+        entry.0 += 1;
+        checked += 1;
+
+        // The key rule.
+        if !universe.contains(key)
+            && !ELEMENT_NAMES_WITHOUT_A_WRAPPER.contains(&key)
+            && !key.starts_with("listOf")
+        {
+            findings.push((table, key, "<key>", "names no element of the crate"));
+        }
+
+        for value in values.iter().copied() {
+            entry.1 += 1;
+            checked += 1;
+            let container_of_same_table =
+                value.starts_with("listOf") && keys_of_table.contains(value) && value != key;
+            if universe.contains(value) || ELEMENT_NAMES_WITHOUT_A_WRAPPER.contains(&value) {
+                // A name of the object model, or an SBase payload.
+            } else if value.starts_with("listOf") {
+                if value == key {
+                    findings.push((
+                        table,
+                        key,
+                        value,
+                        "self-containment: a list cannot contain itself",
+                    ));
+                } else if !keys_of_table.contains(value) {
+                    findings.push((
+                        table,
+                        key,
+                        value,
+                        "list container that is no key of this table",
+                    ));
+                }
+            } else {
+                findings.push((
+                    table,
+                    key,
+                    value,
+                    "not a wrapper name, not an SBase payload name",
+                ));
+            }
+
+            // The list-item rule: the members of a list container have to be the list's own item
+            // (or one of its cited kinds).
+            if key.starts_with("listOf") && !ELEMENT_NAMES_WITHOUT_A_WRAPPER.contains(&value) {
+                let mut expected = list_item_candidates(key);
+                expected.extend(multi_kind_list_members(key).iter().map(|it| it.to_string()));
+                if !expected.contains(value) && !container_of_same_table {
+                    findings.push((
+                        table,
+                        key,
+                        value,
+                        "not a member of the list whose key names it",
+                    ));
+                }
+            }
+        }
+
+        // The completeness rule: a child that is allowed in a non-list element must be unique
+        // there, or the table is missing an entry (which would let a second copy of the child pass
+        // silently). It is evaluated once per key, from the ALLOWED table, and its findings are
+        // attributed to that table.
+        if table == "ALLOWED_CHILDREN"
+            && !key.starts_with("listOf")
+            && !REPEATABLE_CHILD_KEYS.contains(&key)
+        {
+            let unique_here = unique.get(key);
+            for child in values.iter() {
+                if REPEATABLE_CHILD_KEYS.contains(child) {
+                    continue;
+                }
+                if !unique_here.is_some_and(|it| it.contains(child)) {
+                    findings.push((
+                        "ALLOWED_CHILDREN",
+                        key,
+                        child,
+                        "allowed but not unique in this element",
+                    ));
+                }
+            }
+        }
+    }
+
+    // The findings are deduplicated: a name can fail two rules (the value rule and the item rule),
+    // and the disposition table is per name.
+    let findings = findings
+        .into_iter()
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    (findings, checked, counts)
+}
+
+#[test]
+fn the_element_name_tables_only_use_names_the_crate_knows() {
+    let (findings, checked, counts) = scan_element_names();
+
+    // The scan has to have looked at every key and value, otherwise it would be vacuous. The
+    // numbers are pinned: 26 keys and 32 values in `REQUIRED_CHILDREN`, 88 keys and 294 values in
+    // `ALLOWED_CHILDREN`, 88 keys and 249 values in `UNIQUE_CHILDREN`. They are four values lower
+    // than the tables held before this unit's fixes, which removed the four phantom names
+    // (`boundingBox` from two glyph lists, `curveSegments` and the `listOfObjectives` self-entry);
+    // the *universe* of accepted names is what must not shrink, and it is asserted separately.
+    assert_eq!(
+        checked, 777,
+        "The element-name scan checked {checked} names instead of 777."
+    );
+    assert_eq!(
+        counts,
+        BTreeMap::from([
+            ("REQUIRED_CHILDREN", (26, 32)),
+            ("ALLOWED_CHILDREN", (88, 294)),
+            ("UNIQUE_CHILDREN", (88, 249)),
+        ]),
+        "The per-table key/value counts changed."
+    );
+
+    let found = findings
+        .iter()
+        .map(|(table, key, name, _reason)| (*table, *key, *name))
+        .collect::<BTreeSet<_>>();
+    let expected = ELEMENT_NAME_EXCEPTIONS
+        .iter()
+        .map(|it| (it.table, it.key, it.name))
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        found,
+        expected,
+        "The set of element names the universe does not accept changed:\n{}",
+        findings
+            .iter()
+            .map(|(table, key, name, reason)| format!("- [{table}][\"{key}\"] => {name}: {reason}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+
+    // Every exception has to say who owns it, so a later reader knows where to look.
+    for exception in ELEMENT_NAME_EXCEPTIONS {
+        assert!(
+            exception.owner.contains("G4") || exception.owner.contains("scan rule"),
+            "The exception {exception:?} does not name its owner."
+        );
+        assert!(
+            !exception.reason.is_empty(),
+            "The exception {exception:?} carries no evidence."
+        );
+    }
+}
+
+/// A guard for the scan: a name that no wrapper recognizes must not be reported as known, and the
+/// universe must contain the names of the crate and the root.
+#[test]
+fn the_element_name_universe_is_not_empty_and_not_permissive() {
+    let universe = element_name_universe();
+    assert!(universe.contains("species"));
+    assert!(universe.contains("curveSegment"));
+    assert!(!universe.contains("notAnElementName"));
+    assert!(
+        !universe.contains("graphicalObjects"),
+        "A plural that no declaration recognizes must not be in the universe."
+    );
+    // The list-item candidates are what the item rule accepts for a key.
+    assert!(list_item_candidates("listOfTextGlyphs").contains("textGlyph"));
+    assert!(list_item_candidates("listOfSpecies").contains("species"));
+    assert!(list_item_candidates("listOfObjectives").contains("objective"));
+    assert!(!list_item_candidates("listOfTextGlyphs").contains("boundingBox"));
+    assert!(
+        !universe.contains("listOfAdditionalGraphicalObjects"),
+        "A list container is not a wrapper element name."
+    );
+    assert!(multi_kind_list_members("listOfSubGlyphs").contains(&"graphicalObject"));
 }
