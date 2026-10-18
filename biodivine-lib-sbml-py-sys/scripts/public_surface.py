@@ -84,6 +84,32 @@ class Item:
         return (self.path, self.kind, self.impl_trait)
 
 
+def ensure_public_docs(doc_root: str) -> None:
+    """Rebuilds the crate's public documentation, so the inventory cannot depend on build order.
+
+    `scripts/verify.sh` runs the repository's rustdoc gate with `--document-private-items`, and both
+    builds write to the same `target/doc`: a script that read whatever is there would take its
+    inventory from a private build (every private module becomes an item) and disagree with the
+    committed files. `cargo doc --no-deps` is a no-op when the documentation is current, so the cost
+    of being explicit is one freshness check.
+    """
+    crate = os.path.dirname(doc_root)  # `<crate>/target/doc` -> `<crate>`
+    crate = os.path.dirname(crate)
+    try:
+        subprocess.run(
+            ["cargo", "doc", "--no-deps"],
+            cwd=crate,
+            capture_output=True,
+            check=True,
+        )
+    except FileNotFoundError as error:
+        raise SystemExit(f"`cargo` is needed to build the documentation: {error}") from error
+    except subprocess.CalledProcessError as error:
+        raise SystemExit(
+            f"`cargo doc --no-deps` failed; run it by hand to see why:\n{error.stderr.decode()}"
+        ) from error
+
+
 def read_text(path: str) -> str:
     with open(path, encoding="utf-8") as handle:
         return handle.read()
@@ -1527,6 +1553,7 @@ def main() -> int:
         raise SystemExit(
             f"no rustdoc output at {args.doc}: run `cargo doc --no-deps` (or `make bindings`) first"
         )
+    ensure_public_docs(args.doc)
     version = ""
     try:
         version = subprocess.run(

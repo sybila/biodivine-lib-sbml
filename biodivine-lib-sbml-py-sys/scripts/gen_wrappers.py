@@ -131,6 +131,30 @@ HAND_WRITTEN: dict[str, str] = {
 }
 
 
+def ensure_public_docs(doc_root: str) -> None:
+    """Rebuilds the crate's public documentation, so the inventory cannot depend on build order.
+
+    The repository's rustdoc gate documents private items and shares `target/doc` with the public
+    build; a generator that read whatever is there would take its input from the private build and
+    report the committed wrappers as stale. `cargo doc --no-deps` is a no-op when the documentation
+    is current.
+    """
+    crate = os.path.dirname(os.path.dirname(doc_root))
+    try:
+        subprocess.run(
+            ["cargo", "doc", "--no-deps"],
+            cwd=crate,
+            capture_output=True,
+            check=True,
+        )
+    except FileNotFoundError as error:
+        raise SystemExit(f"`cargo` is needed to build the documentation: {error}") from error
+    except subprocess.CalledProcessError as error:
+        raise SystemExit(
+            f"`cargo doc --no-deps` failed; run it by hand to see why:\n{error.stderr.decode()}"
+        ) from error
+
+
 def format_rust(content: str) -> str:
     """Formats generated code with `rustfmt`, so the committed sources are the formatted ones.
 
@@ -1519,6 +1543,7 @@ def main() -> int:
     parser.add_argument("--report", action="store_true", help="print what would be generated")
     args = parser.parse_args()
 
+    ensure_public_docs(ps.DEFAULT_DOC)
     items = ps.collect(ps.DEFAULT_DOC, ps.DEFAULT_SRC)
     ps.classify(items)
     for path, (status, python, reason) in ps.EXCEPTIONS.items():

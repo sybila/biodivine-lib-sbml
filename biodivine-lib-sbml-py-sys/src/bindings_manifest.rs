@@ -171,10 +171,12 @@ fn every_bound_name_resolves() {
         let (rows, _rules) = manifest();
         let mut missing: Vec<String> = Vec::new();
         let mut checked = 0;
+        let mut bound_rows = 0;
         for row in &rows {
             if row.status != "bound" || !IMPLEMENTED_RULES.contains(&row.rule.as_str()) {
                 continue;
             }
+            bound_rows += 1;
             for name in row.python.split(';') {
                 let name = name.trim();
                 if name.is_empty() || name == "-" {
@@ -187,7 +189,13 @@ fn every_bound_name_resolves() {
                 }
             }
         }
-        assert!(checked > 1000, "the check covered only {checked} names");
+        // Every bound row of an implemented rule must contribute at least one name, so a coverage
+        // floor tied to the row count cannot be lowered by deleting rows from the manifest without
+        // also deleting them from the inventory the manifest is generated from.
+        assert!(
+            checked >= bound_rows && bound_rows > 1000,
+            "the check covered {checked} names over {bound_rows} bound rows"
+        );
         assert!(
             missing.is_empty(),
             "{} bound names do not resolve in the module:\n{}",
