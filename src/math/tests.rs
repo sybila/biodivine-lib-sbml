@@ -87,6 +87,9 @@ fn mathml_declarations(source: &str) -> usize {
 /// C16 (they can never be valid children of a `math` element, so the layer must reject them).
 #[test]
 fn the_typed_layer_recognizes_exactly_the_validated_names() {
+    // The base table, i.e. the Level 3 Version 2 subset. The Version 1 subset is a delta on it
+    // (`MATHML_CHILD_DELTAS`), so reading this constant cannot miss a name the typed layer has to
+    // recognize: the union of the two versions is the base table.
     let allowed = MATHML_ALLOWED_CHILDREN["math"];
     assert_eq!(allowed.len(), 73, "The measured subset changed.");
 

@@ -64,6 +64,7 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "10402", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A given XML namespace cannot be the namespace of more than one top-level element within a given Annotation object" },
     RuleDescriptor { id: "10404", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A given SBML element may contain at most one Annotation subobject" },
     RuleDescriptor { id: "10805", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A given SBML object may contain at most one Notes subobject" },
+    RuleDescriptor { id: "20101", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The sbml container element must declare the XML Namespace for SBML, and this declaration must be consistent with the values …" },
     RuleDescriptor { id: "20102", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The sbml container element must declare the SBML Level using the attribute level, and this declaration must be consistent with …" },
     RuleDescriptor { id: "20103", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The sbml container element must declare the SBML Version using the attribute version, and this declaration must be consistent …" },
     RuleDescriptor { id: "20108", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The sbml object may have the optional attributes id, name, metaid and sboTerm" },
@@ -262,4 +263,5 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "SANITY_CHECK", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Error, summary: "An attribute value or the default namespace of the document is missing where a typed read requires it." },
     RuleDescriptor { id: "not-validated", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Info, summary: "An object was not validated, because a type check of its own element reported a problem" },
     RuleDescriptor { id: "unused-namespace", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Info, summary: "A declared SBML namespace is not used by any element or attribute in its scope." },
+    RuleDescriptor { id: "unmodelled-level", kind: RuleKind::LibraryLint, severity: SbmlIssueSeverity::Info, summary: "The document declares a published SBML level and version that this library does not model, so no object model resolves for it." },
 ];

@@ -83,6 +83,22 @@ use crate::xml::{Document, XmlElement, XmlWrapper};
 ///  * the value of the `xsi:type` attribute against [`SbmlObject::XSI_TYPE`], when the type
 ///    declares one.
 ///
+/// ### A core element matches the core namespace *family*
+///
+/// A type whose [`ELEMENT_NAMESPACE`](SbmlObject::ELEMENT_NAMESPACE) is the core namespace matches
+/// any **published** core namespace, because the core namespace of a document is the namespace of
+/// *its* level and version: the content of a Level 1 or Level 2 document is in the namespace of its
+/// root, and Level 3 adds `/core`. The family is the data constant
+/// [`SBML_ROOT_NAMESPACES`](crate::SBML_ROOT_NAMESPACES), so teaching the crate a level's namespace
+/// is a data change.
+///
+/// The match also requires that the document this element belongs to be read as a level and version
+/// this crate **models** (see `constants::version`). The typed wrappers describe the core of one
+/// level and version, so accepting an element of a document described by other tables would hand a
+/// caller a typed view that does not describe the document. A document whose level the crate does
+/// not model therefore resolves no object model, and `Sbml::validate` names it with the
+/// `unmodelled-level` lint instead of reporting an empty result.
+///
 /// The prefix-agnostic rule is a statement about the *element's* namespace. An attribute never
 /// takes a default namespace and this crate reads `xsi:type` through its written prefix (the same
 /// path the typed `xsi:type` property of a curve segment uses), so a document that binds the XML
@@ -187,7 +203,24 @@ pub trait SbmlObject: XmlWrapper {
     /// See the documentation of the trait for what is compared and for the reason a match does not
     /// identify a type uniquely.
     fn matches_element(element: &XmlElement) -> bool {
-        if element.namespace_url() != Self::ELEMENT_NAMESPACE.1 {
+        let namespace = element.namespace_url();
+        if Self::ELEMENT_NAMESPACE.1 == crate::URL_SBML_CORE {
+            // A core element lives in the core namespace of the document's level and version, and
+            // every published one of them is a member of `SBML_ROOT_NAMESPACES`: the content of a
+            // Level 1 or Level 2 document is in the namespace of its root, and Level 3 adds
+            // `/core`. Matching the family rather than one URL is what makes a document of an
+            // older level resolve its model at all.
+            if !crate::constants::namespaces::is_core_namespace(&namespace) {
+                return false;
+            }
+            if !crate::constants::version::element_is_in_modelled_document(element) {
+                // The core namespace of a level the crate does not model yet: the typed view of
+                // such a document would be described by the wrong tables, so no type accepts its
+                // elements and the document resolves no object model. `Sbml::validate` names the
+                // condition with the `unmodelled-level` lint.
+                return false;
+            }
+        } else if namespace != Self::ELEMENT_NAMESPACE.1 {
             return false;
         }
         if !Self::element_names().contains(&element.tag_name().as_str()) {

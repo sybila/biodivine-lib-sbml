@@ -110,34 +110,34 @@ pub const ALLOWED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
 };
 
 // <String> attributes are omitted as their value is always considered valid nevertheless the actual value
-pub const ATTRIBUTE_TYPES: Map<&str, Map<&str, &str>> = phf_map! {
-    "sbml" => phf_map! { "level" => "positive_int", "version" => "positive_int"},
-    "model" => phf_map! { "fbc:strict" => "boolean" },
-    "unit" => phf_map! { "exponent" => "double", "scale" => "int", "multiplier" => "double"},
-    "compartment" => phf_map! { "spatialDimensions" => "double", "size" => "double", "constant" => "boolean"},
-    "species" => phf_map! { "initialAmount" => "double", "initialConcentration" => "double", "hasOnlySubstanceUnits" => "boolean", "boundaryCondition" => "boolean", "constant" => "boolean", "charge" => "int"},
-    "parameter" => phf_map! { "value" => "double", "constant" => "boolean"},
-    "reaction" => phf_map! { "reversible" => "boolean", "lowerFluxBound" => "sid", "upperFluxBound" => "sid"},
-    "speciesReference" => phf_map! { "stoichiometry" => "double", "constant" => "boolean"},
-    "localParameter" => phf_map! { "value" => "double"},
-    "event" => phf_map! { "useValuesFromTriggerTime" => "boolean" },
-    "trigger" => phf_map! { "initialValue" => "boolean", "persistent" => "boolean" },
+pub const ATTRIBUTE_TYPES: Map<&str, &[(&str, &str)]> = phf_map! {
+    "sbml" => &[("level", "positive_int"), ("version", "positive_int")],
+    "model" => &[("fbc:strict", "boolean")],
+    "unit" => &[("exponent", "double"), ("scale", "int"), ("multiplier", "double")],
+    "compartment" => &[("spatialDimensions", "double"), ("size", "double"), ("constant", "boolean")],
+    "species" => &[("initialAmount", "double"), ("initialConcentration", "double"), ("hasOnlySubstanceUnits", "boolean"), ("boundaryCondition", "boolean"), ("constant", "boolean"), ("charge", "int")],
+    "parameter" => &[("value", "double"), ("constant", "boolean")],
+    "reaction" => &[("reversible", "boolean"), ("lowerFluxBound", "sid"), ("upperFluxBound", "sid")],
+    "speciesReference" => &[("stoichiometry", "double"), ("constant", "boolean")],
+    "localParameter" => &[("value", "double")],
+    "event" => &[("useValuesFromTriggerTime", "boolean")],
+    "trigger" => &[("initialValue", "boolean"), ("persistent", "boolean")],
     //fbc package
-    "objective" => phf_map! { "fbc:id" => "sid", "fbc:type" => "fbc_type" },
-    "listOfObjectives" => phf_map! { "fbc:activeObjective" => "sid" },
-    "fluxObjective" => phf_map! { "fbc:reaction" => "sid", "fbc:coefficient" => "double" },
-    "geneProductAssociation" => phf_map! {"fbc:id" => "sid"},
-    "geneProductRef" => phf_map! {"fbc:id" => "sid", "fbc:geneProduct" => "sid"},
-    "geneProduct" => phf_map!("fbc:id" => "sid", "fbc:geneProduct" => "sid"),
+    "objective" => &[("fbc:id", "sid"), ("fbc:type", "fbc_type")],
+    "listOfObjectives" => &[("fbc:activeObjective", "sid")],
+    "fluxObjective" => &[("fbc:reaction", "sid"), ("fbc:coefficient", "double")],
+    "geneProductAssociation" => &[("fbc:id", "sid")],
+    "geneProductRef" => &[("fbc:id", "sid"), ("fbc:geneProduct", "sid")],
+    "geneProduct" => &[("fbc:id", "sid"), ("fbc:geneProduct", "sid")],
     //qual package
-    "qualitativeSpecies" => phf_map!("qual:id" => "sid", "qual:compartment" => "sid", "qual:constant" => "boolean", "qual:initialLevel" => "positive_int", "qual:maxLevel" => "positive_int"),
-    "input" => phf_map!("qual:id" => "sid", "qual:sign" => "sign", "qual:qualitativeSpecies" => "sid", "qual:transitionEffect" => "input_effect", "qual:thresholdLevel" => "positive_int"),
-    "output" => phf_map!("qual:id" => "sid", "qual:qualitativeSpecies" => "sid", "qual:transitionEffect" => "output_effect", "qual:outputLevel" => "positive_int"),
-    "defaultTerm" => phf_map!("qual:resultLevel" => "positive_int"),
-    "functionTerm" => phf_map!("qual:resultLevel" => "positive_int"),
+    "qualitativeSpecies" => &[("qual:id", "sid"), ("qual:compartment", "sid"), ("qual:constant", "boolean"), ("qual:initialLevel", "positive_int"), ("qual:maxLevel", "positive_int")],
+    "input" => &[("qual:id", "sid"), ("qual:sign", "sign"), ("qual:qualitativeSpecies", "sid"), ("qual:transitionEffect", "input_effect"), ("qual:thresholdLevel", "positive_int")],
+    "output" => &[("qual:id", "sid"), ("qual:qualitativeSpecies", "sid"), ("qual:transitionEffect", "output_effect"), ("qual:outputLevel", "positive_int")],
+    "defaultTerm" => &[("qual:resultLevel", "positive_int")],
+    "functionTerm" => &[("qual:resultLevel", "positive_int")],
     //layout package
-    "position" => phf_map! { "layout:x" => "double", "layout:y" => "double", "layout:z" => "double" },
-    "dimensions" => phf_map! { "layout:width" => "double", "layout:height" => "double", "layout:depth" => "double" },
+    "position" => &[("layout:x", "double"), ("layout:y", "double"), ("layout:z", "double")],
+    "dimensions" => &[("layout:width", "double"), ("layout:height", "double"), ("layout:depth", "double")],
 };
 
 pub const REQUIRED_ATTRIBUTES: Map<&str, &[&str]> = phf_map! {
@@ -455,27 +455,6 @@ pub const MATHML_ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
                 "lt", "max", "min", "minus", "neq", "notanumber", "not", "or", "otherwise", "piecewise",
                 "piece", "pi", "plus", "power", "quotient", "rem", "root", "sech", "sec", "semantics",
                 "sep", "sinh", "sin", "tanh", "tan", "times", "true", "xor"]
-};
-
-/// The MathML subset of SBML Level 3 **Version 1**: the same set of operators as
-/// [`MATHML_ALLOWED_CHILDREN`] without the five that Version 2 added (the specification marks them
-/// with `\vertwo`): `implies`, `max`, `min`, `quotient` and `rem`.
-///
-/// The two tables exist because the subset is a property of the *document*, not of the crate: a
-/// document that declares `version="1"` is checked against this one, and the difference is the
-/// whole of the version handling for MathML - the operators are the only part of the subset that
-/// changed between the two versions of the core.
-pub const MATHML_ALLOWED_CHILDREN_L3V1: Map<&str, &[&str]> = phf_map! {
-    "math" => &[
-                  "abs", "and", "annotation", "annotation-xml", "apply", "arccosh", "arccos", "arccoth",
-                  "arccot", "arccsch", "arccsc", "arcsech", "arcsec", "arcsinh", "arcsin", "arctanh",
-                  "arctan", "bvar", "ceiling", "ci", "cn", "cosh", "cos", "coth", "cot", "csch", "csc",
-                  "csymbol", "degree", "divide", "eq", "exponentiale", "exp", "factorial", "false", "floor",
-                  "geq", "gt", "infinity", "lambda", "leq", "ln", "logbase", "log", "lt", "minus", "neq",
-                  "notanumber", "not", "or", "otherwise", "piecewise", "piece", "pi", "plus", "power",
-                  "root", "sech", "sec", "semantics", "sep", "sinh", "sin", "tanh", "tan", "times", "true",
-                  "xor"
-    ]
 };
 
 pub const MATHML_ALLOWED_CHILDREN_BY_ATTR: Map<&str, &[&str]> = phf_map! {

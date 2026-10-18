@@ -1,12 +1,10 @@
 use crate::cancellation::CancellationCheck;
-use crate::constants::element::{
-    ALLOWED_ATTRIBUTES, ALLOWED_CHILDREN, ATTRIBUTE_TYPES, REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN,
-    UNIQUE_CHILDREN,
-};
+use crate::constants::deltas;
 use crate::constants::namespaces::{
     is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix, NS_SBML_CORE,
     URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE,
 };
+use crate::constants::version::document_level_version_or_base;
 use crate::constraint::FbcType;
 use crate::core::SId;
 use crate::qual::{Sign, TransitionInputEffect, TransitionOutputEffect};
@@ -77,8 +75,13 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     //  - Each allowed child is present at most once.
     apply_rule_10102_and_derivatives(xml_element, issues);
 
+    // The version-aware tables: the element tables of this crate are the Level 3 Version 2 base
+    // tables, and the deltas of the document's own level and version are applied here. The version
+    // is resolved once per element (the table lookups below all use it).
+    let version = document_level_version_or_base(xml_element);
+
     // Check that all required attributes are present.
-    if let Some(required) = REQUIRED_ATTRIBUTES.get(element_name.as_str()) {
+    if let Some(required) = deltas::required_attributes(element_name.as_str(), version) {
         for req_attr in required.iter() {
             let (prefix, name) = separate_prefix_name(req_attr);
             let namespace = namespace_of_prefix(prefix);
@@ -109,12 +112,12 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
     for attr in attributes.keys() {
         let attr_name = attr.local_name_str();
         let (_prefix, name) = separate_prefix_name(attr_name);
-        let Some(types) = ATTRIBUTE_TYPES.get(element_name.as_str()) else {
+        let Some(types) = deltas::attribute_types(element_name.as_str(), version) else {
             break;
         };
 
         // t => (attribute name, attribute value)
-        for (attr_id, attr_type) in types {
+        for (attr_id, attr_type) in types.iter() {
             let (_prefix, name2) = separate_prefix_name(attr_name);
             // TODO:
             //  This ignores namespace prefixes as simply assumes that if we find the
@@ -180,7 +183,9 @@ pub(crate) fn type_check_of_list<T: CanTypeCheck + SbmlObject>(
     let name = element.tag_name();
     issues.extend(type_check_problems(element));
 
-    if let Some(allowed) = ALLOWED_CHILDREN.get(name.as_str()) {
+    if let Some(allowed) =
+        deltas::allowed_children(name.as_str(), document_level_version_or_base(element))
+    {
         // Only sanity-check the allowed children. The rest is going to be reported as an
         // error and is probably malformed anyway.
         for object in xml_list.iter() {
@@ -312,7 +317,9 @@ pub fn validate_allowed_attributes(
     issues: &mut Vec<SbmlIssue>,
 ) {
     let element_name = xml_element.tag_name();
-    let Some(allowed_attributes) = ALLOWED_ATTRIBUTES.get(element_name.as_str()) else {
+    let version = document_level_version_or_base(xml_element);
+    let Some(allowed_attributes) = deltas::allowed_attributes(element_name.as_str(), version)
+    else {
         // This might happen if someone runs this method on a tag in the SBML namespace that
         // is not officially supported. In such a case, other functions should report that error,
         // but we just silently continue.
@@ -375,7 +382,8 @@ pub fn validate_allowed_attributes(
 /// of children (tag names). If not, an error is logged in the vector of issues.
 pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let Some(allowed_children) = ALLOWED_CHILDREN.get(element_name.as_str()) else {
+    let version = document_level_version_or_base(xml_element);
+    let Some(allowed_children) = deltas::allowed_children(element_name.as_str(), version) else {
         // If the element has no allowed children registered, then it can be safely skipped
         // (we have no relevant rules for this element and anything is thus allowed)
         return;
@@ -429,7 +437,8 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
 
 pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let Some(required_children) = REQUIRED_CHILDREN.get(element_name.as_str()) else {
+    let version = document_level_version_or_base(xml_element);
+    let Some(required_children) = deltas::required_children(element_name.as_str(), version) else {
         return;
     };
 
@@ -456,7 +465,8 @@ pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut 
 /// indeed do. Logs error if this is violated.
 pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let Some(unique_children) = UNIQUE_CHILDREN.get(element_name.as_str()) else {
+    let version = document_level_version_or_base(xml_element);
+    let Some(unique_children) = deltas::unique_children(element_name.as_str(), version) else {
         // No rules are given for this child element.
         return;
     };
@@ -478,7 +488,7 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
         }
     }
 
-    for name in *unique_children {
+    for name in unique_children.iter() {
         if let Some(count) = counts.get(*name) {
             if *count > 1 {
                 let message = format!(

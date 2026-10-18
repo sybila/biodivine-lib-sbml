@@ -40,10 +40,12 @@ use crate::SbmlIssueSeverity;
 
 mod issue;
 mod rules;
+mod unmodelled_level;
 mod unused_namespace;
 
 pub use issue::SbmlIssue;
 
+pub(crate) use unmodelled_level::validate_unmodelled_level;
 pub(crate) use unused_namespace::validate_unused_namespaces;
 
 /// What an issue means: a rule of the SBML standard, or a diagnostic of this library.

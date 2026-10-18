@@ -4,8 +4,6 @@
       1 Test 10801/10801-fail-01-16-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
       1 Test 10801/10801-fail-01-17-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
       1 Test 10801/10801-fail-01-18-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
-      1 Test 20101/20101-fail-01-08-sev2-l3v2.xml: Missed issue 20101 (severity "Error").
-      1 Test 20101/20101-fail-01-09-sev2-l3v2.xml: Missed issue 20101 (severity "Error").
       1 Test 20216/20216-fail-01-02-sev2-l3v2.xml: Missed issue 20216 (severity "Error").
       1 Test 20301/20301-fail-01-14-sev2-l3v2.xml: Missed issue 20301 (severity "Error").
       1 Test 20301/20301-fail-01-15-sev2-l3v2.xml: Missed issue 20301 (severity "Error").

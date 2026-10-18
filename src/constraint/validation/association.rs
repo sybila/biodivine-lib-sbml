@@ -6,7 +6,7 @@ use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::CanTypeCheck;
 use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, SId};
-use crate::xml::{RequiredXmlProperty, XmlSubtype, XmlWrapper};
+use crate::xml::{XmlProperty, XmlSubtype, XmlWrapper};
 use crate::SbmlIssue;
 use crate::SbmlResult;
 use std::collections::HashSet;
@@ -68,7 +68,21 @@ impl SbmlValidable for GeneProductRef {
         check.tick()?;
         validate_sbase(self, issues, identifiers, meta_ids);
 
-        apply_rule_fbc_20908(self, issues, self.gene_product().get());
+        // Rule fbc-20908 resolves the reference, so it needs a *value* to resolve. The typed read of
+        // `fbc:geneProduct` is a required property, and this crate's property types report an
+        // unconvertible value as "no value", which makes that read panic when the attribute is
+        // present but is not a valid `SId` (`syntactic/fbc-20904/fbc-20904-fail-01-01-...` is such a
+        // document: the value is `64`). The raw value is therefore converted here, and the reference
+        // rule runs only for a value that is an identifier: the syntax of the value is rule
+        // fbc-20904, which this crate does not implement, and the *absence* of the attribute is rule
+        // fbc-20903, which the type check reports.
+        if let Some(sid) = self
+            .gene_product()
+            .get_raw()
+            .and_then(|it| SId::try_from(it).ok())
+        {
+            apply_rule_fbc_20908(self, issues, sid);
+        }
         Ok(())
     }
 }

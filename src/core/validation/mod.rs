@@ -1,21 +1,20 @@
 use const_format::formatcp;
 use regex::Regex;
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
 use crate::cancellation::CancellationCheck;
-use crate::constants::element::{
-    ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN, MATHML_ALLOWED_CHILDREN_L3V1,
-};
+use crate::constants::deltas;
+use crate::constants::version::document_level_version_or_base;
+pub(crate) use crate::constants::version::is_level_3_version_1;
 use crate::core::sbase::SId;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::{BaseUnit, MetaId, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
-use crate::xml::XmlProperty;
 use crate::xml::{SbmlObject, XmlWrapper};
-use crate::Sbml;
 use crate::SbmlIssue;
 use crate::SbmlResult;
 
@@ -157,36 +156,21 @@ pub(crate) fn validate_list_of_objects<T: SbmlValidable + SbmlObject>(
     Ok(())
 }
 
-/// Whether the document this element belongs to declares SBML Level 3 Version 1.
+/// The children the given element permits, in the version of the document it belongs to.
 ///
-/// A document that cannot be resolved to its root (or whose `level`/`version` attributes are
-/// missing or unparsable) is *not* treated as Version 1: the type check reports those conditions
-/// on the root, and assuming a version would turn one report into a cascade of them.
-pub(crate) fn is_level_3_version_1(xml_element: &XmlElement) -> bool {
-    let Some(root) = Sbml::try_for_child(xml_element) else {
-        return false;
-    };
-    let level = XmlProperty::get_raw(&root.level());
-    let version = XmlProperty::get_raw(&root.version());
-    level.as_deref() == Some("3") && version.as_deref() == Some("1")
-}
-
-pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> &'static [&'static str] {
+/// The lookup is the core element table first and the MathML subset second, exactly as before; both
+/// are now version-aware, so the Level 3 Version 1 subset of rule 10202 (the Version 2 one without
+/// the five operators Version 2 added) comes out of the MathML delta rather than out of a
+/// hand-maintained copy of the whole list.
+pub(crate) fn get_allowed_children(xml_element: &XmlElement) -> Cow<'static, [&'static str]> {
     let tag_name = xml_element.tag_name();
-    if let Some(allowed) = ALLOWED_CHILDREN.get(&tag_name) {
+    let version = document_level_version_or_base(xml_element);
+    if let Some(allowed) = deltas::allowed_children(&tag_name, version) {
         allowed
-    } else if let Some(allowed) = MATHML_ALLOWED_CHILDREN.get(&tag_name) {
-        if tag_name == "math" && is_level_3_version_1(xml_element) {
-            // The MathML subset is a property of the document's version, not of the crate: the
-            // Level 3 Version 1 subset is the Version 2 one without the five operators Version 2
-            // added, so a Version 1 document that uses one of them has an unknown `<math>` child
-            // (rule 10202), which is exactly what this table switch produces.
-            MATHML_ALLOWED_CHILDREN_L3V1["math"]
-        } else {
-            allowed
-        }
+    } else if let Some(allowed) = deltas::mathml_children(&tag_name, version) {
+        allowed
     } else {
-        &[]
+        Cow::Borrowed(&[])
     }
 }
 
@@ -325,8 +309,9 @@ pub(crate) fn apply_rule_10313(
 
 #[cfg(test)]
 mod version_tests {
-    use crate::Sbml;
     use std::collections::BTreeSet;
+
+    use crate::Sbml;
 
     fn rules_of(document: &str) -> BTreeSet<String> {
         Sbml::read_str(document)
@@ -379,8 +364,9 @@ mod version_tests {
 
 #[cfg(test)]
 mod version_applicability_tests {
-    use crate::Sbml;
     use std::collections::BTreeSet;
+
+    use crate::Sbml;
 
     fn rules_of(document: &str) -> BTreeSet<String> {
         Sbml::read_str(document)

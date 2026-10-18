@@ -44,6 +44,89 @@ pub const SBML_ROOT_NAMESPACES: &[&str] = &[
     URL_SBML_CORE,
 ];
 
+/// Whether `url` is the core namespace of a **published** SBML level/version.
+///
+/// The core namespace of a level is the namespace the content of its `<model>` lives in. For
+/// Levels 1 and 2 that is the same URL as the document root; for Level 3 it is the `/core` form.
+/// Every published one of them is a member of [`SBML_ROOT_NAMESPACES`], so the two notions coincide
+/// and the constant stays the single list: teaching the crate a new level's namespace is a data
+/// change in one place.
+///
+/// This is the predicate the core lookups match on. They used to compare against
+/// [`URL_SBML_CORE`] alone, which is why a document of any other published level resolved no
+/// object model at all.
+pub(crate) fn is_core_namespace(url: &str) -> bool {
+    SBML_ROOT_NAMESPACES.contains(&url)
+}
+
+/// The `(prefix, url)` namespace of a core namespace URL, if the URL is one.
+///
+/// The result borrows the constant list, so it is `'static` and can be handed to the accessors
+/// that take a [`Namespace`]. The prefix is empty: a core element is written in the document's
+/// default namespace.
+pub(crate) fn core_namespace_of(url: &str) -> Option<Namespace> {
+    SBML_ROOT_NAMESPACES
+        .iter()
+        .find(|it| **it == url)
+        .map(|it| ("", *it))
+}
+
+/// The core namespace a document uses, or [`NS_SBML_CORE`] when it has none.
+///
+/// This is what a write operation needs: creating a child of a resolved document creates it in
+/// *that document's* core namespace, so editing a Level 3 Version 1 document does not mix two core
+/// namespaces in one file. A document whose root declares no published SBML core namespace (one the
+/// crate has just parsed, say) resolves to [`NS_SBML_CORE`], which is the namespace the crate
+/// writes with.
+pub(crate) fn document_core_namespace_for(document: &biodivine_lib_xml_dom::Document) -> Namespace {
+    document
+        .root()
+        .and_then(|root| {
+            core_namespace_of(
+                &root
+                    .namespace()
+                    .map(|it| it.uri().to_string())
+                    .unwrap_or_default(),
+            )
+        })
+        .unwrap_or(NS_SBML_CORE)
+}
+
+/// The level and the (optional) version a published core namespace encodes.
+///
+/// The version is optional because two published namespaces cover more than one version: Level 1
+/// Version 1 and Level 1 Version 2 share `http://www.sbml.org/sbml/level1`, and Level 2 Version 1
+/// is `http://www.sbml.org/sbml/level2` (while `.../level2/version2` and up name their version).
+/// A namespace that pins its version is a *set with one member*, which is what makes the map a set
+/// rather than a function from URL to a single (level, version) pair.
+///
+/// # Panics
+///
+/// Panics for a URL that is not a published core namespace. Callers test
+/// [`is_core_namespace`] first.
+pub(crate) fn level_version_of_namespace(url: &str) -> (u32, Option<u32>) {
+    if url == "http://www.sbml.org/sbml/level1" {
+        return (1, None);
+    }
+    if url == "http://www.sbml.org/sbml/level2" {
+        return (2, Some(1));
+    }
+    let rest = url
+        .strip_prefix("http://www.sbml.org/sbml/level")
+        .unwrap_or_else(|| panic!("Not a published SBML core namespace: {url}"));
+    let mut segments = rest.split('/');
+    let level = segments
+        .next()
+        .and_then(|it| it.parse().ok())
+        .unwrap_or_else(|| panic!("Not a published SBML core namespace: {url}"));
+    let version = segments
+        .next()
+        .and_then(|it| it.strip_prefix("version"))
+        .and_then(|it| it.parse().ok())
+        .unwrap_or_else(|| panic!("Not a published SBML core namespace: {url}"));
+    (level, Some(version))
+}
+
 pub const URL_PACKAGE_LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/layout/version1";
 
 pub const URL_PACKAGE_QUAL: &str = "http://www.sbml.org/sbml/level3/version1/qual/version1";

@@ -2,6 +2,20 @@ use crate::constants::namespaces::Namespace;
 use crate::xml::{XmlDefault, XmlElement, XmlList, XmlWrapper};
 use biodivine_lib_xml_dom::QualifiedName;
 
+/// The first child element of `parent` with the expanded `name`, if there is one.
+///
+/// This is the lookup every [`XmlChild`] implementation performs, factored out so that an
+/// implementation that adds a condition of its own can still use it.
+pub(crate) fn find_child_with_name(
+    parent: &XmlElement,
+    name: &QualifiedName,
+) -> Option<XmlElement> {
+    parent
+        .child_elements()
+        .into_iter()
+        .find(|it| it.qualified_name() == *name)
+}
+
 /// [XmlChild] implements a reference to a singleton child element `T`. That is, an element
 /// which is unique in its parent and represents a larger structure of type `T`.
 ///
@@ -54,10 +68,7 @@ pub trait XmlChild<T: XmlWrapper> {
     /// is not present.
     fn get_raw(&self) -> Option<XmlElement> {
         let name = self.qualified_name(false).ok()?;
-        self.parent()
-            .child_elements()
-            .into_iter()
-            .find(|it| it.qualified_name() == name)
+        find_child_with_name(self.parent(), &name)
     }
 
     /// Replace the referenced child element with a new [XmlElement] and return the

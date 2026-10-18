@@ -30,6 +30,16 @@ impl XmlElement {
     /// The namespace is declared on the new element if it is not already in scope, so that the
     /// resulting element serializes correctly wherever it is later attached.
     ///
+    /// ## The core namespace is resolved against the document
+    ///
+    /// The SBML core namespace is the one case in which the requested namespace is a *marker*
+    /// rather than a literal URL: the core namespace of a document is the namespace of *its* level
+    /// and version, and [`URL_SBML_CORE`](crate::URL_SBML_CORE) names only one of them (the
+    /// namespace this crate writes with). An element created in the core namespace therefore joins
+    /// the level of the document it is created for, so that adding a compartment to a Level 3
+    /// Version 1 document produces a Level 3 Version 1 `<compartment>` and not a document that
+    /// mixes two core namespaces. Every namespace that is not the core one is used literally.
+    ///
     /// # Panics
     ///
     /// Panics if `name` is not a valid XML name, or if `namespace` is not a valid XML namespace.
@@ -39,6 +49,11 @@ impl XmlElement {
         name: &str,
         namespace: crate::constants::namespaces::Namespace,
     ) -> XmlElement {
+        let namespace = if namespace.1 == crate::URL_SBML_CORE {
+            crate::constants::namespaces::document_core_namespace_for(&document)
+        } else {
+            namespace
+        };
         let qualified_name = crate::constants::namespaces::qualified_name(namespace, name)
             .expect("The provided element name is not a valid XML name.");
         let element = XmlElement(document.create_element(qualified_name));

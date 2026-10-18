@@ -298,7 +298,7 @@ pub struct Sbml {
 /// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
     pub fn model(&self) -> OptionalSbmlChild<Model> {
-        OptionalSbmlChild::new(&self.sbml_root, "model", NS_SBML_CORE)
+        OptionalSbmlChild::new_object_model(&self.sbml_root, "model", NS_SBML_CORE)
     }
 
     pub fn level(&self) -> RequiredProperty<u32> {
@@ -415,15 +415,29 @@ impl Sbml {
 
         issues.extend(type_check_problems(&self.sbml_root));
 
-        let element = self.sbml_root.element();
-        if element.local_name().as_str() == "sbml"
-            && !element.namespace_declarations().contains_key(&None)
+        // Rule 20101: the `<sbml>` container must declare the XML namespace of SBML, and the
+        // declaration must be consistent with the `level` and `version` attributes. The condition
+        // checked here is the first half - the *root element's own* namespace has to be a published
+        // SBML namespace - which is the half that is a property of the root alone. It is
+        // deliberately about the element's namespace URL and not about the presence of an `xmlns`
+        // declaration: a document that binds the SBML namespace under a prefix and writes
+        // `<a:sbml>` is valid, while one whose `<sbml>` element is in no namespace (or in a foreign
+        // one, or in an unpublished variant such as `.../level2/version6`) is not.
+        //
+        // This is the same condition that decides whether the object model resolves at all (see
+        // `constants::version`), so the rule and the model agree by construction rather than by two
+        // implementations that can drift apart.
+        if crate::constants::version::root_is_sbml_element(&self.sbml_root)
+            && !crate::constants::version::root_is_published_sbml_root(&self.sbml_root)
         {
-            issues.push(SbmlIssue::new(
-                "SANITY_CHECK",
-                &self.sbml_root,
-                "Sanity check failed: missing required namespace declaration [xmlns] on <sbml>.",
-            ));
+            let namespace = self.sbml_root.xml_element().namespace_url();
+            let message = format!(
+                "The <sbml> container element must declare the XML namespace for SBML, and this \
+                 declaration must be consistent with the values of the 'level' and 'version' \
+                 attributes on the <sbml> element. The namespace of the root element is \
+                 '{namespace}', which no SBML specification defines."
+            );
+            issues.push(SbmlIssue::new("20101", &self.sbml_root, message));
         }
 
         if let Some(model) = self.model().get() {
@@ -458,6 +472,53 @@ impl Sbml {
     ///
     /// The [rule table](RuleSet::CORE) is where a rule id acquires its kind and severity, so an
     /// issue cannot be reported with a severity that its rule does not have.
+    ///
+    /// ## Which documents resolve an object model
+    ///
+    /// The tables of the validation layer describe one level and version of SBML, and the object
+    /// model resolves only for a document whose declared level and version this crate models. Three
+    /// rules decide it, and the crate's `VALIDATION.md` states them with the tests that pin each of
+    /// them:
+    ///
+    ///  1. the root element's **own namespace** has to be a published SBML root namespace
+    ///     ([`SBML_ROOT_NAMESPACES`]); otherwise no model resolves and rule `20101` reports it;
+    ///  2. the declared `level`/`version` **attributes** select the tables (the namespace is the
+    ///     fallback when one of them is missing), because the specification makes the namespace a
+    ///     redundant encoding of the same fact;
+    ///  3. the pair has to be one the crate models; a published pair it does not model resolves no
+    ///     model and is named by the `unmodelled-level` lint, so a caller is never told "no issues"
+    ///     about a document that nothing checked.
+    ///
+    /// ```
+    /// use biodivine_lib_sbml::Sbml;
+    /// use biodivine_lib_sbml::xml::OptionalXmlChild;
+    ///
+    /// // A Level 3 Version 1 document resolves its model, and is checked against the Version 1
+    /// // tables: `fast` is a legal reaction attribute there, so nothing is reported.
+    /// let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+    ///     <model><listOfReactions><reaction id="r" reversible="true" fast="false"/></listOfReactions></model>
+    /// </sbml>"#;
+    /// let document = Sbml::read_str(source)?;
+    /// assert!(document.model().get().is_some());
+    /// assert!(document.validate()?.is_empty());
+    ///
+    /// // A document of a published level this crate does not model resolves no model, and the
+    /// // `unmodelled-level` lint says so instead of reporting an empty result.
+    /// let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4"><model/></sbml>"#;
+    /// let document = Sbml::read_str(source)?;
+    /// assert!(document.model().get().is_none());
+    /// let rules: Vec<String> = document.validate()?.into_iter().map(|it| it.rule().to_string()).collect();
+    /// assert_eq!(rules, vec!["unmodelled-level".to_string()]);
+    ///
+    /// // A root whose namespace no specification defines is reported by rule 20101, and nothing
+    /// // else is checked, because nothing in such a document can be interpreted.
+    /// let source = r#"<sbml xmlns="http://example.org/not-sbml" level="3" version="2"><model/></sbml>"#;
+    /// let document = Sbml::read_str(source)?;
+    /// assert!(document.model().get().is_none());
+    /// let rules: Vec<String> = document.validate()?.into_iter().map(|it| it.rule().to_string()).collect();
+    /// assert_eq!(rules, vec!["20101".to_string()]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     ///
     /// ## What this call guarantees, and what a type-check issue means for the walk
     ///
@@ -549,6 +610,7 @@ impl Sbml {
         // the type check's outcome. They are appended after the type check so that a fatal problem
         // stays the first issue of the report.
         validation::validate_unused_namespaces(&self.sbml_root, &mut issues, &mut check)?;
+        validation::validate_unmodelled_level(&self.sbml_root, &mut issues, &mut check)?;
 
         // The walk runs for every document. What a type-check problem means for it is decided per
         // object by the guard of `SbmlValidable::validate`: the object whose element is not
@@ -1163,57 +1225,62 @@ mod tests {
     /// A document with a type-check issue *inside* its model is validated, not skipped: `validate`
     /// returns a report instead of panicking, and the report names the element it could not walk.
     ///
-    /// The documents are the two FBC documents of the corpus the architecture note names, read the
-    /// way the test-suite harness reads a Level 3 Version 1 document (by lifting its core namespace
-    /// to Version 2).
+    /// The document is a real Level 3 Version 1 corpus document, read as its own level (no namespace
+    /// translation), and its type-check problem is a genuine one: a `<curve>` inside a
+    /// `<referenceGlyph>`, which the layout package does not permit there. The report carries both
+    /// the problem and the `not-validated` note, and - the point of the contract - the issues of the
+    /// *rest* of the document, so the guard is per element rather than per document.
     #[test]
     pub fn test_a_type_check_issue_does_not_skip_the_document() {
-        for name in [
-            "fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml",
-            "fbc-20908/fbc-20908-fail-01-01-sev2-l3v1.xml",
-        ] {
-            let Some(source) = corpus_document(name) else {
-                return;
-            };
-            // The documents of this corpus half are Level 3 Version 1 files: the test therefore
-            // asserts the contract on the *translated* content (the namespace lift the harness
-            // applies), not on a hand-written document.
-            let source = source.replace(
-                "http://www.sbml.org/sbml/level3/version1/core",
-                "http://www.sbml.org/sbml/level3/version2/core",
-            );
-            let document = Sbml::read_str(&source)
-                .unwrap_or_else(|error| panic!("cannot read {name}: {error}"));
-            // The call has to return a report: reaching the next line is the panic-freedom half of
-            // the contract.
-            let issues = document
-                .validate()
-                .unwrap_or_else(|error| panic!("cannot validate {name}: {error}"));
+        let Some(source) = corpus_document("layout-21103/layout-21103-fail-01-01-sev2-l3v1.xml")
+        else {
+            return;
+        };
+        let document = Sbml::read_str(&source).expect("the corpus document is well-formed");
+        assert!(
+            document.model().get().is_some(),
+            "a Level 3 Version 1 document resolves its model"
+        );
+        let issues = document.validate().expect("validation cannot be cancelled");
 
-            let note = issues
-                .iter()
-                .find(|issue| issue.rule() == "not-validated")
-                .unwrap_or_else(|| {
-                    panic!(
-                        "{name} must name the subtree it did not validate: {:?}",
-                        issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
-                    )
-                });
-            assert_eq!(note.kind(), RuleKind::LibraryLint);
-            assert_eq!(note.severity(), SbmlIssueSeverity::Info);
-            assert!(
-                note.message().contains("was not validated"),
-                "the note has to say what happened: {}",
-                note.message()
-            );
-        }
+        let note = issues
+            .iter()
+            .find(|issue| issue.rule() == "not-validated")
+            .unwrap_or_else(|| {
+                panic!(
+                    "the document must name the subtree it did not validate: {:?}",
+                    issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+                )
+            });
+        assert_eq!(note.kind(), RuleKind::LibraryLint);
+        assert_eq!(note.severity(), SbmlIssueSeverity::Info);
+        assert!(
+            note.message().contains("was not validated"),
+            "the note has to say what happened: {}",
+            note.message()
+        );
+        assert!(
+            note.message().contains("referenceGlyph"),
+            "the note names the element it skipped: {}",
+            note.message()
+        );
+        // The walk of the rest of the document is not suppressed: the document reports the rule of
+        // the layout package whose element is broken (`layout-21103`, the two `<curve>` children of
+        // the glyph), and that report is on the skipped element's own element, while the issues
+        // below are on others.
+        assert!(
+            issues.iter().any(|issue| issue.rule() == "layout-21103"),
+            "the document is still walked outside the skipped subtree: {:?}",
+            issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+        );
     }
 
-    /// A type-check issue on the *root* element leaves the walk of the model intact: the report
-    /// carries the type-check diagnostic and no `not-validated` note, because nothing was skipped.
+    /// A problem of the *root* element is reported without skipping anything: the report carries
+    /// the root-level rule and no `not-validated` note.
     ///
-    /// The two documents are the only documents of the corpus whose walk the early return used to
-    /// suppress, so this is the case the architecture change was about.
+    /// The two documents are the corpus documents whose root element is not in a published SBML
+    /// namespace (one with no namespace at all, one in a foreign namespace), which is the condition
+    /// of rule 20101.
     #[test]
     pub fn test_a_type_check_issue_on_the_root_leaves_the_walk_intact() {
         for name in [
@@ -1223,20 +1290,305 @@ mod tests {
             let Some(source) = corpus_document(name) else {
                 return;
             };
-            let document = Sbml::read_str(&source)
-                .unwrap_or_else(|error| panic!("cannot read {name}: {error}"));
-            let issues = document
-                .validate()
-                .unwrap_or_else(|error| panic!("cannot validate {name}: {error}"));
+            let document = Sbml::read_str(&source).expect("the corpus document is well-formed");
+            let issues = document.validate().expect("validation cannot be cancelled");
             assert!(
-                issues.iter().any(|issue| issue.rule() == "SANITY_CHECK"),
-                "{name} has a type-check problem on its root: {:?}",
+                issues.iter().any(|issue| issue.rule() == "20101"),
+                "{name} declares a root namespace no SBML specification defines: {:?}",
                 issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
             );
             assert!(
                 !issues.iter().any(|issue| issue.rule() == "not-validated"),
-                "the walk of the model is not skipped, so nothing is named as not validated: {:?}",
+                "a root-level problem does not skip a subtree, so nothing is named as not \
+                 validated: {:?}",
                 issues.iter().map(|issue| issue.rule()).collect::<Vec<_>>()
+            );
+        }
+    }
+
+    /// The rule ids of a document's report, in order.
+    fn reported_rules(document: &Sbml) -> Vec<String> {
+        document
+            .validate()
+            .expect("validation cannot be cancelled")
+            .into_iter()
+            .map(|it| it.rule().to_string())
+            .collect()
+    }
+
+    /// The eight published SBML document roots, and what this crate does with each of them.
+    ///
+    /// This is the contract of the object model in one place: a document of a level and version the
+    /// crate models resolves its model and is validated against that pair's tables; a document of a
+    /// published level the crate does not model yet resolves **no** model and is named by the
+    /// `unmodelled-level` lint, so a caller is never told "no issues" about a document that nothing
+    /// checked. Enabling a level (the `l1`/`l2` goals) is a change to this table, which is what
+    /// makes it visible.
+    #[test]
+    fn every_published_root_is_read_and_the_unmodelled_ones_are_named() {
+        // (namespace, level, version, modelled by this crate)
+        const ROOTS: &[(&str, &str, &str, bool)] = &[
+            ("http://www.sbml.org/sbml/level1", "1", "1", false),
+            ("http://www.sbml.org/sbml/level1", "1", "2", false),
+            ("http://www.sbml.org/sbml/level2", "2", "1", false),
+            ("http://www.sbml.org/sbml/level2/version2", "2", "2", false),
+            ("http://www.sbml.org/sbml/level2/version3", "2", "3", false),
+            ("http://www.sbml.org/sbml/level2/version4", "2", "4", false),
+            ("http://www.sbml.org/sbml/level2/version5", "2", "5", false),
+            (
+                "http://www.sbml.org/sbml/level3/version1/core",
+                "3",
+                "1",
+                true,
+            ),
+            (
+                "http://www.sbml.org/sbml/level3/version2/core",
+                "3",
+                "2",
+                true,
+            ),
+        ];
+        for (namespace, level, version, modelled) in ROOTS {
+            let source = format!(
+                r#"<sbml xmlns="{namespace}" level="{level}" version="{version}"><model/></sbml>"#
+            );
+            let document = Sbml::read_str(&source).expect("the document is well-formed");
+            // The level and version are readable whichever the root is, which is what makes the
+            // `unmodelled-level` lint able to name the pair it could not read.
+            assert_eq!(document.level().get_raw().as_deref(), Some(*level));
+            assert_eq!(document.version().get_raw().as_deref(), Some(*version));
+            assert_eq!(
+                document.model().get().is_some(),
+                *modelled,
+                "the object model of {level}v{version} must resolve exactly when the crate models it"
+            );
+
+            let rules = reported_rules(&document);
+            if *modelled {
+                assert!(
+                    rules.is_empty(),
+                    "{level}v{version} of a bare model reports nothing: {rules:?}"
+                );
+            } else {
+                assert_eq!(
+                    rules,
+                    vec!["unmodelled-level".to_string()],
+                    "a document of a published but unmodelled level is named, and nothing else is \
+                     checked"
+                );
+            }
+        }
+    }
+
+    /// A root whose namespace no specification defines resolves no model and reports rule 20101,
+    /// and *only* rule 20101: nothing in such a document can be interpreted, so nothing else is
+    /// checked.
+    ///
+    /// This is the restated form of the earlier "a foreign root still parses and reports" note: the
+    /// guarantee is now executable, and it is what the corpus's `20101-fail-*` documents expect
+    /// (`20101-fail-01-05` binds the SBML namespace under a prefix that the `<sbml>` element itself
+    /// does not use, `20101-fail-01-06` puts the root in a foreign namespace).
+    #[test]
+    fn a_root_outside_the_published_namespaces_is_reported_as_20101() {
+        for (label, source) in [
+            (
+                "a foreign namespace",
+                r#"<sbml xmlns="http://example.org/not-sbml" level="3" version="2"><model/></sbml>"#,
+            ),
+            (
+                "no namespace at all",
+                r#"<sbml level="3" version="2"><model/></sbml>"#,
+            ),
+            (
+                "the SBML namespace under an unused prefix",
+                r#"<sbml xmlns:sbml="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2"><model/></sbml>"#,
+            ),
+            (
+                "an unpublished variant of a published namespace",
+                r#"<sbml xmlns="http://www.sbml.org/sbml/level2/version6" level="2" version="6"><model/></sbml>"#,
+            ),
+        ] {
+            let document = Sbml::read_str(source).expect("the document is well-formed");
+            assert!(
+                document.model().get().is_none(),
+                "{label}: no object model resolves"
+            );
+            let rules = reported_rules(&document);
+            assert_eq!(
+                rules.first().map(String::as_str),
+                Some("20101"),
+                "{label}: the root rule comes first: {rules:?}"
+            );
+            assert_eq!(
+                rules
+                    .iter()
+                    .filter(|it| crate::RuleSet::CORE.is_spec_rule(it))
+                    .collect::<Vec<_>>(),
+                vec!["20101"],
+                "{label}: no *content* rule is reported, because nothing in such a document can be \
+                 interpreted ({rules:?})"
+            );
+        }
+    }
+
+    /// When the declared `level`/`version` attributes and the root namespace disagree, the
+    /// **attributes** decide which tables the document is read with, and the root rules report the
+    /// disagreement (rules 20102 and 20103 are the consistency halves, which the crate reports for a
+    /// missing attribute today).
+    ///
+    /// The corpus is what pins the direction: `20102-fail-01-01` declares the Level 1 namespace and
+    /// `level="1" version="1"`, has Level 1 content (`<specie>`, `<specieReference>`), and its
+    /// expectation file lists *only* rule 20102 - so the reference implementation reads the content
+    /// as the level the attribute names, not the one the namespace does.
+    #[test]
+    fn the_declared_level_and_version_decide_the_tables() {
+        // The Version 2 namespace with `version="1"`: read as Version 1, where `fast` is a legal
+        // reaction attribute (rule 21110 of Version 1 requires it, in fact).
+        let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3"
+            version="1"><model><listOfReactions><reaction id="r" reversible="true"
+            fast="false"/></listOfReactions></model></sbml>"#;
+        let document = Sbml::read_str(source).expect("the document is well-formed");
+        assert!(document.model().get().is_some());
+        assert!(
+            !reported_rules(&document).contains(&"21110".to_string()),
+            "`fast` is a Version 1 attribute, so a document declaring `version=\"1\"` may use it"
+        );
+
+        // The Version 1 namespace with `version="2"`: read as Version 2, which removed `fast`.
+        let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3"
+            version="2"><model><listOfReactions><reaction id="r" reversible="true"
+            fast="false"/></listOfReactions></model></sbml>"#;
+        let document = Sbml::read_str(source).expect("the document is well-formed");
+        assert!(document.model().get().is_some());
+        assert!(
+            reported_rules(&document).contains(&"21110".to_string()),
+            "`fast` was removed in Version 2, so a document declaring `version=\"2\"` may not use it"
+        );
+    }
+
+    /// The other direction of the Version 1/Version 2 delta, on the element the corpus exercises
+    /// it with: Version 2 added the optional `id` and `name` attributes to a `unit`, so a Version 1
+    /// document that has one is invalid (rule 20421), while the same document in Version 2 is not
+    /// (`syntactic/20421/20421-fail-01-05-sev2-l3v1.xml` is the corpus document).
+    #[test]
+    fn the_attributes_version_2_added_are_reported_in_version_1() {
+        let body = r#"<model><listOfUnitDefinitions><unitDefinition id="u"><listOfUnits><unit id="x"
+            kind="mole" exponent="1" scale="0" multiplier="1"/></listOfUnits></unitDefinition>
+            </listOfUnitDefinitions></model>"#;
+        let v1 = format!(
+            r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">{body}</sbml>"#
+        );
+        let v2 = format!(
+            r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">{body}</sbml>"#
+        );
+
+        let document = Sbml::read_str(&v1).expect("the document is well-formed");
+        assert!(
+            reported_rules(&document).contains(&"20421".to_string()),
+            "`unit@id` is not permitted in Version 1"
+        );
+        let document = Sbml::read_str(&v2).expect("the document is well-formed");
+        assert!(
+            reported_rules(&document).is_empty(),
+            "`unit@id` is permitted in Version 2"
+        );
+    }
+
+    /// Creating a child of a resolved document creates it in *that document's* core namespace, so
+    /// editing an older document does not produce a document that mixes two core namespaces.
+    #[test]
+    fn a_new_child_of_a_version_1_document_joins_its_namespace() {
+        let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3"
+            version="1"><model/></sbml>"#;
+        let document = Sbml::read_str(source).expect("the document is well-formed");
+        let model = document.model().get().expect("the model resolves");
+        let compartment = Compartment::new_empty(document.xml_element().document());
+        assert_eq!(
+            compartment.xml_element().namespace_url(),
+            "http://www.sbml.org/sbml/level3/version1/core",
+            "a new compartment joins the document's level"
+        );
+        // The constructor produces an empty element; a Version 1 compartment needs an `id` and
+        // `constant` (rule 20517), which the typed properties write.
+        compartment
+            .id()
+            .set(&SId::try_from("c".to_string()).expect("a valid identifier"));
+        compartment.constant().set(&true);
+        model.compartments().ensure();
+        model
+            .compartments()
+            .get()
+            .expect("the list was created")
+            .push(compartment);
+
+        // The document is still consistent: the compartment is found again through the typed view,
+        // in the namespace of the document, and the document reports no issue (a Version 1 model
+        // with one compartment is valid).
+        let compartments = model.compartments().get().expect("the list was created");
+        assert_eq!(compartments.len(), 1);
+        let stored = compartments.get(0);
+        assert_eq!(
+            stored.xml_element().namespace_url(),
+            "http://www.sbml.org/sbml/level3/version1/core"
+        );
+        assert_eq!(stored.id().get_raw().as_deref(), Some("c"));
+        assert!(reported_rules(&document).is_empty());
+    }
+
+    /// The headline of the unit, as a test: a real Level 3 Version 1 corpus document resolves its
+    /// model and its report is the rule its test case is about, with no `21110` for the `fast`
+    /// attribute it carries and no `not-validated` cascade.
+    ///
+    /// Before this unit the same document resolved **no** model and reported nothing at all, and the
+    /// same document with its core namespace rewritten to Version 2 reported `21110` (an unknown
+    /// attribute) plus `not-validated`. The `fbc-21207` rule is the one the document's own test case
+    /// is about, and it is what remains.
+    #[test]
+    fn a_version_1_corpus_document_resolves_and_reports_its_own_rule() {
+        let Some(source) = corpus_document("fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml") else {
+            return;
+        };
+        let document = Sbml::read_str(&source).expect("the corpus document is well-formed");
+        assert!(
+            document.model().get().is_some(),
+            "a Level 3 Version 1 document resolves its model"
+        );
+        assert_eq!(
+            reported_rules(&document),
+            vec!["fbc-21207".to_string()],
+            "the report is the rule of the document's own test case"
+        );
+    }
+
+    /// One end-to-end document per modelled level: read a real corpus document of that level,
+    /// resolve its model, validate it, and require that a document which is valid *in its own
+    /// level* reports no unknown-attribute and no unknown-child issue.
+    ///
+    /// The Level 3 Version 1 document is `21110-pass-00-01-sev1-l3v1.xml`, which carries
+    /// `fast="false"` on its reaction and is the pass case of the rule about that attribute; its
+    /// expectation file lists only a libSBML diagnostic, so the library reports nothing at all.
+    #[test]
+    fn an_end_to_end_document_per_modelled_level() {
+        for (level, name) in [
+            ("3v1", "21110/21110-pass-00-01-sev1-l3v1.xml"),
+            ("3v2", "21110/21110-pass-00-02-sev1-l3v2.xml"),
+        ] {
+            let Some(source) = corpus_document(name) else {
+                return;
+            };
+            let document = Sbml::read_str(&source).expect("the corpus document is well-formed");
+            assert!(
+                document.model().get().is_some(),
+                "{level}: the model of {name} resolves"
+            );
+            let issues = document.validate().expect("validation cannot be cancelled");
+            assert!(
+                issues.is_empty(),
+                "{level}: {name} is valid in its own level, so nothing is reported: {:?}",
+                issues
+                    .iter()
+                    .map(|it| (it.rule(), it.message().to_string()))
+                    .collect::<Vec<_>>()
             );
         }
     }

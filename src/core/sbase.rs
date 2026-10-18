@@ -3,7 +3,7 @@
 //      because IDs have a special format that should be enforced. This is also related to other
 //      types that are "string like", e.g. meta id and sboTerm.
 
-use crate::constants::namespaces::{Namespace, NS_HTML, NS_MATHML, NS_SBML_CORE, URL_SBML_CORE};
+use crate::constants::namespaces::{Namespace, NS_HTML, NS_MATHML, NS_SBML_CORE};
 use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
 };
@@ -247,14 +247,16 @@ pub(crate) trait SbmlUtils: SBase {
     /// XML element until the appropriate tag is discovered. If no such tag is found,
     /// returns `None`.
     ///
-    /// TODO: Currently, this requires SBML core namespace.
+    /// The search matches the *core* namespace of the document rather than one fixed core URL:
+    /// the ancestor it looks for is a core element of whatever level the document declares, and a
+    /// Level 3 Version 1 `<model>` lives in a different namespace than a Version 2 one.
     fn search_in_parents(child: &XmlElement, tag_name: &str) -> Option<Self> {
         let mut parent = child.element().clone();
         loop {
             if parent.local_name().as_str() == tag_name
                 && parent
                     .namespace()
-                    .is_some_and(|it| it.uri() == URL_SBML_CORE)
+                    .is_some_and(|it| crate::constants::namespaces::is_core_namespace(it.uri()))
             {
                 break;
             }

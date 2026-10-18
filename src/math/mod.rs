@@ -105,7 +105,12 @@
 //! The layer follows the **crate's validation constants** (`MATHML_ALLOWED_CHILDREN` and its
 //! siblings in `src/constants/element.rs`), which are the list the validation layer enforces
 //! (rules 10202 to 10225, in `src/core/validation/math.rs`), and which agree exactly with the
-//! normative rule 10202 of the specification and with the prose list of Section 3.4.1. The XML
+//! normative rule 10202 of the specification and with the prose list of Section 3.4.1. That
+//! constant is the **Level 3 Version 2** subset, which is the superset of the two the core has; the
+//! Version 1 subset is a *delta* on it (`MATHML_CHILD_DELTAS` in `src/constants/deltas.rs`, which
+//! removes the five operators Version 2 added), and the validation layer selects it per document.
+//! The typed layer therefore describes the union: which of the names a document may use is the
+//! document's version, which is a question for the rules, not for the types. The XML
 //! Schema shipped in the specification repository is five names short of that list (`implies`,
 //! `max`, `min`, `quotient` and `rem`), and it is the schema that is stale: it describes the
 //! Level 2 subset, while the five missing names are the ones the Level 3 Version 2 specification

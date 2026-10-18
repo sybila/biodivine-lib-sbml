@@ -229,38 +229,54 @@ of a run in progress or against the recorded snapshots.
 
 #### What the object model resolves, and what it does not
 
-The object model is keyed on the **core namespace of Level 3 Version 2**
-(`http://www.sbml.org/sbml/level3/version2/core`). A document that declares one of the other
-published core namespaces (Level 3 Version 1, Level 2 any version, Level 1 any version) is read
-successfully — `Sbml::read_str`/`read_path` parse it and its `level` and `version` attributes are
-readable — but the elements of its model are not resolved:
+The object model is keyed on the **core namespace of the document's own level and version**, and
+the tables it is checked against are the tables of that level and version. The rules that decide
+which document resolves what are the following, and they are pinned by the tests named with each of
+them (a change to the behaviour fails a gate, which is what the earlier prose version of this
+section could not do).
 
-```rust
-use biodivine_lib_sbml::Sbml;
-use biodivine_lib_sbml::xml::OptionalXmlChild;
+  1. **The root namespace decides whether the document is an SBML document.** A root whose own
+     namespace URL is not in
+     [`SBML_ROOT_NAMESPACES`](crate::SBML_ROOT_NAMESPACES) — an absent namespace, a foreign one, or
+     an unpublished variant such as `.../level2/version6` — resolves **no** model and is reported by
+     rule **`20101`**, which is the only rule that describes it (nothing in such a document can be
+     interpreted). `tests::a_root_outside_the_published_namespaces_is_reported_as_20101`.
+  2. **The declared `level`/`version` attributes decide the tables.** When both are present and
+     parseable they select the tables; when one of them is missing, the namespace is the fallback.
+     The attributes win because the specification makes the namespace a redundant encoding of the
+     same fact — rules `20101`, `20102` and `20103` require the two to be *consistent* — and because
+     the SBML test suite reads a document whose namespace and attributes disagree as the level the
+     attribute names (`syntactic/20102/20102-fail-01-01-sev2-l1v1.xml` has Level 1 content in the
+     Level 2 namespace and expects *only* rule `20102`).
+     `tests::the_declared_level_and_version_decide_the_tables`.
+  3. **The pair has to be one this crate models.** The tables are the Level 3 Version 2 core and
+     package tables, and every other version is a *delta* on them
+     (`src/constants/deltas.rs`); a document whose declared pair has no tables resolves no model,
+     and the **`unmodelled-level`** lint names the pair, so a caller is never told "no issues" about
+     a document that nothing checked. The lint is a `RuleKind::LibraryLint` of `Info` severity and
+     never takes part in the comparison against the test suite.
+     `tests::every_published_root_is_read_and_the_unmodelled_ones_are_named`.
 
-let source = std::fs::read_to_string("syntactic/fbc-21207/fbc-21207-fail-01-01-sev2-l3v1.xml")?;
-let document = Sbml::read_str(&source)?;
-assert!(document.model().get().is_none());   // the model does not resolve
-assert!(document.validate()?.is_empty());    // and so nothing is checked
-# Ok::<(), Box<dyn std::error::Error>>(())
-```
+The three rules above are executable twice over: once as the tests named with each of them, and
+once as a doctest in the documentation of `Sbml::validate` (see "Which documents resolve an object
+model"), which `cargo test --doc` runs on every checkout. The doctest uses inline documents rather
+than corpus files, because the corpus is downloaded rather than committed.
 
-Rewriting that document's core namespace to the Version 2 one is what makes the three checks of
-that test case report (`21110`, `not-validated`, `fbc-21207`). The same holds for the `l2v4` and
-`l1v1` cases of the corpus: they resolve no model and report nothing.
+The same is true of the `l2v4` and `l1v1` cases of the corpus: they are read, their `level` and
+`version` are readable, and the `unmodelled-level` lint names the pair instead of reporting an empty
+result. Enabling Level 1 and Level 2 is the work of their level modules (the `l1`/`l2` goals): a
+delta for their tables, not a new entry in the constant that lists the accepted roots.
 
 Two consequences are worth stating plainly.
 
-  * The **harness translates namespaces**, it is not the library. The syntactic example rewrites
-    the core namespace of the older cases onto the Level 3 Version 2 one before validating them, so
-    the `l3v1` lines of a dump describe *translated* documents. A version-dependent check of the
-    library (the Level 3 Version 1 MathML subset, the `10301` class list, the `rateOf` guards) is
-    therefore reachable in a run only because the harness performed that translation; on a real
-    Version 1 document the library resolves no model at all.
-  * Reading an older level, and validating it, is the work of the level modules: an object model
-    (or a translation layer) that resolves the older core namespaces, not a new entry in the
-    constant that lists the accepted roots.
+  * The **harness translates namespaces**, it is not the library. The syntactic example rewrites the
+    core namespace of the older cases onto the Level 3 Version 2 one before validating them, so the
+    `l3v1` lines of a dump describe *translated* documents. The library no longer needs that
+    translation to read a Version 1 document, and the translated documents are now equivalent to the
+    originals (the version is read from the attribute in both cases); the translation stays only
+    because the comparison against the suite's `l3v1` expectation files is the next stage's work.
+  * Reading an older level, and validating it, is the work of the level modules: a delta for the
+    tables of that level, plus the rules whose text differs between the versions.
 
 ##### `not-validated` is a regression signal
 
