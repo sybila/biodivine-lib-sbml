@@ -50,6 +50,7 @@ examples:
 # descriptor whose kind is `RuleKind::SpecRule` must name a rule the specification defines. The
 # check skips successfully when the coverage matrix is absent.
 rules:
+	python3 scripts/corpus_duplicates.py --dir scripts/full-corpus-baseline --expect 1
 	python3 scripts/check_rule_ids.py
 	python3 scripts/check_emitted_ids.py
 	python3 scripts/spec_ids_audit.py --spec "$${SPEC:-../../sbml-specifications}" --check

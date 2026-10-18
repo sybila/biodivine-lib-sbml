@@ -36,7 +36,7 @@ pub(crate) fn resolve_attribute_name(
 ///
 /// In practice, we use two derived "variants" inheriting from [XmlProperty]:
 /// [RequiredXmlProperty] and [OptionalXmlProperty]. These provide the two common "default"
-/// behaviours for treating missing values.
+/// behaviors for treating missing values.
 pub trait XmlProperty<T: XmlPropertyType>: Sized {
     /// Returns a reference to the underlying [XmlElement].
     fn element(&self) -> &XmlElement;

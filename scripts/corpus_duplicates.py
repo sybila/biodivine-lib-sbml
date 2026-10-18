@@ -75,6 +75,13 @@ def parse_args() -> argparse.Namespace:
         default="syntactic",
         help="the corpus directory the dump's documents come from (default: syntactic)",
     )
+    parser.add_argument(
+        "--expect",
+        type=int,
+        default=None,
+        help="fail unless exactly this many duplicated (document, rule) pairs are found; the gate "
+        "uses `--expect 1`, the one pair the recorded baseline has (`layout-21603`)",
+    )
     return parser.parse_args()
 
 
@@ -145,6 +152,12 @@ def main() -> int:
             f"## {len(unknown)} document(s) of the dump are not in the corpus: "
             f"{', '.join(unknown[:3])}{' ...' if len(unknown) > 3 else ''}"
         )
+    if args.expect is not None and len(duplicates) != args.expect:
+        print(
+            f"FAIL: {len(duplicates)} duplicated pair(s), but {args.expect} are recorded; a new duplicate is a "
+            "report the corpus cannot accounting for. Re-record it deliberately if it is intended."
+        )
+        return 1
     return 0
 
 

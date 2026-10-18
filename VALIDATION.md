@@ -46,17 +46,28 @@ For the purposes of automated testing, we apply the list of rules in the
 `validated-rules.txt` file. As such, if you extend the list of actually validated
 rules, you have to also extend this file.
 
-The comparison set is part of every measurement, so the numbers that go with it are worth stating.
-The file holds **115 lines: 107 enabled rules and 8 documented-disabled ones** (`10209`, `10211`,
-`10212`, `10213`, `10217`, `10218`, `10223`, `10224`, each with the citation and the reason for
-staying disabled in `notes/g4-report.md` and `notes/g5-report.md`), and **106 `KnownDifference`
-entries** cover the documents where a correct check is stricter than the suite's reference
-implementation. The unfiltered census of the whole corpus - both halves, compared as they are
-shipped - reports **2869 documents with a mismatch over 7694 events** (1409 error + 6285 warning);
-the four informational events of the corpus are the `spatial-23254` documents, and the pinned census
-excludes them, so a total that includes them is **2873 documents over 7698 events** and every tool
-prints which of the two it is reporting. The *filtered* CI gate reports 0 mismatches over those 107
-rules. A stage that adjudicates a rule moves the denominator of the
+The comparison set is part of every measurement, so the numbers that go with it are worth stating,
+and each of them is a command a reader can run (from the crate directory, with the syntactic test
+suite present):
+
+| number | value | command |
+| --- | --- | --- |
+| enabled rules in the comparison set | **127** | `grep -vE '^#' validated-rules.txt \| grep -cE '^[A-Za-z0-9_-]+$'` |
+| documented-disabled rules | **9** (`10209`, `10211`, `10212`, `10213`, `10217`, `10218`, `10223`, `10224`, `fbc-20509`) | `grep -E '^#\s*[A-Za-z0-9_-]+$' validated-rules.txt` |
+| `KnownDifference` entries | **103** (83 `Reported`, 20 `Missed`) | `grep -c 'KnownDifference {' examples/test-suite-syntactic.rs` |
+| unfiltered census | **2815 documents over 7637 events** (error 1272 / 1348; warning 2006 / 6285; info 4 / 4) | `python3 scripts/corpus_census.py --baseline` |
+| duplicated reports | **1** `(document, rule)` pair, over 1 document (`layout-21603`) | `python3 scripts/corpus_duplicates.py --dir scripts/full-corpus-baseline` |
+| library lints no expectation can cover | **375** pairs (`not-validated`, `SANITY_CHECK`, `unused-namespace`) | the same command |
+| `unused-namespace` documents | **6** | `awk -F'\|' '$2=="unused-namespace"' scripts/full-corpus-baseline/test_suite_issues.txt.sorted \| cut -d'\|' -f1 \| sort -u \| wc -l` |
+| `not-validated` notes / documents | **341 / 341** | `awk -F'\|' '$2=="not-validated"' scripts/full-corpus-baseline/test_suite_issues.txt.sorted \| wc -l` |
+| `xsi:type` values in the compared halves | **1132** | `grep -rho 'xsi:type="[^"]*"' syntactic --include="*-l3v1.xml" --include="*-l3v2.xml" \| wc -l` |
+
+The census counts an *event* per mismatch line and a *document* once, so the two columns differ. The
+four informational events are the `spatial-23254` documents; the pinned census includes them, and
+every tool prints which of the two it is reporting. `scripts/full_corpus_parity.sh` fails when the
+first three rows of the snapshot change, so the census, the duplicate count and the lint count are
+*gated*; the `xsi:type` count is documentation only. The *filtered* CI gate reports 0 mismatches over
+those 127 rules. A stage that adjudicates a rule moves the denominator of the
 filtered gate, which is why the filtered metric is always reported together with the size of the
 list that produced it.
 
@@ -129,8 +140,9 @@ be read as a rule id by the loader and split into nonsense arguments by the filt
 compared yet, belongs here:
 
   * `10218` (operator arity), `10223` (`rateOf` arguments) and `10224` (the `rateOf` argument
-    value): the checks are incomplete or stricter than the suite reads them, each adjudicated with
-    a citation in the unit reports (`notes/g4-report.md`, `notes/g5-report.md`).
+    value): the checks are incomplete or stricter than the suite reads them; each is annotated where
+    it is implemented, with the wording of the rule it adjudicates against
+    (`src/core/validation/math.rs`).
   * `10209`-`10213` and `10217` (the Version 1 expression-typing rules): they need the typed MathML
     tree and are a Level 3 Version 1 family, so comparing them against the Version 1 half would
     report every document of the family as missed while nothing is lost for the Version 2 half.
@@ -227,7 +239,8 @@ and a type-check problem makes the element `not-validated`, which stops the walk
 it. A specification rule reported from the type check therefore risks two things the corpus cannot
 see: the same report twice for one element (the comparison of a `(document, rule)` pair is a set) and
 an inner violation hidden behind the outer element's `not-validated`. `scripts/corpus_duplicates.py`
-finds the first class (11 pairs before the package rules moved, 4 after, all pre-existing), and the
+finds the first class (one pair today: `layout-21603`, reported 4 times against 1 expectation; the
+check is run by `scripts/verify.sh`, `make rules` and `make verify`), and the
 package rules of the crate are applied by the document-wide pass
 (`src/validation/package_rules.rs`) for both reasons. The type check keeps its own reports (`10102`
 and its derivatives), whose multiplicity the suite does share.
@@ -255,7 +268,7 @@ either). The alternative - a fixed list of the known QName-valued attributes - w
 QName-valued attribute a package defines, which is exactly the case the rule exists for.
 
 The corpus cannot exercise this case, and the measurement says why rather than leaving it to a
-comment: all 1128 `xsi:type` values of the compared corpus are written **unprefixed**
+comment: all 1132 `xsi:type` values of the compared corpus are written **unprefixed**
 (`xsi:type="CubicBezier"`, `xsi:type="LineSegment"`), and no attribute value of any document
 contains a prefixed name whose prefix a declaration binds to an SBML namespace
 (`grep -rhoE 'xsi:type="[^"]*"' syntactic --include=*.xml | sort | uniq -c`). The dump snapshot is
@@ -295,8 +308,9 @@ Two consequences are worth stating explicitly, because they are the boundary of 
     version of the same package is validated as a document of that other version - i.e. its content
     is that version's business and the package checks of this crate do not apply to it
     (`Sbml::declares_modelled_package`). Relaxing that gate without per-version deltas in the tables
-    is a measured regression, and the measurement names each relaxation separately because they are
-    not interchangeable (the table is in `notes/g42-report.md` section 4.1). Relaxing the
+    is a measured regression, and the relaxations are not interchangeable: the two below are cited
+    separately for that reason, and each is repeatable by applying it in `src/validation/package_rules.rs`
+    and running `./scripts/full_corpus_parity.sh`. Relaxing the
     *content-model* guards alone - the child predicate accepting every published version of the
     modelled packages, and the requirement gate removed - makes the corpus report **147 events the
     suite does not expect, against 0 gained** (`10102` x82 for `listOfFluxBounds`, an unknown child of
@@ -441,11 +455,13 @@ than corpus files, because the corpus is downloaded rather than committed.
 The same is true of the `l1v1` case of the corpus: it is read, its `level` and `version` are
 readable, and the `unmodelled-level` lint names the pair instead of reporting an empty result.
 **Level 2 is enabled** (Versions 1 to 5): `l2v4` and its siblings resolve their model and are walked,
-against the tables of *their* version, which live as a delta in `src/constants/deltas.rs` (the
-three-case classification - optional-with-default, required, absent-from-that-version - is recorded
-with its schema citations in `notes/g5-report.md` 7.1, and the measurement in 7.3). Enabling Level 1
-is the work of its level module (the `l1` goal): a delta for its tables, not a new entry in the
-constant that lists the accepted roots.
+against the tables of *their* version, which live as a delta in `src/constants/deltas.rs`. Each row
+of that table carries the three-case classification (optional-with-default, required,
+absent-from-that-version) and cites the schema line that decides it; `cargo test` checks the rows
+against each other, and the corpus documents of each version are the measurement (they are compared
+per version, so a wrong row shows up as a mismatch rather than as a silent pass). A further level is
+the work of its level module: a delta for its tables, not a new entry in the constant that lists the
+accepted roots.
 
 Two consequences are worth stating plainly.
 

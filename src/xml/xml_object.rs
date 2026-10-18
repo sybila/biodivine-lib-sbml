@@ -107,7 +107,7 @@ use crate::xml::{Document, XmlElement, XmlWrapper};
 /// path the typed `xsi:type` property of a curve segment uses), so a document that binds the XML
 /// Schema instance namespace under a prefix other than `xsi` is not recognized as a curve segment of
 /// either variant. That matches how the crate reads the attribute everywhere else: one spelling for
-/// "the value of the `xsi:type` attribute", one behaviour.
+/// "the value of the `xsi:type` attribute", one behavior.
 ///
 /// ## One identity accepts a set of URLs: the document root
 ///

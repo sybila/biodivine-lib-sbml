@@ -27,7 +27,7 @@
 //! expectation file that lists only the root rule, so the reference implementation reads the
 //! content as the level the *attribute* names.
 //!
-//! Three consequences are worth stating, because they are the behaviour a caller observes:
+//! Three consequences are worth stating, because they are the behavior a caller observes:
 //!
 //!  * a document whose root namespace is **not** a published SBML root (an absent namespace, a
 //!    foreign one, or an unpublished variant such as `.../level2/version6`) resolves **no model**.

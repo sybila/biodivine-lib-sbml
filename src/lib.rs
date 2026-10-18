@@ -2000,7 +2000,7 @@ mod tests {
         assert!(rules.contains(&"10301"), "{rules:?}");
 
         // The other half of the contract: the typed view of the broken element is unusable. The
-        // test asserts that documented behaviour instead of relying on it silently.
+        // test asserts that documented behavior instead of relying on it silently.
         let model = document.model().get().expect("The document has a model.");
         let broken = model
             .compartments()
@@ -3223,9 +3223,10 @@ mod tests {
     ///
     /// No document of the SBML test corpus (or of `test-inputs/`) binds a package URL under a
     /// non-conventional prefix, so `scripts/full_corpus_parity.sh` exercises neither half of this
-    /// contract; this test is its tripwire. It turns the write-path delta documented in
-    /// `notes/g2-report.md` (G2.3, section 4.3) into asserted behaviour: a later change that makes
-    /// the writer reuse the prefix found in the document fails here by design.
+    /// contract; this test is its tripwire. It pins the read/write asymmetry the writer is designed
+    /// with - the reader accepts any prefix the document binds the package URL to, the writer always
+    /// declares the conventional one - so a later change that makes the writer reuse the prefix found
+    /// in the document fails here by design.
     #[test]
     pub fn test_package_read_path_is_prefix_agnostic() {
         let core = URL_SBML_CORE;

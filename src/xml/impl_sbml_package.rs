@@ -203,7 +203,7 @@ impl Sbml {
     /// expanded name, so the two spellings cannot coexist).
     ///
     /// No document of the SBML test corpus (and no document under `test-inputs/`) binds a package
-    /// URL under a non-conventional prefix, so this last paragraph describes behaviour that the
+    /// URL under a non-conventional prefix, so this last paragraph describes behavior that the
     /// corpus gate cannot exercise; it is the price of the single naming rule, and it can only make
     /// the document more explicit, never invalid: the declared prefix is exactly the one used by
     /// every name the library writes.

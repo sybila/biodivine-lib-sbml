@@ -94,6 +94,11 @@ if [ -d "$ROOT/syntactic" ]; then
     # and round-trip reports against recorded snapshots, so rules (and documents) the filtered run
     # cannot see are still covered.
     run scripts/full_corpus_parity.sh
+    # The census compares a document's reported rules as a *set*, so a rule the library reports twice
+    # for one document moves no number at all. This reads the multiplicity out of the issue dump and
+    # pins it: the recorded baseline has exactly one such pair (`layout-21603`), and a new one fails
+    # here rather than hiding behind an unchanged census.
+    run "$PYTHON" scripts/corpus_duplicates.py --dir scripts/full-corpus-baseline --expect 1
 else
     skip "the SBML syntactic test suite is not unpacked in $ROOT/syntactic"
 fi

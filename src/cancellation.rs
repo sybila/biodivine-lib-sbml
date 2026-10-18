@@ -25,7 +25,7 @@
 //! through the XML layer's check and then validates through this one. The natural end state is a
 //! single implementation that the XML layer owns and this crate re-exports, so that the policy
 //! cannot drift; until then, a change to one of the two interval constants has to be mirrored by
-//! hand, and the tests of both modules pin the behaviour they share.
+//! hand, and the tests of both modules pin the behavior they share.
 //!
 //! ## What is checked, and how often
 //!

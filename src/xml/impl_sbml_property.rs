@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 ///  - If the property is in the core namespace, it *must* be defined without any prefix, even
 ///    if the core namespace itself is defined with a prefix. In XML terms, an SBML core
 ///    attribute lives in *no* namespace, because attributes never take the default namespace.
-///  - If the property is in a package namespace, the behaviour depends on whether the element
+///  - If the property is in a package namespace, the behavior depends on whether the element
 ///    is in the same package or not (in the core specification, this only applies to the core
 ///    package, but it makes sense for all instances where one package extends another):
 ///     * For elements from different packages (or core), the property *must* be used

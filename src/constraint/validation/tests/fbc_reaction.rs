@@ -138,7 +138,7 @@ fn the_lower_flux_bound_rule_is_about_inf_and_not_about_either_infinity() {
     // `-fail-01-02` is deliberately absent: it declares the *version 3* FBC namespace
     // (`.../fbc/version3`), which this crate does not model (it models `.../fbc/version2`), so its
     // FBC content is not read at all. That is a scope-out of the FBC package support, not a
-    // behaviour of this rule, and it is recorded with the other package gaps.
+    // behavior of this rule, and it is recorded with the other package gaps.
     let Some(fail) = corpus_rules("fbc-20711/fbc-20711-fail-01-01-sev2-l3v1.xml") else {
         return;
     };
