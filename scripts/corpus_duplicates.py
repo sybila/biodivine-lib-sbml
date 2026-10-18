@@ -17,6 +17,14 @@ recorded baseline's sorted copy of it); a run that does not pass that flag does 
 lines are `<document>|<rule>|<severity>`, one per issue, or `<count> <document>|<rule>|<severity>`
 in the sorted snapshot; the expectation files are the corpus's own `.txt` files next to each
 document.
+
+**What the gate reads.** `make rules` runs this tool over `scripts/full-corpus-baseline`, which is
+the *committed snapshot* of a dump, not the current report: the gate therefore answers "does the
+snapshot the repository carries contradict itself", and it stays meaningful only while the snapshot
+is current. The live check is the dump comparison inside `scripts/full_corpus_parity.sh`, which runs
+the harness on the corpus and compares its dump against the same baseline; a change to the library's
+reporting has to pass that one, and this tool is what makes the comparison's own bookkeeping
+(the multiplicity of a report) checkable in a checkout without the corpus.
 """
 
 from __future__ import annotations

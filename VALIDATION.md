@@ -518,6 +518,30 @@ assert!(!species.constant().get());
 (The block is the body of `examples/verify-doc-example.rs`, which is compiled and run with the crate
 rather than being a doctest, because `VALIDATION.md` is not Rust documentation.)
 
+### Where the duplicate check reads from
+
+`scripts/corpus_duplicates.py` is run by `make rules` against `scripts/full-corpus-baseline`: the
+*committed snapshot* of an issue dump. The gate therefore checks the snapshot the repository carries,
+not the current report of the library, and it stays meaningful only while that snapshot is current.
+The live check is the dump comparison inside `scripts/full_corpus_parity.sh`, which runs the harness
+on the corpus and compares its dump against the same baseline.
+
+### The examples of the crate
+
+`examples/` holds the entry points a reader (or the book) starts from, and the diagnostic tools this
+document's measurements are made with. `make examples` runs the first group; the tools take an
+input and are run by hand.
+
+| example | what it is |
+| --- | --- |
+| `basic_example.rs` | the tour: read a document, validate it, edit the model, write it back |
+| `extension-example.rs` | a complete SBML package (see the extension chapter of the Biodivine Book) |
+| `verify-doc-example.rs` | the program behind the "reading a value" block above: it checks that the documented read of every defaulted attribute holds on a document of every modelled level |
+| `test-suite-syntactic.rs` | the corpus harness: it compares the library's report against the expectations of the SBML test suite for the rules of `validated-rules.txt` (`scripts/verify.sh` runs it that way) |
+| `probe-issues.rs` | prints every issue of one document, or of a corpus directory, one line per issue |
+| `probe-c24.rs` | a per-document census of the corpus by level, version and rule |
+| `probe-c24-messages.rs` | the same census with the message of each rule, for reading the *wording* of a report |
+
 The same applies to `compartment@constant` and `parameter@constant` (default `true`),
 `reaction@reversible` (`true`), `unit@exponent`/`@scale`/`@multiplier` (`1`/`0`/`1`) and the other
 rows of the table. A caller that follows the documented read therefore cannot panic on a valid

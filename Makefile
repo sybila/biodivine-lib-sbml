@@ -54,9 +54,34 @@ docs-check:
 	python3 scripts/gen_rule_coverage_doc.py --check
 	cargo test --lib a_doc_sentence_names_the_xml_name_the_code_actually_uses
 
+# Run every example of the crate, the way a reader would. Two of them are not a "hello world":
+#
+#   * `test-suite-syntactic` is the corpus harness: it reads the SBML test suite (a `syntactic`
+#     directory in the repository root), prints the mismatches and exits non-zero when an
+#     *enabled* rule disagrees with the expectations of the suite. A run with no rule filter also
+#     walks the rules the crate does not implement, which is what makes it slow and what makes it
+#     exit non-zero by design; the gate therefore runs it in release mode with the filtered rule
+#     list, exactly as `scripts/verify.sh` does.
+#   * the other examples are short programs that exit 0 when the behaviour they show is right.
+#   * the `probe-*` examples are diagnostic tools of the development process: each one takes a
+#     document or a corpus directory and prints a report. They are documented in their own headers
+#     and listed in `VALIDATION.md`, and they are skipped here because they need an input.
 examples:
 	@for example in $$(ls examples/*.rs | sed 's|examples/||; s|\.rs||'); do \
-		echo "== $$example"; cargo run --quiet --example $$example >/dev/null || exit 1; \
+		case "$$example" in probe-*) \
+			echo "== $$example (a diagnostic tool: it needs a document or a corpus directory)"; \
+			continue; \
+			;; \
+		esac; \
+		if [ "$$example" = "test-suite-syntactic" ]; then \
+			echo "== $$example (release, enabled rules)"; \
+			cargo run --quiet --release --example $$example -- \
+				$$(sed -nE '/^[A-Za-z0-9_-]+$$/p' validated-rules.txt | tr '\n' ' ') \
+				>/dev/null || exit 1; \
+		else \
+			echo "== $$example"; \
+			cargo run --quiet --example $$example >/dev/null || exit 1; \
+		fi; \
 	done
 
 # Check the crate's rule table against the specification rule list of the coverage matrix: every
