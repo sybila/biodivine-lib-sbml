@@ -1458,6 +1458,53 @@ mod tests {
         }
     }
 
+    /// A Level 2 document is read with *its* tables: the attributes Level 2 adds and the ones it
+    /// does not have are both decided by the document's own version.
+    ///
+    /// `20411-pass-00-02-l2v1.xml` is the fixture for the second half of the third case: it carries
+    /// `offset` on a `<unit>`, which `sbml-level-2/version-1/schema/sbml.xsd:132` declares (and
+    /// which the document's own comment notes is deprecated from Version 2 on), so it must report
+    /// nothing - while the same attribute on a Version 2 document would be an unknown attribute.
+    #[test]
+    fn a_level_2_document_is_read_with_its_own_versions_tables() {
+        const CASES: &[(&str, &[&str])] = &[
+            // Level 2 Version 1: `offset` is allowed (20411), `charge` is allowed (20411), and the
+            // document is a pass document of the suite.
+            ("20411/20411-pass-00-02-l2v1.xml", &[]),
+            // Level 2 Version 1: `spatialSizeUnits` is allowed on a species.
+            ("20421/20421-pass-00-01-l2v1.xml", &[]),
+            // Level 2 Version 4: a species without `constant`/`boundaryCondition`/
+            // `hasOnlySubstanceUnits` is valid (they are optional with a default), and its report
+            // is the rule the document is about.
+            ("20409/20409-fail-01-03-sev2-l2v4.xml", &["20409"]),
+        ];
+
+        for (name, expected) in CASES {
+            let Some(document) = corpus_document(name) else {
+                return;
+            };
+            let document = Sbml::read_str(&document).expect("the corpus document parses");
+            let rules = reported_spec_rules(&document);
+            for rule in *expected {
+                assert!(
+                    rules.contains(&rule.to_string()),
+                    "{name} must report {rule}: {rules:?}"
+                );
+            }
+            // No *table* problem on any of them: the unknown-attribute and unknown-child ids are
+            // what the Level 2 tables exist to keep out of a valid document's report.
+            for rule in &rules {
+                assert!(
+                    !matches!(
+                        rule.as_str(),
+                        "20421" | "20517" | "20623" | "21132" | "10102" | "21104"
+                    ),
+                    "{name} must not report a table problem, but reports {rule}"
+                );
+            }
+        }
+    }
+
     /// The eight published SBML document roots, and what this crate does with each of them.
     ///
     /// This is the contract of the object model in one place: a document of a level and version the

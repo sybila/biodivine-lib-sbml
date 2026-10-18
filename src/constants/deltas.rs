@@ -221,9 +221,15 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
     "listOfReactions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfEvents" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfUnits" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
-    "unit" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
+    "unit" => &[
+        NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
         // Level 2: a `Unit` has no `id` and no `name`.
         NameDelta { versions: L2_ALL, added: &[], removed: &["id", "name"] },
+        // Level 2 Version 1 only: `sbml-level-2/version-1/schema/sbml.xsd:132` declares
+        // `<xsd:attribute name="offset" type="xsd:double" default="0"/>` inside the `Unit` type.
+        // It is deprecated from Version 2 on (the corpus document
+        // `20411-pass-00-02-l2v1.xml` says so in a comment) and absent from the v2-v5 schemas.
+        NameDelta { versions: L2_V1, added: &["offset"], removed: &[] },
     ],
     "initialAssignment" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "assignmentRule" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
@@ -326,6 +332,8 @@ pub(crate) static REQUIRED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! 
 /// for `fast`, so the delta adds one.
 pub(crate) static ATTRIBUTE_TYPE_DELTAS: Map<&str, &[TypeDelta]> = phf_map! {
     "reaction" => &[TypeDelta { versions: L3V1, added: &[("fast", "boolean")], removed: &[] }],
+    // Level 2 Version 1 only (`sbml-level-2/version-1/schema/sbml.xsd:132`).
+    "unit" => &[TypeDelta { versions: L2_V1, added: &[("offset", "double")], removed: &[] }],
 };
 
 /// The per-element deltas of the allowed-children table.
