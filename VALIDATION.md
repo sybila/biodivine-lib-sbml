@@ -262,13 +262,20 @@ Two consequences are worth stating explicitly, because they are the boundary of 
     version of the same package is validated as a document of that other version - i.e. its content
     is that version's business and the package checks of this crate do not apply to it
     (`Sbml::declares_modelled_package`). Relaxing that gate without per-version deltas in the tables
-    is a measured regression: with the gate relaxed, the corpus reports **146 new unexpected events
-    against 13 missed events that disappear** (65 of them `model@fbc:strict`, which FBC Version 1
-    does not have and Version 3 removed, and 81 of them `listOfFluxBounds`, which is an unknown child
-    of `<model>` in the Version 2 table but legal in Version 1), and one document **panics** on the
-    required read of `fbc:strict`. Supporting a second version of a package is therefore the same
-    work as supporting a second version of the core: a per-version delta for the tables, its
-    requirements and its content model.
+    is a measured regression, and the measurement names each relaxation separately because they are
+    not interchangeable (the table is in `notes/g42-report.md` section 4.1): relaxing the
+    *content-model* guards alone - the child predicate accepting every published version of the
+    modelled packages, and the requirement gate
+    removed - makes the corpus report **147 events the suite does not expect, against 0 gained**
+    (`10102` x82 for `listOfFluxBounds`, an unknown child of `<model>` in the Version 2 table but legal
+    in Version 1, and `20222` x65 for `model@fbc:strict`, which Version 1 does not have and Version 3
+    removed), on 65 Version 1 and 20 Version 3 documents, and turns the *filtered* gate from 0 into
+    147 mismatches. Relaxing the *recognition* gate alone **aborts the run**: the requirement gate is
+    what produces the `20222` report, and the `not-validated` short-circuit that report triggers is
+    what keeps the required read of `fbc:strict` away from a document that does not carry it, so the
+    two guards have to move together (relaxing all three panics on 587 documents). Supporting a second
+    version of a package is therefore the same work as supporting a second version of the core: a
+    per-version delta for the tables, its requirements and its content model.
 
 The rule table is checked against the specification by `python3 scripts/check_rule_ids.py`
 (`make rules`): every rule the table calls a specification rule must be a rule the
