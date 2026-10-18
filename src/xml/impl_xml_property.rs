@@ -47,7 +47,9 @@ impl<'a, T: XmlPropertyType> DynamicProperty<'a, T> {
     }
 }
 
+/// The accessors of a property of an element: see [`Property`].
 impl<'a, T: XmlPropertyType> Property<'a, T> {
+    /// Creates an accessor for the attribute `name` of `element`.
     pub fn new(element: &'a XmlElement, name: &'static str) -> Property<'a, T> {
         Property {
             element,
@@ -58,24 +60,28 @@ impl<'a, T: XmlPropertyType> Property<'a, T> {
 }
 
 impl<'a, T: XmlPropertyType> OptionalProperty<'a, T> {
+    /// Creates an accessor for an attribute that may be absent.
     pub fn new(element: &'a XmlElement, name: &'static str) -> OptionalProperty<'a, T> {
         OptionalProperty(Property::new(element, name))
     }
 }
 
 impl<'a, T: XmlPropertyType> RequiredProperty<'a, T> {
+    /// Creates an accessor for an attribute the specification requires.
     pub fn new(element: &'a XmlElement, name: &'static str) -> RequiredProperty<'a, T> {
         RequiredProperty(Property::new(element, name))
     }
 }
 
 impl<'a, T: XmlPropertyType> OptionalDynamicProperty<'a, T> {
+    /// Creates an accessor for an attribute a package defines (an unprefixed name).
     pub fn new(element: &'a XmlElement, name: &str) -> OptionalDynamicProperty<'a, T> {
         OptionalDynamicProperty(DynamicProperty::new(element, name))
     }
 }
 
 impl<'a, T: XmlPropertyType> RequiredDynamicProperty<'a, T> {
+    /// Creates an accessor for an attribute a package defines and requires.
     pub fn new(element: &'a XmlElement, name: &str) -> RequiredDynamicProperty<'a, T> {
         RequiredDynamicProperty(DynamicProperty::new(element, name))
     }

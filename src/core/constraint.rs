@@ -4,6 +4,7 @@ use crate::math::{Math, MathNode};
 use crate::xml::{Document, OptionalChild, OptionalXmlChild, XmlDefault, XmlElement};
 use sbml_macros::{SBase, XmlWrapper};
 
+/// The `<constraint>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "constraint", namespace = NS_SBML_CORE)]
 pub struct Constraint(XmlElement);
@@ -15,6 +16,7 @@ impl XmlDefault for Constraint {
 }
 
 impl Constraint {
+    /// The `math` child of this `<constraint>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
@@ -27,6 +29,7 @@ impl Constraint {
         self.math().get().map(|it| it.node())
     }
 
+    /// The `message` child of this `<constraint>` element.
     pub fn message(&self) -> OptionalChild<'_, XmlElement> {
         self.optional_html_child("message")
     }

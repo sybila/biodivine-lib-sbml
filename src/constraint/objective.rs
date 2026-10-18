@@ -8,9 +8,13 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
+/// The `fbc:type` of an objective (FBC Package, Section 3.3): the direction in which the
+/// objective is optimized.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FbcType {
+    /// The objective is maximized.
     Maximize,
+    /// The objective is minimized.
     Minimize,
 }
 
@@ -58,27 +62,33 @@ impl XmlPropertyType for FbcType {
         Some(self.to_string().clone())
     }
 }
+/// The `<objective>` element of the FBC (Flux Balance Constraints) package specification.
 #[derive(Clone, Debug, SBase, XmlWrapper)]
 #[sbml_object(name = "objective", namespace = NS_FBC)]
 pub struct Objective(XmlElement);
 
 impl Objective {
+    /// Creates a new `<objective>` element with the given `id`, `bound_type`.
     pub fn new(document: Document, id: SId, bound_type: FbcType) -> Objective {
         let obj = Objective::new_empty(document);
         obj.id().set(&id);
         obj.bound_type().set(&bound_type);
         obj
     }
+    /// The `id` attribute of this `<objective>` element.
     pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("id", NS_FBC, NS_FBC)
     }
+    /// The `name` attribute of this `<objective>` element.
     pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
+    /// The `type` attribute of this `<objective>` element.
     pub fn bound_type(&self) -> RequiredSbmlProperty<'_, FbcType> {
         self.required_package_property("type", NS_FBC, NS_FBC)
     }
 
+    /// The `listOfFluxObjectives` child of this `<objective>` element, as a list of [`FluxObjective`].
     pub fn flux_objectives(&self) -> RequiredSbmlChild<'_, XmlList<FluxObjective>> {
         self.required_package_child("listOfFluxObjectives", NS_FBC, false)
     }

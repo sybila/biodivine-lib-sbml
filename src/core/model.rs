@@ -236,94 +236,117 @@ impl XmlDefault for Model {
 
 /// The SBML-defined components of the [`Model`] class.
 impl Model {
+    /// The `substanceUnits` attribute of this `<model>` element.
     pub fn substance_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
+    /// The `timeUnits` attribute of this `<model>` element.
     pub fn time_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("timeUnits")
     }
 
+    /// The `volumeUnits` attribute of this `<model>` element.
     pub fn volume_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("volumeUnits")
     }
 
+    /// The `areaUnits` attribute of this `<model>` element.
     pub fn area_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("areaUnits")
     }
 
+    /// The `lengthUnits` attribute of this `<model>` element.
     pub fn length_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("lengthUnits")
     }
 
+    /// The `extentUnits` attribute of this `<model>` element.
     pub fn extent_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("extentUnits")
     }
 
+    /// The `conversionFactor` attribute of this `<model>` element.
     pub fn conversion_factor(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("conversionFactor")
     }
 
+    /// The `strict` attribute of this `<model>` element.
     pub fn strict(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_package_property("strict", NS_FBC, NS_FBC)
     }
 
+    /// The `listOfFunctionDefinitions` child of this `<model>` element, as a list of [`FunctionDefinition`].
     pub fn function_definitions(&self) -> OptionalSbmlChild<'_, XmlList<FunctionDefinition>> {
         self.optional_sbml_child("listOfFunctionDefinitions")
     }
 
+    /// The `listOfUnitDefinitions` child of this `<model>` element, as a list of [`UnitDefinition`].
     pub fn unit_definitions(&self) -> OptionalSbmlChild<'_, XmlList<UnitDefinition>> {
         self.optional_sbml_child("listOfUnitDefinitions")
     }
 
+    /// The `listOfCompartments` child of this `<model>` element, as a list of [`Compartment`].
     pub fn compartments(&self) -> OptionalSbmlChild<'_, XmlList<Compartment>> {
         self.optional_sbml_child("listOfCompartments")
     }
 
+    /// The `listOfSpecies` child of this `<model>` element, as a list of [`Species`].
     pub fn species(&self) -> OptionalSbmlChild<'_, XmlList<Species>> {
         self.optional_sbml_child("listOfSpecies")
     }
 
+    /// The `listOfParameters` child of this `<model>` element, as a list of [`Parameter`].
     pub fn parameters(&self) -> OptionalSbmlChild<'_, XmlList<Parameter>> {
         self.optional_sbml_child("listOfParameters")
     }
 
+    /// The `listOfInitialAssignments` child of this `<model>` element, as a list of [`InitialAssignment`].
     pub fn initial_assignments(&self) -> OptionalSbmlChild<'_, XmlList<InitialAssignment>> {
         self.optional_sbml_child("listOfInitialAssignments")
     }
 
+    /// The `listOfRules` child of this `<model>` element, as a list of [`AbstractRule`].
     pub fn rules(&self) -> OptionalSbmlChild<'_, XmlList<AbstractRule>> {
         self.optional_sbml_child("listOfRules")
     }
 
+    /// The `listOfConstraints` child of this `<model>` element, as a list of [`Constraint`].
     pub fn constraints(&self) -> OptionalSbmlChild<'_, XmlList<Constraint>> {
         self.optional_sbml_child("listOfConstraints")
     }
 
+    /// The `listOfReactions` child of this `<model>` element, as a list of [`Reaction`].
     pub fn reactions(&self) -> OptionalSbmlChild<'_, XmlList<Reaction>> {
         self.optional_sbml_child("listOfReactions")
     }
 
+    /// The `listOfEvents` child of this `<model>` element, as a list of [`Event`].
     pub fn events(&self) -> OptionalSbmlChild<'_, XmlList<Event>> {
         self.optional_sbml_child("listOfEvents")
     }
 
+    /// The `listOfLayouts` child of this `<model>` element, as a list of [`Layout`].
     pub fn layouts(&self) -> OptionalSbmlChild<'_, XmlList<Layout>> {
         self.optional_package_child("listOfLayouts", NS_LAYOUT, false)
     }
 
+    /// The `listOfGeneProducts` child of this `<model>` element, as a list of [`GeneProduct`].
     pub fn gene_products(&self) -> OptionalSbmlChild<'_, XmlList<GeneProduct>> {
         self.optional_package_child("listOfGeneProducts", NS_FBC, false)
     }
 
+    /// The `listOfObjectives` child of this `<model>` element, as a list of [`Objective`].
     pub fn objectives(&self) -> OptionalSbmlChild<'_, XmlList<Objective>> {
         self.optional_package_child("listOfObjectives", NS_FBC, false)
     }
 
+    /// The `listOfTransitions` child of this `<model>` element, as a list of [`Transition`].
     pub fn transitions(&self) -> OptionalSbmlChild<'_, XmlList<Transition>> {
         self.optional_package_child("listOfTransitions", NS_QUAL, true)
     }
 
+    /// The `listOfQualitativeSpecies` child of this `<model>` element, as a list of [`QualitativeSpecies`].
     pub fn qual_species(&self) -> OptionalSbmlChild<'_, XmlList<QualitativeSpecies>> {
         self.optional_package_child("listOfQualitativeSpecies", NS_QUAL, true)
     }

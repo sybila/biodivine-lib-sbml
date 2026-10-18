@@ -10,6 +10,7 @@ use sbml_macros::{SBase, XmlWrapper};
 pub struct UnitDefinition(XmlElement);
 
 impl UnitDefinition {
+    /// The `listOfUnits` child of this `<unitDefinition>` element, as a list of [`Unit`].
     pub fn units(&self) -> OptionalSbmlChild<'_, XmlList<Unit>> {
         self.optional_sbml_child("listOfUnits")
     }

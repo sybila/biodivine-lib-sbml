@@ -21,6 +21,7 @@ impl XmlSupertype for AbstractTerm {}
 
 impl AbstractTerm {}
 
+/// The `<defaultTerm>` element of the Qual (Qualitative Models) package specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "defaultTerm", namespace = NS_QUAL)]
 pub struct DefaultTerm(XmlElement);
@@ -28,17 +29,20 @@ pub struct DefaultTerm(XmlElement);
 impl XmlNamedSubtype<AbstractTerm> for DefaultTerm {}
 
 impl DefaultTerm {
+    /// Creates a new `<defaultTerm>` element with the given `result_level`.
     pub fn new(document: Document, result_level: u32) -> DefaultTerm {
         let obj = DefaultTerm::new_empty(document);
         obj.result_level().set(&result_level);
         obj
     }
 
+    /// The `resultLevel` attribute of this `<defaultTerm>` element.
     pub fn result_level(&self) -> RequiredSbmlProperty<'_, u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 }
 
+/// The `<functionTerm>` element of the Qual (Qualitative Models) package specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "functionTerm", namespace = NS_QUAL)]
 pub struct FunctionTerm(XmlElement);
@@ -46,12 +50,14 @@ pub struct FunctionTerm(XmlElement);
 impl XmlNamedSubtype<AbstractTerm> for FunctionTerm {}
 
 impl FunctionTerm {
+    /// Creates a new `<functionTerm>` element with the given `result_level`, `math`.
     pub fn new(document: Document, result_level: u32, math: Math) -> FunctionTerm {
         let obj = FunctionTerm::new_empty(document);
         obj.result_level().set(&result_level);
         obj.math().set(math);
         obj
     }
+    /// The `resultLevel` attribute of this `<functionTerm>` element.
     pub fn result_level(&self) -> RequiredSbmlProperty<'_, u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }

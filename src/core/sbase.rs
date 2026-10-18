@@ -14,6 +14,11 @@ use crate::xml::{
 use crate::Sbml;
 use std::fmt::Display;
 
+/// The value of an `id` attribute: the identifier of an SBML object inside its model
+/// (Section 3.1.7).
+///
+/// The wrapper makes an identifier a distinct type from a `String`, and it is what the uniqueness
+/// of identifiers in a model is checked on.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SId(String);
 
@@ -81,6 +86,11 @@ impl XmlPropertyType for SId {
     }
 }
 
+/// The value of a `metaid` attribute: the document-wide identifier of any element
+/// (Section 3.1.7).
+///
+/// Unlike [`SId`], a `metaid` is unique across the whole document rather than inside a model, which
+/// is what lets a package refer to an element of any kind.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MetaId(String);
 
@@ -141,6 +151,8 @@ impl XmlPropertyType for MetaId {
     }
 }
 
+/// The value of an `sboTerm` attribute: the Systems Biology Ontology term that classifies an
+/// object (Section 3.1.7).
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SboTerm(String);
 
@@ -205,26 +217,32 @@ impl XmlPropertyType for SboTerm {
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
+    /// The `id` attribute of this object: its identifier inside the model.
     fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("id")
     }
 
+    /// The `name` attribute of this object: a human-readable name that carries no semantics.
     fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_sbml_property("name")
     }
 
+    /// The `metaid` attribute of this object: its identifier across the whole document.
     fn meta_id(&self) -> OptionalSbmlProperty<'_, MetaId> {
         self.optional_sbml_property("metaid")
     }
 
+    /// The `sboTerm` attribute of this object: the ontology term that classifies it.
     fn sbo_term(&self) -> OptionalSbmlProperty<'_, SboTerm> {
         self.optional_sbml_property("sboTerm")
     }
 
+    /// The `notes` child of this object: XHTML content meant to be read by a human.
     fn notes(&self) -> OptionalSbmlChild<'_, XmlElement> {
         self.optional_sbml_child("notes")
     }
 
+    /// The `annotation` child of this object: machine-readable content of a tool or a package.
     fn annotation(&self) -> OptionalSbmlChild<'_, XmlElement> {
         self.optional_sbml_child("annotation")
     }

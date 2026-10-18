@@ -9,24 +9,31 @@ use crate::xml::{
 use sbml_macros::{SBase, XmlWrapper};
 use std::fmt::Display;
 
+/// The `<curve>` element of the Layout package specification.
 #[derive(Debug, Clone, XmlWrapper, SBase)]
 #[sbml_object(name = "curve", namespace = NS_LAYOUT)]
 pub struct Curve(XmlElement);
 
 impl Curve {
+    /// Creates a new `<curve>` element with the given `segments`.
     pub fn new(document: Document, segments: XmlList<LineSegment>) -> Self {
         let curve = Curve::new_empty(document);
         curve.curve_segments().set(segments);
         curve
     }
+    /// The `listOfCurveSegments` child of this `<curve>` element, as a list of [`LineSegment`].
     pub fn curve_segments(&self) -> RequiredSbmlChild<'_, XmlList<LineSegment>> {
         self.required_package_child("listOfCurveSegments", NS_LAYOUT, false)
     }
 }
 
+/// The value of the `xsi:type` attribute of a `<layout:curveSegment>` element (Layout Package,
+/// Section 3.4): which of the two shapes of a segment the element is.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum XsiType {
+    /// A cubic Bézier segment: a `<curveSegment>` with two base points.
     CubicBezier,
+    /// A straight segment: a `<curveSegment>` with a start point and an end point.
     LineSegment,
 }
 
@@ -75,6 +82,7 @@ impl XmlPropertyType for XsiType {
     }
 }
 
+/// The `<curveSegment>` element of the Layout package specification.
 #[derive(Debug, Clone, XmlWrapper, SBase)]
 #[sbml_object(name = "curveSegment", namespace = NS_LAYOUT)]
 pub struct LineSegment(XmlElement);
@@ -82,6 +90,7 @@ pub struct LineSegment(XmlElement);
 impl XmlSupertype for LineSegment {}
 
 impl LineSegment {
+    /// Creates a new `<curveSegment>` element with the given `start`, `end`.
     pub fn new(document: Document, start: Point, end: Point) -> Self {
         let line = LineSegment::new_empty(document);
 
@@ -93,26 +102,32 @@ impl LineSegment {
         line
     }
 
+    /// The `xsi:type` attribute of this `<curveSegment>` element.
     pub fn xsi_type(&self) -> RequiredSbmlProperty<'_, XsiType> {
         self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
 
+    /// The `start` child of this `<curveSegment>` element.
     pub fn start(&self) -> RequiredSbmlChild<'_, Point> {
         self.required_package_child("start", NS_LAYOUT, false)
     }
 
+    /// The `end` child of this `<curveSegment>` element.
     pub fn end(&self) -> RequiredSbmlChild<'_, Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
 
+    /// The `basePoint1` child of this `<curveSegment>` element.
     pub fn base_point1(&self) -> OptionalSbmlChild<'_, Point> {
         self.optional_package_child("basePoint1", NS_LAYOUT, false)
     }
+    /// The `basePoint2` child of this `<curveSegment>` element.
     pub fn base_point2(&self) -> OptionalSbmlChild<'_, Point> {
         self.optional_package_child("basePoint2", NS_LAYOUT, false)
     }
 }
 
+/// The `<curveSegment>` element of the Layout package specification.
 #[derive(Debug, Clone, SBase, XmlWrapper)]
 #[sbml_object(name = "curveSegment", namespace = NS_LAYOUT, xsi_type = "CubicBezier")]
 pub struct CubicBezier(XmlElement);
@@ -129,6 +144,7 @@ impl XmlSubtype<LineSegment> for CubicBezier {
 }
 
 impl CubicBezier {
+    /// Creates a new `<curveSegment>` element with the given `start`, `end`, `base_point1`, `base_point2`.
     pub fn new(
         document: Document,
         start: Point,
@@ -146,18 +162,23 @@ impl CubicBezier {
         cub.base_point2().set(base_point2);
         cub
     }
+    /// The `xsi:type` attribute of this `<curveSegment>` element.
     pub fn xsi_type(&self) -> RequiredSbmlProperty<'_, XsiType> {
         self.required_package_property("xsi:type", NS_LAYOUT, NS_LAYOUT)
     }
+    /// The `start` child of this `<curveSegment>` element.
     pub fn start(&self) -> RequiredSbmlChild<'_, Point> {
         self.required_package_child("start", NS_LAYOUT, false)
     }
+    /// The `end` child of this `<curveSegment>` element.
     pub fn end(&self) -> RequiredSbmlChild<'_, Point> {
         self.required_package_child("end", NS_LAYOUT, false)
     }
+    /// The `basePoint1` child of this `<curveSegment>` element.
     pub fn base_point1(&self) -> OptionalSbmlChild<'_, Point> {
         self.optional_package_child("basePoint1", NS_LAYOUT, false)
     }
+    /// The `basePoint2` child of this `<curveSegment>` element.
     pub fn base_point2(&self) -> OptionalSbmlChild<'_, Point> {
         self.optional_package_child("basePoint2", NS_LAYOUT, false)
     }

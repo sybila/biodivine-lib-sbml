@@ -8,21 +8,25 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 
+/// The `<initialAssignment>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "initialAssignment", namespace = NS_SBML_CORE)]
 pub struct InitialAssignment(XmlElement);
 
 impl InitialAssignment {
+    /// Creates a new `<initialAssignment>` element with the given `symbol`.
     pub fn new(document: Document, symbol: &SId) -> Self {
         let obj = InitialAssignment::new_empty(document);
         obj.symbol().set(symbol);
         obj
     }
 
+    /// The `symbol` attribute of this `<initialAssignment>` element.
     pub fn symbol(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("symbol")
     }
 
+    /// The `math` child of this `<initialAssignment>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }

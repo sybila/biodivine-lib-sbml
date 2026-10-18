@@ -1,3 +1,9 @@
+//! Procedural macros of `biodivine-lib-sbml`: `XmlWrapper` (the declared XML identity of an
+//! SBML object type, its constructor and its conversions) and `SBase` (the empty implementation
+//! of the common base class). An SBML package written outside the crate uses them exactly as the
+//! crate does.
+#![warn(missing_docs)]
+
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;

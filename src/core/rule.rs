@@ -8,16 +8,26 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 
+/// The kind of a rule, as [`AbstractRule::cast`] decides it from the element it wraps.
 pub enum RuleTypes {
     // Other is used to represent rules that are only defined in (hypothetical) SBML extensions
     // that are not covered by this library.
+    /// A rule of a kind this crate does not model (a rule only an SBML package defines).
     Other(AbstractRule),
+    /// An `<algebraicRule>`: a rule with no subject identifier.
     Algebraic(AlgebraicRule),
+    /// An `<assignmentRule>`: a rule that assigns the value of its formula to one identifier.
     Assignment(AssignmentRule),
+    /// A `<rateRule>`: a rule that gives the time derivative of one identifier.
     Rate(RateRule),
 }
 
+/// A rule of the core specification: an object that carries a mathematical formula.
+///
+/// The three concrete kinds are [`AlgebraicRule`], [`AssignmentRule`] and [`RateRule`]; a document
+/// writes all of them as elements of those names inside `<listOfRules>`.
 pub trait Rule: SBase {
+    /// The `math` child of this rule element: the formula the rule applies.
     fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
@@ -51,6 +61,7 @@ impl Rule for AbstractRule {}
 impl XmlSupertype for AbstractRule {}
 
 impl AbstractRule {
+    /// The kind of this rule, as one of the four [`RuleTypes`].
     pub fn cast(self) -> RuleTypes {
         if let Some(rule) = self.try_downcast::<AlgebraicRule>() {
             RuleTypes::Algebraic(rule)
@@ -63,11 +74,13 @@ impl AbstractRule {
         }
     }
 
+    /// The default `<algebraicRule>` element of a document: the content the specification gives an empty one.
     pub fn default(document: Document, tag_name: &str) -> Self {
         AbstractRule::new_empty_named(document, tag_name)
     }
 }
 
+/// The `<algebraicRule>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "algebraicRule", namespace = NS_SBML_CORE)]
 pub struct AlgebraicRule(XmlElement);
@@ -82,6 +95,7 @@ impl XmlDefault for AlgebraicRule {
 
 impl XmlNamedSubtype<AbstractRule> for AlgebraicRule {}
 
+/// The `<assignmentRule>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "assignmentRule", namespace = NS_SBML_CORE)]
 pub struct AssignmentRule(XmlElement);
@@ -91,17 +105,20 @@ impl Rule for AssignmentRule {}
 impl XmlNamedSubtype<AbstractRule> for AssignmentRule {}
 
 impl AssignmentRule {
+    /// Creates a new `<assignmentRule>` element with the given `variable`.
     pub fn new(document: Document, variable: &SId) -> Self {
         let obj = AssignmentRule::new_empty(document);
         obj.variable().set(variable);
         obj
     }
 
+    /// The `variable` attribute of this `<assignmentRule>` element.
     pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }
 }
 
+/// The `<rateRule>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "rateRule", namespace = NS_SBML_CORE)]
 pub struct RateRule(XmlElement);
@@ -111,12 +128,14 @@ impl Rule for RateRule {}
 impl XmlNamedSubtype<AbstractRule> for RateRule {}
 
 impl RateRule {
+    /// Creates a new `<rateRule>` element with the given `variable`.
     pub fn new(document: Document, variable: &SId) -> Self {
         let obj = RateRule::new_empty(document);
         obj.variable().set(variable);
         obj
     }
 
+    /// The `variable` attribute of this `<rateRule>` element.
     pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }

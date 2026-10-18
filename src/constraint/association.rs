@@ -19,6 +19,7 @@ pub struct Association(XmlElement);
 
 impl XmlSupertype for Association {}
 
+/// The `<geneProductRef>` element of the FBC (Flux Balance Constraints) package specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "geneProductRef", namespace = NS_FBC)]
 pub struct GeneProductRef(XmlElement);
@@ -26,22 +27,27 @@ pub struct GeneProductRef(XmlElement);
 impl XmlNamedSubtype<Association> for GeneProductRef {}
 
 impl GeneProductRef {
+    /// Creates a new `<geneProductRef>` element with the given `gene_product`.
     pub fn new(document: Document, gene_product: SId) -> Self {
         let obj = GeneProductRef::new_empty(document);
         obj.gene_product().set(&gene_product);
         obj
     }
+    /// The `id` attribute of this `<geneProductRef>` element.
     pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_FBC, NS_FBC)
     }
+    /// The `name` attribute of this `<geneProductRef>` element.
     pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
+    /// The `geneProduct` attribute of this `<geneProductRef>` element.
     pub fn gene_product(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("geneProduct", NS_FBC, NS_FBC)
     }
 }
 
+/// The `<and>` element of the FBC (Flux Balance Constraints) package specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "and", namespace = NS_FBC)]
 pub struct And(XmlElement);
@@ -49,11 +55,13 @@ pub struct And(XmlElement);
 impl XmlNamedSubtype<Association> for And {}
 
 impl And {
+    /// The `and` child of this `<and>` element, as a list of [`Association`].
     pub fn and(&self) -> OptionalSbmlChild<'_, XmlList<Association>> {
         self.optional_package_child("and", NS_FBC, false)
     }
 }
 
+/// The `<or>` element of the FBC (Flux Balance Constraints) package specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "or", namespace = NS_FBC)]
 pub struct Or(XmlElement);
@@ -61,6 +69,7 @@ pub struct Or(XmlElement);
 impl XmlNamedSubtype<Association> for Or {}
 
 impl Or {
+    /// The `or` child of this `<or>` element, as a list of [`Association`].
     pub fn or(&self) -> RequiredSbmlChild<'_, XmlList<Association>> {
         self.required_package_child("or", NS_FBC, false)
     }

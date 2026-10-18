@@ -100,6 +100,10 @@
 //! ```
 //!
 
+// The public surface of this crate is documented item by item, and the gate denies warnings, so an
+// undocumented public item is a build failure rather than a hole in the reference.
+#![warn(missing_docs)]
+
 // The derive macros of `sbml-macros` generate absolute paths into this crate, so that a type
 // declared *outside* it — an SBML extension, in particular — can use them as well: a macro that
 // emitted `crate::..` would mean "the crate that invokes the macro", which is the wrong crate for
@@ -120,6 +124,9 @@ use crate::core::validation::SbmlValidable;
 use crate::core::{MetaId, Model, SBase, SId};
 use crate::xml::{OptionalSbmlChild, OptionalXmlChild, SbmlObject, XmlElement, XmlWrapper};
 
+/// The **FBC** (Flux Balance Constraints) package: [`GeneProduct`][constraint::GeneProduct],
+/// [`Objective`][constraint::Objective], the flux bounds of a reaction and the gene-product
+/// association of FBC Version 2.
 pub mod constraint;
 /// Defines [`Model`], [`Species`][core::Species], [`Compartment`][core::Compartment],
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
@@ -130,12 +137,16 @@ pub mod core;
 /// view the package adds ([`ExtensionOf`], [`ExtensionCast`]) and the injection of the package's
 /// validation rules into a document's validation ([`ExtensionValidation`]).
 pub mod extension;
+/// The **Layout** package: [`Layout`][layout::Layout], the glyphs it draws and the curve segments
+/// between them.
 pub mod layout;
 
 /// Defines [`Math`][math::Math], the typed layer over the MathML subset that SBML formulas use:
 /// [`MathNode`][math::MathNode], the declared element types of the subset, and the closed operator
 /// and constant sets.
 pub mod math;
+/// The **Qual** (Qualitative Models) package: [`QualitativeSpecies`][qual::QualitativeSpecies],
+/// [`Transition`][qual::Transition] and their inputs, outputs and terms.
 pub mod qual;
 
 /// Defines [`Document`], [`XmlElement`], [`XmlWrapper`], [`XmlProperty`][xml::XmlProperty],
@@ -228,10 +239,17 @@ pub enum SbmlError {
     NotSbmlDocument,
     /// The document declares an SBML level/version outside the range this crate can process.
     ///
+    /// The document declares an SBML level and version that this crate does not model.
+    ///
     /// Returned by level/version dispatch when a document declares a level/version that the crate
     /// does not support.
     #[error("Unsupported SBML level {level} version {version}.")]
-    UnsupportedLevel { level: u32, version: u32 },
+    UnsupportedLevel {
+        /// The level the document declares.
+        level: u32,
+        /// The version the document declares.
+        version: u32,
+    },
     /// An I/O error occurred while reading or writing a document.
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
@@ -315,14 +333,17 @@ pub struct Sbml {
 
 /// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
+    /// The `model` child of the `<sbml>` container, if the document has one.
     pub fn model(&self) -> OptionalSbmlChild<'_, Model> {
         OptionalSbmlChild::new_object_model(&self.sbml_root, "model", NS_SBML_CORE)
     }
 
+    /// The `level` attribute of the `<sbml>` container.
     pub fn level(&self) -> RequiredProperty<'_, u32> {
         RequiredProperty::new(&self.sbml_root, "level")
     }
 
+    /// The `version` attribute of the `<sbml>` container.
     pub fn version(&self) -> RequiredProperty<'_, u32> {
         RequiredProperty::new(&self.sbml_root, "version")
     }
@@ -887,6 +908,11 @@ impl SbmlObject for Sbml {
     }
 }
 
+/// The severity a [rule](crate::RuleDescriptor) assigns to the issues it produces.
+///
+/// The severity is a property of the rule rather than of the report: an issue inherits it from its
+/// [`RuleDescriptor`], so one rule cannot be an error in one place and a note
+/// in another.
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum SbmlIssueSeverity {
     /// An issue that makes the document impossible to read correctly (e.g. a function is

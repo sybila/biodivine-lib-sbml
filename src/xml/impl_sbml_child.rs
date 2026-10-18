@@ -24,6 +24,7 @@ pub struct OptionalSbmlChild<'a, T: XmlWrapper>(SbmlChild<'a, T>);
 pub struct RequiredSbmlChild<'a, T: XmlWrapper>(SbmlChild<'a, T>);
 
 impl<'a, T: XmlWrapper> SbmlChild<'a, T> {
+    /// Creates a package-aware accessor for the child `name` of `parent`.
     pub fn new(parent: &'a XmlElement, name: &'static str, namespace: Namespace) -> Self {
         Self {
             parent,
@@ -60,6 +61,7 @@ impl<'a, T: XmlWrapper> SbmlChild<'a, T> {
 }
 
 impl<'a, T: XmlWrapper> OptionalSbmlChild<'a, T> {
+    /// Creates a package-aware accessor for a child that may be absent.
     pub fn new(parent: &'a XmlElement, name: &'static str, namespace: Namespace) -> Self {
         Self(SbmlChild::new(parent, name, namespace))
     }
@@ -99,6 +101,7 @@ impl<'a, T: XmlWrapper> XmlChild<T> for OptionalSbmlChild<'a, T> {
 }
 
 impl<'a, T: XmlWrapper> RequiredSbmlChild<'a, T> {
+    /// Creates a package-aware accessor for a child the specification requires.
     pub fn new(parent: &'a XmlElement, name: &'static str, namespace: Namespace) -> Self {
         Self(SbmlChild::new(parent, name, namespace))
     }

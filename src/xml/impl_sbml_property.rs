@@ -41,6 +41,7 @@ pub struct RequiredSbmlProperty<'a, T: XmlPropertyType>(SbmlProperty<'a, T>);
 impl<'a, T: XmlPropertyType> SbmlProperty<'a, T> {
     /// Create a new instance of a [SbmlProperty] for the given `element`, `name`,
     /// `property_namespace` and `element_namespace`.
+    /// Creates a package-aware accessor for the attribute `name` of `element`.
     pub fn new(
         element: &'a XmlElement,
         name: &'static str,
@@ -69,6 +70,7 @@ impl<'a, T: XmlPropertyType> SbmlProperty<'a, T> {
 }
 
 impl<'a, T: XmlPropertyType> OptionalSbmlProperty<'a, T> {
+    /// Creates a package-aware accessor for an attribute that may be absent.
     pub fn new(
         element: &'a XmlElement,
         name: &'static str,
@@ -85,6 +87,7 @@ impl<'a, T: XmlPropertyType> OptionalSbmlProperty<'a, T> {
 }
 
 impl<'a, T: XmlPropertyType> RequiredSbmlProperty<'a, T> {
+    /// Creates a package-aware accessor for an attribute the specification requires.
     pub fn new(
         element: &'a XmlElement,
         name: &'static str,

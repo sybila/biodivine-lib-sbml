@@ -169,10 +169,13 @@ pub(crate) fn level_version_of_namespace(url: &str) -> (u32, Option<u32>) {
     (level, Some(version))
 }
 
+/// The namespace URL of the **Layout** package (Version 1), which this crate writes with.
 pub const URL_PACKAGE_LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/layout/version1";
 
+/// The namespace URL of the **Qual** package (Version 1), which this crate writes with.
 pub const URL_PACKAGE_QUAL: &str = "http://www.sbml.org/sbml/level3/version1/qual/version1";
 
+/// The namespace URL of the **FBC** package (Version 2), which this crate writes with.
 pub const URL_PACKAGE_FBC: &str = "http://www.sbml.org/sbml/level3/version1/fbc/version2";
 
 /// The accepted namespace URL set of the **FBC** package, one entry per published version.
@@ -326,8 +329,12 @@ pub const URL_EMPTY: &str = "";
 /// The "core" SBML namespace. Default prefix for this namespace is empty.
 pub const NS_SBML_CORE: Namespace = ("", URL_SBML_CORE);
 
+/// The namespace of the **Layout** package, as the `(prefix, url)` pair this crate writes names
+/// with.
 pub const NS_LAYOUT: Namespace = ("layout", URL_PACKAGE_LAYOUT);
 
+/// The namespace of the **Qual** package, as the `(prefix, url)` pair this crate writes names
+/// with.
 pub const NS_QUAL: Namespace = ("qual", URL_PACKAGE_QUAL);
 
 /// Whether the document that owns `element` uses the package version the crate models, i.e. binds
@@ -357,6 +364,8 @@ pub(crate) fn separate_prefix_name(name: &str) -> (&str, &str) {
     }
 }
 
+/// The namespace of the **FBC** package, as the `(prefix, url)` pair this crate writes names
+/// with.
 pub const NS_FBC: Namespace = ("fbc", URL_PACKAGE_FBC);
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.

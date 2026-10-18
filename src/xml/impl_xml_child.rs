@@ -63,18 +63,21 @@ impl<T: XmlWrapper> Child<'_, T> {
 }
 
 impl<T: XmlWrapper> OptionalDynamicChild<'_, T> {
+    /// Create a new instance of an [OptionalDynamicChild] for the given `parent` and `name`.
     pub fn new<'a>(parent: &'a XmlElement, name: &str) -> OptionalDynamicChild<'a, T> {
         OptionalDynamicChild(DynamicChild::new(parent, name))
     }
 }
 
 impl<T: XmlWrapper> RequiredDynamicChild<'_, T> {
+    /// Create a new instance of a [RequiredDynamicChild] for the given `parent` and `name`.
     pub fn new<'a>(parent: &'a XmlElement, name: &str) -> RequiredDynamicChild<'a, T> {
         RequiredDynamicChild(DynamicChild::new(parent, name))
     }
 }
 
 impl<T: XmlWrapper> OptionalChild<'_, T> {
+    /// Create a new instance of an [OptionalChild] for the given `parent`, `name` and `namespace`.
     pub fn new<'a>(
         parent: &'a XmlElement,
         name: &'static str,
@@ -85,6 +88,7 @@ impl<T: XmlWrapper> OptionalChild<'_, T> {
 }
 
 impl<T: XmlWrapper> RequiredChild<'_, T> {
+    /// Create a new instance of a [RequiredChild] for the given `parent`, `name` and `namespace`.
     pub fn new<'a>(
         parent: &'a XmlElement,
         name: &'static str,

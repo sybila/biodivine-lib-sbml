@@ -8,6 +8,7 @@ use crate::xml::{
 };
 use sbml_macros::{SBase, XmlWrapper};
 
+/// The `<event>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "event", namespace = NS_SBML_CORE)]
 pub struct Event(XmlElement);
@@ -19,6 +20,7 @@ impl XmlDefault for Event {
 }
 
 impl Event {
+    /// Creates a new `<event>` element with the given `use_values_from_trigger_time`.
     pub fn new(document: Document, use_values_from_trigger_time: bool) -> Self {
         let obj = Event::new_empty(document);
         obj.use_values_from_trigger_time()
@@ -26,27 +28,33 @@ impl Event {
         obj
     }
 
+    /// The `useValuesFromTriggerTime` attribute of this `<event>` element.
     pub fn use_values_from_trigger_time(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("useValuesFromTriggerTime")
     }
 
+    /// The `trigger` child of this `<event>` element.
     pub fn trigger(&self) -> OptionalSbmlChild<'_, Trigger> {
         self.optional_sbml_child("trigger")
     }
 
+    /// The `priority` child of this `<event>` element.
     pub fn priority(&self) -> OptionalSbmlChild<'_, Priority> {
         self.optional_sbml_child("priority")
     }
 
+    /// The `delay` child of this `<event>` element.
     pub fn delay(&self) -> OptionalSbmlChild<'_, Delay> {
         self.optional_sbml_child("delay")
     }
 
+    /// The `listOfEventAssignments` child of this `<event>` element, as a list of [`EventAssignment`].
     pub fn event_assignments(&self) -> OptionalSbmlChild<'_, XmlList<EventAssignment>> {
         self.optional_sbml_child("listOfEventAssignments")
     }
 }
 
+/// The `<trigger>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "trigger", namespace = NS_SBML_CORE)]
 pub struct Trigger(XmlElement);
@@ -58,6 +66,7 @@ impl XmlDefault for Trigger {
 }
 
 impl Trigger {
+    /// Creates a new `<trigger>` element with the given `persistent`, `initial_value`.
     pub fn new(document: Document, persistent: bool, initial_value: bool) -> Self {
         let obj = Trigger::new_empty(document);
         obj.persistent().set(&persistent);
@@ -65,14 +74,17 @@ impl Trigger {
         obj
     }
 
+    /// The `initialValue` attribute of this `<trigger>` element.
     pub fn initial_value(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("initialValue")
     }
 
+    /// The `persistent` attribute of this `<trigger>` element.
     pub fn persistent(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("persistent")
     }
 
+    /// The `math` child of this `<trigger>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
@@ -86,6 +98,7 @@ impl Trigger {
     }
 }
 
+/// The `<priority>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "priority", namespace = NS_SBML_CORE)]
 pub struct Priority(XmlElement);
@@ -97,6 +110,7 @@ impl XmlDefault for Priority {
 }
 
 impl Priority {
+    /// The `math` child of this `<priority>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
@@ -110,6 +124,7 @@ impl Priority {
     }
 }
 
+/// The `<delay>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "delay", namespace = NS_SBML_CORE)]
 pub struct Delay(XmlElement);
@@ -121,6 +136,7 @@ impl XmlDefault for Delay {
 }
 
 impl Delay {
+    /// The `math` child of this `<delay>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
@@ -134,21 +150,25 @@ impl Delay {
     }
 }
 
+/// The `<eventAssignment>` element of the SBML core specification.
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "eventAssignment", namespace = NS_SBML_CORE)]
 pub struct EventAssignment(XmlElement);
 
 impl EventAssignment {
+    /// Creates a new `<eventAssignment>` element with the given `variable`.
     pub fn new(document: Document, variable: &SId) -> Self {
         let obj = EventAssignment::new_empty(document);
         obj.variable().set(variable);
         obj
     }
 
+    /// The `variable` attribute of this `<eventAssignment>` element.
     pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }
 
+    /// The `math` child of this `<eventAssignment>` element.
     pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
