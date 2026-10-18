@@ -345,6 +345,11 @@ which rule changed without re-running the suite.
 
 #### Measuring the result
 
+The comparison is per `(document, rule)` **set**: a rule reported twice for one document moves no
+number at all, so `scripts/corpus_duplicates.py` (in `make rules`) is the only place that class is
+checked. Its sibling, a rule reported with no report of its own subtree, is the `not-validated`
+short-circuit described under the rule mechanisms.
+
 The three report files the example compares are the input of the small tools in `scripts/`
 that turn them into the numbers a change is reviewed against. They are plain `python3` with no
 dependencies and they never write to the repository, so they can be run against the report files
