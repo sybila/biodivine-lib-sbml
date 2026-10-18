@@ -9,10 +9,6 @@
 10206
 10207
 10208
-# The Version 1 expression-typing rules are not implemented: they need the typed MathML tree
-# (the carried-forward item C21), so comparing them against the Level 3 Version 1 half would
-# report every document of the family as missed. They are Version 1 only, so nothing is lost
-# for the Level 3 Version 2 half, which is what the gate was written against.
 #10209
 #10211
 #10212

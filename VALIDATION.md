@@ -93,6 +93,21 @@ mismatch reports are byte-identical in both modes.
 
 #### Specification rules and library lints
 
+The list of compared rules is `validated-rules.txt`, and its **format is machine-read**: every
+non-empty line is either a bare rule id (the rule is compared) or `#` followed by a rule id (the
+rule is documented but not compared), and nothing else. A prose line is rejected by both
+`scripts/spec_coverage.py` and `scripts/corpus_worklist.py` rather than ignored, because it used to
+be read as a rule id by the loader and split into nonsense arguments by the filtered run in
+`scripts/verify.sh` — a silent weakening of two gates. The reason a rule is disabled, or is not
+compared yet, belongs here:
+
+  * `10218` (operator arity), `10223` (`rateOf` arguments) and `10224` (the `rateOf` argument
+    value): the checks are incomplete or stricter than the suite reads them, each adjudicated with
+    a citation in the unit reports (`notes/g4-report.md`, `notes/g5-report.md`).
+  * `10209`-`10213` and `10217` (the Version 1 expression-typing rules): they need the typed MathML
+    tree and are a Level 3 Version 1 family, so comparing them against the Version 1 half would
+    report every document of the family as missed while nothing is lost for the Version 2 half.
+
 The library reports two kinds of issue, and the snapshots above treat them differently:
 
   * a **specification rule** is a rule of the SBML standard, identified by the

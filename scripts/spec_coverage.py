@@ -150,12 +150,18 @@ def parse_rules_dir(path: Path | None) -> dict[str, str]:
     return rules
 
 
+RULE_LINE = re.compile(r"^(#?)([A-Za-z0-9_-]+)$")
+
+
 def load_validated_rules(crate: Path) -> tuple[set[str], set[str]]:
     """Return ``(enabled, disabled)`` rule ids from ``validated-rules.txt``.
 
-    A leading ``#`` comments a rule out: it stays documented but the test harness no longer
-    checks it (the ``test-suite-syntactic`` example receives these lines verbatim and simply
-    does not recognize them).
+    The file is a machine-read list, so every non-empty line is either a bare rule id (the rule
+    is compared) or ``#`` followed by a rule id (the rule is documented but not compared). Any
+    other line is rejected: free text in this file used to be read as a rule id by this loader and
+    to be split into nonsense arguments by the shell invocation in ``scripts/verify.sh``, so a
+    prose line silently weakened two gates instead of failing one. The reasons for the disabled
+    and unadjudicated rules belong in ``VALIDATION.md`` (and in the unit's report).
     """
 
     enabled: set[str] = set()
@@ -163,14 +169,17 @@ def load_validated_rules(crate: Path) -> tuple[set[str], set[str]]:
     path = crate / "validated-rules.txt"
     if not path.exists():
         return enabled, disabled
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         line = line.strip()
         if not line:
             continue
-        if line.startswith("#"):
-            disabled.add(line.lstrip("#").strip())
-        else:
-            enabled.add(line)
+        match = RULE_LINE.match(line)
+        if match is None:
+            raise SystemExit(
+                f"{path}:{number}: {line!r} is neither a rule id nor a '#'-commented rule id. "
+                "This file must stay machine-readable; put the explanation in VALIDATION.md."
+            )
+        (disabled if match.group(1) else enabled).add(match.group(2))
     return enabled, disabled
 
 

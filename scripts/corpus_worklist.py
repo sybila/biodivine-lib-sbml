@@ -122,14 +122,18 @@ def read_status(root: str):
         if match is not None:
             table.add(match.group("id"))
     enabled, disabled = set(), set()
-    for line in open(os.path.join(root, "validated-rules.txt"), encoding="utf-8"):
+    for number, line in enumerate(
+        open(os.path.join(root, "validated-rules.txt"), encoding="utf-8"), start=1
+    ):
         line = line.strip()
         if not line:
             continue
-        if line.startswith("#"):
-            disabled.add(line[1:].strip())
-        else:
-            enabled.add(line)
+        if not re.fullmatch(r"#?[A-Za-z0-9_-]+", line):
+            raise SystemExit(
+                f"validated-rules.txt:{number}: {line!r} is not a rule id; the file is "
+                "machine-read (see VALIDATION.md) - keep explanations out of it."
+            )
+        (disabled if line.startswith("#") else enabled).add(line.lstrip("#"))
     return table, enabled, disabled
 
 

@@ -77,7 +77,12 @@ fi
 
 # --- SBML syntactic test suite ----------------------------------------------------------------
 if [ -d "$ROOT/syntactic" ]; then
-    run cargo run --release --example test-suite-syntactic -- $(cat validated-rules.txt)
+    # Only the *enabled* rule ids are passed (a bare id; `#`-commented ones are documented but not
+    # compared). Extracting them explicitly matters: `$(cat validated-rules.txt)` relied on the
+    # shell treating a `#id` word as a comment, so any other line in the file silently became a
+    # nonsense argument and the gate degraded instead of failing.
+    enabled_rules=$(sed -nE '/^[A-Za-z0-9_-]+$/p' validated-rules.txt | tr '\n' ' ')
+    run cargo run --release --example test-suite-syntactic -- $enabled_rules
     # The filtered run above only reports the rules listed in `validated-rules.txt`; this second
     # gate runs the same example without a filter and compares the whole-corpus mismatch, issue
     # and round-trip reports against recorded snapshots, so rules (and documents) the filtered run
