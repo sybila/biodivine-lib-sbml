@@ -42,24 +42,24 @@ pub(crate) fn validate_sbase<T: SBase>(
 /// The value of the attribute id on every instance of the following classes of objects must be unique
 /// across the set of all id attribute values of all such objects in a model:
 /// [AlgebraicRule](crate::core::rule::AlgebraicRule), [AssignmentRule](crate::core::rule::AssignmentRule),
-/// [Compartment](compartment::Compartment), [Constraint](constraint::Constraint), [Delay](event::Delay),
-/// [Event](event::Event), [EventAssignment](event::EventAssignment),
-/// [FunctionDefinition](function_definition::FunctionDefinition),
-/// [InitialAssignment](initial_assignment::InitialAssignment), [KineticLaw](reaction::KineticLaw),
-/// [ListOfCompartments](Model::compartments), [ListOfConstraints](Model::constraints),
-/// [ListOfEventAssignments](event::Event::event_assignments), [ListOfEvents](Model::events),
-/// [ListOfFunctionDefinitions](Model::function_definitions),
-/// [ListOfInitialAssignments](Model::initial_assignments),
-/// [ListOfLocalParameters](reaction::KineticLaw::local_parameters),
-/// [ListOfModifierSpeciesReferences](reaction::Reaction::modifiers), [ListOfParameters](Model::parameters),
-/// [ListOfReactions](Model::reactions), [ListOfRules](Model::rules),
-/// [ListOfSpecies](Model::species), [ListOfSpeciesReferences](reaction::Reaction::reactants),
-/// [ListOfUnitDefinitions](Model::unit_definitions), [ListOfUnits](unit_definition::UnitDefinition::units),
-/// [Model](Model), [ModifierSpeciesReference](reaction::ModifierSpeciesReference),
-/// [Parameter](parameter::Parameter), [Priority](event::Priority), [RateRule](rule::RateRule),
-/// [Reaction](reaction::Reaction), [Species](species::Species), [SpeciesReference](reaction::SpeciesReference),
-/// [Trigger](event::Trigger), and [Unit](unit::Unit), plus the *id* attribute values of any SBML Level 3 package
-/// element defined to be in the *SId* namespace of the [Model](Model).
+/// [Compartment](crate::core::Compartment), [Constraint](crate::core::Constraint), [Delay](crate::core::Delay),
+/// [Event](crate::core::Event), [EventAssignment](crate::core::EventAssignment),
+/// [FunctionDefinition](crate::core::FunctionDefinition),
+/// [InitialAssignment](crate::core::InitialAssignment), [KineticLaw](crate::core::KineticLaw),
+/// [ListOfCompartments](crate::core::Model::compartments), [ListOfConstraints](crate::core::Model::constraints),
+/// [ListOfEventAssignments](crate::core::Event::event_assignments), [ListOfEvents](crate::core::Model::events),
+/// [ListOfFunctionDefinitions](crate::core::Model::function_definitions),
+/// [ListOfInitialAssignments](crate::core::Model::initial_assignments),
+/// [ListOfLocalParameters](crate::core::KineticLaw::local_parameters),
+/// [ListOfModifierSpeciesReferences](crate::core::Reaction::modifiers), [ListOfParameters](crate::core::Model::parameters),
+/// [ListOfReactions](crate::core::Model::reactions), [ListOfRules](crate::core::Model::rules),
+/// [ListOfSpecies](crate::core::Model::species), [ListOfSpeciesReferences](crate::core::Reaction::reactants),
+/// [ListOfUnitDefinitions](crate::core::Model::unit_definitions), [ListOfUnits](crate::core::UnitDefinition::units),
+/// [Model](crate::core::Model), [ModifierSpeciesReference](crate::core::ModifierSpeciesReference),
+/// [Parameter](crate::core::Parameter), [Priority](crate::core::Priority), [RateRule](crate::core::RateRule),
+/// [Reaction](crate::core::Reaction), [Species](crate::core::Species), [SpeciesReference](crate::core::SpeciesReference),
+/// [Trigger](crate::core::Trigger), and [Unit](crate::core::Unit), plus the *id* attribute values of any SBML Level 3 package
+/// element defined to be in the *SId* namespace of the [Model](crate::core::Model).
 pub(crate) fn apply_rule_10301(
     id: Option<SId>,
     xml_element: &XmlElement,

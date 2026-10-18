@@ -254,11 +254,11 @@ fn matches_xml_string_pattern(value: &Option<String>) -> bool {
 
 /// ### Rule 10311
 /// Unit identifiers (that is, the values of the **id** attribute on
-/// [UnitDefinition](unit_definition::UnitDefinition), the **units** attribute
-/// on [Compartment](compartment::Compartment), the **units** attribute on
-/// [Parameter](parameter::Parameter), the **units** attribute on
-/// [LocalParameter](reaction::LocalParameter), the **substanceUnits** attribute on
-/// [Species](species::Species), the SBML **units** attribute on MathML **cn** elements, and the
+/// [UnitDefinition](crate::core::UnitDefinition), the **units** attribute
+/// on [Compartment](crate::core::Compartment), the **units** attribute on
+/// [Parameter](crate::core::Parameter), the **units** attribute on
+/// [LocalParameter](crate::core::LocalParameter), the **substanceUnits** attribute on
+/// [Species](crate::core::Species), the SBML **units** attribute on MathML **cn** elements, and the
 /// **substanceUnits**, **volumeUnits**, **areaUnits**, **lengthUnits**, **timeUnits** and
 /// **extentUnits** on [Model]) must always conform to the syntax of the SBML
 /// data type **UnitSId**.
@@ -279,12 +279,12 @@ pub(crate) fn apply_rule_10311(
 
 /// ### Rule 10313
 /// Unit identifier references (that is, the *units* attribute on
-/// [Compartment](compartment::Compartment), the *units* attribute on
-/// [Parameter](parameter::Parameter), the *units* attribute on
-/// [LocalParameter](reaction::LocalParameter), the *substanceUnits* attribute on [Species],
+/// [Compartment](crate::core::Compartment), the *units* attribute on
+/// [Parameter](crate::core::Parameter), the *units* attribute on
+/// [LocalParameter](crate::core::LocalParameter), the *substanceUnits* attribute on [Species](crate::core::Species),
 /// the SBML *units* attribute on MathML **ci** elements, and the *substanceUnits*, *volumeUnits*,
 /// *areaUnits*, *lengthUnits*, *timeUnits* and *extentUnits* on [Model]) must be the identifier of
-/// a [UnitDefinition] in the [Model], or the identifier of a predefined unit in SBML, that is, any
+/// a [UnitDefinition](crate::core::UnitDefinition) in the [Model], or the identifier of a predefined unit in SBML, that is, any
 /// of the following [BaseUnit]: `ampere`, `avogadro`, `becquerel`, `candela`, `coulomb`, `dimensionless`, `farad`, `gram`,
 // `gray`, `henry`, `hertz`, `item`, `joule`, `katal`, `kelvin`, `kilogram`, `litre`, `lumen`,
 // `lux`, `metre`, `mole`, `newton`, `ohm`, `pascal`, `radian`, `second`, `siemens`, `sievert`,

@@ -396,7 +396,7 @@ impl Model {
         }
     }
 
-    /// Returns a vector of [LocalParameter] identifiers (attribute **id**).
+    /// Returns a vector of [LocalParameter](crate::core::LocalParameter) identifiers (attribute **id**).
     pub(crate) fn local_parameter_identifiers(&self) -> Vec<SId> {
         let mut identifiers: Vec<SId> = Vec::new();
 
@@ -451,7 +451,7 @@ impl Model {
         }
     }
 
-    /// Returns a vector of [SpeciesReference] identifiers (attribute **id**). Unit definitions
+    /// Returns a vector of [SpeciesReference](crate::core::SpeciesReference) identifiers (attribute **id**). Unit definitions
     /// without IDs are not included in the output.
     pub(crate) fn species_reference_identifiers(&self) -> Vec<SId> {
         let mut identifiers: Vec<SId> = vec![];

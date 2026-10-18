@@ -321,7 +321,7 @@ pub(crate) trait SbmlUtils: SBase {
         OptionalChild::new(self.xml_element(), name, NS_HTML)
     }
 
-    /// Create an instance of a [RequiredProperty] with the given `name` which adheres to
+    /// Create an instance of a [RequiredProperty](crate::xml::RequiredProperty) with the given `name` which adheres to
     /// the SBML namespace.
     #[inline(always)]
     fn required_sbml_property<T: XmlPropertyType>(
@@ -331,7 +331,7 @@ pub(crate) trait SbmlUtils: SBase {
         RequiredSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
     }
 
-    /// Create an instance of a [OptionalProperty] with the given `name` which adheres to
+    /// Create an instance of a [OptionalProperty](crate::xml::OptionalProperty) with the given `name` which adheres to
     /// the SBML namespace.
     #[inline(always)]
     fn optional_sbml_property<T: XmlPropertyType>(
@@ -408,5 +408,6 @@ pub(crate) trait SbmlUtils: SBase {
     }
 }
 
-/// [crate::sbase::SbmlUtils] is implemented for all types that implement [crate::sbase::SBase].
+/// `SbmlUtils` (a crate-internal helper trait) is implemented for all types that implement
+/// [SBase].
 impl<T: SBase> SbmlUtils for T {}

@@ -759,7 +759,7 @@ pub fn apply_rule_20808<T: SBase>(id: Option<SId>, element: &T, issues: &mut Vec
 }
 
 /// ### Rule 20509
-/// Both attributes [metaidRef] and attribute holding the metaid reference
+/// Both attributes `metaidRef` and attribute holding the metaid reference
 /// have to refer to the same specific element of model.
 pub fn apply_rule_20509<T: SBase>(
     element: &Option<T>,
@@ -804,7 +804,7 @@ pub fn apply_rule_20809<T: SBase>(
     }
 }
 
-/// Covers the basic rules same for all the [glyph] elements.
+/// Covers the basic rules same for all the `glyph` elements.
 ///
 pub fn apply_glyph_rules<T: SBase>(
     metaid_ref: &OptionalSbmlProperty<MetaId>,

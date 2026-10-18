@@ -165,10 +165,10 @@ impl Math {
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10205
     /// In SBML Level 3, the only values permitted for the attribute **definitionURL** on a
-    /// **csymbol** are "**http://www.sbml.org/sbml/symbols/time**",
-    /// "**http://www.sbml.org/sbml/symbols/delay**",
-    /// "**http://www.sbml.org/sbml/symbols/avogadro**", and
-    /// "**http://www.sbml.org/sbml/symbols/rateOf**". An SBML package may allow new values for the
+    /// **csymbol** are "**<http://www.sbml.org/sbml/symbols/time>**",
+    /// "**<http://www.sbml.org/sbml/symbols/delay>**",
+    /// "**<http://www.sbml.org/sbml/symbols/avogadro>**", and
+    /// "**<http://www.sbml.org/sbml/symbols/rateOf>**". An SBML package may allow new values for the
     /// definitionURL attribute of a csymbol, and if so, the package must define **required="true"**
     /// on the SBML container element [**sbml**](crate::Sbml).
     pub(crate) fn apply_rule_10205(&self, issues: &mut Vec<SbmlIssue>) {
@@ -242,8 +242,8 @@ impl Math {
     // TODO: Complete implementation when adding extensions/packages is solved
     /// ### Rule 10208
     /// MathML **lambda** elements are only permitted as either the first element inside the
-    /// [**Math**] element of a [**FunctionDefinition**](FunctionDefinition) object,
-    /// or as the first element of a **semantics** element immediately inside the [**Math**] element
+    /// **Math** element of a [**FunctionDefinition**](FunctionDefinition) object,
+    /// or as the first element of a **semantics** element immediately inside the **Math** element
     /// of a [**FunctionDefinition**](FunctionDefinition) object. MathML **lambda**
     /// elements may not be used elsewhere in an SBML model. An SBML package may allow **lambda**
     /// elements on other elements, and if so, the package must define **required="true"** on the
@@ -358,9 +358,9 @@ impl Math {
     /// ### Rule 10215
     /// Outside a [FunctionDefinition] object, if a MathML **ci** element is not the first element within
     /// a MathML **apply**, then the **ci** element's value may only be chosen from the following set of
-    /// identifiers: the identifiers of [Species], [Compartment], [Parameter], [SpeciesReference]
-    /// and [Reaction] objects defined in the enclosing [Model] object; the identifiers of
-    /// [LocalParameter] objects that are children of the [Reaction] in which the
+    /// identifiers: the identifiers of [Species](crate::core::Species), [Compartment](crate::core::Compartment), [Parameter](crate::core::Parameter), [SpeciesReference](crate::core::SpeciesReference)
+    /// and [Reaction](crate::core::Reaction) objects defined in the enclosing [Model] object; the identifiers of
+    /// [LocalParameter](crate::core::LocalParameter) objects that are children of the [Reaction](crate::core::Reaction) in which the
     /// [FunctionDefinition] appears (if it appears inside the [Math] object of a [KineticLaw]),
     /// and any identifiers (in the SId namespace of the model) belonging to an
     /// object class defined by an SBML Level 3 package as having mathematical meaning.
@@ -413,12 +413,12 @@ impl Math {
     }
 
     /// ### Rule 10216
-    /// The id attribute value of a [LocalParameter] object defined within a [KineticLaw] object may only be
+    /// The id attribute value of a [LocalParameter](crate::core::LocalParameter) object defined within a [KineticLaw] object may only be
     /// used, in core, in MathML ci elements within the math element of that same [KineticLaw]; in other
-    /// words, the identifier of the [LocalParameter] object is not visible to other parts of the model outside
-    /// of that [Reaction] instance. In package constructs, the **id** attribute value of a [LocalParameter] object
+    /// words, the identifier of the [LocalParameter](crate::core::LocalParameter) object is not visible to other parts of the model outside
+    /// of that [Reaction](crate::core::Reaction) instance. In package constructs, the **id** attribute value of a [LocalParameter](crate::core::LocalParameter) object
     /// may only be used in MathML ci elements or as the target of an SIdRef attribute if that package
-    /// construct is a child of the parent [Reaction].
+    /// construct is a child of the parent [Reaction](crate::core::Reaction).
     pub(crate) fn apply_rule_10216(&self, issues: &mut Vec<SbmlIssue>) {
         let model = Model::for_child_element(self.xml_element()).unwrap();
         let all_local_param_ids = model.local_parameter_identifiers();

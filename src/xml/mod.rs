@@ -7,13 +7,13 @@
 //!    accessors (and no implicit dereference).
 //!  - [XmlWrapper]: the trait implemented by every SBML object; it provides access to the
 //!    underlying [XmlElement], which is the canonical accessor surface for element data.
-//!  - [XmlProperty] (with the [OptionalXmlProperty] and [RequiredXmlProperty] variants):
+//!  - [XmlProperty](crate::xml::XmlProperty) (with the [OptionalXmlProperty](crate::xml::OptionalXmlProperty) and [RequiredXmlProperty](crate::xml::RequiredXmlProperty) variants):
 //!    type-safe access to a single attribute of an element.
-//!  - [XmlChild] (with the [OptionalXmlChild], [RequiredXmlChild] and [XmlChildDefault]
+//!  - [XmlChild](crate::xml::XmlChild) (with the [OptionalXmlChild], [RequiredXmlChild](crate::xml::RequiredXmlChild) and [XmlChildDefault](crate::xml::XmlChildDefault)
 //!    variants): type-safe access to a single child element.
-//!  - [XmlList]: a typed list of child elements.
-//!  - [XmlPropertyType]: conversion between an attribute value and a Rust type.
-//!  - [XmlSubtype] / [XmlSupertype]: a safe downcast/upcast mechanism between related object
+//!  - [XmlList](crate::xml::XmlList): a typed list of child elements.
+//!  - [XmlPropertyType](crate::xml::XmlPropertyType): conversion between an attribute value and a Rust type.
+//!  - [XmlSubtype](crate::xml::XmlSubtype) / [XmlSupertype](crate::xml::XmlSupertype): a safe downcast/upcast mechanism between related object
 //!    types.
 //!
 //! The document model itself (parsing, serialization, node editing, namespace handling and
