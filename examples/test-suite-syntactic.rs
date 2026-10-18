@@ -470,15 +470,6 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     },
     KnownDifference {
         rule: "10102",
-        document: "fbc-20509/fbc-20509-fail-01-04-sev2-l3v1.xml",
-        direction: DifferenceDirection::Reported,
-        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
-                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
-                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
-                 report of the unknown child is right for the namespace the document declares.",
-    },
-    KnownDifference {
-        rule: "10102",
         document: "fbc-20608/fbc-20608-fail-01-03-sev2-l3v1.xml",
         direction: DifferenceDirection::Reported,
         reason: "The document is a Flux Balance Constraints document that uses the element names of the \
@@ -513,22 +504,6 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10102",
         document: "layout-21403/layout-21403-fail-01-01-sev2-l3v1.xml",
-        direction: DifferenceDirection::Reported,
-        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
-                 of the document's namespace permits; the suite's file lists the Layout package's own \
-                 rule for the same element instead.",
-    },
-    KnownDifference {
-        rule: "10102",
-        document: "layout-21405/layout-21405-fail-01-01-sev2-l3v1.xml",
-        direction: DifferenceDirection::Reported,
-        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
-                 of the document's namespace permits; the suite's file lists the Layout package's own \
-                 rule for the same element instead.",
-    },
-    KnownDifference {
-        rule: "10102",
-        document: "layout-21405/layout-21405-fail-01-02-sev2-l3v1.xml",
         direction: DifferenceDirection::Reported,
         reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
                  of the document's namespace permits; the suite's file lists the Layout package's own \

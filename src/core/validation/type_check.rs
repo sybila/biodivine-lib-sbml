@@ -356,6 +356,13 @@ fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<S
     validate_allowed_children(xml_element, issues);
     validate_required_children(xml_element, issues);
     validate_unique_children(xml_element, issues);
+
+    // The rules that constrain the attributes of an element *in a package namespace*, one row per
+    // rule (`crate::constants::package_rules`). They are a separate pass because the check above is
+    // a whitelist consulted by name: an attribute the package defines but the element does not
+    // permit is invisible to it, and the tables cannot express "this element has no attribute of
+    // this package at all".
+    crate::constants::package_rules::validate_package_attributes(xml_element, issues);
 }
 
 /// Validates for a given element that its attributes (keys) are only from predefined set of
@@ -647,6 +654,20 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "trigger" => Some("21226"),
         "delay" => Some("21227"),
         "priority" => Some("21232"),
+        // The *list* elements of a package, whose own rule covers both halves of the constraint
+        // ("no other attributes from the SBML Level 3 Core namespace **or** the package
+        // namespace"): the report of an attribute the element does not permit is the element's rule
+        // whichever namespace the attribute is in. `objective` and its siblings are different: their
+        // core half and their package half are separate rules, and only the package half is mapped
+        // here (the core half is an open cut point of the unit's report).
+        "listOfFluxObjectives" => Some("fbc-20509"),
+        "listOfFluxBounds" => Some("fbc-20205"),
+        "listOfObjectives" => Some("fbc-20206"),
+        "listOfLayouts" => Some("layout-20204"),
+        "listOfCurveSegments" => Some("layout-21405"),
+        "listOfQualitativeSpecies" => Some("qual-20205"),
+        "listOfTransitions" => Some("qual-20206"),
+        "listOfOutputs" => Some("qual-20411"),
         //fbc package
         "objective" => Some("fbc-20503"),
         "geneProductAssociation" => Some("fbc-20803"),
@@ -657,7 +678,6 @@ fn tag_to_attribute_rule_id(tag_name: &str, attr_name: &str) -> Option<&'static 
         "qualitativeSpecies" => Some("qual-20303"),
         "transition" => Some("qual-20403"),
         "listOfInputs" => Some("qual-20410"),
-        "listOfOutputs" => Some("qual-20411"),
         "listOfFunctionTerms" => Some("qual-20412"),
         "input" => Some("qual-20503"),
         "output" => Some("qual-20603"),

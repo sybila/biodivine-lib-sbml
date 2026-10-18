@@ -429,9 +429,6 @@
       1 Test fbc-20210/fbc-20210-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20210 (severity "Error").
       1 Test fbc-20210/fbc-20210-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20210 (severity "Error").
       1 Test fbc-20214/fbc-20214-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20214 (severity "Error").
-      1 Test fbc-20301/fbc-20301-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
-      1 Test fbc-20301/fbc-20301-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
-      1 Test fbc-20301/fbc-20301-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
       1 Test fbc-20302/fbc-20302-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20302 (severity "Error").
       1 Test fbc-20302/fbc-20302-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20302 (severity "Error").
       1 Test fbc-20303/fbc-20303-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
@@ -489,8 +486,6 @@
       1 Test fbc-20506/fbc-20506-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
       1 Test fbc-20509/fbc-20509-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20509/fbc-20509-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
-      1 Test fbc-20509/fbc-20509-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
-      1 Test fbc-20509/fbc-20509-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20509/fbc-20509-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20601/fbc-20601-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20601 (severity "Error").
       1 Test fbc-20601/fbc-20601-fail-01-02-sev2-l3v1.xml: Found unexpected issue fbc-20603 (severity "Error").
@@ -516,8 +511,6 @@
       1 Test fbc-20608/fbc-20608-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20608 (severity "Error").
       1 Test fbc-20608/fbc-20608-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20608 (severity "Error").
       1 Test fbc-20701/fbc-20701-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20701 (severity "Error").
-      1 Test fbc-20702/fbc-20702-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20702 (severity "Error").
-      1 Test fbc-20702/fbc-20702-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20702 (severity "Error").
       1 Test fbc-20703/fbc-20703-fail-01-01-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20703 (severity "Error").
       1 Test fbc-20703/fbc-20703-fail-01-01-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20705 (severity "Error").
       1 Test fbc-20703/fbc-20703-fail-01-02-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20703 (severity "Error").
@@ -719,14 +712,6 @@
       1 Test layout-20807/layout-20807-fail-01-01-layout-20808-sev2-l3v1.xml: Missed issue layout-20807 (severity "Error").
       1 Test layout-20807/layout-20807-fail-01-01-layout-20808-sev2-l3v1.xml: Missed issue layout-20808 (severity "Error").
       1 Test layout-20811/layout-20811-fail-01-01-sev2-l3v1.xml: Missed issue layout-20811 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-02-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-04-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-05-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-08-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-09-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-12-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-14-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
-      1 Test layout-20813/layout-20813-fail-01-16-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
       1 Test layout-20902/layout-20902-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20904 (severity "Error").
       1 Test layout-20902/layout-20902-fail-01-01-sev2-l3v1.xml: Missed issue layout-20902 (severity "Error").
       1 Test layout-20904/layout-20904-fail-01-02-sev2-l3v1.xml: Missed issue layout-20904 (severity "Error").
@@ -796,8 +781,6 @@
       1 Test layout-21402/layout-21402-fail-01-01-sev2-l3v1.xml: Missed issue layout-21402 (severity "Error").
       1 Test layout-21403/layout-21403-fail-01-01-sev2-l3v1.xml: Missed issue layout-21403 (severity "Error").
       1 Test layout-21404/layout-21404-fail-01-01-sev2-l3v1.xml: Missed issue layout-21404 (severity "Error").
-      1 Test layout-21405/layout-21405-fail-01-01-sev2-l3v1.xml: Missed issue layout-21405 (severity "Error").
-      1 Test layout-21405/layout-21405-fail-01-02-sev2-l3v1.xml: Missed issue layout-21405 (severity "Error").
       1 Test layout-21502/layout-21502-fail-01-01-sev2-l3v1.xml: Missed issue layout-21502 (severity "Error").
       1 Test layout-21503/layout-21503-fail-01-05-sev2-l3v1.xml: Found unexpected issue layout-21603 (severity "Error").
       1 Test layout-21503/layout-21503-fail-01-05-sev2-l3v1.xml: Missed issue layout-21503 (severity "Error").
