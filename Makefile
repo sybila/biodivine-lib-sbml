@@ -42,6 +42,7 @@ examples:
 rules:
 	python3 scripts/check_rule_ids.py
 	python3 scripts/check_emitted_ids.py
+	python3 scripts/spec_ids_audit.py --spec "$${SPEC:-../../sbml-specifications}" --check
 
 # Regenerate the coverage matrix from the SBML specification sources. Pass the checkout with
 # SPEC=/path/to/sbml-specifications.

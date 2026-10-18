@@ -71,6 +71,9 @@ run "$PYTHON" scripts/check_emitted_ids.py
 # --- specification coverage matrix ------------------------------------------------------------
 if [ -d "$SPEC" ]; then
     run "$PYTHON" scripts/spec_coverage.py --spec "$SPEC" --check
+    # The other direction of the same claim: the matrix must not have lost a rule id the released
+    # documents define, because a lost id silently leaves the scope of every ranking in this repo.
+    run "$PYTHON" scripts/spec_ids_audit.py --spec "$SPEC" --check
 else
     skip "specification checkout not found at $SPEC (set SPEC=...)"
 fi

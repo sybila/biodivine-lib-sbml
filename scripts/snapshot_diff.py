@@ -280,14 +280,34 @@ def main() -> None:
 
     print()
     print("## Metric movement (census only)")
+    print(
+        "   convention: the three severities are printed separately; the pinned census a report "
+        "quotes is error + warning (the `info` report carries the informational diagnostics)."
+    )
     total_before, total_after = len(before_index), len(after_index)
     print(f"   documents with a mismatch: {total_before} -> {total_after}")
+    info_before: set[str] = set()
+    info_after: set[str] = set()
     for name in ("error", "warning", "info"):
+        before_docs = {
+            MISMATCH.match(line).group("doc") for line in before[name] if MISMATCH.match(line)
+        }
+        after_docs = {
+            MISMATCH.match(line).group("doc") for line in after[name] if MISMATCH.match(line)
+        }
+        if name == "info":
+            info_before, info_after = before_docs, after_docs
         print(
             f"   {name}: {sum(before[name].values())} -> {sum(after[name].values())} events, "
-            f"{len({MISMATCH.match(line).group('doc') for line in before[name] if MISMATCH.match(line)})} "
-            f"-> {len({MISMATCH.match(line).group('doc') for line in after[name] if MISMATCH.match(line)})} documents"
+            f"{len(before_docs)} -> {len(after_docs)} documents"
         )
+        if name == "warning":
+            census_events_before = sum(before[name].values()) + sum(before["error"].values())
+            census_events_after = sum(after[name].values()) + sum(after["error"].values())
+    print(
+        f"   census (error + warning): {census_events_before} -> {census_events_after} events, "
+        f"{total_before - len(info_before)} -> {total_after - len(info_after)} documents"
+    )
     for rule in sorted(clean_per_rule):
         print(
             f"   documents moved mismatch -> clean because of {rule}: {clean_per_rule[rule]} "

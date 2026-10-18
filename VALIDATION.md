@@ -46,13 +46,28 @@ For the purposes of automated testing, we apply the list of rules in the
 `validated-rules.txt` file. As such, if you extend the list of actually validated
 rules, you have to also extend this file.
 
-The comparison set is part of every measurement, so the numbers that go with it are worth stating:
-112 of the file's rules are enabled and three are disabled (`10218`, `10223`, `10224`, each with the
-citation and the reason for staying disabled in the unit's report), nine disagreements are recorded
-as `KnownDifference` entries (three for `10215`, six for `10313`), and the unfiltered census reports
-739 documents with a mismatch over 1852 events. A stage that adjudicates a rule moves the
-denominator of the filtered gate, which is why the filtered metric is always reported together with
-the size of the list that produced it.
+The comparison set is part of every measurement, so the numbers that go with it are worth stating.
+The file holds **115 lines: 107 enabled rules and 8 documented-disabled ones** (`10209`, `10211`,
+`10212`, `10213`, `10217`, `10218`, `10223`, `10224`, each with the citation and the reason for
+staying disabled in `notes/g4-report.md` and `notes/g5-report.md`), and **106 `KnownDifference`
+entries** cover the documents where a correct check is stricter than the suite's reference
+implementation. The unfiltered census of the whole corpus - both halves, compared as they are
+shipped - reports **2869 documents with a mismatch over 7694 events** (1409 error + 6285 warning,
+plus 4 informational events that only the issue dump carries); the *filtered* CI gate reports 0
+mismatches over those 107 rules. A stage that adjudicates a rule moves the denominator of the
+filtered gate, which is why the filtered metric is always reported together with the size of the
+list that produced it.
+
+Two properties of that list are worth stating because they are easy to mistake for progress. An
+**enabled rule the corpus never exercises** moves no event at all, so its row cannot be counted
+into a pass-rate claim: `10104`, `10208`, `10210`, `10222`, `10312` and `10401` are enabled and the
+corpus carries no expectation for any of them (five of the six are rules of the standard whose test
+documents are Level 2 documents, which the comparison does not read; `10104` and `10210` are marked
+`harness-only` in the coverage matrix because the crate reports them only through the harness's own
+levels). `scripts/corpus_worklist.py` prints that list from the expectation files
+(`## Hollow enables`), and the harness prints its own, narrower version ("rules were requested but
+not found in the test suite", which is directory-level).
+
 
 ### Whole-corpus gates
 
@@ -211,18 +226,31 @@ that turn them into the numbers a change is reviewed against. They are plain `py
 dependencies and they never write to the repository, so they can be run against the report files
 of a run in progress or against the recorded snapshots.
 
-  * `scripts/corpus_census.py` (`--baseline` for the snapshots, `--by-rule` for the detail) is
-    the pinned metric: how many *documents* carry at least one mismatch and how many mismatch
-    *events* there are, each partitioned by rule family and by direction (`Missed` versus
-    `Found unexpected`). An event is one line counted with multiplicity; a document is counted
-    once. Running the example with the enabled rules of `validated-rules.txt` as arguments gives
-    the filtered metric of the CI gate, running it without them gives the unfiltered census.
+  * `scripts/corpus_census.py` (`--baseline` for the snapshots, `--by-rule` for the detail,
+    `--by-provenance` for the partition that decides scope) is the pinned metric: how many
+    *documents* carry at least one mismatch and how many mismatch *events* there are, each
+    partitioned by rule family and by direction (`Missed` versus `Found unexpected`). An event is
+    one line counted with multiplicity; a document is counted once. Running the example with the
+    enabled rules of `validated-rules.txt` as arguments gives the filtered metric of the CI gate,
+    running it without them gives the unfiltered census. `--by-provenance` adds the partition the
+    scope decisions use (an id is in scope because a *specification* defines it, read from
+    `spec-coverage/rules.csv`, never because of its digits), the per-package split of the in-scope
+    events, the ids no specification defines, the cross-table between the two taxonomies and the
+    converse check that no `8xxxx`/`9xxxx` id is a specification rule.
   * `scripts/corpus_worklist.py` ranks every rule the corpus or the census mentions, twice: by
     mismatch events and by *documents unlocked* (a rule that is a document's only remaining
-    mismatch is worth more than one that appears in a document with five others). It reads
-    `validated-rules.txt` and the crate's rule table to show, per rule, whether the id is enabled,
-    disabled or unknown, so "implemented but not compared" is distinguishable from "not
+    mismatch is worth more than one that appears in a document with five others). It ranks by
+    provenance, splits the strict unlock by corpus half (`l3v1`/`l3v2`), prints one ranking per
+    package of the extension box, and prints its own sections for the ids no specification defines,
+    for the marginal count restricted to documents that in-scope work can actually clean, and for
+    the *hollow enables* (an enabled rule the corpus never exercises, which can move no event). It
+    reads `validated-rules.txt` and the crate's rule table to show, per rule, whether the id is
+    enabled, disabled or unknown, so "implemented but not compared" is distinguishable from "not
     implemented".
+  * `scripts/spec_ids_audit.py` re-derives the rule ids of the released specification documents by
+    a second route and diffs them against `spec-coverage/rules.csv`, because a generator that drops
+    an id silently turns real in-scope work into "no owning specification" in every table. It fails
+    (`--check`) when a specification defines an id the matrix does not hold.
   * `scripts/snapshot_diff.py` attributes a moved snapshot line to a rule and to a *shape*
     (a missing expectation that is now reported, a spurious one that disappeared, a line that
     only the issue dump can see, ...) and reports, per rule, how many documents moved from
