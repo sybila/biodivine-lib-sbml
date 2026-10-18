@@ -263,10 +263,14 @@ once as a doctest in the documentation of `Sbml::validate` (see "Which documents
 model"), which `cargo test --doc` runs on every checkout. The doctest uses inline documents rather
 than corpus files, because the corpus is downloaded rather than committed.
 
-The same is true of the `l2v4` and `l1v1` cases of the corpus: they are read, their `level` and
-`version` are readable, and the `unmodelled-level` lint names the pair instead of reporting an empty
-result. Enabling Level 1 and Level 2 is the work of their level modules (the `l1`/`l2` goals): a
-delta for their tables, not a new entry in the constant that lists the accepted roots.
+The same is true of the `l1v1` case of the corpus: it is read, its `level` and `version` are
+readable, and the `unmodelled-level` lint names the pair instead of reporting an empty result.
+**Level 2 is enabled** (Versions 1 to 5): `l2v4` and its siblings resolve their model and are walked,
+against the tables of *their* version, which live as a delta in `src/constants/deltas.rs` (the
+three-case classification - optional-with-default, required, absent-from-that-version - is recorded
+with its schema citations in `notes/g5-report.md` 7.1, and the measurement in 7.3). Enabling Level 1
+is the work of its level module (the `l1` goal): a delta for its tables, not a new entry in the
+constant that lists the accepted roots.
 
 Two consequences are worth stating plainly.
 
@@ -276,9 +280,57 @@ Two consequences are worth stating plainly.
     lines described *translated* documents and their expectation files were never compared at all.
     The library no longer needs that translation to read a Version 1 document, so the harness does
     not do it: the version a document declares is the version it is validated as. The levels the
-    crate does not model yet (Level 1 and Level 2) are not read at all, and the run says so.
+    crate does not model yet (Level 1) are not read at all, and the run says so - separately from
+    the levels it *does* model but does not compare yet (Level 2), whose comparison and whose class
+    dispositions are the next step, because reading a level without its dispositions would turn the
+    filtered gate red.
   * Reading an older level, and validating it, is the work of the level modules: a delta for the
     tables of that level, plus the rules whose text differs between the versions.
+
+##### A required property whose attribute the version makes optional
+
+The typed accessors of this crate are level-agnostic: `Species::constant()` is a
+`RequiredSbmlProperty<Boolean>`, and on a Level 3 document it panics when the attribute is absent,
+which is what the required-attribute guard of the type check prevents. Level 2 does not require that
+attribute - it is *optional with a default* - so a valid Level 2 document would make such a read
+panic.
+
+`RequiredSbmlProperty::get` therefore answers with the **specification's default** when the
+document's version makes the attribute optional, and keeps the documented panic when the version
+requires it. The defaults are data (`src/constants/deltas.rs`, `ATTRIBUTE_DEFAULTS`), each cited to
+the schema line that declares it:
+
+```rust
+use biodivine_lib_sbml::core::Species;
+use biodivine_lib_sbml::xml::{OptionalXmlChild, RequiredXmlProperty, XmlChild};
+use biodivine_lib_sbml::Sbml;
+
+// A Level 2 document that leaves `constant` out is valid, and the read answers `false`
+// (Level 2 Version 4, `sbml-level-2/version-4/schema/sbml.xsd`: `<xsd:attribute name="constant"
+// type="xsd:boolean" use="optional" default="false"/>`).
+let document = Sbml::read_str(
+    r#"
+    <sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+      <model>
+        <listOfCompartments><compartment id="c" size="1"/></listOfCompartments>
+        <listOfSpecies><species id="s" compartment="c" initialAmount="1"/></listOfSpecies>
+      </model>
+    </sbml>
+"#,
+)
+.unwrap();
+let model = document.model().get().unwrap();
+let species: Species = model.species().get().unwrap().get(0);
+assert!(!species.constant().get());
+```
+
+(The block is the body of `examples/verify-doc-example.rs`, which is compiled and run with the crate
+rather than being a doctest, because `VALIDATION.md` is not Rust documentation.)
+
+The same applies to `compartment@constant` and `parameter@constant` (default `true`),
+`reaction@reversible` (`true`), `unit@exponent`/`@scale`/`@multiplier` (`1`/`0`/`1`) and the other
+rows of the table. A caller that follows the documented read therefore cannot panic on a valid
+document of any level this crate models, and the panic inventory over the whole corpus is empty.
 
 ##### `not-validated` is a regression signal
 
