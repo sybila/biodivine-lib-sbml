@@ -263,19 +263,25 @@ Two consequences are worth stating explicitly, because they are the boundary of 
     is that version's business and the package checks of this crate do not apply to it
     (`Sbml::declares_modelled_package`). Relaxing that gate without per-version deltas in the tables
     is a measured regression, and the measurement names each relaxation separately because they are
-    not interchangeable (the table is in `notes/g42-report.md` section 4.1): relaxing the
+    not interchangeable (the table is in `notes/g42-report.md` section 4.1). Relaxing the
     *content-model* guards alone - the child predicate accepting every published version of the
-    modelled packages, and the requirement gate
-    removed - makes the corpus report **147 events the suite does not expect, against 0 gained**
-    (`10102` x82 for `listOfFluxBounds`, an unknown child of `<model>` in the Version 2 table but legal
-    in Version 1, and `20222` x65 for `model@fbc:strict`, which Version 1 does not have and Version 3
-    removed), on 65 Version 1 and 20 Version 3 documents, and turns the *filtered* gate from 0 into
-    147 mismatches. Relaxing the *recognition* gate alone **aborts the run**: the requirement gate is
-    what produces the `20222` report, and the `not-validated` short-circuit that report triggers is
-    what keeps the required read of `fbc:strict` away from a document that does not carry it, so the
-    two guards have to move together (relaxing all three panics on 587 documents). Supporting a second
-    version of a package is therefore the same work as supporting a second version of the core: a
-    per-version delta for the tables, its requirements and its content model.
+    modelled packages, and the requirement gate removed - makes the corpus report **147 events the
+    suite does not expect, against 0 gained** (`10102` x82 for `listOfFluxBounds`, an unknown child of
+    `<model>` in the Version 2 table but legal in Version 1, and `20222` x65 for `model@fbc:strict`,
+    which Version 1 does not have and Version 3 removed), on 65 Version 1 and 20 Version 3 documents.
+    Both ids are enabled, so it also turns the *filtered* gate from 0 into 147 mismatches.
+    Relaxing the *recognition* gate alone makes **65 documents panic** on the required read of
+    `fbc:strict` (`--report-panics` counts them; without that flag the run stops at the first), with
+    no report of its own. Relaxing both completes with **no panic** and gains **10** detections
+    (`fbc-20705`-`fbc-20714` on Version 3 documents) - and that is the reading of the evidence a
+    reader should take away: the two guards have to move together, because the requirement gate is
+    what produces the `20222` report and the `not-validated` short-circuit that report triggers is
+    what keeps the required read away from a document that does not carry the attribute. (A third,
+    incorrect relaxation that removed the gate's declaration test altogether - "validate every
+    document as if it carried FBC" - is the one that panics on 587 documents; it is recorded in the
+    report as a non-candidate.) Supporting a second version of a package is therefore the same work as
+    supporting a second version of the core: a per-version delta for the tables, its requirements and
+    its content model.
 
 The rule table is checked against the specification by `python3 scripts/check_rule_ids.py`
 (`make rules`): every rule the table calls a specification rule must be a rule the
