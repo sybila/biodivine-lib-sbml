@@ -22,37 +22,37 @@ impl Reaction {
         obj
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn reversible(&self) -> RequiredSbmlProperty<bool> {
+    pub fn reversible(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("reversible")
     }
 
-    pub fn compartment(&self) -> OptionalSbmlProperty<SId> {
+    pub fn compartment(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("compartment")
     }
 
-    pub fn reactants(&self) -> OptionalSbmlChild<XmlList<SpeciesReference>> {
+    pub fn reactants(&self) -> OptionalSbmlChild<'_, XmlList<SpeciesReference>> {
         self.optional_sbml_child("listOfReactants")
     }
 
-    pub fn products(&self) -> OptionalSbmlChild<XmlList<SpeciesReference>> {
+    pub fn products(&self) -> OptionalSbmlChild<'_, XmlList<SpeciesReference>> {
         self.optional_sbml_child("listOfProducts")
     }
 
-    pub fn modifiers(&self) -> OptionalSbmlChild<XmlList<ModifierSpeciesReference>> {
+    pub fn modifiers(&self) -> OptionalSbmlChild<'_, XmlList<ModifierSpeciesReference>> {
         self.optional_sbml_child("listOfModifiers")
     }
 
-    pub fn kinetic_law(&self) -> OptionalSbmlChild<KineticLaw> {
+    pub fn kinetic_law(&self) -> OptionalSbmlChild<'_, KineticLaw> {
         self.optional_sbml_child("kineticLaw")
     }
 }
 
 pub trait SimpleSpeciesReference: SBase {
-    fn species(&self) -> RequiredSbmlProperty<SId> {
+    fn species(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("species")
     }
 }
@@ -71,11 +71,11 @@ impl SpeciesReference {
         obj
     }
 
-    pub fn stoichiometry(&self) -> OptionalSbmlProperty<f64> {
+    pub fn stoichiometry(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("stoichiometry")
     }
 
-    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("constant")
     }
 }
@@ -114,7 +114,7 @@ impl KineticLaw {
         Self::search_in_parents(child, "kineticLaw")
     }
 
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -126,7 +126,7 @@ impl KineticLaw {
         self.math().get().map(|it| it.node())
     }
 
-    pub fn local_parameters(&self) -> OptionalSbmlChild<XmlList<LocalParameter>> {
+    pub fn local_parameters(&self) -> OptionalSbmlChild<'_, XmlList<LocalParameter>> {
         self.optional_sbml_child("listOfLocalParameters")
     }
 
@@ -153,15 +153,15 @@ impl LocalParameter {
         obj
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn value(&self) -> OptionalSbmlProperty<f64> {
+    pub fn value(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("value")
     }
 
-    pub fn units(&self) -> OptionalSbmlProperty<SId> {
+    pub fn units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("units")
     }
 }

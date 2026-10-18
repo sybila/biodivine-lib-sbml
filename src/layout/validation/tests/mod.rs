@@ -44,7 +44,7 @@ fn check_compartment_glyph() {
     let issues = doc.unwrap().validate().unwrap();
 
     assert_eq!(issues.len(), 2);
-    assert_eq!(issues.get(0).unwrap().rule(), "layout-20509");
+    assert_eq!(issues.first().unwrap().rule(), "layout-20509");
     assert_eq!(issues.get(1).unwrap().rule(), "layout-20508");
 }
 

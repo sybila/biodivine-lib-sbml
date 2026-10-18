@@ -25,24 +25,24 @@ impl Compartment {
         cmp
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn spatial_dimensions(&self) -> OptionalSbmlProperty<f64> {
+    pub fn spatial_dimensions(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("spatialDimensions")
     }
 
-    pub fn size(&self) -> OptionalSbmlProperty<f64> {
+    pub fn size(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("size")
     }
 
     /// TODO: implement units lookup in model according to documentation
-    pub fn units(&self) -> OptionalSbmlProperty<SId> {
+    pub fn units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("units")
     }
 
-    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("constant")
     }
 }

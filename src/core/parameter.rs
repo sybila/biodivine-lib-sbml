@@ -19,19 +19,19 @@ impl Parameter {
         obj
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn value(&self) -> OptionalSbmlProperty<f64> {
+    pub fn value(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("value")
     }
 
-    pub fn units(&self) -> OptionalSbmlProperty<SId> {
+    pub fn units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("units")
     }
 
-    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("constant")
     }
 }

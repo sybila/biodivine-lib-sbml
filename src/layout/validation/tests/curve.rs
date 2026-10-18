@@ -1,5 +1,4 @@
 use crate::Sbml;
-use std::collections::BTreeSet;
 
 /// ### Rule layout-21503
 /// A `LineSegment` must specify the two `Point` elements `start` and `end`. No other elements from

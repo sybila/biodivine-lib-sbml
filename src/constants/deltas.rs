@@ -650,18 +650,22 @@ mod tests {
         REQUIRED_ATTRIBUTES, REQUIRED_CHILDREN, UNIQUE_CHILDREN,
     };
 
-    /// Every delta row of the module, as `(table, element, versions, added, removed)`.
-    ///
-    /// The rows are collected from the tables themselves rather than written down again, so a row
-    /// that is added without being covered by the consistency rules below is impossible: the scan
-    /// reads the same data the accessors do.
-    fn all_rows() -> Vec<(
+    /// One delta row: the table it belongs to, the element, the versions it applies to, and the
+    /// attributes or children it adds and removes.
+    type DeltaRow = (
         &'static str,
         &'static str,
         &'static [LevelVersion],
         &'static [&'static str],
         &'static [&'static str],
-    )> {
+    );
+
+    /// Every delta row of the module, as a [`DeltaRow`].
+    ///
+    /// The rows are collected from the tables themselves rather than written down again, so a row
+    /// that is added without being covered by the consistency rules below is impossible: the scan
+    /// reads the same data the accessors do.
+    fn all_rows() -> Vec<DeltaRow> {
         let mut rows = Vec::new();
         for (table, entries) in [
             (
@@ -891,7 +895,7 @@ mod tests {
                 "`fast` must be required exactly in Version 1 ({version:?})"
             );
             assert_eq!(
-                types.iter().any(|it| *it == ("fast", "boolean")),
+                types.contains(&("fast", "boolean")),
                 is_v1,
                 "`fast` must be typed exactly in Version 1 ({version:?})"
             );

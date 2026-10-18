@@ -1,7 +1,7 @@
 //! The per-document report of a level, for the shape analysis of `notes/g5-report.md` section 7.
 //!
 //!     cargo run --release --example probe-c24-messages -- 2 > /tmp/l2.txt
-use biodivine_lib_sbml::xml::{OptionalXmlChild, XmlProperty};
+use biodivine_lib_sbml::xml::XmlProperty;
 use biodivine_lib_sbml::Sbml;
 
 fn main() {

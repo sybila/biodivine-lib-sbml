@@ -27,11 +27,8 @@ fn check_single_field(ast: &syn::DeriveInput) {
         panic!("This derive macro only supports types with a single field.");
     }
     let field = fields.into_iter().next().unwrap();
-    if field.ident.is_some() {
-        panic!(
-            "Unexpected field `{}` found.",
-            field.ident.as_ref().unwrap()
-        );
+    if let Some(ident) = field.ident.as_ref() {
+        panic!("Unexpected field `{ident}` found.");
     }
 }
 

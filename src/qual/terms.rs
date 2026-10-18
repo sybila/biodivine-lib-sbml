@@ -34,7 +34,7 @@ impl DefaultTerm {
         obj
     }
 
-    pub fn result_level(&self) -> RequiredSbmlProperty<u32> {
+    pub fn result_level(&self) -> RequiredSbmlProperty<'_, u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 }
@@ -52,7 +52,7 @@ impl FunctionTerm {
         obj.math().set(math);
         obj
     }
-    pub fn result_level(&self) -> RequiredSbmlProperty<u32> {
+    pub fn result_level(&self) -> RequiredSbmlProperty<'_, u32> {
         self.required_package_property("resultLevel", NS_QUAL, NS_QUAL)
     }
 
@@ -79,7 +79,7 @@ impl FunctionTerm {
     /// # Panics
     ///
     /// Reading the child ([`RequiredXmlChild::get`]) panics when the element has none.
-    pub fn math(&self) -> RequiredChild<Math> {
+    pub fn math(&self) -> RequiredChild<'_, Math> {
         RequiredChild::new(self.xml_element(), "math", NS_MATHML)
     }
 

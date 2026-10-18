@@ -69,17 +69,17 @@ impl Objective {
         obj.bound_type().set(&bound_type);
         obj
     }
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("id", NS_FBC, NS_FBC)
     }
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
-    pub fn bound_type(&self) -> RequiredSbmlProperty<FbcType> {
+    pub fn bound_type(&self) -> RequiredSbmlProperty<'_, FbcType> {
         self.required_package_property("type", NS_FBC, NS_FBC)
     }
 
-    pub fn flux_objectives(&self) -> RequiredSbmlChild<XmlList<FluxObjective>> {
+    pub fn flux_objectives(&self) -> RequiredSbmlChild<'_, XmlList<FluxObjective>> {
         self.required_package_child("listOfFluxObjectives", NS_FBC, false)
     }
 }

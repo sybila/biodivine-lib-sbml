@@ -23,23 +23,23 @@ impl QualOutput {
         obj.transition_effect().set(&transition_effect);
         obj
     }
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_QUAL, NS_QUAL)
     }
 
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_QUAL, NS_QUAL)
     }
 
-    pub fn qualitative_species(&self) -> RequiredSbmlProperty<SId> {
+    pub fn qualitative_species(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("qualitativeSpecies", NS_QUAL, NS_QUAL)
     }
 
-    pub fn transition_effect(&self) -> RequiredSbmlProperty<TransitionOutputEffect> {
+    pub fn transition_effect(&self) -> RequiredSbmlProperty<'_, TransitionOutputEffect> {
         self.required_package_property("transitionEffect", NS_QUAL, NS_QUAL)
     }
 
-    pub fn output_level(&self) -> OptionalSbmlProperty<u32> {
+    pub fn output_level(&self) -> OptionalSbmlProperty<'_, u32> {
         self.optional_package_property("outputLevel", NS_QUAL, NS_QUAL)
     }
 }

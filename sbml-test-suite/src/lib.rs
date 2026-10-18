@@ -526,6 +526,7 @@ mod tests {
         let entry = KnownDifference {
             rule: "99999",
             document: "10101/pass-l3v2.xml",
+            direction: DifferenceDirection::Reported,
             reason: "a test entry",
         };
         let read = |_document: &str| vec![("10101".to_string(), "Error".to_string())];

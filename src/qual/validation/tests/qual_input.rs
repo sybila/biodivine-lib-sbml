@@ -7,7 +7,7 @@ fn check_qual_20509() {
     let issues = doc.validate().unwrap();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule(), "qual-20509")
+    assert_eq!(issues.first().unwrap().rule(), "qual-20509")
 }
 
 #[test]
@@ -17,5 +17,5 @@ fn check_qual_20508() {
     let issues = doc.validate().unwrap();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule(), "qual-20508")
+    assert_eq!(issues.first().unwrap().rule(), "qual-20508")
 }

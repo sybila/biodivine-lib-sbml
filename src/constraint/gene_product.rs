@@ -18,16 +18,16 @@ impl GeneProduct {
         obj
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("id", NS_FBC, NS_FBC)
     }
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
-    pub fn label(&self) -> RequiredSbmlProperty<String> {
+    pub fn label(&self) -> RequiredSbmlProperty<'_, String> {
         self.required_package_property("label", NS_FBC, NS_FBC)
     }
-    pub fn associated_species(&self) -> OptionalSbmlProperty<SId> {
+    pub fn associated_species(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("associatedSpecies", NS_FBC, NS_FBC)
     }
 }

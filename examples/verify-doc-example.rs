@@ -1,5 +1,5 @@
 use biodivine_lib_sbml::core::Species;
-use biodivine_lib_sbml::xml::{OptionalXmlChild, RequiredXmlProperty, XmlChild};
+use biodivine_lib_sbml::xml::{OptionalXmlChild, RequiredXmlProperty};
 use biodivine_lib_sbml::Sbml;
 
 fn main() {

@@ -26,23 +26,23 @@ impl Event {
         obj
     }
 
-    pub fn use_values_from_trigger_time(&self) -> RequiredSbmlProperty<bool> {
+    pub fn use_values_from_trigger_time(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("useValuesFromTriggerTime")
     }
 
-    pub fn trigger(&self) -> OptionalSbmlChild<Trigger> {
+    pub fn trigger(&self) -> OptionalSbmlChild<'_, Trigger> {
         self.optional_sbml_child("trigger")
     }
 
-    pub fn priority(&self) -> OptionalSbmlChild<Priority> {
+    pub fn priority(&self) -> OptionalSbmlChild<'_, Priority> {
         self.optional_sbml_child("priority")
     }
 
-    pub fn delay(&self) -> OptionalSbmlChild<Delay> {
+    pub fn delay(&self) -> OptionalSbmlChild<'_, Delay> {
         self.optional_sbml_child("delay")
     }
 
-    pub fn event_assignments(&self) -> OptionalSbmlChild<XmlList<EventAssignment>> {
+    pub fn event_assignments(&self) -> OptionalSbmlChild<'_, XmlList<EventAssignment>> {
         self.optional_sbml_child("listOfEventAssignments")
     }
 }
@@ -65,15 +65,15 @@ impl Trigger {
         obj
     }
 
-    pub fn initial_value(&self) -> RequiredSbmlProperty<bool> {
+    pub fn initial_value(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("initialValue")
     }
 
-    pub fn persistent(&self) -> RequiredSbmlProperty<bool> {
+    pub fn persistent(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("persistent")
     }
 
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -97,7 +97,7 @@ impl XmlDefault for Priority {
 }
 
 impl Priority {
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -121,7 +121,7 @@ impl XmlDefault for Delay {
 }
 
 impl Delay {
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -145,11 +145,11 @@ impl EventAssignment {
         obj
     }
 
-    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }
 
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 

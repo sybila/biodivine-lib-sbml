@@ -23,27 +23,27 @@ impl QualInput {
         obj.transition_effect().set(&transition_effect);
         obj
     }
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_QUAL, NS_QUAL)
     }
 
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_QUAL, NS_QUAL)
     }
 
-    pub fn sign(&self) -> OptionalSbmlProperty<Sign> {
+    pub fn sign(&self) -> OptionalSbmlProperty<'_, Sign> {
         self.optional_package_property("sign", NS_QUAL, NS_QUAL)
     }
 
-    pub fn qualitative_species(&self) -> RequiredSbmlProperty<SId> {
+    pub fn qualitative_species(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("qualitativeSpecies", NS_QUAL, NS_QUAL)
     }
 
-    pub fn transition_effect(&self) -> RequiredSbmlProperty<TransitionInputEffect> {
+    pub fn transition_effect(&self) -> RequiredSbmlProperty<'_, TransitionInputEffect> {
         self.required_package_property("transitionEffect", NS_QUAL, NS_QUAL)
     }
 
-    pub fn threshold_level(&self) -> OptionalSbmlProperty<u32> {
+    pub fn threshold_level(&self) -> OptionalSbmlProperty<'_, u32> {
         self.optional_package_property("thresholdLevel", NS_QUAL, NS_QUAL)
     }
 }

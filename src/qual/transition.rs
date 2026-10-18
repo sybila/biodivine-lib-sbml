@@ -19,15 +19,15 @@ impl Transition {
         obj.function_terms().set(function_terms);
         obj
     }
-    pub fn inputs(&self) -> OptionalSbmlChild<XmlList<QualInput>> {
+    pub fn inputs(&self) -> OptionalSbmlChild<'_, XmlList<QualInput>> {
         self.optional_package_child("listOfInputs", NS_QUAL, true)
     }
 
-    pub fn outputs(&self) -> OptionalSbmlChild<XmlList<QualOutput>> {
+    pub fn outputs(&self) -> OptionalSbmlChild<'_, XmlList<QualOutput>> {
         self.optional_package_child("listOfOutputs", NS_QUAL, true)
     }
 
-    pub fn function_terms(&self) -> RequiredSbmlChild<XmlList<AbstractTerm>> {
+    pub fn function_terms(&self) -> RequiredSbmlChild<'_, XmlList<AbstractTerm>> {
         self.required_package_child("listOfFunctionTerms", NS_QUAL, true)
     }
 }

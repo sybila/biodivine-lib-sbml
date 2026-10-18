@@ -315,15 +315,15 @@ pub struct Sbml {
 
 /// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
-    pub fn model(&self) -> OptionalSbmlChild<Model> {
+    pub fn model(&self) -> OptionalSbmlChild<'_, Model> {
         OptionalSbmlChild::new_object_model(&self.sbml_root, "model", NS_SBML_CORE)
     }
 
-    pub fn level(&self) -> RequiredProperty<u32> {
+    pub fn level(&self) -> RequiredProperty<'_, u32> {
         RequiredProperty::new(&self.sbml_root, "level")
     }
 
-    pub fn version(&self) -> RequiredProperty<u32> {
+    pub fn version(&self) -> RequiredProperty<'_, u32> {
         RequiredProperty::new(&self.sbml_root, "version")
     }
 }
@@ -2781,23 +2781,23 @@ mod tests {
         assert_eq!(rules.len(), 9);
 
         match rules.get(0).cast() {
-            RuleTypes::Algebraic(_) => assert!(false),
+            RuleTypes::Algebraic(_) => panic!("The rule is algebraic."),
             Assignment(rule) => {
                 assert_eq!(rule.variable().get().as_str(), "SUMRecTAINF");
                 assert!(rule.math().is_set());
             }
-            RuleTypes::Rate(_) => assert!(false),
-            RuleTypes::Other(_) => assert!(false),
+            RuleTypes::Rate(_) => panic!("The rule is a rate rule."),
+            RuleTypes::Other(_) => panic!("The rule is of a type this test does not expect."),
         };
 
         match rules.top().cast() {
-            RuleTypes::Other(_) => assert!(false),
-            RuleTypes::Algebraic(_) => assert!(false),
+            RuleTypes::Other(_) => panic!("The rule is of a type this test does not expect."),
+            RuleTypes::Algebraic(_) => panic!("The rule is algebraic."),
             Assignment(rule) => {
                 assert_eq!(rule.variable().get().as_str(), "SUMForFoam");
                 assert!(rule.math().is_set());
             }
-            RuleTypes::Rate(_) => assert!(false),
+            RuleTypes::Rate(_) => panic!("The rule is a rate rule."),
         }
     }
 

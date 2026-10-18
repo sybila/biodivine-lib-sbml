@@ -12,10 +12,10 @@ pub struct FbcSpecies(XmlElement);
 impl XmlNamedSubtype<Species> for FbcSpecies {}
 
 impl FbcSpecies {
-    pub fn charge(&self) -> OptionalSbmlProperty<u32> {
+    pub fn charge(&self) -> OptionalSbmlProperty<'_, u32> {
         self.optional_package_property("charge", NS_FBC, NS_FBC)
     }
-    pub fn formula(&self) -> OptionalSbmlProperty<String> {
+    pub fn formula(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("chemicalFormula", NS_FBC, NS_FBC)
     }
 }

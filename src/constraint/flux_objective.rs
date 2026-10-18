@@ -17,16 +17,16 @@ impl FluxObjective {
         obj.coefficient().set(&coefficient);
         obj
     }
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_FBC, NS_FBC)
     }
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
-    pub fn reaction(&self) -> RequiredSbmlProperty<SId> {
+    pub fn reaction(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("reaction", NS_FBC, NS_FBC)
     }
-    pub fn coefficient(&self) -> RequiredSbmlProperty<f64> {
+    pub fn coefficient(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_package_property("coefficient", NS_FBC, NS_FBC)
     }
 }

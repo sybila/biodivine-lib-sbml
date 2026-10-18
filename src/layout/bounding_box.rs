@@ -18,13 +18,13 @@ impl BoundingBox {
         b_box
     }
 
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn position(&self) -> RequiredSbmlChild<Point> {
+    pub fn position(&self) -> RequiredSbmlChild<'_, Point> {
         self.required_package_child("position", NS_LAYOUT, false)
     }
-    pub fn dimensions(&self) -> RequiredSbmlChild<Dimensions> {
+    pub fn dimensions(&self) -> RequiredSbmlChild<'_, Dimensions> {
         self.required_package_child("dimensions", NS_LAYOUT, false)
     }
 }

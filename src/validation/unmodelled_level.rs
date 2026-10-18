@@ -60,7 +60,7 @@ pub(crate) fn validate_unmodelled_level(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
     use crate::validation::RuleKind;
     use crate::{RuleSet, SbmlIssueSeverity};
 

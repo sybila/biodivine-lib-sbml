@@ -21,19 +21,19 @@ impl Point {
         obj
     }
 
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn x(&self) -> RequiredSbmlProperty<f64> {
+    pub fn x(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_package_property("x", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn y(&self) -> RequiredSbmlProperty<f64> {
+    pub fn y(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_package_property("y", NS_LAYOUT, NS_LAYOUT)
     }
 
-    pub fn z(&self) -> OptionalSbmlProperty<f64> {
+    pub fn z(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_package_property("z", NS_LAYOUT, NS_LAYOUT)
     }
 }

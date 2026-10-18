@@ -23,25 +23,25 @@ impl QualitativeSpecies {
         obj.constant().set(&constant);
         obj
     }
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("id", NS_QUAL, NS_QUAL)
     }
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_QUAL, NS_QUAL)
     }
-    pub fn compartment(&self) -> RequiredSbmlProperty<SId> {
+    pub fn compartment(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("compartment", NS_QUAL, NS_QUAL)
     }
 
-    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_package_property("constant", NS_QUAL, NS_QUAL)
     }
 
-    pub fn initial_level(&self) -> OptionalSbmlProperty<u32> {
+    pub fn initial_level(&self) -> OptionalSbmlProperty<'_, u32> {
         self.optional_package_property("initialLevel", NS_QUAL, NS_QUAL)
     }
 
-    pub fn max_level(&self) -> OptionalSbmlProperty<u32> {
+    pub fn max_level(&self) -> OptionalSbmlProperty<'_, u32> {
         self.optional_package_property("maxLevel", NS_QUAL, NS_QUAL)
     }
 }

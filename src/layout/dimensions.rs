@@ -18,16 +18,16 @@ impl Dimensions {
         dim
     }
 
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn width(&self) -> RequiredSbmlProperty<f64> {
+    pub fn width(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_package_property("width", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn height(&self) -> RequiredSbmlProperty<f64> {
+    pub fn height(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_package_property("height", NS_LAYOUT, NS_LAYOUT)
     }
-    pub fn depth(&self) -> OptionalSbmlProperty<f64> {
+    pub fn depth(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_package_property("depth", NS_LAYOUT, NS_LAYOUT)
     }
 }

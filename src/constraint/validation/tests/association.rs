@@ -7,7 +7,7 @@ fn check_fbc_21103() {
     let issues = doc.validate().unwrap();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule(), "fbc-21103");
+    assert_eq!(issues.first().unwrap().rule(), "fbc-21103");
 }
 
 #[test]
@@ -17,5 +17,5 @@ fn check_fbc_20908() {
     let issues = doc.validate().unwrap();
 
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20908");
+    assert_eq!(issues.first().unwrap().rule(), "fbc-20908");
 }

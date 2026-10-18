@@ -13,13 +13,13 @@ pub struct FbcReaction(XmlElement);
 impl XmlNamedSubtype<Reaction> for FbcReaction {}
 
 impl FbcReaction {
-    pub fn lower_flux_bound(&self) -> OptionalSbmlProperty<SId> {
+    pub fn lower_flux_bound(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("lowerFluxBound", NS_FBC, NS_FBC)
     }
-    pub fn upper_flux_bound(&self) -> OptionalSbmlProperty<SId> {
+    pub fn upper_flux_bound(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("upperFluxBound", NS_FBC, NS_FBC)
     }
-    pub fn gene_product_association(&self) -> OptionalSbmlChild<GeneProductAssociation> {
+    pub fn gene_product_association(&self) -> OptionalSbmlChild<'_, GeneProductAssociation> {
         self.optional_package_child("geneProductAssociation", NS_FBC, false)
     }
 }

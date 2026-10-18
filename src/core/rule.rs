@@ -18,7 +18,7 @@ pub enum RuleTypes {
 }
 
 pub trait Rule: SBase {
-    fn math(&self) -> OptionalChild<Math> {
+    fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -97,7 +97,7 @@ impl AssignmentRule {
         obj
     }
 
-    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }
 }
@@ -117,7 +117,7 @@ impl RateRule {
         obj
     }
 
-    pub fn variable(&self) -> RequiredSbmlProperty<SId> {
+    pub fn variable(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("variable")
     }
 }

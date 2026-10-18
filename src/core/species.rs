@@ -25,40 +25,40 @@ impl Species {
         obj
     }
 
-    pub fn id(&self) -> RequiredSbmlProperty<SId> {
+    pub fn id(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("id")
     }
 
-    pub fn compartment(&self) -> RequiredSbmlProperty<SId> {
+    pub fn compartment(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("compartment")
     }
 
-    pub fn initial_amount(&self) -> OptionalSbmlProperty<f64> {
+    pub fn initial_amount(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("initialAmount")
     }
 
-    pub fn initial_concentration(&self) -> OptionalSbmlProperty<f64> {
+    pub fn initial_concentration(&self) -> OptionalSbmlProperty<'_, f64> {
         self.optional_sbml_property("initialConcentration")
     }
 
     // TODO: need to embrace recommended units (p. 148)
-    pub fn substance_units(&self) -> OptionalSbmlProperty<SId> {
+    pub fn substance_units(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("substanceUnits")
     }
 
-    pub fn has_only_substance_units(&self) -> RequiredSbmlProperty<bool> {
+    pub fn has_only_substance_units(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("hasOnlySubstanceUnits")
     }
 
-    pub fn boundary_condition(&self) -> RequiredSbmlProperty<bool> {
+    pub fn boundary_condition(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("boundaryCondition")
     }
 
-    pub fn constant(&self) -> RequiredSbmlProperty<bool> {
+    pub fn constant(&self) -> RequiredSbmlProperty<'_, bool> {
         self.required_sbml_property("constant")
     }
 
-    pub fn conversion_factor(&self) -> OptionalSbmlProperty<SId> {
+    pub fn conversion_factor(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("conversionFactor")
     }
 }

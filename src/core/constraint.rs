@@ -15,7 +15,7 @@ impl XmlDefault for Constraint {
 }
 
 impl Constraint {
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
@@ -27,7 +27,7 @@ impl Constraint {
         self.math().get().map(|it| it.node())
     }
 
-    pub fn message(&self) -> OptionalChild<XmlElement> {
+    pub fn message(&self) -> OptionalChild<'_, XmlElement> {
         self.optional_html_child("message")
     }
 }

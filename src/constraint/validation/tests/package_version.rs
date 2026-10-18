@@ -11,7 +11,7 @@
 //!    version its tables describe, and a document that declares another published version of the
 //!    package is not validated against them ([`Sbml::declares_modelled_package`]).
 use crate::constraint::FbcSpecies;
-use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlList, XmlSubtype};
+use crate::xml::{OptionalXmlChild, OptionalXmlProperty, XmlSubtype};
 use crate::{Sbml, FBC_NAMESPACE_URLS, URL_SBML_CORE};
 
 /// A document that declares the FBC package in `version` under the prefix `prefix`, and carries one

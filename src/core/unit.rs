@@ -14,19 +14,19 @@ use strum_macros::{Display, EnumString};
 pub struct Unit(XmlElement);
 
 impl Unit {
-    pub fn kind(&self) -> RequiredSbmlProperty<BaseUnit> {
+    pub fn kind(&self) -> RequiredSbmlProperty<'_, BaseUnit> {
         self.required_sbml_property("kind")
     }
 
-    pub fn exponent(&self) -> RequiredSbmlProperty<f64> {
+    pub fn exponent(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_sbml_property("exponent")
     }
 
-    pub fn scale(&self) -> RequiredSbmlProperty<u32> {
+    pub fn scale(&self) -> RequiredSbmlProperty<'_, u32> {
         self.required_sbml_property("scale")
     }
 
-    pub fn multiplier(&self) -> RequiredSbmlProperty<f64> {
+    pub fn multiplier(&self) -> RequiredSbmlProperty<'_, f64> {
         self.required_sbml_property("multiplier")
     }
 }

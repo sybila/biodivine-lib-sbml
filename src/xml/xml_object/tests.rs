@@ -1356,9 +1356,11 @@ fn strip_line_comments(source: &str) -> String {
 /// and by the specification-cited rows of the table instead.
 fn child_accessors(source: &str) -> Vec<(String, String)> {
     let mut result = Vec::new();
-    // `pub fn x(&self) -> OptionalSbmlChild<T> { ...("name" ...) }`
+    // `pub fn x(&self) -> OptionalSbmlChild<'_, T> { ...("name" ...) }`. The lifetime argument is
+    // optional in the pattern: it is the same type either way, and both spellings appear in the
+    // crate (a signature that names the lifetime and one that elides it).
     let pattern = regex::Regex::new(
-        r#"->\s*(?:Optional|Required)SbmlChild<(\w+)>\s*\{(?:[^{}]|\{[^{}]*\})*?[\w:]+\(\s*(?:[^,()]*,\s*)?"([^"]+)""#,
+        r#"->\s*(?:Optional|Required)SbmlChild<(?:'_\s*,\s*)?(\w+)>\s*\{(?:[^{}]|\{[^{}]*\})*?[\w:]+\(\s*(?:[^,()]*,\s*)?"([^"]+)""#,
     )
     .expect("The accessor pattern is a valid regular expression.");
     for captures in pattern.captures_iter(source) {

@@ -8,7 +8,7 @@ pub fn property_type() {
     let issues = doc.unwrap().validate().unwrap();
 
     assert!(!issues.is_empty());
-    assert_eq!(issues.get(0).unwrap().rule(), "SANITY_CHECK")
+    assert_eq!(issues.first().unwrap().rule(), "SANITY_CHECK")
 }
 
 #[test]
@@ -33,5 +33,5 @@ fn test_coefficient_special_values() {
         .get(0);
 
     assert_eq!(flux_objective.coefficient().get(), f64::INFINITY);
-    assert_eq!(issues.get(0).unwrap().rule(), "fbc-20608")
+    assert_eq!(issues.first().unwrap().rule(), "fbc-20608")
 }

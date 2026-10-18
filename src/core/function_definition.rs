@@ -18,7 +18,7 @@ impl FunctionDefinition {
         Self::search_in_parents(child, "functionDefinition")
     }
 
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 

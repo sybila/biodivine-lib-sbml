@@ -31,13 +31,13 @@ impl GeneProductRef {
         obj.gene_product().set(&gene_product);
         obj
     }
-    pub fn id(&self) -> OptionalSbmlProperty<SId> {
+    pub fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_package_property("id", NS_FBC, NS_FBC)
     }
-    pub fn name(&self) -> OptionalSbmlProperty<String> {
+    pub fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_package_property("name", NS_FBC, NS_FBC)
     }
-    pub fn gene_product(&self) -> RequiredSbmlProperty<SId> {
+    pub fn gene_product(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_package_property("geneProduct", NS_FBC, NS_FBC)
     }
 }
@@ -49,7 +49,7 @@ pub struct And(XmlElement);
 impl XmlNamedSubtype<Association> for And {}
 
 impl And {
-    pub fn and(&self) -> OptionalSbmlChild<XmlList<Association>> {
+    pub fn and(&self) -> OptionalSbmlChild<'_, XmlList<Association>> {
         self.optional_package_child("and", NS_FBC, false)
     }
 }
@@ -61,7 +61,7 @@ pub struct Or(XmlElement);
 impl XmlNamedSubtype<Association> for Or {}
 
 impl Or {
-    pub fn or(&self) -> RequiredSbmlChild<XmlList<Association>> {
+    pub fn or(&self) -> RequiredSbmlChild<'_, XmlList<Association>> {
         self.required_package_child("or", NS_FBC, false)
     }
 }

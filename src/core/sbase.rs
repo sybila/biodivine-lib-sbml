@@ -205,27 +205,27 @@ impl XmlPropertyType for SboTerm {
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
 pub trait SBase: XmlWrapper {
-    fn id(&self) -> OptionalSbmlProperty<SId> {
+    fn id(&self) -> OptionalSbmlProperty<'_, SId> {
         self.optional_sbml_property("id")
     }
 
-    fn name(&self) -> OptionalSbmlProperty<String> {
+    fn name(&self) -> OptionalSbmlProperty<'_, String> {
         self.optional_sbml_property("name")
     }
 
-    fn meta_id(&self) -> OptionalSbmlProperty<MetaId> {
+    fn meta_id(&self) -> OptionalSbmlProperty<'_, MetaId> {
         self.optional_sbml_property("metaid")
     }
 
-    fn sbo_term(&self) -> OptionalSbmlProperty<SboTerm> {
+    fn sbo_term(&self) -> OptionalSbmlProperty<'_, SboTerm> {
         self.optional_sbml_property("sboTerm")
     }
 
-    fn notes(&self) -> OptionalSbmlChild<XmlElement> {
+    fn notes(&self) -> OptionalSbmlChild<'_, XmlElement> {
         self.optional_sbml_child("notes")
     }
 
-    fn annotation(&self) -> OptionalSbmlChild<XmlElement> {
+    fn annotation(&self) -> OptionalSbmlChild<'_, XmlElement> {
         self.optional_sbml_child("annotation")
     }
 
@@ -285,7 +285,7 @@ pub(crate) trait SbmlUtils: SBase {
 
     /// Create an instance of [OptionalChild] with the given `name` and using the SBML namespace.
     #[inline(always)]
-    fn optional_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalSbmlChild<T> {
+    fn optional_sbml_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalSbmlChild<'_, T> {
         OptionalSbmlChild::new(self.xml_element(), name, NS_SBML_CORE)
     }
 
@@ -295,7 +295,7 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
         extension: Namespace,
         _required: bool,
-    ) -> OptionalSbmlChild<T> {
+    ) -> OptionalSbmlChild<'_, T> {
         OptionalSbmlChild::new(self.xml_element(), name, extension)
     }
 
@@ -305,19 +305,19 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
         extension: Namespace,
         _required: bool,
-    ) -> RequiredSbmlChild<T> {
+    ) -> RequiredSbmlChild<'_, T> {
         RequiredSbmlChild::new(self.xml_element(), name, extension)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the MathML namespace.
     #[inline(always)]
-    fn optional_math_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
+    fn optional_math_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<'_, T> {
         OptionalChild::new(self.xml_element(), name, NS_MATHML)
     }
 
     /// Create an instance of [OptionalChild] with the given `name` and using the HTML namespace.
     #[inline(always)]
-    fn optional_html_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<T> {
+    fn optional_html_child<T: XmlWrapper>(&self, name: &'static str) -> OptionalChild<'_, T> {
         OptionalChild::new(self.xml_element(), name, NS_HTML)
     }
 
@@ -327,7 +327,7 @@ pub(crate) trait SbmlUtils: SBase {
     fn required_sbml_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-    ) -> RequiredSbmlProperty<T> {
+    ) -> RequiredSbmlProperty<'_, T> {
         RequiredSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
     }
 
@@ -337,7 +337,7 @@ pub(crate) trait SbmlUtils: SBase {
     fn optional_sbml_property<T: XmlPropertyType>(
         &self,
         name: &'static str,
-    ) -> OptionalSbmlProperty<T> {
+    ) -> OptionalSbmlProperty<'_, T> {
         OptionalSbmlProperty::new(self.xml_element(), name, NS_SBML_CORE, NS_SBML_CORE)
     }
 
@@ -346,7 +346,7 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
         property_package: Namespace,
         element_package: Namespace,
-    ) -> OptionalSbmlProperty<T> {
+    ) -> OptionalSbmlProperty<'_, T> {
         OptionalSbmlProperty::new(self.xml_element(), name, property_package, element_package)
     }
 
@@ -355,7 +355,7 @@ pub(crate) trait SbmlUtils: SBase {
         name: &'static str,
         property_package: Namespace,
         element_package: Namespace,
-    ) -> RequiredSbmlProperty<T> {
+    ) -> RequiredSbmlProperty<'_, T> {
         RequiredSbmlProperty::new(self.xml_element(), name, property_package, element_package)
     }
 

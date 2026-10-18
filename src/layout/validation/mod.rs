@@ -728,13 +728,10 @@ pub fn apply_rule_20406<T: SBase>(
     issues: &mut Vec<SbmlIssue>,
     xml_element: &XmlElement,
 ) {
-    if meta_id.is_some() {
-        match element.find_element_by_meta_id(&meta_id.unwrap()) {
-            Some(_) => (),
-            None => {
-                let message = "Attribute [MetaidRef] does not refer to an existing element!";
-                issues.push(SbmlIssue::new("layout-20406", xml_element, message));
-            }
+    if let Some(meta_id) = meta_id {
+        if element.find_element_by_meta_id(&meta_id).is_none() {
+            let message = "Attribute [MetaidRef] does not refer to an existing element!";
+            issues.push(SbmlIssue::new("layout-20406", xml_element, message));
         }
     }
 }

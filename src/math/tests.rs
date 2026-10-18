@@ -714,7 +714,7 @@ fn a_node_is_a_checked_view_of_an_element() {
     let document = Document::parse_string(source).expect("A well-formed probe.");
     let root = XmlElement::new(document.root().expect("a root"));
     assert_eq!(root.tag_name(), "math");
-    assert!(Math::matches_element(&root) == false);
+    assert!(!Math::matches_element(&root));
     assert!(MathNode::try_from_element(root).is_none());
 
     // A node built by the layer is recognized by its own kind.
@@ -976,7 +976,7 @@ fn a_typed_edit_is_minimal() {
     // unambiguous.
     let target = document
         .xml_element()
-        .recursive_child_elements_filtered(|it| Cn::matches_element(it))
+        .recursive_child_elements_filtered(Cn::matches_element)
         .into_iter()
         .find(|it| before.matches(&it.element().to_string()).count() == 1)
         .expect("The example document contains a `cn` whose rendering is unique.");
@@ -1048,7 +1048,7 @@ fn writing_units_declares_the_sbml_prefix() {
     let document = Sbml::read_str(&source).expect("A readable document.");
     let cn = document
         .xml_element()
-        .recursive_child_elements_filtered(|it| Cn::matches_element(it))
+        .recursive_child_elements_filtered(Cn::matches_element)
         .into_iter()
         .next()
         .expect("The document has a `cn` element.");
@@ -1465,7 +1465,7 @@ fn sweep_math(root: &str) -> Sweep {
         };
         let formulas = document
             .xml_element()
-            .recursive_child_elements_filtered(|it| Math::matches_element(it));
+            .recursive_child_elements_filtered(Math::matches_element);
         for formula in formulas {
             sweep.formulas += 1;
             walk_formula(&formula, &mut sweep);
@@ -1573,14 +1573,14 @@ fn the_corpus_math_outside_the_subset_is_the_deliberate_violation() {
     // rule 01009/01011/01023 cases about XML that a parser refuses, so the walk cannot read them.
     assert_eq!(
         sweep.unreadable,
-        vec![
+        [
             "syntactic/01009/01009-fail-01-02-sev2-l2v1.xml",
             "syntactic/01009/01009-fail-01-03-sev2-l2v1.xml",
             "syntactic/01009/01009-fail-01-05-sev2-l2v2.xml",
             "syntactic/01009/01009-fail-01-06-sev2-l2v3.xml",
             "syntactic/01009/01009-fail-01-07-sev2-l2v4.xml",
             "syntactic/01011/01011-fail-01-01-sev2-l2v1.xml",
-            "syntactic/01023/01023-fail-01-01-sev2-l2v1.xml",
+            "syntactic/01023/01023-fail-01-01-sev2-l2v1.xml"
         ]
         .iter()
         .map(|it| it.to_string())

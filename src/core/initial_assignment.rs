@@ -19,11 +19,11 @@ impl InitialAssignment {
         obj
     }
 
-    pub fn symbol(&self) -> RequiredSbmlProperty<SId> {
+    pub fn symbol(&self) -> RequiredSbmlProperty<'_, SId> {
         self.required_sbml_property("symbol")
     }
 
-    pub fn math(&self) -> OptionalChild<Math> {
+    pub fn math(&self) -> OptionalChild<'_, Math> {
         self.optional_math_child("math")
     }
 
