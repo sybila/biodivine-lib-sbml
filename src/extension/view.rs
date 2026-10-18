@@ -111,7 +111,9 @@ pub trait ExtensionOf<Base: SbmlObject + Clone>: Sized {
     /// The namespace of the package, as the `(prefix, url)` pair this crate writes names with.
     ///
     /// See the trait documentation for the shape the URL has to have and for what happens when it
-    /// does not (rule `10102` on every element and attribute the package adds).
+    /// does not: the type check reports every element and every attribute the package adds to an
+    /// SBML document, an element under rule `10102` itself and an attribute under the rule of the
+    /// element it is on.
     const PACKAGE: Namespace;
 
     /// Wraps `object` into this view.

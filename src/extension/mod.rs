@@ -30,9 +30,10 @@
 //!
 //!  * a **namespace**, as the `(prefix, url)` pair this crate writes names with. The URL has to be
 //!    shaped like the namespace of a standard package
-//!    (`http://www.sbml.org/sbml/level3/version2/<package>/version1`): an element or attribute whose
-//!    namespace is neither a namespace of the standard nor a foreign one is reported by rule
-//!    `10102` (see [`ExtensionOf::PACKAGE`] for the whole rule);
+//!    (`http://www.sbml.org/sbml/level3/version2/<package>/version1`): the content of a namespace
+//!    that is neither one of the standard nor a foreign one is reported by the core type check - an
+//!    element under rule `10102` itself, an attribute under the rule of the element it is on (see
+//!    [`ExtensionOf::PACKAGE`] for the measured table);
 //!  * the **wrapper declarations** of the elements it adds: `#[derive(XmlWrapper)]` with an
 //!    `#[sbml_object(..)]` attribute naming the element and the namespace. The derive generates the
 //!    identity (element names, namespace, `xsi:type`) and the `new_empty(document)` constructor, and

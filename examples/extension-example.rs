@@ -34,6 +34,10 @@
 //! Nothing here is a helper of the crate: the wrappers come from the `XmlWrapper` derive, the
 //! accessors from the public XML layer, the cast from `ExtensionCast`, the rules from `RuleSet` and
 //! the injection from `ExtensionValidation`.
+//!
+//! The items of the package are `pub` because this file is also compiled as a module by
+//! `tests/extension-example.rs`, which calls `main()` and reaches the view and the rule set; a
+//! package of its own would not need that, and nothing in the crate requires it.
 
 use std::error::Error;
 
@@ -52,10 +56,10 @@ use sbml_macros::XmlWrapper;
 /// URL that identifies the namespace.
 ///
 /// The URL is written in the shape a package of the SBML standard uses,
-/// `.../level3/version2/<package>/version1`. That is not cosmetic: an element or an attribute in a
-/// namespace that is neither a namespace of the standard nor a foreign one is reported by rule
-/// 10102, so a package that adds content to an SBML document has to declare a namespace of this
-/// shape.
+/// `.../level3/version2/<package>/version1`. That is not cosmetic: the core type check reports the
+/// content of a namespace that is neither one of the standard nor a foreign one (an element under
+/// rule 10102, an attribute under the rule of the element it is on), so a package that adds content
+/// to an SBML document has to declare a namespace of this shape.
 pub const MY_EXTENSION: (&str, &str) = (
     "myext",
     "http://www.sbml.org/sbml/level3/version2/myext/version1",

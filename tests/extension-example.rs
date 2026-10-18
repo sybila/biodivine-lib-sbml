@@ -35,12 +35,13 @@ use biodivine_lib_sbml::{RuleSet, Sbml, SbmlError, SbmlIssueSeverity, URL_SBML_C
 
 use extension_example::{MyExtensionRules, MY_EXTENSION};
 
-/// A saw whose package URL is *not* shaped like the namespace of a package of the standard.
+/// A view whose package URL is *not* shaped like the namespace of a package of the standard.
 ///
 /// The cast of this view succeeds on a document that declares the URL - the cast asks whether the
 /// document declares the package, not what the package is called - while the *type check* of this
-/// crate reports rule 10102 for the elements and attributes of that namespace. The test below pins
-/// both halves, because the second one is the case an extension author runs into first.
+/// crate reports the content of that namespace (an element under rule `10102`, an attribute under
+/// the rule of the element it is on). The test below pins both halves, because the second one is the
+/// case an extension author runs into first.
 struct ForeignNamespaceModel {
     model: Model,
 }
@@ -69,6 +70,10 @@ fn the_extension_example_runs() {
 
 /// A two-document corpus, both documents declaring the package and each with an empty expectation
 /// file, so the suite expects nothing from either of them.
+///
+/// The directory is keyed on the process id, so one corpus per process is the assumption: a second
+/// test that used a `TempCorpus` concurrently would share the path and the two would delete each
+/// other's files.
 ///
 /// The first document breaks the package's specification rule (a tuning parameter without a
 /// `value`), and the second is valid but carries the package's diagnostic (an empty list): the two
@@ -144,6 +149,11 @@ impl Drop for TempCorpus {
 /// Reads, validates (with the package's rules injected) and reports a document the way the harness
 /// expects: one `(rule id, severity)` pair per issue, with the severity spelled as the suite spells
 /// it.
+///
+/// A document the XML layer cannot parse is reported as `10101` rather than as a failure, which is
+/// the convention of the suite and not a rule of this package: `10101` is the specification rule "an
+/// SBML document must be well-formed XML", so the suite's expectation files express an unreadable
+/// document that way, and the harness of this crate does the same (`src/test_suite.rs`).
 fn validate_with_extension(
     content: &str,
     extension: &dyn ExtensionValidation,
