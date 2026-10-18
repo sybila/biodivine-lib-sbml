@@ -1816,3 +1816,176 @@ fn the_element_name_universe_is_not_empty_and_not_permissive() {
     );
     assert!(multi_kind_list_members("listOfSubGlyphs").contains(&"graphicalObject"));
 }
+
+// ---------------------------------------------------------------------------------------------
+// The doc-sentence scan
+// ---------------------------------------------------------------------------------------------
+
+/// The doc sentence of a typed accessor, as the crate writes it: the XML name of the attribute or
+/// child, and the element it is read from.
+///
+/// The sentence is not cosmetic: the Rust name is a snake_case rendering of the XML name, so the
+/// sentence is where a reader learns *which* attribute an accessor exposes - and it is the only place
+/// that says so. That is why it has to agree with the code, and this scan is what keeps the two from
+/// drifting apart.
+const ACCESSOR_DOC: &str =
+    r"/// The `([A-Za-z0-9_:]+)` (attribute|child) of this `<([A-Za-z0-9_]+)>` element";
+
+/// The doc sentence of a wrapper type whose element the declaration names on its own.
+const WRAPPER_DOC: &str = r"/// The `<([A-Za-z0-9_]+)>` element of the ";
+
+/// The element name a `#[sbml_object(..)]` declaration gives a type: its `name`, or the first of its
+/// `names`.
+const OBJECT_NAME: &str = r#"#\[sbml_object\(\s*(?:name = "([^"]+)"|names = \["([^"]+)"[^\]]*\])"#;
+
+/// The number of accessor and wrapper sentences the scan has to see.
+///
+/// A count rather than a floor of one, for the reason the creation scans state: a scan that finds
+/// nothing has to fail rather than pass vacuously.
+const ACCESSOR_SENTENCES: usize = 190;
+const WRAPPER_SENTENCES: usize = 40;
+
+/// Every accessor sentence names the attribute or child its body reads and the element its type
+/// declares; every wrapper sentence names the element its declaration declares.
+#[test]
+fn a_doc_sentence_names_the_xml_name_the_code_actually_uses() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let object_name = regex::Regex::new(OBJECT_NAME).expect("A valid pattern.");
+    let accessor_doc = regex::Regex::new(ACCESSOR_DOC).expect("A valid pattern.");
+    let wrapper_doc = regex::Regex::new(WRAPPER_DOC).expect("A valid pattern.");
+    let accessor_call =
+        regex::Regex::new(r#"self\.(\w+)\(\s*(?:[A-Za-z_]+\s*,\s*)?"([A-Za-z0-9_:]+)""#)
+            .expect("A valid pattern.");
+    let impl_declaration =
+        regex::Regex::new(r"^impl(?:<[^>]*>)?\s+(\w+)").expect("A valid pattern.");
+
+    let files = rust_sources(&root)
+        .into_iter()
+        .map(|path| {
+            let source = std::fs::read_to_string(&path).expect("A readable source.");
+            (path, source)
+        })
+        .collect::<Vec<_>>();
+
+    // The element each wrapper type declares, from its own `#[sbml_object(..)]` attribute.
+    let mut elements = BTreeMap::new();
+    for (_path, source) in files.iter() {
+        let lines = source.lines().collect::<Vec<_>>();
+        for (index, line) in lines.iter().enumerate() {
+            let Some(position) = line.find("pub struct ") else {
+                continue;
+            };
+            let name = line[position + "pub struct ".len()..]
+                .chars()
+                .take_while(|it| it.is_alphanumeric() || *it == '_')
+                .collect::<String>();
+            let window = lines[index.saturating_sub(6)..=index].join(" ");
+            if let Some(captures) = object_name.captures(&window) {
+                let declared = captures
+                    .get(1)
+                    .or_else(|| captures.get(2))
+                    .map(|it| it.as_str().to_string());
+                if let Some(declared) = declared {
+                    elements.insert(name, declared);
+                }
+            }
+        }
+    }
+    elements.insert("Sbml".to_string(), "sbml".to_string());
+
+    let mut accessors = 0usize;
+    let mut wrappers = 0usize;
+    let mut problems = Vec::new();
+    for (path, source) in files.iter() {
+        let lines = source.lines().collect::<Vec<_>>();
+        for (index, line) in lines.iter().enumerate() {
+            if let Some(captures) = accessor_doc.captures(line) {
+                let documented = captures[1].to_string();
+                let element = captures[3].to_string();
+                // The accessor is the next line that is neither a doc comment nor an attribute.
+                let mut next = index + 1;
+                while next < lines.len()
+                    && (lines[next].trim_start().starts_with("///")
+                        || lines[next].trim_start().starts_with("#[")
+                        || lines[next].trim().is_empty())
+                {
+                    next += 1;
+                }
+                let body = lines[next..std::cmp::min(next + 6, lines.len())].join("\n");
+                let Some(used) = accessor_call.captures(&body) else {
+                    problems.push(format!(
+                        "{}:{}: the sentence has no accessor call below it",
+                        path.display(),
+                        index + 1
+                    ));
+                    continue;
+                };
+                let owner = (0..=index)
+                    .rev()
+                    .find_map(|back| impl_declaration.captures(lines[back]))
+                    .map(|it| it[1].to_string());
+                let declared = owner.as_ref().and_then(|it| elements.get(it)).cloned();
+                if used[2] != documented {
+                    problems.push(format!(
+                        "{}:{}: the sentence says `{documented}`, the body passes `{}`",
+                        path.display(),
+                        index + 1,
+                        &used[2]
+                    ));
+                } else if declared.as_deref() != Some(element.as_str()) {
+                    problems.push(format!(
+                        "{}:{}: the sentence says `<{element}>`, `{}` declares `<{}>`",
+                        path.display(),
+                        index + 1,
+                        owner.as_deref().unwrap_or("?"),
+                        declared.as_deref().unwrap_or("?")
+                    ));
+                } else {
+                    accessors += 1;
+                }
+            }
+            if let Some(captures) = wrapper_doc.captures(line) {
+                let documented = captures[1].to_string();
+                let mut next = index;
+                while next < lines.len() && !lines[next].contains("pub struct ") {
+                    next += 1;
+                }
+                if next == lines.len() {
+                    continue;
+                }
+                let window = lines[index..=next].join(" ");
+                let declared = object_name.captures(&window).and_then(|it| {
+                    it.get(1)
+                        .or_else(|| it.get(2))
+                        .map(|it| it.as_str().to_string())
+                });
+                if declared.as_deref() == Some(documented.as_str()) {
+                    wrappers += 1;
+                } else {
+                    problems.push(format!(
+                        "{}:{}: the sentence says `<{documented}>`, the declaration says `<{}>`",
+                        path.display(),
+                        index + 1,
+                        declared.as_deref().unwrap_or("?")
+                    ));
+                }
+            }
+        }
+    }
+
+    assert!(
+        problems.is_empty(),
+        "A doc sentence and the code it documents disagree:\n{}",
+        problems.join("\n")
+    );
+    assert!(
+        accessors >= ACCESSOR_SENTENCES,
+        "The scan found {accessors} accessor sentence(s), fewer than the {ACCESSOR_SENTENCES} it has \
+         to see: a scan that finds nothing has to fail rather than pass vacuously."
+    );
+    assert!(
+        wrappers >= WRAPPER_SENTENCES,
+        "The scan found {wrappers} wrapper sentence(s), fewer than the {WRAPPER_SENTENCES} it has to \
+         see."
+    );
+}
