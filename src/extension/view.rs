@@ -89,13 +89,18 @@ use crate::xml::{
 /// defines, and this crate implements the rule over the URI: a namespace is one of the standard when
 /// it is a published root (`SBML_ROOT_NAMESPACES`), a package namespace this crate models, or a URL
 /// of the shape above; the only other accepted namespaces are the foreign ones a document payload
-/// uses (`xsi`, XHTML, MathML and RDF). An extension whose URL is none of those - for example
-/// `http://example.org/myext` - is an *undefined SBML namespace*, so the type check reports 10102
-/// on **every element and every attribute** the extension adds to an SBML element, and those reports
-/// are not a mistake of the extension: the specification really does forbid content in a namespace
-/// that SBML does not define. The corpus has the case in
-/// `syntactic/99107/99107-fail-01-06-10102-sev2-l3v2.xml`, whose `xmlns:appear="http://anything"`
-/// makes `<appear:listOfShapes>` a 10102 report.
+/// uses (`xsi`, XHTML, MathML and RDF).
+///
+/// An extension whose URL is none of those - `http://example.org/myext`, say - is an **undefined
+/// SBML namespace**, and then the core type check reports every element and every attribute the
+/// extension adds to an SBML document: an element of such a namespace under rule `10102` itself, and
+/// an attribute under the rule this crate's tables give the element the attribute is on (a
+/// compartment's attributes are `20517`, a species' are `20623`), or under `10102` when the tables
+/// have no rule for that element. Those reports are not a mistake of the extension: the
+/// specification really does forbid an element or an attribute in a namespace that SBML does not
+/// define, so a package that is meant to be used on SBML documents declares a URL of the shape
+/// above. The corpus has the case in `syntactic/99107/99107-fail-01-06-10102-sev2-l3v2.xml`, whose
+/// `xmlns:appear="http://anything"` makes `<appear:listOfShapes>` a 10102 report.
 ///
 /// Deciding the URL is therefore part of writing the package, and a package that is registered with
 /// the SBML project has one of the shape above. `tests/extension_object.rs` of this crate uses

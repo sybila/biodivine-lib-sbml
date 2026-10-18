@@ -22,7 +22,9 @@
 //!
 //! A worked example of a package that adds an element type, a package attribute, an injected rule
 //! and a round trip through a file is `examples/extension-example.rs`; it is the reference for this
-//! module and it is compiled and run by `tests/extension-example.rs`.
+//! module, and `tests/extension-example.rs` runs it, pins the namespace-URL contract of
+//! [`ExtensionOf::PACKAGE`], and pins the guarantee the test-suite harness needs from an injected
+//! rule set.
 //!
 //! ## What a package needs from this crate
 //!
