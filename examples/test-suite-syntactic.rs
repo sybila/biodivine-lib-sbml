@@ -63,11 +63,8 @@ fn main() {
     // measured instead of stopping at the first broken document.
     // Say which levels the run does not read, so a reader of a parity report cannot mistake the
     // corpus coverage for the whole syntactic suite.
-    for level in unread_levels() {
-        println!(
-            "Not reading {level} documents: this crate does not model that level yet, so a document \
-             of it resolves no object model and its expectation file would be reported as missed."
-        );
+    for (level, reason) in unread_levels() {
+        println!("Not reading {level} documents: {reason}.");
     }
 
     let result = test_helper(

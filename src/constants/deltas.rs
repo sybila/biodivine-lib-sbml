@@ -201,6 +201,14 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
         // (added by Level 3 Version 1). `sbml-level-2/version-4/schema/sbml.xsd`, Reaction.
         NameDelta { versions: L2_ALL, added: &["fast"], removed: &["compartment"] },
     ],
+    // Level 2: `outside` is optional in every version (`version-N/schema/sbml.xsd`, `complexType
+    // Compartment`) and `compartmentType` exists from Version 2; Version 1 alone gives a
+    // `KineticLaw` the optional `substanceUnits` and `timeUnits` attributes (Level 3 removed them).
+    "compartment" => &[
+        NameDelta { versions: L2_ALL, added: &["outside"], removed: &[] },
+        NameDelta { versions: L2_V2_TO_V5, added: &["compartmentType"], removed: &[] },
+    ],
+
     "sbml" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfFunctionDefinitions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfUnitDefinitions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
@@ -223,16 +231,21 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
     "algebraicRule" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "constraint" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfLocalParameters" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
-    "kineticLaw" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
+    "kineticLaw" => &[
+        NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
+        // Level 2 Version 1 gives a `KineticLaw` the optional `substanceUnits` and `timeUnits`
+        // attributes (Level 3 removed them).
+        NameDelta { versions: L2_V1, added: &["substanceUnits", "timeUnits"], removed: &[] },
+    ],
     "listOfReactants" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfProducts" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfModifiers" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "eventAssignment" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfEventAssignments" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "trigger" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
-        // Level 2 Versions 1-3: a `Trigger` has no attributes at all (`persistent` and
-        // `initialValue` were added in Version 4).
-        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["initialValue", "persistent"] },
+        // Level 2: a `Trigger` has no attributes at all - `persistent` and `initialValue` occur in
+        // none of the five Level 2 schemas (they were added by Level 3 Version 1).
+        NameDelta { versions: L2_ALL, added: &[], removed: &["initialValue", "persistent"] },
     ],
     "delay" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "priority" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
@@ -291,16 +304,18 @@ pub(crate) static REQUIRED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! 
         NameDelta { versions: L2_ALL, added: &[], removed: &["constant"] },
     ],
     "event" => &[
-        // Level 2 Versions 1-3: `useValuesFromTriggerTime` does not exist.
-        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["useValuesFromTriggerTime"] },
+        // Level 2: `useValuesFromTriggerTime` is absent before Version 4 and optional with the
+        // default `true` in Versions 4 and 5, so it is not a required attribute in *any* version of
+        // the level (the allowed-attribute row is the one that removes it where it does not exist).
+        NameDelta { versions: L2_ALL, added: &[], removed: &["useValuesFromTriggerTime"] },
     ],
     "unit" => &[
         // Level 2: `exponent`, `scale` and `multiplier` are optional with the defaults 1, 0, 1.
         NameDelta { versions: L2_ALL, added: &[], removed: &["exponent", "scale", "multiplier"] },
     ],
     "trigger" => &[
-        // Level 2 Versions 1-3: a `Trigger` has no attributes.
-        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["initialValue", "persistent"] },
+        // Level 2: a `Trigger` has no attributes at all (see the allowed-attribute row).
+        NameDelta { versions: L2_ALL, added: &[], removed: &["initialValue", "persistent"] },
     ],
 };
 

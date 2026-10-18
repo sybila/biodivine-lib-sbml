@@ -147,15 +147,39 @@ impl CorpusDocument {
 /// resolves no object model (see the crate's `VALIDATION.md`), so reading it would only produce the
 /// root-level rules and report every other expectation of its file as missed. [`unread_levels`]
 /// names them for the run's output.
-pub fn unread_levels() -> Vec<&'static str> {
+pub fn unread_levels() -> Vec<(&'static str, &'static str)> {
     vec![
-        "Level 1 Version 1",
-        "Level 1 Version 2",
-        "Level 2 Version 1",
-        "Level 2 Version 2",
-        "Level 2 Version 3",
-        "Level 2 Version 4",
-        "Level 2 Version 5",
+        (
+            "Level 1 Version 1",
+            "this crate does not model that level yet, so a document of it resolves no object model \
+             and its expectation file would be reported as missed",
+        ),
+        (
+            "Level 1 Version 2",
+            "this crate does not model that level yet (see the row above)",
+        ),
+        (
+            "Level 2 Version 1",
+            "the crate models that level, but the comparison of its half and the dispositions of \
+             the classes it reports are the next step; reading it without them would turn the \
+             filtered gate red",
+        ),
+        (
+            "Level 2 Version 2",
+            "the crate models that level (see the row above)",
+        ),
+        (
+            "Level 2 Version 3",
+            "the crate models that level (see the row above)",
+        ),
+        (
+            "Level 2 Version 4",
+            "the crate models that level (see the row above)",
+        ),
+        (
+            "Level 2 Version 5",
+            "the crate models that level (see the row above)",
+        ),
     ]
 }
 
