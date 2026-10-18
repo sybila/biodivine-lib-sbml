@@ -1,14 +1,52 @@
+      1 Test 01013/01013-fail-01-11-sev2-l3v1.xml: Missed issue 01013 (severity "Error").
+      1 Test 01016/01016-fail-01-01-21226-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      1 Test 01016/01016-fail-01-02-21226-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      2 Test 10102/10102-fail-02-01-layout-10402-sev2-l3v1.xml: Found unexpected issue layout-21503 (severity "Error").
+      2 Test 10102/10102-fail-02-02-layout-10401-sev2-l3v1.xml: Found unexpected issue layout-21503 (severity "Error").
+      2 Test 10102/10102-fail-02-02-layout-10402-sev2-l3v1.xml: Found unexpected issue layout-21503 (severity "Error").
+      2 Test 10102/10102-fail-02-04-layout-10402-sev2-l3v1.xml: Found unexpected issue layout-21503 (severity "Error").
+      1 Test 10103/10103-fail-02-17-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test 10103/10103-fail-02-21-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test 10103/10103-fail-02-26-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test 10209/10209-fail-01-12-sev2-l3v1.xml: Missed issue 10209 (severity "Error").
+      1 Test 10209/10209-fail-01-13-sev2-l3v1.xml: Missed issue 10209 (severity "Error").
+      1 Test 10209/10209-fail-02-14-sev2-l3v1.xml: Missed issue 10209 (severity "Error").
+      1 Test 10211/10211-fail-01-06-sev2-l3v1.xml: Missed issue 10211 (severity "Error").
+      1 Test 10212/10212-fail-01-11-sev2-l3v1.xml: Missed issue 10212 (severity "Error").
+      1 Test 10212/10212-fail-01-13-sev2-l3v1.xml: Missed issue 10212 (severity "Error").
+      1 Test 10212/10212-fail-02-14-sev2-l3v1.xml: Missed issue 10212 (severity "Error").
+      1 Test 10213/10213-fail-01-11-sev2-l3v1.xml: Missed issue 10213 (severity "Error").
+      1 Test 10217/10217-fail-01-05-sev2-l3v1.xml: Missed issue 10217 (severity "Error").
+      1 Test 10217/10217-fail-01-07-sev2-l3v1.xml: Missed issue 10217 (severity "Error").
+      1 Test 10217/10217-fail-01-08-sev2-l3v1.xml: Missed issue 10217 (severity "Error").
+      1 Test 10217/10217-fail-01-10-sev2-l3v1.xml: Missed issue 10217 (severity "Error").
+      1 Test 10218/10218-fail-01-11-10213-sev2-l3v1.xml: Missed issue 10218 (severity "Error").
+      1 Test 10218/10218-fail-01-12-sev2-l3v1.xml: Missed issue 10218 (severity "Error").
+      1 Test 10218/10218-fail-02-10-sev2-l3v1.xml: Missed issue 10218 (severity "Error").
       1 Test 10224/10224-fail-01-02-sev2-l3v2.xml: Missed issue 10224 (severity "Error").
+      1 Test 10601/10601-fail-01-07-sev2-l3v1.xml: Missed issue 10601 (severity "Error").
+      1 Test 10601/10601-fail-01-08-sev2-l3v1.xml: Missed issue 10601 (severity "Error").
       1 Test 10601/10601-fail-01-10-sev2-l3v2.xml: Missed issue 10601 (severity "Error").
       1 Test 10601/10601-fail-01-11-sev2-l3v2.xml: Missed issue 10601 (severity "Error").
+      1 Test 10801/10801-fail-01-10-sev2-l3v1.xml: Missed issue 10801 (severity "Error").
+      1 Test 10801/10801-fail-01-11-sev2-l3v1.xml: Missed issue 10801 (severity "Error").
+      1 Test 10801/10801-fail-01-12-sev2-l3v1.xml: Missed issue 10801 (severity "Error").
       1 Test 10801/10801-fail-01-16-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
       1 Test 10801/10801-fail-01-17-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
       1 Test 10801/10801-fail-01-18-sev2-l3v2.xml: Missed issue 10801 (severity "Error").
+      1 Test 20203/20203-fail-01-11-sev2-l3v1.xml: Missed issue 20203 (severity "Error").
+      1 Test 20216/20216-fail-01-01-sev2-l3v1.xml: Missed issue 20216 (severity "Error").
       1 Test 20216/20216-fail-01-02-sev2-l3v2.xml: Missed issue 20216 (severity "Error").
+      1 Test 20301/20301-fail-01-08-sev2-l3v1.xml: Missed issue 20301 (severity "Error").
+      1 Test 20301/20301-fail-01-09-sev2-l3v1.xml: Missed issue 20301 (severity "Error").
       1 Test 20301/20301-fail-01-14-sev2-l3v2.xml: Missed issue 20301 (severity "Error").
       1 Test 20301/20301-fail-01-15-sev2-l3v2.xml: Missed issue 20301 (severity "Error").
+      1 Test 20303/20303-fail-01-07-sev2-l3v1.xml: Missed issue 20303 (severity "Error").
+      1 Test 20303/20303-fail-01-08-sev2-l3v1.xml: Missed issue 20303 (severity "Error").
       1 Test 20303/20303-fail-01-11-sev2-l3v2.xml: Missed issue 20303 (severity "Error").
       1 Test 20303/20303-fail-01-12-sev2-l3v2.xml: Missed issue 20303 (severity "Error").
+      1 Test 20304/20304-fail-01-13-sev2-l3v1.xml: Missed issue 20304 (severity "Error").
+      1 Test 20304/20304-fail-01-14-sev2-l3v1.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-01-22-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-01-23-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-01-29-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
@@ -16,41 +54,87 @@
       1 Test 20304/20304-fail-01-30-99301-sev2-l3v2.xml: Missed issue 99301 (severity "Error").
       1 Test 20304/20304-fail-01-30-sev2-l3v2.xml: Found unexpected issue 10223 (severity "Error").
       1 Test 20304/20304-fail-01-30-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
+      1 Test 20304/20304-fail-02-15-sev2-l3v1.xml: Missed issue 20304 (severity "Error").
+      1 Test 20304/20304-fail-02-16-sev2-l3v1.xml: Missed issue 20304 (severity "Error").
+      1 Test 20304/20304-fail-02-17-sev2-l3v1.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-02-24-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-02-25-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
       1 Test 20304/20304-fail-02-26-sev2-l3v2.xml: Missed issue 20304 (severity "Error").
       1 Test 20305/20305-fail-01-01-sev2-l3v2.xml: Found unexpected issue 10218 (severity "Error").
       1 Test 20305/20305-fail-01-01-sev2-l3v2.xml: Missed issue 20305 (severity "Error").
+      1 Test 20305/20305-fail-01-08-sev2-l3v1.xml: Found unexpected issue 10218 (severity "Error").
+      1 Test 20305/20305-fail-01-08-sev2-l3v1.xml: Missed issue 20305 (severity "Error").
+      1 Test 20401/20401-fail-01-07-sev2-l3v1.xml: Missed issue 20401 (severity "Error").
+      1 Test 20401/20401-fail-01-08-sev2-l3v1.xml: Missed issue 20401 (severity "Error").
       1 Test 20401/20401-fail-01-10-sev2-l3v2.xml: Missed issue 20401 (severity "Error").
       1 Test 20401/20401-fail-01-11-sev2-l3v2.xml: Missed issue 20401 (severity "Error").
+      1 Test 20410/20410-fail-01-17-sev2-l3v1.xml: Missed issue 20410 (severity "Error").
+      1 Test 20410/20410-fail-01-18-sev2-l3v1.xml: Missed issue 20410 (severity "Error").
+      1 Test 20410/20410-fail-01-19-sev2-l3v1.xml: Missed issue 20410 (severity "Error").
       1 Test 20410/20410-fail-01-25-sev2-l3v2.xml: Missed issue 20410 (severity "Error").
       1 Test 20410/20410-fail-01-26-sev2-l3v2.xml: Missed issue 20410 (severity "Error").
       1 Test 20410/20410-fail-01-27-sev2-l3v2.xml: Missed issue 20410 (severity "Error").
+      1 Test 20413/20413-fail-01-01-sev2-l3v1.xml: Missed issue 20413 (severity "Error").
+      1 Test 20601/20601-fail-01-07-sev2-l3v1.xml: Missed issue 20601 (severity "Error").
       1 Test 20601/20601-fail-01-09-sev2-l3v2.xml: Missed issue 20601 (severity "Error").
+      1 Test 20609/20609-fail-01-05-sev2-l3v1.xml: Missed issue 20609 (severity "Error").
       1 Test 20609/20609-fail-01-07-sev2-l3v2.xml: Missed issue 20609 (severity "Error").
+      1 Test 20610/20610-fail-01-13-sev2-l3v1.xml: Missed issue 20610 (severity "Error").
+      1 Test 20610/20610-fail-01-14-sev2-l3v1.xml: Missed issue 20610 (severity "Error").
       1 Test 20610/20610-fail-01-17-sev2-l3v2.xml: Missed issue 20610 (severity "Error").
       1 Test 20610/20610-fail-01-18-sev2-l3v2.xml: Missed issue 20610 (severity "Error").
+      1 Test 20611/20611-fail-01-13-sev2-l3v1.xml: Missed issue 20611 (severity "Error").
+      1 Test 20611/20611-fail-01-14-sev2-l3v1.xml: Missed issue 20611 (severity "Error").
+      1 Test 20611/20611-fail-01-15-sev2-l3v1.xml: Missed issue 20611 (severity "Error").
       1 Test 20611/20611-fail-01-19-sev2-l3v2.xml: Missed issue 20611 (severity "Error").
       1 Test 20611/20611-fail-01-20-sev2-l3v2.xml: Missed issue 20611 (severity "Error").
       1 Test 20611/20611-fail-01-21-sev2-l3v2.xml: Missed issue 20611 (severity "Error").
+      1 Test 20617/20617-fail-01-01-sev2-l3v1.xml: Missed issue 20617 (severity "Error").
       1 Test 20617/20617-fail-01-02-sev2-l3v2.xml: Missed issue 20617 (severity "Error").
+      1 Test 20705/20705-fail-01-01-sev2-l3v1.xml: Missed issue 20705 (severity "Error").
+      1 Test 20705/20705-fail-01-02-sev2-l3v1.xml: Missed issue 20705 (severity "Error").
       1 Test 20705/20705-fail-01-03-sev2-l3v2.xml: Missed issue 20705 (severity "Error").
       1 Test 20705/20705-fail-01-04-sev2-l3v2.xml: Missed issue 20705 (severity "Error").
+      1 Test 20801/20801-fail-01-04-sev2-l3v1.xml: Missed issue 20801 (severity "Error").
       1 Test 20801/20801-fail-01-06-sev2-l3v2.xml: Missed issue 20801 (severity "Error").
+      1 Test 20802/20802-fail-01-04-sev2-l3v1.xml: Missed issue 20802 (severity "Error").
       1 Test 20802/20802-fail-01-06-sev2-l3v2.xml: Missed issue 20802 (severity "Error").
+      1 Test 20803/20803-fail-01-04-sev2-l3v1.xml: Missed issue 20803 (severity "Error").
       1 Test 20803/20803-fail-01-06-sev2-l3v2.xml: Missed issue 20803 (severity "Error").
+      1 Test 20901/20901-fail-01-11-sev2-l3v1.xml: Missed issue 20901 (severity "Error").
       1 Test 20901/20901-fail-01-13-sev2-l3v2.xml: Missed issue 20901 (severity "Error").
+      1 Test 20902/20902-fail-01-11-sev2-l3v1.xml: Missed issue 20902 (severity "Error").
       1 Test 20902/20902-fail-01-13-sev2-l3v2.xml: Missed issue 20902 (severity "Error").
+      1 Test 20903/20903-fail-01-13-sev2-l3v1.xml: Missed issue 20903 (severity "Error").
+      1 Test 20903/20903-fail-01-14-sev2-l3v1.xml: Missed issue 20903 (severity "Error").
+      1 Test 20903/20903-fail-01-15-sev2-l3v1.xml: Missed issue 20903 (severity "Error").
+      1 Test 20903/20903-fail-01-16-sev2-l3v1.xml: Missed issue 20903 (severity "Error").
+      1 Test 20903/20903-fail-01-17-sev2-l3v1.xml: Missed issue 20903 (severity "Error").
       1 Test 20903/20903-fail-01-21-sev2-l3v2.xml: Missed issue 20903 (severity "Error").
       1 Test 20903/20903-fail-01-22-sev2-l3v2.xml: Missed issue 20903 (severity "Error").
       1 Test 20903/20903-fail-01-23-sev2-l3v2.xml: Missed issue 20903 (severity "Error").
       1 Test 20903/20903-fail-01-24-sev2-l3v2.xml: Missed issue 20903 (severity "Error").
       1 Test 20903/20903-fail-01-25-sev2-l3v2.xml: Missed issue 20903 (severity "Error").
+      1 Test 20904/20904-fail-01-13-sev2-l3v1.xml: Missed issue 20904 (severity "Error").
+      1 Test 20904/20904-fail-01-14-sev2-l3v1.xml: Missed issue 20904 (severity "Error").
+      1 Test 20904/20904-fail-01-15-sev2-l3v1.xml: Missed issue 20904 (severity "Error").
+      1 Test 20904/20904-fail-01-16-sev2-l3v1.xml: Missed issue 20904 (severity "Error").
+      1 Test 20904/20904-fail-01-17-sev2-l3v1.xml: Missed issue 20904 (severity "Error").
       1 Test 20904/20904-fail-01-21-sev2-l3v2.xml: Missed issue 20904 (severity "Error").
       1 Test 20904/20904-fail-01-22-sev2-l3v2.xml: Missed issue 20904 (severity "Error").
       1 Test 20904/20904-fail-01-23-sev2-l3v2.xml: Missed issue 20904 (severity "Error").
       1 Test 20904/20904-fail-01-24-sev2-l3v2.xml: Missed issue 20904 (severity "Error").
       1 Test 20904/20904-fail-01-25-sev2-l3v2.xml: Missed issue 20904 (severity "Error").
+      1 Test 20906/20906-fail-01-41-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-42-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-43-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-44-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-45-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-46-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-47-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-48-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-49-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-01-50-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-01-63-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-01-64-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-01-65-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
@@ -61,6 +145,8 @@
       1 Test 20906/20906-fail-01-70-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-01-71-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-01-72-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-03-39-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
+      1 Test 20906/20906-fail-03-40-sev2-l3v1.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-03-73-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20906/20906-fail-03-74-sev2-l3v2.xml: Missed issue 20906 (severity "Error").
       1 Test 20912/20912-fail-01-01-sev2-l3v2.xml: Missed issue 20912 (severity "Error").
@@ -75,22 +161,1243 @@
       1 Test 20912/20912-fail-01-12-sev2-l3v2.xml: Missed issue 20912 (severity "Error").
       1 Test 20912/20912-fail-02-09-sev2-l3v2.xml: Missed issue 20912 (severity "Error").
       1 Test 20912/20912-fail-02-10-sev2-l3v2.xml: Missed issue 20912 (severity "Error").
+      1 Test 21001/21001-fail-01-04-sev2-l3v1.xml: Missed issue 21001 (severity "Error").
+      1 Test 21101/21101-fail-01-11-sev2-l3v1.xml: Missed issue 21101 (severity "Error").
+      1 Test 21101/21101-fail-01-12-sev2-l3v1.xml: Missed issue 21101 (severity "Error").
+      1 Test 21103/21103-fail-01-19-sev2-l3v1.xml: Missed issue 21103 (severity "Error").
+      1 Test 21103/21103-fail-01-20-sev2-l3v1.xml: Missed issue 21103 (severity "Error").
+      1 Test 21103/21103-fail-02-21-sev2-l3v1.xml: Missed issue 21103 (severity "Error").
+      1 Test 21107/21107-fail-01-01-sev2-l3v1.xml: Missed issue 21107 (severity "Error").
       1 Test 21107/21107-fail-01-02-sev2-l3v2.xml: Missed issue 21107 (severity "Error").
+      1 Test 21111/21111-fail-01-17-sev2-l3v1.xml: Missed issue 21111 (severity "Error").
+      1 Test 21111/21111-fail-01-18-sev2-l3v1.xml: Missed issue 21111 (severity "Error").
+      1 Test 21111/21111-fail-01-19-sev2-l3v1.xml: Missed issue 21111 (severity "Error").
       1 Test 21111/21111-fail-01-23-sev2-l3v2.xml: Missed issue 21111 (severity "Error").
       1 Test 21111/21111-fail-01-24-sev2-l3v2.xml: Missed issue 21111 (severity "Error").
       1 Test 21111/21111-fail-01-25-sev2-l3v2.xml: Missed issue 21111 (severity "Error").
+      1 Test 21121/21121-fail-01-07-sev2-l3v1.xml: Missed issue 21121 (severity "Error").
       1 Test 21121/21121-fail-01-09-sev2-l3v2.xml: Missed issue 21121 (severity "Error").
+      1 Test 21123/21123-fail-01-07-sev2-l3v1.xml: Missed issue 21123 (severity "Error").
       1 Test 21173/21173-fail-01-01-sev2-l3v2.xml: Missed issue 21173 (severity "Error").
       1 Test 21173/21173-fail-01-02-sev2-l3v2.xml: Missed issue 21173 (severity "Error").
       1 Test 21173/21173-fail-01-03-sev2-l3v2.xml: Missed issue 21173 (severity "Error").
+      1 Test 21202/21202-fail-01-13-sev2-l3v1.xml: Missed issue 21202 (severity "Error").
+      1 Test 21202/21202-fail-01-14-sev2-l3v1.xml: Missed issue 21202 (severity "Error").
+      1 Test 21202/21202-fail-01-15-sev2-l3v1.xml: Missed issue 21202 (severity "Error").
+      1 Test 21203/21203-fail-01-05-sev2-l3v1.xml: Missed issue 21203 (severity "Error").
+      1 Test 21211/21211-fail-01-05-sev2-l3v1.xml: Missed issue 21211 (severity "Error").
       1 Test 21211/21211-fail-01-07-sev2-l3v2.xml: Missed issue 21211 (severity "Error").
+      1 Test 21212/21212-fail-01-13-sev2-l3v1.xml: Missed issue 21212 (severity "Error").
+      1 Test 21212/21212-fail-01-14-sev2-l3v1.xml: Missed issue 21212 (severity "Error").
+      1 Test 21212/21212-fail-01-15-sev2-l3v1.xml: Missed issue 21212 (severity "Error").
       1 Test 21212/21212-fail-01-19-sev2-l3v2.xml: Missed issue 21212 (severity "Error").
       1 Test 21212/21212-fail-01-20-sev2-l3v2.xml: Missed issue 21212 (severity "Error").
       1 Test 21212/21212-fail-01-21-sev2-l3v2.xml: Missed issue 21212 (severity "Error").
       1 Test 21212/21212-fail-01-22-sev2-l3v2.xml: Missed issue 21212 (severity "Error").
+      1 Test 99107/99107-fail-01-02-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test 99107/99107-fail-01-03-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test 99107/99107-fail-01-04-10102-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
       1 Test 99107/99107-fail-01-04-sev2-l3v2.xml: Missed issue 99107 (severity "Error").
       1 Test 99107/99107-fail-01-05-sev2-l3v2.xml: Missed issue 99107 (severity "Error").
       1 Test 99107/99107-fail-01-06-10102-sev2-l3v2.xml: Missed issue 99107 (severity "Error").
+      1 Test 99108/99108-fail-02-03-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
       1 Test 99108/99108-fail-02-06-99107-sev2-l3v2.xml: Missed issue 99107 (severity "Error").
+      1 Test 99302/99302-fail-01-04-sev2-l3v1.xml: Missed issue 99302 (severity "Error").
+      1 Test 99302/99302-fail-01-05-sev2-l3v1.xml: Missed issue 99302 (severity "Error").
       1 Test 99302/99302-fail-01-06-sev2-l3v2.xml: Missed issue 99302 (severity "Error").
       1 Test 99302/99302-fail-01-07-sev2-l3v2.xml: Missed issue 99302 (severity "Error").
+      1 Test 99304/99304-fail-01-01-sev2-l3v1.xml: Missed issue 99304 (severity "Error").
+      1 Test 99304/99304-fail-01-02-sev2-l3v1.xml: Missed issue 99304 (severity "Error").
+      1 Test 99304/99304-fail-01-03-sev2-l3v1.xml: Missed issue 99304 (severity "Error").
+      1 Test 99304/99304-fail-01-04-sev2-l3v1.xml: Missed issue 99304 (severity "Error").
+      1 Test 99505/99505-pass-00-08-l3v1.xml: Found unexpected issue 10218 (severity "Error").
+      1 Test comp-10301/comp-10301-fail-01-01-sev2-l3v1.xml: Missed issue comp-10301 (severity "Error").
+      1 Test comp-10301/comp-10301-fail-01-02-sev2-l3v1.xml: Missed issue comp-10301 (severity "Error").
+      1 Test comp-10302/comp-10302-fail-01-01-sev2-l3v1.xml: Missed issue comp-10302 (severity "Error").
+      1 Test comp-10302/comp-10302-fail-01-02-sev2-l3v1.xml: Missed issue comp-10302 (severity "Error").
+      1 Test comp-10302/comp-10302-fail-01-03-sev2-l3v1.xml: Missed issue comp-10302 (severity "Error").
+      1 Test comp-10302/comp-10302-fail-01-06-sev2-l3v1.xml: Missed issue comp-10302 (severity "Error").
+      1 Test comp-10302/comp-10302-fail-02-04-sev2-l3v1.xml: Missed issue comp-10302 (severity "Error").
+      1 Test comp-10303/comp-10303-fail-01-01-sev2-l3v1.xml: Missed issue comp-10303 (severity "Error").
+      1 Test comp-10304/comp-10304-fail-01-01-sev2-l3v1.xml: Missed issue comp-10304 (severity "Error").
+      1 Test comp-10308/comp-10308-fail-01-01-comp-10304-sev2-l3v1.xml: Missed issue comp-10304 (severity "Error").
+      1 Test comp-10308/comp-10308-fail-01-01-comp-10304-sev2-l3v1.xml: Missed issue comp-10308 (severity "Error").
+      1 Test comp-10308/comp-10308-fail-01-02-comp-10304-sev2-l3v1.xml: Missed issue comp-10304 (severity "Error").
+      1 Test comp-10308/comp-10308-fail-01-02-comp-10304-sev2-l3v1.xml: Missed issue comp-10308 (severity "Error").
+      1 Test comp-10309/comp-10309-fail-01-01-comp-10304-sev2-l3v1.xml: Missed issue comp-10304 (severity "Error").
+      1 Test comp-10309/comp-10309-fail-01-01-comp-10304-sev2-l3v1.xml: Missed issue comp-10309 (severity "Error").
+      1 Test comp-10310/comp-10310-fail-01-01-10310-sev2-l3v1.xml: Missed issue comp-10310 (severity "Error").
+      1 Test comp-20101/comp-20101-fail-01-01-sev2-l3v1.xml: Missed issue comp-20101 (severity "Error").
+      1 Test comp-20103/comp-20103-fail-01-01-sev2-l3v1.xml: Missed issue comp-20103 (severity "Error").
+      1 Test comp-20103/comp-20103-fail-01-02-10103-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test comp-20103/comp-20103-fail-01-02-10103-sev2-l3v1.xml: Missed issue comp-20103 (severity "Error").
+      1 Test comp-20105/comp-20105-fail-01-01-sev2-l3v1.xml: Missed issue comp-20105 (severity "Error").
+      1 Test comp-20201/comp-20201-fail-01-01-sev2-l3v1.xml: Missed issue comp-20201 (severity "Error").
+      1 Test comp-20202/comp-20202-fail-01-01-01016-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      1 Test comp-20202/comp-20202-fail-01-01-01016-sev2-l3v1.xml: Missed issue comp-20202 (severity "Error").
+      1 Test comp-20205/comp-20205-fail-01-01-sev2-l3v1.xml: Missed issue comp-20205 (severity "Error").
+      1 Test comp-20209/comp-20209-fail-01-01-sev2-l3v1.xml: Missed issue comp-20209 (severity "Error").
+      1 Test comp-20210/comp-20210-fail-01-01-sev2-l3v1.xml: Missed issue comp-20210 (severity "Error").
+      1 Test comp-20211/comp-20211-fail-01-01-sev2-l3v1.xml: Missed issue comp-20211 (severity "Error").
+      1 Test comp-20212/comp-20212-fail-01-01-sev2-l3v1.xml: Missed issue comp-20212 (severity "Error").
+      1 Test comp-20301/comp-20301-fail-01-01-sev2-l3v1.xml: Missed issue comp-20301 (severity "Error").
+      1 Test comp-20303/comp-20303-fail-01-01-sev2-l3v1.xml: Missed issue comp-20303 (severity "Error").
+      1 Test comp-20303/comp-20303-fail-01-02-sev2-l3v1.xml: Missed issue comp-20303 (severity "Error").
+      1 Test comp-20304/comp-20304-fail-01-01-sev2-l3v1.xml: Missed issue comp-20304 (severity "Error").
+      1 Test comp-20305/comp-20305-fail-01-01-sev2-l3v1.xml: Missed issue comp-20305 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-01-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-01-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-02-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-02-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-03-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-03-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-04-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-04-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-05-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-05-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-06-comp-90101-sev2-l3v1.xml: Missed issue comp-20307 (severity "Error").
+      1 Test comp-20307/comp-20307-fail-01-06-comp-90101-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-20308/comp-20308-fail-01-01-comp-20305-sev2-l3v1.xml: Missed issue comp-20305 (severity "Error").
+      1 Test comp-20308/comp-20308-fail-01-01-comp-20305-sev2-l3v1.xml: Missed issue comp-20308 (severity "Error").
+      1 Test comp-20310/comp-20310-fail-01-01-sev2-l3v1.xml: Missed issue comp-20310 (severity "Error").
+      1 Test comp-20310/comp-20310-fail-01-02-sev2-l3v1.xml: Missed issue comp-20310 (severity "Error").
+      1 Test comp-20310/comp-20310-fail-02-03-sev2-l3v1.xml: Missed issue comp-20310 (severity "Error").
+      1 Test comp-20310/comp-20310-fail-02-04-sev2-l3v1.xml: Missed issue comp-20310 (severity "Error").
+      1 Test comp-20310/comp-20310-fail-02-05-sev2-l3v1.xml: Missed issue comp-20310 (severity "Error").
+      1 Test comp-20501/comp-20501-fail-01-01-sev2-l3v1.xml: Missed issue comp-20501 (severity "Error").
+      1 Test comp-20501/comp-20501-fail-01-02-sev2-l3v1.xml: Missed issue comp-20501 (severity "Error").
+      1 Test comp-20505/comp-20505-fail-01-01-sev2-l3v1.xml: Missed issue comp-20505 (severity "Error").
+      1 Test comp-20505/comp-20505-fail-01-02-10103-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test comp-20505/comp-20505-fail-01-02-10103-sev2-l3v1.xml: Missed issue comp-20505 (severity "Error").
+      1 Test comp-20506/comp-20506-fail-01-01-sev2-l3v1.xml: Missed issue comp-20506 (severity "Error").
+      1 Test comp-20506/comp-20506-fail-01-02-10103-sev2-l3v1.xml: Missed issue 10103 (severity "Error").
+      1 Test comp-20506/comp-20506-fail-01-02-10103-sev2-l3v1.xml: Missed issue comp-20506 (severity "Error").
+      1 Test comp-20601/comp-20601-fail-01-01-sev2-l3v1.xml: Missed issue comp-20601 (severity "Error").
+      1 Test comp-20603/comp-20603-fail-01-01-sev2-l3v1.xml: Missed issue comp-20603 (severity "Error").
+      1 Test comp-20606/comp-20606-fail-01-01-sev2-l3v1.xml: Missed issue comp-20606 (severity "Error").
+      1 Test comp-20607/comp-20607-fail-01-01-sev2-l3v1.xml: Missed issue comp-20607 (severity "Error").
+      1 Test comp-20607/comp-20607-fail-01-02-sev2-l3v1.xml: Missed issue comp-20607 (severity "Error").
+      1 Test comp-20608/comp-20608-fail-01-01-comp-20615-sev2-l3v1.xml: Missed issue comp-20608 (severity "Error").
+      1 Test comp-20608/comp-20608-fail-01-01-comp-20615-sev2-l3v1.xml: Missed issue comp-20615 (severity "Error").
+      1 Test comp-20613/comp-20613-fail-01-01-comp-20622-sev2-l3v1.xml: Missed issue comp-20613 (severity "Error").
+      1 Test comp-20613/comp-20613-fail-01-01-comp-20622-sev2-l3v1.xml: Missed issue comp-20622 (severity "Error").
+      1 Test comp-20614/comp-20614-fail-01-01-comp-20623-sev2-l3v1.xml: Missed issue comp-20614 (severity "Error").
+      1 Test comp-20614/comp-20614-fail-01-01-comp-20623-sev2-l3v1.xml: Missed issue comp-20623 (severity "Error").
+      1 Test comp-20615/comp-20615-fail-01-01-sev2-l3v1.xml: Missed issue comp-20615 (severity "Error").
+      1 Test comp-20617/comp-20617-fail-01-01-sev2-l3v1.xml: Missed issue comp-20617 (severity "Error").
+      1 Test comp-20617/comp-20617-fail-01-03-sev2-l3v1.xml: Missed issue comp-20617 (severity "Error").
+      1 Test comp-20617/comp-20617-fail-01-04-sev2-l3v1.xml: Missed issue comp-20617 (severity "Error").
+      1 Test comp-20617/comp-20617-fail-01-05-sev2-l3v1.xml: Missed issue comp-20617 (severity "Error").
+      1 Test comp-20617/comp-20617-fail-03-02-sev2-l3v1.xml: Missed issue comp-20617 (severity "Error").
+      1 Test comp-20622/comp-20622-fail-01-01-sev2-l3v1.xml: Missed issue comp-20622 (severity "Error").
+      1 Test comp-20623/comp-20623-fail-01-01-sev2-l3v1.xml: Missed issue comp-20623 (severity "Error").
+      1 Test comp-20701/comp-20701-fail-01-02-sev2-l3v1.xml: Missed issue comp-20701 (severity "Error").
+      1 Test comp-20701/comp-20701-fail-01-05-sev2-l3v1.xml: Missed issue comp-20701 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-03-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-04-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-11-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-12-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-14-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20702/comp-20702-fail-01-17-sev2-l3v1.xml: Missed issue comp-20702 (severity "Error").
+      1 Test comp-20703/comp-20703-fail-01-01-sev2-l3v1.xml: Missed issue comp-20703 (severity "Error").
+      1 Test comp-20703/comp-20703-fail-01-04-sev2-l3v1.xml: Missed issue comp-20703 (severity "Error").
+      1 Test comp-20703/comp-20703-fail-01-05-sev2-l3v1.xml: Missed issue comp-20703 (severity "Error").
+      1 Test comp-20703/comp-20703-fail-01-06-sev2-l3v1.xml: Missed issue comp-20703 (severity "Error").
+      1 Test comp-20704/comp-20704-fail-01-02-sev2-l3v1.xml: Missed issue comp-20704 (severity "Error").
+      1 Test comp-20704/comp-20704-fail-01-04-sev2-l3v1.xml: Missed issue comp-20704 (severity "Error").
+      1 Test comp-20704/comp-20704-fail-01-05-sev2-l3v1.xml: Missed issue comp-20704 (severity "Error").
+      1 Test comp-20705/comp-20705-fail-01-06-sev2-l3v1.xml: Missed issue comp-20705 (severity "Error").
+      1 Test comp-20706/comp-20706-fail-01-01-comp-20701-sev2-l3v1.xml: Missed issue comp-20701 (severity "Error").
+      1 Test comp-20706/comp-20706-fail-01-01-comp-20701-sev2-l3v1.xml: Missed issue comp-20706 (severity "Error").
+      1 Test comp-20708/comp-20708-fail-01-01-comp-20703-sev2-l3v1.xml: Missed issue comp-20703 (severity "Error").
+      1 Test comp-20708/comp-20708-fail-01-01-comp-20703-sev2-l3v1.xml: Missed issue comp-20708 (severity "Error").
+      1 Test comp-20709/comp-20709-fail-01-01-comp-20704-sev2-l3v1.xml: Missed issue comp-20704 (severity "Error").
+      1 Test comp-20709/comp-20709-fail-01-01-comp-20704-sev2-l3v1.xml: Missed issue comp-20709 (severity "Error").
+      1 Test comp-20710/comp-20710-fail-01-01-sev2-l3v1.xml: Missed issue comp-20710 (severity "Error").
+      1 Test comp-20801/comp-20801-fail-01-01-sev2-l3v1.xml: Missed issue comp-20801 (severity "Error").
+      1 Test comp-20802/comp-20802-fail-01-01-sev2-l3v1.xml: Missed issue comp-20802 (severity "Error").
+      1 Test comp-20802/comp-20802-fail-01-02-sev2-l3v1.xml: Missed issue comp-20802 (severity "Error").
+      1 Test comp-20802/comp-20802-fail-01-03-sev2-l3v1.xml: Missed issue comp-20802 (severity "Error").
+      1 Test comp-20802/comp-20802-fail-01-04-sev2-l3v1.xml: Missed issue comp-20802 (severity "Error").
+      1 Test comp-20803/comp-20803-fail-01-01-sev2-l3v1.xml: Missed issue comp-20803 (severity "Error").
+      1 Test comp-20803/comp-20803-fail-01-02-comp-20801-sev2-l3v1.xml: Missed issue comp-20801 (severity "Error").
+      1 Test comp-20803/comp-20803-fail-01-02-comp-20801-sev2-l3v1.xml: Missed issue comp-20803 (severity "Error").
+      1 Test comp-20804/comp-20804-fail-01-01-sev2-l3v1.xml: Missed issue comp-20804 (severity "Error").
+      1 Test comp-20804/comp-20804-fail-01-02-sev2-l3v1.xml: Missed issue comp-20804 (severity "Error").
+      1 Test comp-20804/comp-20804-fail-01-03-sev2-l3v1.xml: Missed issue comp-20804 (severity "Error").
+      1 Test comp-20804/comp-20804-fail-01-04-sev2-l3v1.xml: Missed issue comp-20804 (severity "Error").
+      1 Test comp-20901/comp-20901-fail-01-01-sev2-l3v1.xml: Missed issue comp-20901 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-01-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-02-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-03-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-04-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-05-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-06-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-07-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-08-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-09-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-10-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-20902/comp-20902-fail-01-11-sev2-l3v1.xml: Missed issue comp-20902 (severity "Error").
+      1 Test comp-21002/comp-21002-fail-01-01-sev2-l3v1.xml: Missed issue comp-21002 (severity "Error").
+      1 Test comp-21006/comp-21006-fail-01-01-sev2-l3v1.xml: Missed issue comp-21006 (severity "Error").
+      1 Test comp-21006/comp-21006-fail-01-02-sev2-l3v1.xml: Missed issue comp-21006 (severity "Error").
+      1 Test comp-21010/comp-21010-fail-01-01-sev2-l3v1.xml: Missed issue comp-21010 (severity "Error").
+      1 Test comp-21010/comp-21010-fail-01-02-sev2-l3v1.xml: Missed issue comp-21010 (severity "Error").
+      1 Test comp-21011/comp-21011-fail-01-01-sev2-l3v1.xml: Missed issue comp-21011 (severity "Error").
+      1 Test comp-21201/comp-21201-fail-01-01-sev2-l3v1.xml: Missed issue comp-21201 (severity "Error").
+      1 Test comp-21201/comp-21201-fail-01-02-sev2-l3v1.xml: Missed issue comp-21201 (severity "Error").
+      1 Test comp-21201/comp-21201-fail-01-03-sev2-l3v1.xml: Missed issue comp-21201 (severity "Error").
+      1 Test comp-21201/comp-21201-fail-01-04-sev2-l3v1.xml: Missed issue comp-21201 (severity "Error").
+      1 Test comp-21201/comp-21201-fail-01-05-sev2-l3v1.xml: Missed issue comp-21201 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-01-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-02-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-03-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-04-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-05-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-06-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90101/comp-90101-fail-01-07-sev2-l3v1.xml: Missed issue comp-90101 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-01-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-02-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-03-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-04-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-05-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-06-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-07-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-08-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-09-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-10-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-11-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90115/comp-90115-fail-01-12-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-01-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-02-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-03-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-04-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-05-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-06-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-07-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-08-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-09-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-10-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-11-99108-sev2-l3v1.xml: Missed issue comp-90105 (severity "Error").
+      1 Test comp-90116/comp-90116-fail-01-12-99107-sev2-l3v1.xml: Missed issue 99107 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-01-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-02-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-03-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-04-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-05-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-06-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-07-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-08-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10301/fbc-10301-fail-01-09-sev2-l3v1.xml: Missed issue fbc-10301 (severity "Error").
+      1 Test fbc-10302/fbc-10302-fail-01-01-sev2-l3v1.xml: Missed issue fbc-10302 (severity "Error").
+      1 Test fbc-10302/fbc-10302-fail-01-02-sev2-l3v1.xml: Missed issue fbc-10302 (severity "Error").
+      1 Test fbc-10302/fbc-10302-fail-01-03-sev2-l3v1.xml: Missed issue fbc-10302 (severity "Error").
+      1 Test fbc-10302/fbc-10302-fail-01-04-sev2-l3v1.xml: Missed issue fbc-10302 (severity "Error").
+      1 Test fbc-20101/fbc-20101-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20101 (severity "Error").
+      1 Test fbc-20101/fbc-20101-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20101 (severity "Error").
+      1 Test fbc-20101/fbc-20101-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20101 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-01-01016-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-01-01016-sev2-l3v1.xml: Missed issue fbc-20102 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-02-01016-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-02-01016-sev2-l3v1.xml: Missed issue fbc-20102 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-03-01016-sev2-l3v1.xml: Missed issue 01016 (severity "Error").
+      1 Test fbc-20102/fbc-20102-fail-01-03-01016-sev2-l3v1.xml: Missed issue fbc-20102 (severity "Error").
+      1 Test fbc-20103/fbc-20103-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20103 (severity "Error").
+      1 Test fbc-20103/fbc-20103-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20103 (severity "Error").
+      1 Test fbc-20103/fbc-20103-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20103 (severity "Error").
+      1 Test fbc-20201/fbc-20201-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20201 (severity "Error").
+      1 Test fbc-20201/fbc-20201-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20201 (severity "Error").
+      1 Test fbc-20201/fbc-20201-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20201 (severity "Error").
+      1 Test fbc-20205/fbc-20205-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20205 (severity "Error").
+      1 Test fbc-20205/fbc-20205-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20205 (severity "Error").
+      1 Test fbc-20206/fbc-20206-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20206 (severity "Error").
+      1 Test fbc-20206/fbc-20206-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20206 (severity "Error").
+      1 Test fbc-20206/fbc-20206-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20206 (severity "Error").
+      1 Test fbc-20206/fbc-20206-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20206 (severity "Error").
+      1 Test fbc-20206/fbc-20206-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20206 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-01-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20207 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-01-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-02-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20207 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-02-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-03-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20207 (severity "Error").
+      1 Test fbc-20207/fbc-20207-fail-01-03-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20208/fbc-20208-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20208/fbc-20208-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20208/fbc-20208-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20209/fbc-20209-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20209 (severity "Error").
+      1 Test fbc-20209/fbc-20209-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20209 (severity "Error").
+      1 Test fbc-20210/fbc-20210-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20210 (severity "Error").
+      1 Test fbc-20210/fbc-20210-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20210 (severity "Error").
+      1 Test fbc-20214/fbc-20214-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20214 (severity "Error").
+      1 Test fbc-20301/fbc-20301-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
+      1 Test fbc-20301/fbc-20301-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
+      1 Test fbc-20301/fbc-20301-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20301 (severity "Error").
+      1 Test fbc-20302/fbc-20302-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20302 (severity "Error").
+      1 Test fbc-20302/fbc-20302-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20302 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-06-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-07-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-08-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-09-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-10-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-11-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-12-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-13-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-14-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-15-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-16-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20303/fbc-20303-fail-01-17-sev2-l3v1.xml: Missed issue fbc-20303 (severity "Error").
+      1 Test fbc-20304/fbc-20304-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20304 (severity "Error").
+      1 Test fbc-20401/fbc-20401-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20401 (severity "Error").
+      1 Test fbc-20403/fbc-20403-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20403 (severity "Error").
+      1 Test fbc-20403/fbc-20403-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20403 (severity "Error").
+      1 Test fbc-20403/fbc-20403-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20403 (severity "Error").
+      1 Test fbc-20403/fbc-20403-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20403 (severity "Error").
+      1 Test fbc-20404/fbc-20404-fail-01-01-20408-sev2-l3v1.xml: Missed issue fbc-20404 (severity "Error").
+      1 Test fbc-20404/fbc-20404-fail-01-01-20408-sev2-l3v1.xml: Missed issue fbc-20408 (severity "Error").
+      1 Test fbc-20406/fbc-20406-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20406 (severity "Error").
+      1 Test fbc-20406/fbc-20406-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20406 (severity "Error").
+      1 Test fbc-20407/fbc-20407-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20407 (severity "Error").
+      1 Test fbc-20408/fbc-20408-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20408 (severity "Error").
+      1 Test fbc-20409/fbc-20409-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20409 (severity "Error").
+      1 Test fbc-20409/fbc-20409-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20409 (severity "Error").
+      1 Test fbc-20409/fbc-20409-fail-02-01-sev2-l3v1.xml: Missed issue fbc-20409 (severity "Error").
+      1 Test fbc-20501/fbc-20501-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20501 (severity "Error").
+      1 Test fbc-20501/fbc-20501-fail-01-02-sev2-l3v1.xml: Found unexpected issue fbc-20503 (severity "Error").
+      1 Test fbc-20501/fbc-20501-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20501 (severity "Error").
+      1 Test fbc-20501/fbc-20501-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20501 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20503 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-02-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-02-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20503 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20503 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-05-fbc-20208-sev2-l3v1.xml: Missed issue fbc-20208 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-06-sev2-l3v1.xml: Missed issue fbc-20503 (severity "Error").
+      1 Test fbc-20503/fbc-20503-fail-01-07-sev2-l3v1.xml: Missed issue fbc-20503 (severity "Error").
+      1 Test fbc-20505/fbc-20505-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20505 (severity "Error").
+      1 Test fbc-20505/fbc-20505-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20505 (severity "Error").
+      1 Test fbc-20505/fbc-20505-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20505 (severity "Error").
+      1 Test fbc-20505/fbc-20505-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20505 (severity "Error").
+      1 Test fbc-20505/fbc-20505-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20505 (severity "Error").
+      1 Test fbc-20506/fbc-20506-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
+      1 Test fbc-20506/fbc-20506-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
+      1 Test fbc-20506/fbc-20506-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
+      1 Test fbc-20506/fbc-20506-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
+      1 Test fbc-20506/fbc-20506-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
+      1 Test fbc-20509/fbc-20509-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
+      1 Test fbc-20509/fbc-20509-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
+      1 Test fbc-20509/fbc-20509-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
+      1 Test fbc-20509/fbc-20509-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
+      1 Test fbc-20509/fbc-20509-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
+      1 Test fbc-20601/fbc-20601-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20601 (severity "Error").
+      1 Test fbc-20601/fbc-20601-fail-01-02-sev2-l3v1.xml: Found unexpected issue fbc-20603 (severity "Error").
+      1 Test fbc-20601/fbc-20601-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20601 (severity "Error").
+      1 Test fbc-20601/fbc-20601-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20601 (severity "Error").
+      1 Test fbc-20603/fbc-20603-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20603 (severity "Error").
+      1 Test fbc-20603/fbc-20603-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20603 (severity "Error").
+      1 Test fbc-20603/fbc-20603-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20603 (severity "Error").
+      1 Test fbc-20603/fbc-20603-fail-01-06-sev2-l3v1.xml: Missed issue fbc-20603 (severity "Error").
+      1 Test fbc-20603/fbc-20603-fail-01-07-sev2-l3v1.xml: Missed issue fbc-20603 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-01-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20605 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-01-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-02-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20605 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-02-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-03-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20605 (severity "Error").
+      1 Test fbc-20605/fbc-20605-fail-01-03-fbc-20606-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20606/fbc-20606-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20606/fbc-20606-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20606/fbc-20606-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20606 (severity "Error").
+      1 Test fbc-20607/fbc-20607-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20607 (severity "Error").
+      1 Test fbc-20607/fbc-20607-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20607 (severity "Error").
+      1 Test fbc-20607/fbc-20607-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20607 (severity "Error").
+      1 Test fbc-20608/fbc-20608-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20608 (severity "Error").
+      1 Test fbc-20608/fbc-20608-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20608 (severity "Error").
+      1 Test fbc-20701/fbc-20701-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20701 (severity "Error").
+      1 Test fbc-20702/fbc-20702-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20702 (severity "Error").
+      1 Test fbc-20702/fbc-20702-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20702 (severity "Error").
+      1 Test fbc-20703/fbc-20703-fail-01-01-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20703 (severity "Error").
+      1 Test fbc-20703/fbc-20703-fail-01-01-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20705 (severity "Error").
+      1 Test fbc-20703/fbc-20703-fail-01-02-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20703 (severity "Error").
+      1 Test fbc-20703/fbc-20703-fail-01-02-fbc-20705-sev2-l3v1.xml: Missed issue fbc-20705 (severity "Error").
+      1 Test fbc-20704/fbc-20704-fail-01-01-fbc-20706-sev2-l3v1.xml: Missed issue fbc-20704 (severity "Error").
+      1 Test fbc-20704/fbc-20704-fail-01-01-fbc-20706-sev2-l3v1.xml: Missed issue fbc-20706 (severity "Error").
+      1 Test fbc-20704/fbc-20704-fail-01-02-fbc-20706-sev2-l3v1.xml: Missed issue fbc-20704 (severity "Error").
+      1 Test fbc-20704/fbc-20704-fail-01-02-fbc-20706-sev2-l3v1.xml: Missed issue fbc-20706 (severity "Error").
+      1 Test fbc-20705/fbc-20705-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20705 (severity "Error").
+      1 Test fbc-20706/fbc-20706-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20706 (severity "Error").
+      1 Test fbc-20707/fbc-20707-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20707 (severity "Error").
+      1 Test fbc-20708/fbc-20708-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20708 (severity "Error").
+      1 Test fbc-20709/fbc-20709-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20709 (severity "Error").
+      1 Test fbc-20710/fbc-20710-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20710 (severity "Error").
+      1 Test fbc-20711/fbc-20711-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20711 (severity "Error").
+      1 Test fbc-20712/fbc-20712-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20712 (severity "Error").
+      1 Test fbc-20713/fbc-20713-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20713 (severity "Error").
+      1 Test fbc-20714/fbc-20714-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20714 (severity "Error").
+      1 Test fbc-20715/fbc-20715-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20715 (severity "Error").
+      1 Test fbc-20715/fbc-20715-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20715 (severity "Error").
+      1 Test fbc-20716/fbc-20716-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20716 (severity "Error").
+      1 Test fbc-20716/fbc-20716-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20716 (severity "Error").
+      1 Test fbc-20801/fbc-20801-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20801 (severity "Error").
+      1 Test fbc-20801/fbc-20801-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20801 (severity "Error").
+      1 Test fbc-20803/fbc-20803-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20803 (severity "Error").
+      1 Test fbc-20803/fbc-20803-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20803 (severity "Error").
+      1 Test fbc-20804/fbc-20804-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20804 (severity "Error").
+      1 Test fbc-20804/fbc-20804-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20804 (severity "Error").
+      1 Test fbc-20805/fbc-20805-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20805 (severity "Error").
+      1 Test fbc-20805/fbc-20805-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20805 (severity "Error").
+      1 Test fbc-20805/fbc-20805-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20805 (severity "Error").
+      1 Test fbc-20901/fbc-20901-fail-01-01-sev2-l3v1.xml: Found unexpected issue fbc-20903 (severity "Error").
+      1 Test fbc-20901/fbc-20901-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20901 (severity "Error").
+      1 Test fbc-20901/fbc-20901-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20901 (severity "Error").
+      1 Test fbc-20903/fbc-20903-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20903 (severity "Error").
+      1 Test fbc-20903/fbc-20903-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20903 (severity "Error").
+      1 Test fbc-20904/fbc-20904-fail-01-01-fbc-20908-sev2-l3v1.xml: Missed issue fbc-20904 (severity "Error").
+      1 Test fbc-20904/fbc-20904-fail-01-01-fbc-20908-sev2-l3v1.xml: Missed issue fbc-20908 (severity "Error").
+      1 Test fbc-21001/fbc-21001-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21001 (severity "Error").
+      1 Test fbc-21101/fbc-21101-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21101 (severity "Error").
+      1 Test fbc-21201/fbc-21201-fail-01-01-sev2-l3v1.xml: Found unexpected issue fbc-21203 (severity "Error").
+      1 Test fbc-21201/fbc-21201-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21201 (severity "Error").
+      1 Test fbc-21205/fbc-21205-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21205 (severity "Error").
+      1 Test fbc-21303/fbc-21303-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21303 (severity "Error").
+      1 Test fbc-21303/fbc-21303-fail-01-02-sev2-l3v1.xml: Missed issue fbc-21303 (severity "Error").
+      1 Test fbc-21304/fbc-21304-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21304 (severity "Error").
+      1 Test fbc-21305/fbc-21305-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21305 (severity "Error").
+      1 Test fbc-21306/fbc-21306-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21306 (severity "Error").
+      1 Test fbc-21403/fbc-21403-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21403 (severity "Error").
+      1 Test fbc-21403/fbc-21403-fail-01-02-sev2-l3v1.xml: Missed issue fbc-21403 (severity "Error").
+      1 Test fbc-21409/fbc-21409-fail-01-01-sev2-l3v1.xml: Missed issue fbc-21409 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-01-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-02-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-03-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-04-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-05-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-01-06-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10301/groups-10301-fail-02-01-sev2-l3v1.xml: Missed issue groups-10301 (severity "Error").
+      1 Test groups-10302/groups-10302-fail-01-01-sev2-l3v1.xml: Missed issue groups-10302 (severity "Error").
+      1 Test groups-10302/groups-10302-fail-01-02-sev2-l3v1.xml: Missed issue groups-10302 (severity "Error").
+      1 Test groups-10302/groups-10302-fail-01-03-sev2-l3v1.xml: Missed issue groups-10302 (severity "Error").
+      1 Test groups-20101/groups-20101-fail-01-01-sev2-l3v1.xml: Missed issue groups-20101 (severity "Error").
+      1 Test groups-20102/groups-20102-fail-01-01-sev2-l3v1.xml: Missed issue groups-20102 (severity "Error").
+      1 Test groups-20103/groups-20103-fail-01-01-sev2-l3v1.xml: Missed issue groups-20103 (severity "Error").
+      1 Test groups-20201/groups-20201-fail-01-01-sev2-l3v1.xml: Missed issue groups-20201 (severity "Error").
+      1 Test groups-20204/groups-20204-fail-01-01-sev2-l3v1.xml: Missed issue groups-20204 (severity "Error").
+      1 Test groups-20301/groups-20301-fail-01-01-sev2-l3v1.xml: Missed issue groups-20301 (severity "Error").
+      1 Test groups-20303/groups-20303-fail-01-01-sev2-l3v1.xml: Missed issue groups-20303 (severity "Error").
+      1 Test groups-20303/groups-20303-fail-01-02-sev2-l3v1.xml: Missed issue groups-20303 (severity "Error").
+      1 Test groups-20304/groups-20304-fail-01-01-sev2-l3v1.xml: Missed issue groups-20304 (severity "Error").
+      1 Test groups-20305/groups-20305-fail-01-01-sev2-l3v1.xml: Missed issue groups-20305 (severity "Error").
+      1 Test groups-20309/groups-20309-fail-01-01-sev2-l3v1.xml: Missed issue groups-20309 (severity "Error").
+      1 Test groups-20310/groups-20310-fail-01-01-sev2-l3v1.xml: Missed issue groups-20310 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-01-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-02-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-03-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-04-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-05-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-06-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-07-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-08-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-09-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-10-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20313/groups-20313-fail-01-11-sev2-l3v1.xml: Missed issue groups-20313 (severity "Error").
+      1 Test groups-20401/groups-20401-fail-01-01-sev2-l3v1.xml: Missed issue groups-20401 (severity "Error").
+      1 Test groups-20403/groups-20403-fail-01-01-sev2-l3v1.xml: Missed issue groups-20403 (severity "Error").
+      1 Test groups-20403/groups-20403-fail-01-02-sev2-l3v1.xml: Missed issue groups-20403 (severity "Error").
+      1 Test groups-20403/groups-20403-fail-01-03-sev2-l3v1.xml: Missed issue groups-20403 (severity "Error").
+      1 Test groups-20405/groups-20405-fail-01-01-sev2-l3v1.xml: Missed issue groups-20405 (severity "Error").
+      1 Test groups-20406/groups-20406-fail-01-01-sev2-l3v1.xml: Missed issue groups-20406 (severity "Error").
+      1 Test groups-20407/groups-20407-fail-01-01-groups-20405-sev2-l3v1.xml: Missed issue groups-20405 (severity "Error").
+      1 Test groups-20407/groups-20407-fail-01-01-groups-20405-sev2-l3v1.xml: Missed issue groups-20407 (severity "Error").
+      1 Test groups-20408/groups-20408-fail-01-01-groups-20406-sev2-l3v1.xml: Missed issue groups-20406 (severity "Error").
+      1 Test groups-20408/groups-20408-fail-01-01-groups-20406-sev2-l3v1.xml: Missed issue groups-20408 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-01-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-02-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-03-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-03-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-04-sev2-l3v1.xml: Found unexpected issue layout-20911 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-04-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-04-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-05-sev2-l3v1.xml: Found unexpected issue layout-20911 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-05-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-05-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-06-sev2-l3v1.xml: Found unexpected issue layout-20911 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-06-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-06-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-07-sev2-l3v1.xml: Found unexpected issue layout-20911 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-07-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-07-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-08-sev2-l3v1.xml: Found unexpected issue layout-20911 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-08-sev2-l3v1.xml: Found unexpected issue layout-21011 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-08-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-09-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-10-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10301/layout-10301-fail-01-11-sev2-l3v1.xml: Missed issue layout-10301 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-01-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-02-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-03-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-04-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-05-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-06-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-10302/layout-10302-fail-01-07-sev2-l3v1.xml: Missed issue layout-10302 (severity "Error").
+      1 Test layout-20101/layout-20101-fail-01-01-sev2-l3v1.xml: Missed issue layout-20101 (severity "Error").
+      1 Test layout-20102/layout-20102-fail-01-01-sev2-l3v1.xml: Missed issue layout-20102 (severity "Error").
+      1 Test layout-20103/layout-20103-fail-01-01-sev2-l3v1.xml: Missed issue layout-20103 (severity "Error").
+      1 Test layout-20204/layout-20204-fail-01-01-sev2-l3v1.xml: Missed issue layout-20204 (severity "Error").
+      1 Test layout-20204/layout-20204-fail-01-02-sev2-l3v1.xml: Missed issue layout-20204 (severity "Error").
+      1 Test layout-20302/layout-20302-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20305 (severity "Error").
+      1 Test layout-20302/layout-20302-fail-01-01-sev2-l3v1.xml: Missed issue layout-20302 (severity "Error").
+      1 Test layout-20305/layout-20305-fail-01-01-sev2-l3v1.xml: Missed issue layout-20305 (severity "Error").
+      1 Test layout-20307/layout-20307-fail-01-01-sev2-l3v1.xml: Missed issue layout-20307 (severity "Error").
+      1 Test layout-20307/layout-20307-fail-01-02-sev2-l3v1.xml: Missed issue layout-20307 (severity "Error").
+      1 Test layout-20309/layout-20309-fail-01-01-sev2-l3v1.xml: Missed issue layout-20309 (severity "Error").
+      1 Test layout-20309/layout-20309-fail-01-02-sev2-l3v1.xml: Missed issue layout-20309 (severity "Error").
+      1 Test layout-20311/layout-20311-fail-01-01-sev2-l3v1.xml: Missed issue layout-20311 (severity "Error").
+      1 Test layout-20311/layout-20311-fail-01-02-sev2-l3v1.xml: Missed issue layout-20311 (severity "Error").
+      1 Test layout-20313/layout-20313-fail-01-01-sev2-l3v1.xml: Missed issue layout-20313 (severity "Error").
+      1 Test layout-20313/layout-20313-fail-01-02-sev2-l3v1.xml: Missed issue layout-20313 (severity "Error").
+      1 Test layout-20315/layout-20315-fail-01-02-sev2-l3v1.xml: Found unexpected issue layout-20303 (severity "Error").
+      1 Test layout-20315/layout-20315-fail-01-02-sev2-l3v1.xml: Missed issue layout-20315 (severity "Error").
+      1 Test layout-20316/layout-20316-fail-01-01-sev2-l3v1.xml: Missed issue layout-20316 (severity "Error").
+      1 Test layout-20316/layout-20316-fail-01-02-sev2-l3v1.xml: Missed issue layout-20316 (severity "Error").
+      1 Test layout-20402/layout-20402-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20404 (severity "Error").
+      1 Test layout-20402/layout-20402-fail-01-01-sev2-l3v1.xml: Missed issue layout-20402 (severity "Error").
+      1 Test layout-20404/layout-20404-fail-01-02-sev2-l3v1.xml: Missed issue layout-20404 (severity "Error").
+      1 Test layout-20405/layout-20405-fail-01-01-layout-20406-sev2-l3v1.xml: Missed issue layout-20406 (severity "Error").
+      1 Test layout-20406/layout-20406-fail-01-01-sev2-l3v1.xml: Missed issue layout-20406 (severity "Error").
+      1 Test layout-20406/layout-20406-fail-01-02-sev2-l3v1.xml: Missed issue layout-20406 (severity "Error").
+      1 Test layout-20407/layout-20407-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20403 (severity "Error").
+      1 Test layout-20407/layout-20407-fail-01-01-sev2-l3v1.xml: Missed issue layout-20407 (severity "Error").
+      1 Test layout-20502/layout-20502-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20504 (severity "Error").
+      1 Test layout-20502/layout-20502-fail-01-01-sev2-l3v1.xml: Missed issue layout-20502 (severity "Error").
+      1 Test layout-20504/layout-20504-fail-01-02-sev2-l3v1.xml: Missed issue layout-20504 (severity "Error").
+      1 Test layout-20505/layout-20505-fail-01-01-layout-20506-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-20505/layout-20505-fail-01-01-layout-20506-sev2-l3v1.xml: Missed issue layout-20505 (severity "Error").
+      1 Test layout-20505/layout-20505-fail-01-01-layout-20506-sev2-l3v1.xml: Missed issue layout-20506 (severity "Error").
+      1 Test layout-20506/layout-20506-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-20506/layout-20506-fail-01-01-sev2-l3v1.xml: Missed issue layout-20506 (severity "Error").
+      1 Test layout-20507/layout-20507-fail-01-01-layout-20508-sev2-l3v1.xml: Missed issue layout-20507 (severity "Error").
+      1 Test layout-20507/layout-20507-fail-01-01-layout-20508-sev2-l3v1.xml: Missed issue layout-20508 (severity "Error").
+      1 Test layout-20510/layout-20510-fail-01-01-sev2-l3v1.xml: Missed issue layout-20510 (severity "Error").
+      1 Test layout-20602/layout-20602-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20604 (severity "Error").
+      1 Test layout-20602/layout-20602-fail-01-01-sev2-l3v1.xml: Missed issue layout-20602 (severity "Error").
+      1 Test layout-20604/layout-20604-fail-01-02-sev2-l3v1.xml: Missed issue layout-20604 (severity "Error").
+      1 Test layout-20605/layout-20605-fail-01-01-layout-20606-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-20605/layout-20605-fail-01-01-layout-20606-sev2-l3v1.xml: Missed issue layout-20605 (severity "Error").
+      1 Test layout-20605/layout-20605-fail-01-01-layout-20606-sev2-l3v1.xml: Missed issue layout-20606 (severity "Error").
+      1 Test layout-20606/layout-20606-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-20606/layout-20606-fail-01-01-sev2-l3v1.xml: Missed issue layout-20606 (severity "Error").
+      1 Test layout-20607/layout-20607-fail-01-01-layout-20608-sev2-l3v1.xml: Missed issue layout-20607 (severity "Error").
+      1 Test layout-20607/layout-20607-fail-01-01-layout-20608-sev2-l3v1.xml: Missed issue layout-20608 (severity "Error").
+      1 Test layout-20609/layout-20609-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20509 (severity "Error").
+      1 Test layout-20609/layout-20609-fail-01-01-sev2-l3v1.xml: Missed issue layout-20609 (severity "Error").
+      1 Test layout-20702/layout-20702-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20704 (severity "Error").
+      1 Test layout-20702/layout-20702-fail-01-01-sev2-l3v1.xml: Missed issue layout-20702 (severity "Error").
+      1 Test layout-20703/layout-20703-fail-01-03-sev2-l3v1.xml: Missed issue layout-20703 (severity "Error").
+      1 Test layout-20703/layout-20703-fail-01-04-sev2-l3v1.xml: Missed issue layout-20703 (severity "Error").
+      1 Test layout-20704/layout-20704-fail-01-01-sev2-l3v1.xml: Missed issue layout-20704 (severity "Error").
+      1 Test layout-20705/layout-20705-fail-01-01-layout-20706-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-20705/layout-20705-fail-01-01-layout-20706-sev2-l3v1.xml: Missed issue layout-20705 (severity "Error").
+      1 Test layout-20705/layout-20705-fail-01-01-layout-20706-sev2-l3v1.xml: Missed issue layout-20706 (severity "Error").
+      1 Test layout-20706/layout-20706-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-20706/layout-20706-fail-01-01-sev2-l3v1.xml: Missed issue layout-20706 (severity "Error").
+      1 Test layout-20707/layout-20707-fail-01-01-layout-20708-sev2-l3v1.xml: Missed issue layout-20707 (severity "Error").
+      1 Test layout-20707/layout-20707-fail-01-01-layout-20708-sev2-l3v1.xml: Missed issue layout-20708 (severity "Error").
+      1 Test layout-20709/layout-20709-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20509 (severity "Error").
+      1 Test layout-20709/layout-20709-fail-01-01-sev2-l3v1.xml: Missed issue layout-20709 (severity "Error").
+      1 Test layout-20711/layout-20711-fail-01-01-sev2-l3v1.xml: Missed issue layout-20711 (severity "Error").
+      1 Test layout-20802/layout-20802-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20804 (severity "Error").
+      1 Test layout-20802/layout-20802-fail-01-01-sev2-l3v1.xml: Missed issue layout-20802 (severity "Error").
+      1 Test layout-20803/layout-20803-fail-01-05-sev2-l3v1.xml: Missed issue layout-20803 (severity "Error").
+      1 Test layout-20804/layout-20804-fail-01-02-sev2-l3v1.xml: Missed issue layout-20804 (severity "Error").
+      1 Test layout-20805/layout-20805-fail-01-01-layout-20806-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-20805/layout-20805-fail-01-01-layout-20806-sev2-l3v1.xml: Missed issue layout-20805 (severity "Error").
+      1 Test layout-20805/layout-20805-fail-01-01-layout-20806-sev2-l3v1.xml: Missed issue layout-20806 (severity "Error").
+      1 Test layout-20806/layout-20806-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-20806/layout-20806-fail-01-01-sev2-l3v1.xml: Missed issue layout-20806 (severity "Error").
+      1 Test layout-20807/layout-20807-fail-01-01-layout-20808-sev2-l3v1.xml: Missed issue layout-20807 (severity "Error").
+      1 Test layout-20807/layout-20807-fail-01-01-layout-20808-sev2-l3v1.xml: Missed issue layout-20808 (severity "Error").
+      1 Test layout-20811/layout-20811-fail-01-01-sev2-l3v1.xml: Missed issue layout-20811 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-02-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-04-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-05-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-08-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-09-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-12-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-14-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20813/layout-20813-fail-01-16-sev2-l3v1.xml: Missed issue layout-20813 (severity "Error").
+      1 Test layout-20902/layout-20902-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20904 (severity "Error").
+      1 Test layout-20902/layout-20902-fail-01-01-sev2-l3v1.xml: Missed issue layout-20902 (severity "Error").
+      1 Test layout-20904/layout-20904-fail-01-02-sev2-l3v1.xml: Missed issue layout-20904 (severity "Error").
+      1 Test layout-20905/layout-20905-fail-01-01-layout-20906-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-20905/layout-20905-fail-01-01-layout-20906-sev2-l3v1.xml: Missed issue layout-20905 (severity "Error").
+      1 Test layout-20905/layout-20905-fail-01-01-layout-20906-sev2-l3v1.xml: Missed issue layout-20906 (severity "Error").
+      1 Test layout-20906/layout-20906-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-20906/layout-20906-fail-01-01-sev2-l3v1.xml: Missed issue layout-20906 (severity "Error").
+      1 Test layout-20907/layout-20907-fail-01-01-layout-20908-sev2-l3v1.xml: Missed issue layout-20907 (severity "Error").
+      1 Test layout-20907/layout-20907-fail-01-01-layout-20908-sev2-l3v1.xml: Missed issue layout-20908 (severity "Error").
+      1 Test layout-20908/layout-20908-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20808 (severity "Error").
+      1 Test layout-20908/layout-20908-fail-01-01-sev2-l3v1.xml: Missed issue layout-20908 (severity "Error").
+      1 Test layout-20909/layout-20909-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20809 (severity "Error").
+      1 Test layout-20909/layout-20909-fail-01-01-sev2-l3v1.xml: Missed issue layout-20909 (severity "Error").
+      1 Test layout-20910/layout-20910-fail-01-01-layout-20911-sev2-l3v1.xml: Missed issue layout-20910 (severity "Error").
+      1 Test layout-20910/layout-20910-fail-01-01-layout-20911-sev2-l3v1.xml: Missed issue layout-20911 (severity "Error").
+      1 Test layout-21002/layout-21002-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21004 (severity "Error").
+      1 Test layout-21002/layout-21002-fail-01-01-sev2-l3v1.xml: Missed issue layout-21002 (severity "Error").
+      1 Test layout-21003/layout-21003-fail-01-01-sev2-l3v1.xml: Missed issue layout-21003 (severity "Error").
+      1 Test layout-21004/layout-21004-fail-01-02-sev2-l3v1.xml: Missed issue layout-21004 (severity "Error").
+      1 Test layout-21005/layout-21005-fail-01-01-layout-21006-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-21005/layout-21005-fail-01-01-layout-21006-sev2-l3v1.xml: Missed issue layout-21005 (severity "Error").
+      1 Test layout-21005/layout-21005-fail-01-01-layout-21006-sev2-l3v1.xml: Missed issue layout-21006 (severity "Error").
+      1 Test layout-21006/layout-21006-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-21006/layout-21006-fail-01-01-sev2-l3v1.xml: Missed issue layout-21006 (severity "Error").
+      1 Test layout-21009/layout-21009-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20509 (severity "Error").
+      1 Test layout-21009/layout-21009-fail-01-01-sev2-l3v1.xml: Missed issue layout-21009 (severity "Error").
+      1 Test layout-21010/layout-21010-fail-01-01-layout-21011-sev2-l3v1.xml: Missed issue layout-21010 (severity "Error").
+      1 Test layout-21012/layout-21012-fail-01-01-sev2-l3v1.xml: Missed issue layout-21012 (severity "Error").
+      1 Test layout-21012/layout-21012-fail-01-02-sev2-l3v1.xml: Missed issue layout-21012 (severity "Error").
+      1 Test layout-21102/layout-21102-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21104 (severity "Error").
+      1 Test layout-21102/layout-21102-fail-01-01-sev2-l3v1.xml: Missed issue layout-21102 (severity "Error").
+      1 Test layout-21104/layout-21104-fail-01-03-sev2-l3v1.xml: Missed issue layout-21104 (severity "Error").
+      1 Test layout-21105/layout-21105-fail-01-01-layout-21106-sev2-l3v1.xml: Found unexpected issue layout-20405 (severity "Error").
+      1 Test layout-21105/layout-21105-fail-01-01-layout-21106-sev2-l3v1.xml: Missed issue layout-21105 (severity "Error").
+      1 Test layout-21105/layout-21105-fail-01-01-layout-21106-sev2-l3v1.xml: Missed issue layout-21106 (severity "Error").
+      1 Test layout-21106/layout-21106-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20406 (severity "Error").
+      1 Test layout-21106/layout-21106-fail-01-01-sev2-l3v1.xml: Missed issue layout-21106 (severity "Error").
+      1 Test layout-21107/layout-21107-fail-01-01-layout-21108-sev2-l3v1.xml: Missed issue layout-21107 (severity "Error").
+      1 Test layout-21107/layout-21107-fail-01-01-layout-21108-sev2-l3v1.xml: Missed issue layout-21108 (severity "Error").
+      1 Test layout-21108/layout-21108-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20808 (severity "Error").
+      1 Test layout-21108/layout-21108-fail-01-01-sev2-l3v1.xml: Missed issue layout-21108 (severity "Error").
+      1 Test layout-21109/layout-21109-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20809 (severity "Error").
+      1 Test layout-21109/layout-21109-fail-01-01-sev2-l3v1.xml: Missed issue layout-21109 (severity "Error").
+      1 Test layout-21110/layout-21110-fail-01-01-layout-21111-sev2-l3v1.xml: Missed issue layout-21110 (severity "Error").
+      1 Test layout-21110/layout-21110-fail-01-01-layout-21111-sev2-l3v1.xml: Missed issue layout-21111 (severity "Error").
+      1 Test layout-21111/layout-21111-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-20508 (severity "Error").
+      1 Test layout-21111/layout-21111-fail-01-01-sev2-l3v1.xml: Missed issue layout-21111 (severity "Error").
+      1 Test layout-21202/layout-21202-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21204 (severity "Error").
+      1 Test layout-21202/layout-21202-fail-01-01-sev2-l3v1.xml: Missed issue layout-21202 (severity "Error").
+      1 Test layout-21203/layout-21203-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21204 (severity "Error").
+      1 Test layout-21203/layout-21203-fail-01-01-sev2-l3v1.xml: Missed issue layout-21203 (severity "Error").
+      1 Test layout-21203/layout-21203-fail-01-02-sev2-l3v1.xml: Found unexpected issue layout-21204 (severity "Error").
+      1 Test layout-21203/layout-21203-fail-01-02-sev2-l3v1.xml: Missed issue layout-21203 (severity "Error").
+      1 Test layout-21203/layout-21203-fail-01-03-sev2-l3v1.xml: Missed issue layout-21203 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21305 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-01-sev2-l3v1.xml: Missed issue layout-21204 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-02-sev2-l3v1.xml: Found unexpected issue layout-21305 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-02-sev2-l3v1.xml: Missed issue layout-21204 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-03-sev2-l3v1.xml: Found unexpected issue layout-21305 (severity "Error").
+      1 Test layout-21204/layout-21204-fail-01-03-sev2-l3v1.xml: Missed issue layout-21204 (severity "Error").
+      1 Test layout-21303/layout-21303-fail-01-01-sev2-l3v1.xml: Missed issue layout-21303 (severity "Error").
+      1 Test layout-21303/layout-21303-fail-01-04-sev2-l3v1.xml: Missed issue layout-21303 (severity "Error").
+      1 Test layout-21304/layout-21304-fail-01-01-sev2-l3v1.xml: Missed issue layout-21304 (severity "Error").
+      1 Test layout-21305/layout-21305-fail-01-01-sev2-l3v1.xml: Missed issue layout-21305 (severity "Error").
+      1 Test layout-21305/layout-21305-pass-00-01-sev1-l3v1.xml: Found unexpected issue layout-21305 (severity "Error").
+      1 Test layout-21402/layout-21402-fail-01-01-sev2-l3v1.xml: Missed issue layout-21402 (severity "Error").
+      1 Test layout-21403/layout-21403-fail-01-01-sev2-l3v1.xml: Missed issue layout-21403 (severity "Error").
+      1 Test layout-21404/layout-21404-fail-01-01-sev2-l3v1.xml: Missed issue layout-21404 (severity "Error").
+      1 Test layout-21405/layout-21405-fail-01-01-sev2-l3v1.xml: Missed issue layout-21405 (severity "Error").
+      1 Test layout-21405/layout-21405-fail-01-02-sev2-l3v1.xml: Missed issue layout-21405 (severity "Error").
+      1 Test layout-21502/layout-21502-fail-01-01-sev2-l3v1.xml: Missed issue layout-21502 (severity "Error").
+      1 Test layout-21503/layout-21503-fail-01-05-sev2-l3v1.xml: Found unexpected issue layout-21603 (severity "Error").
+      1 Test layout-21503/layout-21503-fail-01-05-sev2-l3v1.xml: Missed issue layout-21503 (severity "Error").
+      1 Test layout-21503/layout-21503-fail-01-06-sev2-l3v1.xml: Found unexpected issue layout-21603 (severity "Error").
+      1 Test layout-21503/layout-21503-fail-01-06-sev2-l3v1.xml: Missed issue layout-21503 (severity "Error").
+      1 Test layout-21504/layout-21504-fail-01-01-sev2-l3v1.xml: Missed issue layout-21504 (severity "Error").
+      1 Test layout-21602/layout-21602-fail-01-01-sev2-l3v1.xml: Missed issue layout-21602 (severity "Error").
+      1 Test layout-21603/layout-21603-fail-01-04-sev2-l3v1.xml: Found unexpected issue layout-10402 (severity "Error").
+      1 Test layout-21603/layout-21603-fail-01-05-sev2-l3v1.xml: Found unexpected issue layout-10402 (severity "Error").
+      1 Test layout-21603/layout-21603-fail-01-07-sev2-l3v1.xml: Found unexpected issue layout-10402 (severity "Error").
+      1 Test layout-21604/layout-21604-fail-01-01-sev2-l3v1.xml: Missed issue layout-21604 (severity "Error").
+      1 Test layout-21702/layout-21702-fail-01-01-sev2-l3v1.xml: Found unexpected issue layout-21703 (severity "Error").
+      1 Test layout-21702/layout-21702-fail-01-01-sev2-l3v1.xml: Missed issue layout-21702 (severity "Error").
+      1 Test layout-21703/layout-21703-fail-01-03-sev2-l3v1.xml: Missed issue layout-21703 (severity "Error").
+      1 Test layout-21704/layout-21704-fail-01-01-sev2-l3v1.xml: Missed issue layout-21704 (severity "Error").
+      1 Test layout-21704/layout-21704-fail-01-02-sev2-l3v1.xml: Missed issue layout-21704 (severity "Error").
+      1 Test layout-21704/layout-21704-fail-01-03-sev2-l3v1.xml: Missed issue layout-21704 (severity "Error").
+      1 Test multi-10202/multi-10202-fail-01-01-sev2-l3v1.xml: Missed issue multi-10202 (severity "Error").
+      1 Test multi-10202/multi-10202-fail-01-02-sev2-l3v1.xml: Missed issue multi-10202 (severity "Error").
+      1 Test multi-10203/multi-10203-fail-01-01-sev2-l3v1.xml: Missed issue multi-10203 (severity "Error").
+      1 Test multi-10301/multi-10301-fail-01-01-sev2-l3v1.xml: Missed issue multi-10301 (severity "Error").
+      1 Test multi-10302/multi-10302-fail-01-01-sev2-l3v1.xml: Missed issue multi-10302 (severity "Error").
+      1 Test multi-10304/multi-10304-fail-01-01-sev2-l3v1.xml: Missed issue multi-10304 (severity "Error").
+      1 Test multi-10305/multi-10305-fail-01-01-sev2-l3v1.xml: Missed issue multi-10305 (severity "Error").
+      1 Test multi-10306/multi-10306-fail-01-01-sev2-l3v1.xml: Missed issue multi-10306 (severity "Error").
+      1 Test multi-10307/multi-10307-fail-01-01-sev2-l3v1.xml: Missed issue multi-10307 (severity "Error").
+      1 Test multi-10308/multi-10308-fail-01-01-sev2-l3v1.xml: Missed issue multi-10308 (severity "Error").
+      1 Test multi-10309/multi-10309-fail-01-01-sev2-l3v1.xml: Missed issue multi-10309 (severity "Error").
+      1 Test multi-10310/multi-10310-fail-01-01-sev2-l3v1.xml: Missed issue multi-10310 (severity "Error").
+      1 Test multi-20101/multi-20101-fail-01-01-sev2-l3v1.xml: Missed issue multi-20101 (severity "Error").
+      1 Test multi-20102/multi-20102-fail-01-01-sev2-l3v1.xml: Missed issue multi-20102 (severity "Error").
+      1 Test multi-20103/multi-20103-fail-01-01-sev2-l3v1.xml: Missed issue multi-20103 (severity "Error").
+      1 Test multi-20201/multi-20201-fail-01-01-sev2-l3v1.xml: Missed issue multi-20201 (severity "Error").
+      1 Test multi-20203/multi-20203-fail-01-01-sev2-l3v1.xml: Missed issue multi-20203 (severity "Error").
+      1 Test multi-20203/multi-20203-fail-01-02-sev2-l3v1.xml: Missed issue multi-20203 (severity "Error").
+      1 Test multi-20301/multi-20301-fail-01-01-sev2-l3v1.xml: Missed issue multi-20301 (severity "Error").
+      1 Test multi-20302/multi-20302-fail-01-01-sev2-l3v1.xml: Missed issue multi-20302 (severity "Error").
+      1 Test multi-20303/multi-20303-fail-01-01-sev2-l3v1.xml: Missed issue multi-20303 (severity "Error").
+      1 Test multi-20304/multi-20304-fail-01-01-sev2-l3v1.xml: Missed issue multi-20304 (severity "Error").
+      1 Test multi-20305/multi-20305-fail-01-01-sev2-l3v1.xml: Missed issue multi-20305 (severity "Error").
+      1 Test multi-20306/multi-20306-fail-01-01-10102-sev2-l3v1.xml: Missed issue multi-20306 (severity "Error").
+      1 Test multi-20308/multi-20308-fail-01-01-sev2-l3v1.xml: Missed issue multi-20308 (severity "Error").
+      1 Test multi-20401/multi-20401-fail-01-01-sev2-l3v1.xml: Missed issue multi-20401 (severity "Error").
+      1 Test multi-20403/multi-20403-fail-01-01-sev2-l3v1.xml: Missed issue multi-20403 (severity "Error").
+      1 Test multi-20403/multi-20403-fail-01-012xml-sev2-l3v1.xml: Missed issue multi-20403 (severity "Error").
+      1 Test multi-20404/multi-20404-fail-01-01-sev2-l3v1.xml: Missed issue multi-20404 (severity "Error").
+      1 Test multi-20406/multi-20406-fail-01-01-10102-sev2-l3v1.xml: Missed issue multi-20406 (severity "Error").
+      1 Test multi-20408/multi-20408-fail-01-01-sev2-l3v1.xml: Missed issue multi-20408 (severity "Error").
+      1 Test multi-20409/multi-20409-fail-01-01-10102-sev2-l3v1.xml: Missed issue multi-20409 (severity "Error").
+      1 Test multi-20411/multi-20411-fail-01-01-sev2-l3v1.xml: Missed issue multi-20411 (severity "Error").
+      1 Test multi-20411/multi-20411-fail-01-02-sev2-l3v1.xml: Missed issue multi-20411 (severity "Error").
+      1 Test multi-20412/multi-20412-fail-01-01-10102-sev2-l3v1.xml: Missed issue multi-20412 (severity "Error").
+      1 Test multi-20414/multi-20414-fail-01-01-sev2-l3v1.xml: Missed issue multi-20414 (severity "Error").
+      1 Test multi-20414/multi-20414-fail-01-02-sev2-l3v1.xml: Missed issue multi-20414 (severity "Error").
+      1 Test multi-20415/multi-20415-fail-01-01-sev2-l3v1.xml: Missed issue multi-20415 (severity "Error").
+      1 Test multi-20417/multi-20417-fail-01-01-sev2-l3v1.xml: Missed issue multi-20417 (severity "Error").
+      1 Test multi-20501/multi-20501-fail-01-01-sev2-l3v1.xml: Missed issue multi-20501 (severity "Error").
+      1 Test multi-20601/multi-20601-fail-01-01-sev2-l3v1.xml: Missed issue multi-20601 (severity "Error").
+      1 Test multi-20603/multi-20603-fail-01-01-sev2-l3v1.xml: Missed issue multi-20603 (severity "Error").
+      1 Test multi-20603/multi-20603-fail-01-02-sev2-l3v1.xml: Missed issue multi-20603 (severity "Error").
+      1 Test multi-20603/multi-20603-fail-01-04-sev2-l3v1.xml: Missed issue multi-20603 (severity "Error").
+      1 Test multi-20603/multi-20603-fail-02-03-sev2-l3v1.xml: Missed issue multi-20603 (severity "Error").
+      1 Test multi-20604/multi-20604-fail-01-01-sev2-l3v1.xml: Missed issue multi-20604 (severity "Error").
+      1 Test multi-20605/multi-20605-fail-01-01-sev2-l3v1.xml: Missed issue multi-20605 (severity "Error").
+      1 Test multi-20704/multi-20704-fail-01-01-sev2-l3v1.xml: Missed issue multi-20704 (severity "Error").
+      1 Test multi-20805/multi-20805-fail-01-01-sev2-l3v1.xml: Missed issue multi-20805 (severity "Error").
+      1 Test multi-20806/multi-20806-fail-01-01-sev2-l3v1.xml: Missed issue multi-20806 (severity "Error").
+      1 Test multi-20904/multi-20904-fail-01-01-sev2-l3v1.xml: Missed issue multi-20904 (severity "Error").
+      1 Test multi-20907/multi-20907-fail-01-01-sev2-l3v1.xml: Missed issue multi-20907 (severity "Error").
+      1 Test multi-21103/multi-21103-fail-01-01-multi-21105-sev2-l3v1.xml: Missed issue multi-21103 (severity "Error").
+      1 Test multi-21103/multi-21103-fail-01-01-multi-21105-sev2-l3v1.xml: Missed issue multi-21105 (severity "Error").
+      1 Test multi-21104/multi-21104-fail-01-01-sev2-l3v1.xml: Missed issue multi-21104 (severity "Error").
+      1 Test multi-21105/multi-21105-fail-01-01-sev2-l3v1.xml: Missed issue multi-21105 (severity "Error").
+      1 Test multi-21106/multi-21106-fail-01-01-sev2-l3v1.xml: Missed issue multi-21106 (severity "Error").
+      1 Test multi-21202/multi-21202-fail-01-01-sev2-l3v1.xml: Missed issue multi-21202 (severity "Error").
+      1 Test multi-21212/multi-21212-fail-01-01-sev2-l3v1.xml: Missed issue multi-21212 (severity "Error").
+      1 Test multi-21213/multi-21213-fail-01-01-sev2-l3v1.xml: Missed issue multi-21213 (severity "Error").
+      1 Test multi-21214/multi-21214-fail-01-01-multi-21407-7021504-sev2-l3v1.xml: Missed issue multi-21214 (severity "Error").
+      1 Test multi-21214/multi-21214-fail-01-02-sev2-l3v1.xml: Missed issue multi-21214 (severity "Error").
+      1 Test multi-21215/multi-21215-fail-01-01-sev2-l3v1.xml: Missed issue multi-21215 (severity "Error").
+      1 Test multi-21216/multi-21216-fail-01-01-sev2-l3v1.xml: Missed issue multi-21216 (severity "Error").
+      1 Test multi-21305/multi-21305-fail-01-01-sev2-l3v1.xml: Missed issue multi-21305 (severity "Error").
+      1 Test multi-21306/multi-21306-fail-01-01-sev2-l3v1.xml: Missed issue multi-21306 (severity "Error").
+      1 Test multi-21404/multi-21404-fail-01-01-multi-21504-sev2-l3v1.xml: Missed issue multi-21404 (severity "Error").
+      1 Test multi-21404/multi-21404-fail-01-01-multi-21504-sev2-l3v1.xml: Missed issue multi-21504 (severity "Error").
+      1 Test multi-21405/multi-21405-fail-01-01-sev2-l3v1.xml: Missed issue multi-21405 (severity "Error").
+      1 Test multi-21406/multi-21406-fail-01-01-sev2-l3v1.xml: Missed issue multi-21406 (severity "Error").
+      1 Test multi-21407/multi-21407-fail-01-01-sev2-l3v1.xml: Missed issue multi-21407 (severity "Error").
+      1 Test multi-21504/multi-21504-fail-01-01-sev2-l3v1.xml: Missed issue multi-21504 (severity "Error").
+      1 Test multi-21702/multi-21702-fail-01-01-sev2-l3v1.xml: Missed issue multi-21702 (severity "Error").
+      1 Test multi-21904/multi-21904-fail-01-01-sev2-l3v1.xml: Missed issue multi-21904 (severity "Error").
+      1 Test multi-21905/multi-21905-fail-01-01-sev2-l3v1.xml: Missed issue multi-21905 (severity "Error").
+      1 Test multi-21906/multi-21906-fail-01-01-sev2-l3v1.xml: Missed issue multi-21906 (severity "Error").
+      1 Test multi-22001/multi-22001-fail-01-01-sev2-l3v1.xml: Missed issue multi-22001 (severity "Error").
+      1 Test multi-22003/multi-22003-fail-01-01-sev2-l3v1.xml: Missed issue multi-22003 (severity "Error").
+      1 Test multi-22003/multi-22003-fail-01-02-multi-22004-sev2-l3v1.xml: Missed issue multi-22003 (severity "Error").
+      1 Test multi-22003/multi-22003-fail-01-02-multi-22004-sev2-l3v1.xml: Missed issue multi-22004 (severity "Error").
+      1 Test multi-22004/multi-22004-fail-01-01-sev2-l3v1.xml: Missed issue multi-22004 (severity "Error").
+      1 Test multi-22005/multi-22005-fail-01-01-sev2-l3v1.xml: Missed issue multi-22005 (severity "Error").
+      1 Test multi-22006/multi-22006-fail-02-01-sev2-l3v1.xml: Missed issue multi-22006 (severity "Error").
+      1 Test qual-10301/qual-10301-fail-01-01-sev2-l3v1.xml: Missed issue qual-10301 (severity "Error").
+      1 Test qual-10301/qual-10301-fail-01-02-sev2-l3v1.xml: Missed issue qual-10301 (severity "Error").
+      3 Test qual-10301/qual-10301-fail-01-03-sev2-l3v1.xml: Found unexpected issue qual-20508 (severity "Error").
+      1 Test qual-10301/qual-10301-fail-01-03-sev2-l3v1.xml: Found unexpected issue qual-20607 (severity "Error").
+      1 Test qual-10301/qual-10301-fail-01-03-sev2-l3v1.xml: Missed issue qual-10301 (severity "Error").
+      1 Test qual-10301/qual-10301-fail-01-04-sev2-l3v1.xml: Missed issue qual-10301 (severity "Error").
+      1 Test qual-20101/qual-20101-fail-01-01-sev2-l3v1.xml: Missed issue qual-20101 (severity "Error").
+      1 Test qual-20102/qual-20102-fail-01-01-sev2-l3v1.xml: Missed issue qual-20102 (severity "Error").
+      1 Test qual-20205/qual-20205-fail-01-01-sev2-l3v1.xml: Missed issue qual-20205 (severity "Error").
+      1 Test qual-20205/qual-20205-fail-01-02-sev2-l3v1.xml: Missed issue qual-20205 (severity "Error").
+      1 Test qual-20206/qual-20206-fail-01-01-sev2-l3v1.xml: Missed issue qual-20206 (severity "Error").
+      1 Test qual-20206/qual-20206-fail-01-02-sev2-l3v1.xml: Missed issue qual-20206 (severity "Error").
+      1 Test qual-20301/qual-20301-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20303 (severity "Error").
+      1 Test qual-20301/qual-20301-fail-01-01-sev2-l3v1.xml: Missed issue qual-20301 (severity "Error").
+      1 Test qual-20303/qual-20303-fail-01-04-sev2-l3v1.xml: Missed issue qual-20303 (severity "Error").
+      1 Test qual-20304/qual-20304-fail-01-01-sev2-l3v1.xml: Missed issue qual-20304 (severity "Error").
+      1 Test qual-20306/qual-20306-fail-01-01-sev2-l3v1.xml: Missed issue qual-20306 (severity "Error").
+      1 Test qual-20306/qual-20306-fail-01-02-sev2-l3v1.xml: Missed issue qual-20306 (severity "Error").
+      1 Test qual-20307/qual-20307-fail-01-01-sev2-l3v1.xml: Missed issue qual-20307 (severity "Error").
+      1 Test qual-20307/qual-20307-fail-01-02-sev2-l3v1.xml: Missed issue qual-20307 (severity "Error").
+      1 Test qual-20312/qual-20312-fail-01-01-sev2-l3v1.xml: Missed issue qual-20312 (severity "Error").
+      1 Test qual-20313/qual-20313-fail-01-01-sev2-l3v1.xml: Missed issue qual-20313 (severity "Error").
+      1 Test qual-20401/qual-20401-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20403 (severity "Error").
+      1 Test qual-20401/qual-20401-fail-01-01-sev2-l3v1.xml: Missed issue qual-20401 (severity "Error").
+      1 Test qual-20403/qual-20403-fail-01-01-sev2-l3v1.xml: Missed issue qual-20403 (severity "Error").
+      1 Test qual-20405/qual-20405-fail-01-01-sev2-l3v1.xml: Missed issue qual-20405 (severity "Error").
+      1 Test qual-20410/qual-20410-fail-01-02-sev2-l3v1.xml: Missed issue qual-20410 (severity "Error").
+      1 Test qual-20411/qual-20411-fail-01-01-sev2-l3v1.xml: Missed issue qual-20411 (severity "Error").
+      1 Test qual-20411/qual-20411-fail-01-02-sev2-l3v1.xml: Missed issue qual-20411 (severity "Error").
+      1 Test qual-20412/qual-20412-fail-01-02-sev2-l3v1.xml: Missed issue qual-20412 (severity "Error").
+      1 Test qual-20413/qual-20413-fail-01-01-sev2-l3v1.xml: Missed issue qual-20413 (severity "Error").
+      1 Test qual-20414/qual-20414-fail-01-01-20806-sev2-l3v1.xml: Missed issue qual-20414 (severity "Error").
+      1 Test qual-20414/qual-20414-fail-01-01-20806-sev2-l3v1.xml: Missed issue qual-20806 (severity "Error").
+      1 Test qual-20501/qual-20501-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20503 (severity "Error").
+      1 Test qual-20501/qual-20501-fail-01-01-sev2-l3v1.xml: Missed issue qual-20501 (severity "Error").
+      1 Test qual-20503/qual-20503-fail-01-03-sev2-l3v1.xml: Missed issue qual-20503 (severity "Error").
+      1 Test qual-20505/qual-20505-fail-01-01-sev2-l3v1.xml: Missed issue qual-20505 (severity "Error").
+      1 Test qual-20506/qual-20506-fail-01-01-sev2-l3v1.xml: Missed issue qual-20506 (severity "Error").
+      1 Test qual-20507/qual-20507-fail-01-01-sev2-l3v1.xml: Missed issue qual-20507 (severity "Error").
+      1 Test qual-20510/qual-20510-fail-01-01-sev2-l3v1.xml: Missed issue qual-20510 (severity "Error").
+      1 Test qual-20601/qual-20601-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20603 (severity "Error").
+      1 Test qual-20601/qual-20601-fail-01-01-sev2-l3v1.xml: Missed issue qual-20601 (severity "Error").
+      1 Test qual-20603/qual-20603-fail-01-01-sev2-l3v1.xml: Missed issue qual-20603 (severity "Error").
+      1 Test qual-20605/qual-20605-fail-01-01-sev2-l3v1.xml: Missed issue qual-20605 (severity "Error").
+      1 Test qual-20606/qual-20606-fail-01-01-sev2-l3v1.xml: Missed issue qual-20606 (severity "Error").
+      1 Test qual-20608/qual-20608-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20310 (severity "Error").
+      1 Test qual-20610/qual-20610-fail-01-01-sev2-l3v1.xml: Missed issue qual-20610 (severity "Error").
+      1 Test qual-20701/qual-20701-fail-01-01-sev2-l3v1.xml: Found unexpected issue qual-20703 (severity "Error").
+      1 Test qual-20701/qual-20701-fail-01-01-sev2-l3v1.xml: Missed issue qual-20701 (severity "Error").
+      1 Test qual-20703/qual-20703-fail-01-01-sev2-l3v1.xml: Missed issue qual-20703 (severity "Error").
+      1 Test qual-20704/qual-20704-fail-01-01-sev2-l3v1.xml: Missed issue qual-20704 (severity "Error").
+      1 Test qual-20704/qual-20704-fail-01-02-sev2-l3v1.xml: Missed issue qual-20704 (severity "Error").
+      1 Test qual-20705/qual-20705-fail-01-01-20414-sev2-l3v1.xml: Missed issue qual-20414 (severity "Error").
+      1 Test qual-20705/qual-20705-fail-01-01-20414-sev2-l3v1.xml: Missed issue qual-20705 (severity "Error").
+      1 Test qual-20801/qual-20801-fail-01-01-sev2-l3v1.xml: Missed issue qual-20801 (severity "Error").
+      1 Test qual-20803/qual-20803-fail-01-01-sev2-l3v1.xml: Missed issue qual-20803 (severity "Error").
+      1 Test qual-20805/qual-20805-fail-01-01-sev2-l3v1.xml: Missed issue qual-20805 (severity "Error").
+      1 Test qual-20806/qual-20806-fail-01-01-20414-sev2-l3v1.xml: Missed issue qual-20414 (severity "Error").
+      1 Test qual-20806/qual-20806-fail-01-01-20414-sev2-l3v1.xml: Missed issue qual-20806 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-01-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-02-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-03-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-04-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-05-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-06-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-07-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-08-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-09-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-10-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-11-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-12-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-13-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-14-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-15-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-16-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-17-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-18-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-19-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-20-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-21-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-22-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-23-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-10301/spatial-10301-fail-01-24-sev2-l3v1.xml: Missed issue spatial-10301 (severity "Error").
+      1 Test spatial-20101/spatial-20101-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20101 (severity "Error").
+      1 Test spatial-20102/spatial-20102-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20102 (severity "Error").
+      1 Test spatial-20103/spatial-20103-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20103 (severity "Error").
+      1 Test spatial-20201/spatial-20201-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20201 (severity "Error").
+      1 Test spatial-20301/spatial-20301-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20301 (severity "Error").
+      1 Test spatial-20401/spatial-20401-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20401 (severity "Error").
+      1 Test spatial-20402/spatial-20402-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20402 (severity "Error").
+      1 Test spatial-20450/spatial-20450-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20450 (severity "Error").
+      1 Test spatial-20450/spatial-20450-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20450 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-04-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-05-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-06-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-07-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-08-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-09-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20501/spatial-20501-fail-01-10-sev2-l3v1.xml: Missed issue spatial-20501 (severity "Error").
+      1 Test spatial-20601/spatial-20601-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20601 (severity "Error").
+      1 Test spatial-20601/spatial-20601-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20601 (severity "Error").
+      1 Test spatial-20602/spatial-20602-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20602 (severity "Error").
+      1 Test spatial-20701/spatial-20701-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20701 (severity "Error").
+      1 Test spatial-20703/spatial-20703-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20703 (severity "Error").
+      1 Test spatial-20703/spatial-20703-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20703 (severity "Error").
+      1 Test spatial-20703/spatial-20703-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20703 (severity "Error").
+      1 Test spatial-20704/spatial-20704-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20704 (severity "Error").
+      1 Test spatial-20752/spatial-20752-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20752 (severity "Error").
+      1 Test spatial-20752/spatial-20752-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20752 (severity "Error").
+      1 Test spatial-20752/spatial-20752-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20752 (severity "Error").
+      1 Test spatial-20752/spatial-20752-fail-01-04-sev2-l3v1.xml: Missed issue spatial-20752 (severity "Error").
+      1 Test spatial-20753/spatial-20753-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20753 (severity "Error").
+      1 Test spatial-20753/spatial-20753-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20753 (severity "Error").
+      1 Test spatial-20753/spatial-20753-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20753 (severity "Error").
+      1 Test spatial-20753/spatial-20753-fail-01-04-sev2-l3v1.xml: Missed issue spatial-20753 (severity "Error").
+      1 Test spatial-20753/spatial-20753-fail-01-05-sev2-l3v1.xml: Missed issue spatial-20753 (severity "Error").
+      1 Test spatial-20801/spatial-20801-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20801 (severity "Error").
+      1 Test spatial-20803/spatial-20803-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20803 (severity "Error").
+      1 Test spatial-20803/spatial-20803-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20803 (severity "Error").
+      1 Test spatial-20803/spatial-20803-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20803 (severity "Error").
+      1 Test spatial-20804/spatial-20804-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20804 (severity "Error").
+      1 Test spatial-20805/spatial-20805-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20805 (severity "Error").
+      1 Test spatial-20808/spatial-20808-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20808 (severity "Error").
+      1 Test spatial-20850/spatial-20850-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20850 (severity "Error").
+      1 Test spatial-20850/spatial-20850-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20850 (severity "Error").
+      1 Test spatial-20850/spatial-20850-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20850 (severity "Error").
+      1 Test spatial-20850/spatial-20850-fail-01-04-sev2-l3v1.xml: Missed issue spatial-20850 (severity "Error").
+      1 Test spatial-20850/spatial-20850-fail-01-05-sev2-l3v1.xml: Missed issue spatial-20850 (severity "Error").
+      1 Test spatial-20901/spatial-20901-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20901 (severity "Error").
+      1 Test spatial-20903/spatial-20903-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20903 (severity "Error").
+      1 Test spatial-20903/spatial-20903-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20903 (severity "Error").
+      1 Test spatial-20904/spatial-20904-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20904 (severity "Error").
+      1 Test spatial-20905/spatial-20905-fail-01-01-spatial-20952-sev2-l3v1.xml: Missed issue spatial-20905 (severity "Error").
+      1 Test spatial-20905/spatial-20905-fail-01-01-spatial-20952-sev2-l3v1.xml: Missed issue spatial-20952 (severity "Error").
+      1 Test spatial-20906/spatial-20906-fail-01-01-spatial-20952-sev2-l3v1.xml: Missed issue spatial-20906 (severity "Error").
+      1 Test spatial-20906/spatial-20906-fail-01-01-spatial-20952-sev2-l3v1.xml: Missed issue spatial-20952 (severity "Error").
+      1 Test spatial-20950/spatial-20950-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20950 (severity "Error").
+      1 Test spatial-20950/spatial-20950-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20950 (severity "Error").
+      1 Test spatial-20950/spatial-20950-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20950 (severity "Error").
+      1 Test spatial-20951/spatial-20951-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20951 (severity "Error").
+      1 Test spatial-20951/spatial-20951-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20951 (severity "Error").
+      1 Test spatial-20951/spatial-20951-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20951 (severity "Error").
+      1 Test spatial-20952/spatial-20952-fail-01-01-sev2-l3v1.xml: Missed issue spatial-20952 (severity "Error").
+      1 Test spatial-20952/spatial-20952-fail-01-02-sev2-l3v1.xml: Missed issue spatial-20952 (severity "Error").
+      1 Test spatial-20952/spatial-20952-fail-01-03-sev2-l3v1.xml: Missed issue spatial-20952 (severity "Error").
+      1 Test spatial-21001/spatial-21001-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21001 (severity "Error").
+      1 Test spatial-21003/spatial-21003-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21003 (severity "Error").
+      1 Test spatial-21003/spatial-21003-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21003 (severity "Error").
+      1 Test spatial-21003/spatial-21003-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21003 (severity "Error").
+      1 Test spatial-21004/spatial-21004-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21004 (severity "Error").
+      1 Test spatial-21050/spatial-21050-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21050 (severity "Error").
+      1 Test spatial-21051/spatial-21051-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21051 (severity "Error").
+      1 Test spatial-21101/spatial-21101-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21101 (severity "Error").
+      1 Test spatial-21103/spatial-21103-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21103 (severity "Error").
+      1 Test spatial-21103/spatial-21103-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21103 (severity "Error").
+      1 Test spatial-21103/spatial-21103-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21103 (severity "Error").
+      1 Test spatial-21103/spatial-21103-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21103 (severity "Error").
+      1 Test spatial-21104/spatial-21104-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21104 (severity "Error").
+      1 Test spatial-21105/spatial-21105-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21105 (severity "Error").
+      1 Test spatial-21150/spatial-21150-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21150 (severity "Error").
+      1 Test spatial-21201/spatial-21201-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21201 (severity "Error").
+      1 Test spatial-21203/spatial-21203-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21203 (severity "Error").
+      1 Test spatial-21203/spatial-21203-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21203 (severity "Error").
+      1 Test spatial-21203/spatial-21203-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21203 (severity "Error").
+      1 Test spatial-21204/spatial-21204-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21204 (severity "Error").
+      1 Test spatial-21250/spatial-21250-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21250 (severity "Error").
+      1 Test spatial-21301/spatial-21301-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21301 (severity "Error").
+      1 Test spatial-21303/spatial-21303-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21303 (severity "Error").
+      1 Test spatial-21303/spatial-21303-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21303 (severity "Error").
+      1 Test spatial-21303/spatial-21303-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21303 (severity "Error").
+      1 Test spatial-21303/spatial-21303-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21303 (severity "Error").
+      1 Test spatial-21304/spatial-21304-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21304 (severity "Error").
+      1 Test spatial-21305/spatial-21305-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21305 (severity "Error").
+      1 Test spatial-21350/spatial-21350-fail-01-01-spatial-21351-sev2-l3v1.xml: Missed issue spatial-21350 (severity "Error").
+      1 Test spatial-21350/spatial-21350-fail-01-02-spatial-21351-sev2-l3v1.xml: Missed issue spatial-21350 (severity "Error").
+      1 Test spatial-21350/spatial-21350-fail-01-03-spatial-21351-sev2-l3v1.xml: Missed issue spatial-21350 (severity "Error").
+      1 Test spatial-21350/spatial-21350-fail-01-04-spatial-21351-sev2-l3v1.xml: Missed issue spatial-21350 (severity "Error").
+      1 Test spatial-21401/spatial-21401-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21401 (severity "Error").
+      1 Test spatial-21403/spatial-21403-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21403 (severity "Error").
+      1 Test spatial-21403/spatial-21403-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21403 (severity "Error").
+      1 Test spatial-21403/spatial-21403-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21403 (severity "Error").
+      1 Test spatial-21404/spatial-21404-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21404 (severity "Error").
+      1 Test spatial-21404/spatial-21404-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21404 (severity "Error").
+      1 Test spatial-21404/spatial-21404-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21404 (severity "Error").
+      1 Test spatial-21404/spatial-21404-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21404 (severity "Error").
+      1 Test spatial-21404/spatial-21404-fail-01-05-sev2-l3v1.xml: Missed issue spatial-21404 (severity "Error").
+      1 Test spatial-21405/spatial-21405-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21405 (severity "Error").
+      1 Test spatial-21407/spatial-21407-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21407 (severity "Error").
+      1 Test spatial-21407/spatial-21407-fail-02-01-sev2-l3v1.xml: Missed issue spatial-21407 (severity "Error").
+      1 Test spatial-21503/spatial-21503-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21503 (severity "Error").
+      1 Test spatial-21504/spatial-21504-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21504 (severity "Error").
+      1 Test spatial-21505/spatial-21505-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21505 (severity "Error").
+      1 Test spatial-21507/spatial-21507-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21507 (severity "Error").
+      1 Test spatial-21604/spatial-21604-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21604 (severity "Error").
+      1 Test spatial-21604/spatial-21604-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21604 (severity "Error").
+      1 Test spatial-21604/spatial-21604-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21604 (severity "Error").
+      1 Test spatial-21605/spatial-21605-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21605 (severity "Error").
+      1 Test spatial-21605/spatial-21605-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21605 (severity "Error").
+      1 Test spatial-21607/spatial-21607-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21607 (severity "Error").
+      1 Test spatial-21607/spatial-21607-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21607 (severity "Error").
+      1 Test spatial-21607/spatial-21607-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21607 (severity "Error").
+      1 Test spatial-21608/spatial-21608-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21608 (severity "Error").
+      1 Test spatial-21609/spatial-21609-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21609 (severity "Error").
+      1 Test spatial-21611/spatial-21611-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21611 (severity "Error").
+      1 Test spatial-21612/spatial-21612-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21612 (severity "Error").
+      1 Test spatial-21650/spatial-21650-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21650 (severity "Error").
+      1 Test spatial-21650/spatial-21650-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21650 (severity "Error").
+      1 Test spatial-21650/spatial-21650-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21650 (severity "Error").
+      1 Test spatial-21651/spatial-21651-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21651 (severity "Error").
+      1 Test spatial-21651/spatial-21651-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21651 (severity "Error").
+      1 Test spatial-21651/spatial-21651-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21651 (severity "Error").
+      1 Test spatial-21652/spatial-21652-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21652 (severity "Error").
+      1 Test spatial-21652/spatial-21652-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21652 (severity "Error").
+      1 Test spatial-21652/spatial-21652-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21652 (severity "Error").
+      1 Test spatial-21653/spatial-21653-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21653 (severity "Error").
+      1 Test spatial-21653/spatial-21653-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21653 (severity "Error").
+      1 Test spatial-21654/spatial-21654-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21654 (severity "Error").
+      1 Test spatial-21655/spatial-21655-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21655 (severity "Error").
+      1 Test spatial-21655/spatial-21655-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21655 (severity "Error").
+      1 Test spatial-21655/spatial-21655-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21655 (severity "Error").
+      1 Test spatial-21655/spatial-21655-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21655 (severity "Error").
+      1 Test spatial-21656/spatial-21656-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21656 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-05-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21657/spatial-21657-fail-01-06-sev2-l3v1.xml: Missed issue spatial-21657 (severity "Error").
+      1 Test spatial-21658/spatial-21658-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21658 (severity "Error").
+      1 Test spatial-21704/spatial-21704-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21704 (severity "Error").
+      1 Test spatial-21706/spatial-21706-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21706 (severity "Error").
+      1 Test spatial-21706/spatial-21706-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21706 (severity "Error").
+      1 Test spatial-21707/spatial-21707-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21707 (severity "Error").
+      1 Test spatial-21707/spatial-21707-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21707 (severity "Error").
+      1 Test spatial-21708/spatial-21708-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21708 (severity "Error").
+      1 Test spatial-21708/spatial-21708-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21708 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-05-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21750/spatial-21750-fail-01-06-sev2-l3v1.xml: Missed issue spatial-21750 (severity "Error").
+      1 Test spatial-21751/spatial-21751-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21751 (severity "Error").
+      1 Test spatial-21752/spatial-21752-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21752 (severity "Error").
+      1 Test spatial-21752/spatial-21752-fail-02-02-sev2-l3v1.xml: Missed issue spatial-21752 (severity "Error").
+      1 Test spatial-21752/spatial-21752-fail-02-03-sev2-l3v1.xml: Missed issue spatial-21752 (severity "Error").
+      1 Test spatial-21752/spatial-21752-fail-02-04-sev2-l3v1.xml: Missed issue spatial-21752 (severity "Error").
+      1 Test spatial-21752/spatial-21752-fail-02-05-sev2-l3v1.xml: Missed issue spatial-21752 (severity "Error").
+      1 Test spatial-21753/spatial-21753-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21753 (severity "Error").
+      1 Test spatial-21753/spatial-21753-fail-02-02-sev2-l3v1.xml: Missed issue spatial-21753 (severity "Error").
+      1 Test spatial-21753/spatial-21753-fail-02-03-sev2-l3v1.xml: Missed issue spatial-21753 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-04-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-05-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-06-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-07-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-08-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21754/spatial-21754-fail-01-09-sev2-l3v1.xml: Missed issue spatial-21754 (severity "Error").
+      1 Test spatial-21905/spatial-21905-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21905 (severity "Error").
+      1 Test spatial-21906/spatial-21906-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21906 (severity "Error").
+      1 Test spatial-21908/spatial-21908-fail-01-01-sev2-l3v1.xml: Missed issue spatial-21908 (severity "Error").
+      1 Test spatial-21908/spatial-21908-fail-01-02-sev2-l3v1.xml: Missed issue spatial-21908 (severity "Error").
+      1 Test spatial-21908/spatial-21908-fail-01-03-sev2-l3v1.xml: Missed issue spatial-21908 (severity "Error").
+      1 Test spatial-22050/spatial-22050-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22050 (severity "Error").
+      1 Test spatial-22104/spatial-22104-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22104 (severity "Error").
+      1 Test spatial-22104/spatial-22104-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22104 (severity "Error").
+      1 Test spatial-22105/spatial-22105-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22105 (severity "Error").
+      1 Test spatial-22107/spatial-22107-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22107 (severity "Error").
+      1 Test spatial-22107/spatial-22107-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22107 (severity "Error").
+      1 Test spatial-22108/spatial-22108-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22108 (severity "Error").
+      1 Test spatial-22108/spatial-22108-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22108 (severity "Error").
+      1 Test spatial-22108/spatial-22108-fail-01-03-sev2-l3v1.xml: Missed issue spatial-22108 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-03-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-04-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-05-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-06-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22110/spatial-22110-fail-01-07-sev2-l3v1.xml: Missed issue spatial-22110 (severity "Error").
+      1 Test spatial-22150/spatial-22150-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22150 (severity "Error").
+      1 Test spatial-22150/spatial-22150-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22150 (severity "Error").
+      1 Test spatial-22151/spatial-22151-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22151 (severity "Error").
+      1 Test spatial-22152/spatial-22152-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22152 (severity "Error").
+      1 Test spatial-22152/spatial-22152-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22152 (severity "Error").
+      1 Test spatial-22153/spatial-22153-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22153 (severity "Error").
+      1 Test spatial-22153/spatial-22153-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22153 (severity "Error").
+      1 Test spatial-22154/spatial-22154-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22154 (severity "Error").
+      1 Test spatial-22154/spatial-22154-fail-01-03-sev2-l3v1.xml: Missed issue spatial-22154 (severity "Error").
+      1 Test spatial-22154/spatial-22154-fail-02-02-sev2-l3v1.xml: Missed issue spatial-22154 (severity "Error").
+      1 Test spatial-22154/spatial-22154-fail-03-04-sev2-l3v1.xml: Missed issue spatial-22154 (severity "Error").
+      1 Test spatial-22155/spatial-22155-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22155 (severity "Error").
+      1 Test spatial-22155/spatial-22155-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22155 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-03-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-04-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-05-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-06-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22157/spatial-22157-fail-01-07-sev2-l3v1.xml: Missed issue spatial-22157 (severity "Error").
+      1 Test spatial-22305/spatial-22305-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22305 (severity "Error").
+      1 Test spatial-22307/spatial-22307-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22307 (severity "Error").
+      1 Test spatial-22307/spatial-22307-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22307 (severity "Error").
+      1 Test spatial-22307/spatial-22307-fail-01-03-sev2-l3v1.xml: Missed issue spatial-22307 (severity "Error").
+      1 Test spatial-22604/spatial-22604-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22604 (severity "Error").
+      1 Test spatial-22605/spatial-22605-fail-01-01-spatial-22651-sev2-l3v1.xml: Missed issue spatial-22605 (severity "Error").
+      1 Test spatial-22605/spatial-22605-fail-01-01-spatial-22651-sev2-l3v1.xml: Missed issue spatial-22651 (severity "Error").
+      1 Test spatial-22606/spatial-22606-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22606 (severity "Error").
+      1 Test spatial-22650/spatial-22650-fail-01-01-10102-sev2-l3v1.xml: Missed issue spatial-22650 (severity "Error").
+      1 Test spatial-22651/spatial-22651-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22651 (severity "Error").
+      1 Test spatial-22651/spatial-22651-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22651 (severity "Error").
+      1 Test spatial-22652/spatial-22652-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22652 (severity "Error").
+      1 Test spatial-22653/spatial-22653-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22653 (severity "Error").
+      1 Test spatial-22654/spatial-22654-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22654 (severity "Error").
+      1 Test spatial-22654/spatial-22654-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22654 (severity "Error").
+      1 Test spatial-22704/spatial-22704-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22704 (severity "Error").
+      1 Test spatial-22705/spatial-22705-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22705 (severity "Error").
+      1 Test spatial-22706/spatial-22706-fail-01-01-spatial-22751-sev2-l3v1.xml: Missed issue spatial-22706 (severity "Error").
+      1 Test spatial-22706/spatial-22706-fail-01-01-spatial-22751-sev2-l3v1.xml: Missed issue spatial-22751 (severity "Error").
+      1 Test spatial-22707/spatial-22707-false-01-01-sev2-l3v1.xml: Missed issue spatial-22707 (severity "Error").
+      1 Test spatial-22750/spatial-22750-fail-01-01-10102-sev2-l3v1.xml: Missed issue spatial-22750 (severity "Error").
+      1 Test spatial-22751/spatial-22751-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22751 (severity "Error").
+      1 Test spatial-22751/spatial-22751-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22751 (severity "Error").
+      1 Test spatial-22752/spatial-22752-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22752 (severity "Error").
+      1 Test spatial-22753/spatial-22753-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22753 (severity "Error").
+      1 Test spatial-22754/spatial-22754-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22754 (severity "Error").
+      1 Test spatial-22754/spatial-22754-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22754 (severity "Error").
+      1 Test spatial-22755/spatial-22755-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22755 (severity "Error").
+      1 Test spatial-22804/spatial-22804-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22804 (severity "Error").
+      1 Test spatial-22805/spatial-22805-fail-01-01-spatial-22851-sev2-l3v1.xml: Missed issue spatial-22805 (severity "Error").
+      1 Test spatial-22805/spatial-22805-fail-01-01-spatial-22851-sev2-l3v1.xml: Missed issue spatial-22851 (severity "Error").
+      1 Test spatial-22806/spatial-22806-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22806 (severity "Error").
+      1 Test spatial-22850/spatial-22850-fail-01-01-10102-sev2-l3v1.xml: Missed issue spatial-22850 (severity "Error").
+      1 Test spatial-22851/spatial-22851-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22851 (severity "Error").
+      1 Test spatial-22851/spatial-22851-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22851 (severity "Error").
+      1 Test spatial-22852/spatial-22852-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22852 (severity "Error").
+      1 Test spatial-22853/spatial-22853-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22853 (severity "Error").
+      1 Test spatial-22854/spatial-22854-fail-01-01-sev2-l3v1.xml: Missed issue spatial-22854 (severity "Error").
+      1 Test spatial-22854/spatial-22854-fail-01-02-sev2-l3v1.xml: Missed issue spatial-22854 (severity "Error").
+      1 Test spatial-23004/spatial-23004-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23004 (severity "Error").
+      1 Test spatial-23004/spatial-23004-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23004 (severity "Error").
+      1 Test spatial-23005/spatial-23005-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23005 (severity "Error").
+      1 Test spatial-23050/spatial-23050-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23050 (severity "Error").
+      1 Test spatial-23051/spatial-23051-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23051 (severity "Error").
+      1 Test spatial-23051/spatial-23051-fail-01-02-spatial-23050-sev2-l3v1.xml: Missed issue spatial-23050 (severity "Error").
+      1 Test spatial-23051/spatial-23051-fail-01-02-spatial-23050-sev2-l3v1.xml: Missed issue spatial-23051 (severity "Error").
+      1 Test spatial-23104/spatial-23104-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23104 (severity "Error").
+      1 Test spatial-23104/spatial-23104-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23104 (severity "Error").
+      1 Test spatial-23104/spatial-23104-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23104 (severity "Error").
+      1 Test spatial-23104/spatial-23104-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23104 (severity "Error").
+      1 Test spatial-23104/spatial-23104-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23104 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-06-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-07-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23150/spatial-23150-fail-01-08-sev2-l3v1.xml: Missed issue spatial-23150 (severity "Error").
+      1 Test spatial-23151/spatial-23151-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23151 (severity "Error").
+      1 Test spatial-23151/spatial-23151-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23151 (severity "Error").
+      1 Test spatial-23205/spatial-23205-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23205 (severity "Error").
+      1 Test spatial-23205/spatial-23205-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23205 (severity "Error").
+      1 Test spatial-23205/spatial-23205-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23205 (severity "Error").
+      1 Test spatial-23250/spatial-23250-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23250 (severity "Error").
+      1 Test spatial-23250/spatial-23250-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23250 (severity "Error").
+      1 Test spatial-23250/spatial-23250-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23250 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23251/spatial-23251-fail-01-06-sev2-l3v1.xml: Missed issue spatial-23251 (severity "Error").
+      1 Test spatial-23252/spatial-23252-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23252 (severity "Error").
+      1 Test spatial-23252/spatial-23252-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23252 (severity "Error").
+      1 Test spatial-23252/spatial-23252-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23252 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23253/spatial-23253-fail-01-06-sev2-l3v1.xml: Missed issue spatial-23253 (severity "Error").
+      1 Test spatial-23304/spatial-23304-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23304 (severity "Error").
+      1 Test spatial-23304/spatial-23304-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23304 (severity "Error").
+      1 Test spatial-23304/spatial-23304-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23304 (severity "Error").
+      1 Test spatial-23350/spatial-23350-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23350 (severity "Error").
+      1 Test spatial-23350/spatial-23350-fail-02-02-sev2-l3v1.xml: Missed issue spatial-23350 (severity "Error").
+      1 Test spatial-23404/spatial-23404-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23404 (severity "Error").
+      1 Test spatial-23404/spatial-23404-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23404 (severity "Error").
+      1 Test spatial-23404/spatial-23404-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23404 (severity "Error").
+      1 Test spatial-23405/spatial-23405-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23405 (severity "Error").
+      1 Test spatial-23450/spatial-23450-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23450 (severity "Error").
+      1 Test spatial-23450/spatial-23450-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23450 (severity "Error").
+      1 Test spatial-23450/spatial-23450-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23450 (severity "Error").
+      1 Test spatial-23451/spatial-23451-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23451 (severity "Error").
+      1 Test spatial-23451/spatial-23451-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23451 (severity "Error").
+      1 Test spatial-23451/spatial-23451-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23451 (severity "Error").
+      1 Test spatial-23452/spatial-23452-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23452 (severity "Error").
+      1 Test spatial-23452/spatial-23452-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23452 (severity "Error").
+      1 Test spatial-23452/spatial-23452-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23452 (severity "Error").
+      1 Test spatial-23454/spatial-23454-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23454 (severity "Error").
+      1 Test spatial-23455/spatial-23455-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23455 (severity "Error").
+      1 Test spatial-23455/spatial-23455-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23455 (severity "Error").
+      1 Test spatial-23456/spatial-23456-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23456 (severity "Error").
+      1 Test spatial-23456/spatial-23456-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23456 (severity "Error").
+      1 Test spatial-23456/spatial-23456-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23456 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-06-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-07-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-08-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-09-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-10-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-11-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23457/spatial-23457-fail-01-12-sev2-l3v1.xml: Missed issue spatial-23457 (severity "Error").
+      1 Test spatial-23504/spatial-23504-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23504 (severity "Error").
+      1 Test spatial-23551/spatial-23551-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23551 (severity "Error").
+      1 Test spatial-23604/spatial-23604-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23604 (severity "Error").
+      1 Test spatial-23605/spatial-23605-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23605 (severity "Error").
+      1 Test spatial-23606/spatial-23606-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23606 (severity "Error").
+      1 Test spatial-23606/spatial-23606-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23606 (severity "Error").
+      1 Test spatial-23606/spatial-23606-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23606 (severity "Error").
+      1 Test spatial-23650/spatial-23650-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23650 (severity "Error").
+      1 Test spatial-23650/spatial-23650-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23650 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-06-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-07-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-08-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-09-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-10-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-11-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-12-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-13-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-14-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-15-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-16-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-17-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-01-18-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-02-19-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-02-20-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23651/spatial-23651-fail-02-21-sev2-l3v1.xml: Missed issue spatial-23651 (severity "Error").
+      1 Test spatial-23705/spatial-23705-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23705 (severity "Error").
+      1 Test spatial-23705/spatial-23705-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23705 (severity "Error").
+      1 Test spatial-23751/spatial-23751-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23751 (severity "Error").
+      1 Test spatial-23751/spatial-23751-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23751 (severity "Error").
+      1 Test spatial-23752/spatial-23752-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23752 (severity "Error").
+      1 Test spatial-23752/spatial-23752-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23752 (severity "Error").
+      1 Test spatial-23753/spatial-23753-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23753 (severity "Error").
+      1 Test spatial-23753/spatial-23753-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23753 (severity "Error").
+      1 Test spatial-23753/spatial-23753-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23753 (severity "Error").
+      1 Test spatial-23753/spatial-23753-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23753 (severity "Error").
+      1 Test spatial-23754/spatial-23754-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23754 (severity "Error").
+      1 Test spatial-23754/spatial-23754-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23754 (severity "Error").
+      1 Test spatial-23754/spatial-23754-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23754 (severity "Error").
+      1 Test spatial-23754/spatial-23754-fail-01-04-sev2-l3v1.xml: Missed issue spatial-23754 (severity "Error").
+      1 Test spatial-23754/spatial-23754-fail-01-05-sev2-l3v1.xml: Missed issue spatial-23754 (severity "Error").
+      1 Test spatial-23850/spatial-23850-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23850 (severity "Error").
+      1 Test spatial-23850/spatial-23850-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23850 (severity "Error").
+      1 Test spatial-23850/spatial-23850-fail-01-03-sev2-l3v1.xml: Missed issue spatial-23850 (severity "Error").
+      1 Test spatial-23904/spatial-23904-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23904 (severity "Error").
+      1 Test spatial-23904/spatial-23904-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23904 (severity "Error").
+      1 Test spatial-23905/spatial-23905-fail-01-01-sev2-l3v1.xml: Missed issue spatial-23905 (severity "Error").
+      1 Test spatial-23905/spatial-23905-fail-01-02-sev2-l3v1.xml: Missed issue spatial-23905 (severity "Error").
+      1 Test spatial-24004/spatial-24004-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24004 (severity "Error").
+      1 Test spatial-24004/spatial-24004-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24004 (severity "Error").
+      1 Test spatial-24004/spatial-24004-fail-01-03-sev2-l3v1.xml: Missed issue spatial-24004 (severity "Error").
+      1 Test spatial-24005/spatial-24005-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24005 (severity "Error").
+      1 Test spatial-24005/spatial-24005-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24005 (severity "Error").
+      1 Test spatial-24006/spatial-24006-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24006 (severity "Error").
+      1 Test spatial-24006/spatial-24006-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24006 (severity "Error").
+      1 Test spatial-24008/spatial-24008-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24008 (severity "Error").
+      1 Test spatial-24008/spatial-24008-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24008 (severity "Error").
+      1 Test spatial-24050/spatial-24050-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24050 (severity "Error").
+      1 Test spatial-24050/spatial-24050-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24050 (severity "Error").
+      1 Test spatial-24051/spatial-24051-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24051 (severity "Error").
+      1 Test spatial-24052/spatial-24052-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24052 (severity "Error").
+      1 Test spatial-24052/spatial-24052-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24052 (severity "Error").
+      1 Test spatial-24053/spatial-24053-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24053 (severity "Error").
+      1 Test spatial-24053/spatial-24053-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24053 (severity "Error").
+      1 Test spatial-24053/spatial-24053-fail-01-03-sev2-l3v1.xml: Missed issue spatial-24053 (severity "Error").
+      1 Test spatial-24053/spatial-24053-fail-01-04-sev2-l3v1.xml: Missed issue spatial-24053 (severity "Error").
+      1 Test spatial-24054/spatial-24054-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24054 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-02-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-03-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-04-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-05-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-06-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-07-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-08-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24055/spatial-24055-fail-01-09-sev2-l3v1.xml: Missed issue spatial-24055 (severity "Error").
+      1 Test spatial-24056/spatial-24056-fail-01-01-sev2-l3v1.xml: Missed issue spatial-24056 (severity "Error").

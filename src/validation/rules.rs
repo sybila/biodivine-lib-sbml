@@ -143,11 +143,13 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "21232", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A Priority object may have the optional attributes id, name, metaid and sboTerm" },
 
     // specification rules: fbc
+    RuleDescriptor { id: "fbc-20201", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A Model object may contain one and only one instance of each of the ListOfObjectives, ListOfGeneProducts and ListOfUserDefinedConstraints elements. No other elements from the Flux Balance Constraints namespaces are permitted on a Model object." },
     RuleDescriptor { id: "fbc-20301", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A Species object may have the optional attributes fbc:charge and fbc:chemicalFormula" },
     RuleDescriptor { id: "fbc-20503", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "An Objective object must have the required attributes fbc:id and fbc:type, and may have the optional attributes fbc:name" },
     RuleDescriptor { id: "fbc-20508", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "Apart from the general notes and annotation subobjects permitted on all SBML objects, a ListOfFluxObjectives container object may …" },
     RuleDescriptor { id: "fbc-20603", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A FluxObjective object must have the required attributes fbc:reaction, fbc:coefficient, and fbc:variableType and may have the …" },
     RuleDescriptor { id: "fbc-20608", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "When the value of the Models fbc:strict attribute is true, the value of the attribute fbc:coefficient of a FluxObjective object …" },
+    RuleDescriptor { id: "fbc-20701", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A Reaction object may contain one and only one instance of the GeneProductAssociation element. No other elements from the Flux Balance Constraints namespaces are permitted on a Reaction object." },
     RuleDescriptor { id: "fbc-20703", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The attribute fbc:lowerFluxBound of a Reaction must be of the data type SIdRef" },
     RuleDescriptor { id: "fbc-20705", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the attribute fbc:lowerFluxBound of a Reaction object must be the identifier of an existing Parameter object defined …" },
     RuleDescriptor { id: "fbc-20706", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the attribute fbc:upperFluxBound of a Reaction object must be the identifier of an existing Parameter object defined …" },
@@ -171,6 +173,7 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     RuleDescriptor { id: "fbc-21207", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the attribute fbc:associatedSpecies of a GeneProduct object must be the identifier of an existing Species object …" },
 
     // specification rules: qual
+    RuleDescriptor { id: "qual-20201", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of each of the following kinds of objects within a Model object using Qualitative Models: ListOfTransitions and ListOfQualitativeSpecies." },
     RuleDescriptor { id: "qual-20303", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A QualitativeSpecies object must have the required attributes qual:id, qual:compartment and qual:constant, and may have the …" },
     RuleDescriptor { id: "qual-20308", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the attribute qual:compartment in a QualitativeSpecies object must be the identifier of an existing Compartment …" },
     RuleDescriptor { id: "qual-20309", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the attribute qual:initialLevel in a QualitativeSpecies object cannot be greater than the value of the qual:maxLevel …" },
@@ -197,6 +200,7 @@ pub(super) const CORE_TABLE: &[RuleDescriptor] = &[
     // specification rules: layout
     RuleDescriptor { id: "layout-10401", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The attribute xsi:type must be present on all lineSegment and cubicBezier objects" },
     RuleDescriptor { id: "layout-10402", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The value of the xsi:type attribute must be either LineSegment or CubicBezier appropriate to the object where it is located" },
+    RuleDescriptor { id: "layout-20201", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of the ListOfLayouts element within a Model object using Layout. No other elements from the Layout package are allowed." },
     RuleDescriptor { id: "layout-20302", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "A LayoutClass object may have the optional SBML Level 3 Core attributes metaid and sboTerm" },
     RuleDescriptor { id: "layout-20303", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "There may be at most one instance of each of the following ListOf kinds of objects within a LayoutClass object …" },
     RuleDescriptor { id: "layout-20304", kind: RuleKind::SpecRule, severity: SbmlIssueSeverity::Error, summary: "The various ListOf subobjects within a LayoutClass object are optional, but if present, these container object must not be empty" },

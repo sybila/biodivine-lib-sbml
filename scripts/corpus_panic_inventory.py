@@ -56,7 +56,7 @@ def main() -> None:
     unique = sorted({document for document, _message in panics})
     print(f"documents whose validation panicked: {len(unique)}")
     print(f"  l3v2: {len([d for d in unique if 'l3v2' in d])}")
-    print(f"  l3v1 (translated): {len([d for d in unique if 'l3v1' in d])}")
+    print(f"  l3v1: {len([d for d in unique if 'l3v1' in d])}")
     if not panics:
         return
     print("by panic message:")

@@ -1,11 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-/// The namespace of SBML Level 3 Version 1 Core.
-const L3V1_CORE: &str = "http://www.sbml.org/sbml/level3/version1/core";
-/// The namespace of SBML Level 3 Version 2 Core.
-const L3V2_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
-
 /// A disagreement between the library and the expectation files of the suite that is accepted and
 /// documented, instead of being counted as a mismatch.
 ///
@@ -18,12 +13,29 @@ const L3V2_CORE: &str = "http://www.sbml.org/sbml/level3/version2/core";
 /// visible in the harness instead of hidden in a disabled rule id: the rule stays implemented and
 /// enabled, the *unfiltered* dump still shows the reported issue, and only the comparison against
 /// the suite's list is relaxed for exactly that pair.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DifferenceDirection {
+    /// The library reports the rule, the suite's expectation file does not list it.
+    Reported,
+    /// The suite's expectation file lists the rule, the library does not report it.
+    ///
+    /// This is the other half of the same idea, and it exists because a rule can be *right* and
+    /// still not report: a package the library does not model (its content is not validated at
+    /// all), a report the library expresses under a more specific rule id, or a rule the crate
+    /// reports as a library diagnostic instead of a specification id. Without this direction those
+    /// cases would have to be answered by disabling the rule, which would stop the check for every
+    /// other document too.
+    Missed,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct KnownDifference {
     /// The rule id the library reports.
     pub rule: &'static str,
     /// A substring of the `directory/file` name of the documents it applies to.
     pub document: &'static str,
+    /// Which way round the disagreement is.
+    pub direction: DifferenceDirection,
     /// Why the library is right and the suite's list does not mention it, with the citation.
     pub reason: &'static str,
 }
@@ -35,7 +47,16 @@ impl KnownDifference {
     /// substring match would let an entry silently cover a different document whose name happens to
     /// contain the pattern, which is the opposite of what this list is for.
     pub fn covers(&self, rule: &str, document: &str) -> bool {
-        self.rule == rule && self.document == document
+        self.direction == DifferenceDirection::Reported
+            && self.rule == rule
+            && self.document == document
+    }
+
+    /// Whether this entry covers an expectation of the suite that the library does not report.
+    pub fn covers_missed(&self, rule: &str, document: &str) -> bool {
+        self.direction == DifferenceDirection::Missed
+            && self.rule == rule
+            && self.document == document
     }
 }
 
@@ -62,10 +83,10 @@ pub struct TestResults {
     /// against the suite's expectation files, which list specification rule ids), so a library
     /// lint appears here and nowhere else. The diagnostic of a lint has no other coverage.
     ///
-    /// This also includes the Level 3 Version 1 documents, whose issues the mismatch reports
-    /// deliberately ignore: the translated half of the corpus is invisible to every gate that
-    /// compares the mismatch reports, so a dump of every reported issue is the only way to see a
-    /// regression there. The list is unsorted; callers that compare it should sort it.
+    /// Every document the harness reads is both compared and dumped, so this list is a superset of
+    /// what the mismatch reports can express: it is the only coverage of the reports the comparison
+    /// cannot express (a report beyond the expectation, and the library's own diagnostics). The list
+    /// is unsorted; callers that compare it should sort it.
     pub issues: Vec<String>,
 }
 
@@ -83,11 +104,8 @@ pub struct CorpusDocument {
     pub rule: String,
     /// The file name of the document.
     pub file: String,
-    /// The content of the document; for a Level 3 Version 1 document this is the content after
-    /// the level/version substitution described in [`corpus_documents`].
+    /// The content of the document, exactly as the suite ships it.
     pub content: String,
-    /// True if [`content`](CorpusDocument::content) was translated from an older version.
-    pub translated: bool,
 }
 
 impl CorpusDocument {
@@ -114,9 +132,41 @@ impl CorpusDocument {
 ///
 /// The enumeration is silent: it reports the non-directory entries of `dir_path` (which are not
 /// documents) and otherwise returns the documents for the caller to process. It is the single
-/// place where the selection and translation rules of the corpus live, so every tool that walks
-/// the corpus sees exactly the same documents.
+/// place where the selection rules of the corpus live, so every tool that walks the corpus sees
+/// exactly the same documents.
 ///
+/// Which levels the harness reads, and why the others are left out.
+///
+/// The suite names every document with the level and version it is for, and the harness reads the
+/// ones whose level this crate models: Level 3 Version 2 always, and Level 3 Version 1 when
+/// `all_versions` is set. The documents are read **as they are** - the version a document declares
+/// is the version it is validated as, and it is compared against its own expectation file, which is
+/// what makes the suite's `l3v1` half part of the gate rather than a dump.
+///
+/// The levels the crate does not model yet are not read at all, because a document of such a level
+/// resolves no object model (see the crate's `VALIDATION.md`), so reading it would only produce the
+/// root-level rules and report every other expectation of its file as missed. [`unread_levels`]
+/// names them for the run's output.
+pub fn unread_levels() -> Vec<&'static str> {
+    vec![
+        "Level 1 Version 1",
+        "Level 1 Version 2",
+        "Level 2 Version 1",
+        "Level 2 Version 2",
+        "Level 2 Version 3",
+        "Level 2 Version 4",
+        "Level 2 Version 5",
+    ]
+}
+
+/// Whether the harness reads a document whose file name ends with `test_name`.
+fn is_read_level(test_name: &str, all_versions: bool) -> bool {
+    if test_name.contains("l3v2") {
+        return true;
+    }
+    all_versions && test_name.contains("l3v1")
+}
+
 /// # Panics
 ///
 /// Panics if `dir_path` is not a directory.
@@ -143,24 +193,13 @@ pub fn corpus_documents(dir_path: &str, all_versions: bool) -> Vec<CorpusRule> {
             if !test_name.ends_with(".xml") {
                 continue;
             }
-            if !test_name.contains("l3v2") && !(all_versions && test_name.contains("l3v1")) {
-                // Only read tests which are for Level 3 Version 2, or Version 1 if we want to
-                // also run older tests.
+            if !is_read_level(test_name, all_versions) {
                 continue;
             }
-            let translated = test_name.contains("l3v1");
-            let content = std::fs::read_to_string(rule_dir.path().join(test_name)).unwrap();
-            let content = if translated {
-                // "Lift" version one to version two.
-                content.replace(L3V1_CORE, L3V2_CORE)
-            } else {
-                content
-            };
             documents.push(CorpusDocument {
                 rule: name.to_string(),
                 file: test_name.to_string(),
-                content,
-                translated,
+                content: std::fs::read_to_string(rule_dir.path().join(test_name)).unwrap(),
             });
         }
 
@@ -255,18 +294,7 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
         for document in &rule.documents {
             let test_file: PathBuf = Path::new(dir_path).join(name).join(&document.file);
 
-            if document.translated {
-                println!(" > Testing translated {:?}", test_file);
-                let reported = read_document(document.content.as_str());
-                println!(
-                    " >> Found {} issues in the translated document. Ignoring.",
-                    reported.len()
-                );
-                let id = document.id();
-                for (rule_id, severity) in reported {
-                    issues.push(format!("{id}|{rule_id}|{severity}"));
-                }
-            } else {
+            {
                 /*
                    Try to run the test and record all inconsistencies in output.
                 */
@@ -334,6 +362,20 @@ pub fn test_helper<F: Fn(&str) -> Vec<(String, String)>>(
                         continue;
                     }
                     if filter_rule(id.as_str()) && is_spec_rule(id.as_str()) {
+                        if let Some(index) = known_differences
+                            .iter()
+                            .position(|known| known.covers_missed(id.as_str(), &document.id()))
+                        {
+                            known_difference_matches[index] += 1;
+                            let known = &known_differences[index];
+                            println!(
+                                " >> Known difference (missed): {} on {} - {}",
+                                id,
+                                document.id(),
+                                known.reason
+                            );
+                            continue;
+                        }
                         println!(" >> Missed expected issue {}.", id);
                         let report = format!(
                             "Test {}/{}: Missed issue {} (severity {:?}).",

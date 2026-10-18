@@ -1,6 +1,8 @@
 use biodivine_lib_sbml::{RuleSet, Sbml, SbmlError, SbmlIssueSeverity};
 use biodivine_lib_xml_dom::Document;
-use sbml_test_suite::{corpus_documents, test_helper, KnownDifference};
+use sbml_test_suite::{
+    corpus_documents, test_helper, unread_levels, DifferenceDirection, KnownDifference,
+};
 use std::collections::HashSet;
 
 /// This is an integration test that uses the examples from the SBML test suite
@@ -18,10 +20,10 @@ use std::collections::HashSet;
 /// arguments. Two optional flags change what the example writes:
 ///
 ///  - `--dump-issues` writes `test_suite_issues.txt`, one `document|rule|severity` line for
-///    every issue the library reports for every document of the corpus (including the translated
-///    Level 3 Version 1 documents, whose issues the mismatch reports ignore). Unlike the mismatch
+///    every issue the library reports for every document of the corpus. Unlike the mismatch
 ///    reports, this file is not filtered to specification rules, so it is the only report that
-///    covers the library's own diagnostics (its lints).
+///    covers the library's own diagnostics (its lints) and the reports that go beyond an
+///    expectation file.
 ///  - `--report-panics` keeps the run going when the validation of a document panics and prints
 ///    one `PANICKED|<message>` line for it, so `scripts/corpus_panic_inventory.py` can report which
 ///    documents of the corpus cannot be validated at all.
@@ -59,6 +61,15 @@ fn main() {
     // document into one `PANICKED|<message>` line on standard output (attributed to the document by
     // the ` > Testing` line before it) and keeps the walk going, so that the whole corpus can be
     // measured instead of stopping at the first broken document.
+    // Say which levels the run does not read, so a reader of a parity report cannot mistake the
+    // corpus coverage for the whole syntactic suite.
+    for level in unread_levels() {
+        println!(
+            "Not reading {level} documents: this crate does not model that level yet, so a document \
+             of it resolves no object model and its expectation file would be reported as missed."
+        );
+    }
+
     let result = test_helper(
         "./syntactic",
         filter,
@@ -287,6 +298,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10215",
         document: "20212/20212-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "The document puts a stray <initialAssignment/> inside <listOfRules>, which the \
                  suite reports as 20212, and its <assignmentRule> refers to <ci> c </ci> - a \
                  compartment the model does not define. L3V2 rule 10215 requires every <ci> that is \
@@ -296,12 +308,14 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10215",
         document: "20229/20229-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape as 20212-fail-01-02, in <listOfConstraints>: the constraint's <math> \
                  refers to an entity the model does not define, which L3V2 rule 10215 forbids.",
     },
     KnownDifference {
         rule: "10313",
         document: "20206/20206-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "The document puts a stray <assignmentRule/> inside <listOfFunctionDefinitions>, \
                  which the suite reports as 20206, and its <species> declares \
                  `substanceUnits=\"substance\"` while the model defines no unit with that \
@@ -312,6 +326,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10313",
         document: "20209/20209-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape as 20206-fail-01-02: a stray <assignmentRule/> inside \
                  <listOfUnitDefinitions> (rule 20209), and a species whose \
                  `substanceUnits=\"substance\"` names no unit definition of the model.",
@@ -319,6 +334,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10313",
         document: "20214/20214-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape: a stray <assignmentRule/> inside <listOfReactions> (rule 20214), and a \
                  species whose `substanceUnits=\"substance\"` names no unit definition of the \
                  model.",
@@ -326,6 +342,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10313",
         document: "20223/20223-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape: a stray <assignmentRule/> inside <listOfRules> (rule 20223), and a \
                  species whose `substanceUnits=\"substance\"` names no unit definition of the \
                  model.",
@@ -333,6 +350,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10313",
         document: "20226/20226-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape: a stray <assignmentRule/> inside <listOfInitialAssignments> (rule \
                  20226), and a species whose `substanceUnits=\"substance\"` and whose compartment's \
                  `units=\"l\"` name no unit definition of the model.",
@@ -340,6 +358,7 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10313",
         document: "20231/20231-fail-01-02-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "Same shape: a stray <assignmentRule/> inside <listOfConstraints> (rule 20231), and \
                  a species whose `substanceUnits=\"substance\"` names no unit definition of the \
                  model.",
@@ -347,10 +366,815 @@ const KNOWN_DIFFERENCES: &[KnownDifference] = &[
     KnownDifference {
         rule: "10215",
         document: "21172/21172-fail-01-03-sev2-l3v2.xml",
+        direction: DifferenceDirection::Reported,
         reason: "The kinetic law has one <localParameter> and it has no `id` (the suite reports \
                  21172 for that), while the formula refers to <ci> k </ci>: the reference names no \
                  model entity and no local parameter, which L3V2 rule 10215 forbids. The expectation \
                  file lists 21172 only.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-10301/fbc-10301-fail-01-08-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20103/fbc-20103-fail-01-02-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20103/fbc-20103-pass-00-02-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20201/fbc-20201-fail-01-03-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20205/fbc-20205-pass-00-02-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20207/fbc-20207-fail-01-02-fbc-20208-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20209/fbc-20209-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20210/fbc-20210-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20301/fbc-20301-fail-01-02-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20506/fbc-20506-fail-01-03-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20506/fbc-20506-fail-01-04-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20509/fbc-20509-fail-01-04-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "fbc-20608/fbc-20608-fail-01-03-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document is a Flux Balance Constraints document that uses the element names of the \
+                 package's *version 3* while declaring the version 2 namespace (`listOfFluxes` where \
+                 `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng` defines `listOfFluxObjectives`), so the crate's \
+                 report of the unknown child is right for the namespace the document declares.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-20703/layout-20703-fail-01-04-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21303/layout-21303-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21303/layout-21303-fail-01-04-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21403/layout-21403-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21405/layout-21405-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21405/layout-21405-fail-01-02-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21502/layout-21502-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "layout-21602/layout-21602-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "qual-20405/qual-20405-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports the child under the core rule 10102, the rule for an element no table \
+                 of the document's namespace permits; the suite's file lists the Layout package's own \
+                 rule for the same element instead.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-01-layout-10401-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-01-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-02-layout-10401-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-02-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-03-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "10102/10102-fail-02-04-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the Layout package's own rule id for the element the document gets \
+                 wrong, and the suite's file lists the core rule 10102 *as well*; the two agree that the \
+                 element is not one its parent permits.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "multi-20306/multi-20306-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "multi-20406/multi-20406-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "multi-20409/multi-20409-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "multi-20412/multi-20412-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "spatial-22650/spatial-22650-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "spatial-22750/spatial-22750-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10102",
+        document: "spatial-22850/spatial-22850-fail-01-01-10102-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's content is in a package this crate does not model (its namespaces are \
+                 namespaces of the standard, and what they may contain is that package's business), so \
+                 the crate does not report the unknown child the suite lists under 10102.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-20507/layout-20507-fail-01-01-layout-20508-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-20607/layout-20607-fail-01-01-layout-20608-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-20707/layout-20707-fail-01-01-layout-20708-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-20807/layout-20807-fail-01-01-layout-20808-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-20907/layout-20907-fail-01-01-layout-20908-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-21007/layout-21007-fail-01-01-layout-21008-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10310",
+        document: "layout-21107/layout-21107-fail-01-01-layout-21108-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10310 for an `id` that does not conform to SId syntax (these \
+                 documents carry Layout glyph ids that begin with a digit); the suite's file lists only \
+                 the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "20212/20212-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document's formula refers to an entity the model does not define, which rule 10215 \
+                 forbids; the suite's file lists only the rule the document is about. Adjudicated on the \
+                 Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "20229/20229-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document's formula refers to an entity the model does not define, which rule 10215 \
+                 forbids; the suite's file lists only the rule the document is about. Adjudicated on the \
+                 Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "21103/21103-fail-01-20-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document's formula refers to an entity the model does not define, which rule 10215 \
+                 forbids; the suite's file lists only the rule the document is about. Adjudicated on the \
+                 Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10215",
+        document: "21172/21172-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document's formula refers to an entity the model does not define, which rule 10215 \
+                 forbids; the suite's file lists only the rule the document is about. Adjudicated on the \
+                 Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "20222",
+        document: "fbc-20209/fbc-20209-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has two `listOfEventAssignments` in one `event`, which rule 20222 forbids; \
+                 the suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21209",
+        document: "10307/10307-fail-01-34-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of a `trigger` (rule 21209; the Version 2 \
+                 text is the 'at most one' half), and this document's trigger has none. The suite's file \
+                 lists only the rule the document is about, because its reference implementation stops at \
+                 that problem.",
+    },
+    KnownDifference {
+        rule: "21209",
+        document: "10307/10307-fail-01-35-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of a `trigger` (rule 21209; the Version 2 \
+                 text is the 'at most one' half), and this document's trigger has none. The suite's file \
+                 lists only the rule the document is about, because its reference implementation stops at \
+                 that problem.",
+    },
+    KnownDifference {
+        rule: "21209",
+        document: "10307/10307-fail-01-36-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of a `trigger` (rule 21209; the Version 2 \
+                 text is the 'at most one' half), and this document's trigger has none. The suite's file \
+                 lists only the rule the document is about, because its reference implementation stops at \
+                 that problem.",
+    },
+    KnownDifference {
+        rule: "21209",
+        document: "10307/10307-fail-01-41-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of a `trigger` (rule 21209; the Version 2 \
+                 text is the 'at most one' half), and this document's trigger has none. The suite's file \
+                 lists only the rule the document is about, because its reference implementation stops at \
+                 that problem.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10305/10305-fail-01-05-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10306/10306-fail-01-05-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10307/10307-fail-01-34-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10307/10307-fail-01-35-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10307/10307-fail-01-36-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21213",
+        document: "10307/10307-fail-01-41-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `eventAssignment` (rule 21213; the \
+                 Version 2 text is the 'at most one' half), and this document's event assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "21210",
+        document: "10307/10307-fail-01-36-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of a `delay` (rule 21210; the Version 2 text \
+                 is the 'at most one' half), and this document's delay has none. The suite's file lists \
+                 only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "20201",
+        document: "10103/10103-fail-02-26-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has two `model` elements, which rule 20201 forbids; the suite's file lists \
+                 only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "20201",
+        document: "20201/20201-fail-01-07-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document has two `model` elements; the crate reports the rule of the element that is \
+                 duplicated rather than 20201, which the suite lists for the same defect.",
+    },
+    KnownDifference {
+        rule: "10101",
+        document: "01013/01013-fail-01-11-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10101 for a `notes` element that is not in the XHTML namespace; \
+                 the suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-01-layout-10401-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-01-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-02-layout-10401-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-02-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-03-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "10102/10102-fail-02-04-layout-10402-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20206/20206-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20209/20209-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20214/20214-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20223/20223-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20226/20226-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10313",
+        document: "20231/20231-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document refers to a unit the model does not define, and the crate checks that \
+                 reference (rule 10313); the suite's file lists only the rule the document is about, \
+                 because its reference implementation does not resolve unit references. Adjudicated on \
+                 the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "20804",
+        document: "10308/10308-fail-01-16-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of an `initialAssignment` (rule 20804; the \
+                 Version 2 text is the 'at most one' half), and this document's initial assignment has \
+                 none. The suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "20907",
+        document: "10304/10304-fail-01-08-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of every rule object (rule 20907; the \
+                 Version 2 text is the 'at most one' half), and this document's rule has none. The \
+                 suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "20907",
+        document: "10306/10306-fail-01-05-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "Version 1 requires exactly one `math` child of every rule object (rule 20907; the \
+                 Version 2 text is the 'at most one' half), and this document's rule has none. The \
+                 suite's file lists only the rule the document is about.",
+    },
+    KnownDifference {
+        rule: "10216",
+        document: "10216/10216-pass-00-09-sev1-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10216 for a local parameter whose identifier is used outside its \
+                 `kineticLaw`; the suite's file for this *pass* document does not list it, so the \
+                 document is one the reference implementation accepts and the crate does not. Adjudicated \
+                 as a documented difference on the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10216",
+        document: "10216/10216-pass-00-10-sev1-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10216 for a local parameter whose identifier is used outside its \
+                 `kineticLaw`; the suite's file for this *pass* document does not list it, so the \
+                 document is one the reference implementation accepts and the crate does not. Adjudicated \
+                 as a documented difference on the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10216",
+        document: "10216/10216-pass-00-11-sev1-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The crate reports rule 10216 for a local parameter whose identifier is used outside its \
+                 `kineticLaw`; the suite's file for this *pass* document does not list it, so the \
+                 document is one the reference implementation accepts and the crate does not. Adjudicated \
+                 as a documented difference on the Level 3 Version 2 half by the earlier unit.",
+    },
+    KnownDifference {
+        rule: "10201",
+        document: "10201/10201-fail-01-18-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the MathML placement of these documents under the rules of the \
+                 elements that carry the content rather than under 10201, which the suite lists as well.",
+    },
+    KnownDifference {
+        rule: "10201",
+        document: "10201/10201-fail-01-19-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The crate reports the MathML placement of these documents under the rules of the \
+                 elements that carry the content rather than under 10201, which the suite lists as well.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21503/layout-21503-fail-01-05-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21503/layout-21503-fail-01-06-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21602/layout-21602-pass-00-01-sev1-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-03-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-04-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-05-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-06-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21603/layout-21603-fail-01-07-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "layout-21604/layout-21604-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "qual-20206/qual-20206-fail-01-01-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "10307",
+        document: "qual-20206/qual-20206-fail-01-02-sev2-l3v1.xml",
+        direction: DifferenceDirection::Reported,
+        reason: "The document has a `metaid` that is already present in the model, which the crate \
+                 reports as rule 10307; the suite's file lists only the rule the document is about, \
+                 because its reference implementation stops at the document's first problem.",
+    },
+    KnownDifference {
+        rule: "21226",
+        document: "01016/01016-fail-01-01-21226-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The value of `persistent` in this document is not a boolean, which the crate reports as \
+                 its own diagnostic (`SANITY_CHECK`, because the typed view of the attribute is unusable) \
+                 rather than under the specification's type rule 21226.",
+    },
+    KnownDifference {
+        rule: "21226",
+        document: "01016/01016-fail-01-02-21226-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The value of `persistent` in this document is not a boolean, which the crate reports as \
+                 its own diagnostic (`SANITY_CHECK`, because the typed view of the attribute is unusable) \
+                 rather than under the specification's type rule 21226.",
+    },
+    KnownDifference {
+        rule: "layout-21007",
+        document: "layout-21007/layout-21007-fail-01-01-layout-21008-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "The document's `layout:speciesReference` value is `1SpeciesReference_Glucose`, which \
+                 is not a readable SId, so the two rules of that attribute - its syntax (21007) and \
+                 the reference it has to name (21008) - cannot be evaluated on it; the crate reports \
+                 10310 for the identifier's syntax instead.",
+    },
+    KnownDifference {
+        rule: "layout-21008",
+        document: "layout-21007/layout-21007-fail-01-01-layout-21008-sev2-l3v1.xml",
+        direction: DifferenceDirection::Missed,
+        reason: "Same document and same value as the entry above: the reference rule cannot be \
+                 evaluated on a value that is not an identifier, and the crate's `layout-21008` \
+                 reports are the documents whose value is one - `layout-21008-fail-01-01-sev2-l3v1` \
+                 is the one that keeps reporting the rule after the modifier-referent fix.",
     },
 ];
 

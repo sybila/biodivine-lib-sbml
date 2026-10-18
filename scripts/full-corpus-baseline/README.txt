@@ -6,13 +6,15 @@ syntactic test-suite example with NO rule filter and records, sorted and with du
 
   * every mismatch it reports (the census of the rules whose behaviour disagrees with the suite's
     expectations),
-  * every issue the library reports for every document of the corpus, including the translated
-    Level 3 Version 1 half whose issues the mismatch report ignores, and
+  * every issue the library reports for every document of the corpus, including the reports the
+    mismatch report cannot express (a report beyond what an expectation file lists, and the
+    library's own diagnostics), and
   * every document whose text does not survive a read -> write -> read cycle unchanged.
 
 It complements `validated-rules.txt`, which lists only the rules this crate declares as checked:
-the snapshots here also cover every other rule that appears in the corpus, the translated half of
-the corpus, and the effect of reading and writing on document text.
+the snapshots here also cover every other rule that appears in the corpus, every level the harness
+reads (Level 3 Version 1 and Version 2 alike), and the effect of reading and writing on document
+text.
 
 Provenance
 ----------

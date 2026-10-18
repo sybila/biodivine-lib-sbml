@@ -200,7 +200,7 @@ def main() -> None:
     in_scope = sorted((row for row in rows if row["in_scope"]), key=lambda row: row["rule"])
     out_of_scope = [row for row in rows if not row["in_scope"]]
 
-    print("# corpus scope: every document the harness reads (l3v2 and translated l3v1)")
+    print("# corpus scope: every document the harness reads (l3v2 and l3v1)")
     print(f"# documents with a mismatch: {len(report.mismatches)}")
     print(
         "# an event is counted with multiplicity; `unlock` counts documents that become clean "

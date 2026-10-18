@@ -16,7 +16,7 @@ The shapes, and what each of them can mean:
 | `missed-added` | a `Missed issue` line appears | a check was turned off or broke (`rule-turned-off`, a regression) |
 | `unexpected-removed` | a spurious report disappears | a false positive was fixed (`fixed-false-positive`), or the check was turned off (`rule-turned-off`) |
 | `unexpected-added` | a spurious report appears | a stricter check was enabled (`newly-detected`, a documented interpretation difference) |
-| `walk-only` | a line of the issue dump moves without a matching census move | the change is in a part of the corpus the census cannot see (the translated Level 3 Version 1 half) or in a library lint |
+| `walk-only` | a line of the issue dump moves without a matching census move | the change is in a report the comparison cannot express (a report beyond an expectation file) or in a library lint |
 
 `unexpected-removed` is the ambiguous one by construction, which is why the label is *not*
 derived from the shape: pass `--label <rule>=<label>` (repeatable) to record the verdict taken
@@ -31,10 +31,10 @@ re-runs from after a change.
 
 A `walk-only-added` line is the shape a change is *not* expected to produce: it says the library
 reports something new. Whether that is a detection or a false positive cannot be read off the
-census, because the translated Level 3 Version 1 half of the corpus is not compared against the
-suite's expectation files at all (`sbml-test-suite` dumps its issues and ignores them). The suite
-ships an expectation file for every document, though, including the ones it does not compare, so the
-file is the authority - and the tool therefore reads it for every added line and prints
+census, because the issue dump also carries the reports the comparison cannot express (a report
+beyond what an expectation file lists, and the library's own diagnostics). The suite ships an
+expectation file for every document, though, so the file is the authority - and the tool therefore
+reads it for every added line and prints
 
     lists the rule / does not list the rule / no expectation file
 
@@ -165,11 +165,11 @@ def rule_of(name: str, line: str) -> str:
 def expectation_verdict(corpus: str, document: str, rule: str) -> str:
     """Whether the document's own expectation file lists the rule a dump line reports.
 
-    A dump line of the *translated* half of the corpus is not compared against the suite today, so a
-    line the suite does not expect is invisible in the census - and the census is what a change is
-    usually judged by. This column makes it visible: the suite ships an expectation file for every
-    document, including the ones the harness ignores for comparison, so the file is the authority on
-    whether a newly reported issue is a detection or a false positive.
+    A dump line the comparison cannot express - a report beyond what an expectation file lists, or a
+    library diagnostic - is invisible in the census, and the census is what a change is usually
+    judged by. This column makes it visible: the suite ships an expectation file for every document,
+    so the file is the authority on whether a newly reported issue is a detection or a false
+    positive.
 
     The three answers are `lists the rule`, `does not list the rule` and `no expectation file` (a
     library lint has no expectation file to be listed in, by construction: the suite lists

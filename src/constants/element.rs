@@ -220,7 +220,6 @@ pub const REQUIRED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "reactionGlyph" => &["listOfSpeciesReferenceGlyphs"],
     "listOfSpeciesReferenceGlyphs" => &["speciesReferenceGlyph"],
     "listOfReferenceGlyphs" => &["referenceGlyph"],
-    "listOfSubGlyphs" => &["graphicalObject"],
     // A glyph that carries its geometry as a bounding box has to have one: the rule of the class
     // says so ("must contain exactly one BoundingBox object"), and the schema agrees (the
     // `graphicalObjectBB` datatype is not optional). The glyph classes whose schema *chooses*
@@ -306,8 +305,23 @@ pub const ALLOWED_CHILDREN: Map<&str, &[&str]> = phf_map! {
     "listOfReferenceGlyphs" => extended_sbase_children!("referenceGlyph"),
     "textGlyph" => extended_sbase_children!("boundingBox"),
     "speciesReferenceGlyph" => extended_sbase_children!("curve", "boundingBox"),
-    "referenceGlyph" => extended_sbase_children!("boundingBox"),
-    "listOfSubGlyphs" => extended_sbase_children!("graphicalObject"),
+    // Layout 21103: "There may be at most one instance of an BoundingBox and Curve object on a
+    // ReferenceGlyph." The Curve name is also in the unique-children row below, which is what
+    // makes it "at most one" rather than "any number".
+    "referenceGlyph" => extended_sbase_children!("boundingBox", "curve"),
+    // Layout 20812: "A ListOfSubGlyphs object may only contain CompartmentGlyph, SpeciesGlyph,
+    // ReactionGlyph, GeneralGlyph, GraphicalObject, TextGlyph, SpeciesReferenceGlyph and
+    // ReferenceGlyph objects."
+    "listOfSubGlyphs" => extended_sbase_children!(
+        "compartmentGlyph",
+        "speciesGlyph",
+        "reactionGlyph",
+        "generalGlyph",
+        "graphicalObject",
+        "textGlyph",
+        "speciesReferenceGlyph",
+        "referenceGlyph"
+    ),
     "position" => ALLOWED_SBASE_CHILDREN,
     "start" => ALLOWED_SBASE_CHILDREN,
     "end" => ALLOWED_SBASE_CHILDREN,

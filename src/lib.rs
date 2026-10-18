@@ -440,6 +440,70 @@ impl Sbml {
             issues.push(SbmlIssue::new("20101", &self.sbml_root, message));
         }
 
+        // Rules 20102 and 20103: the declared `level` and `version` must be consistent with the
+        // namespace the root declares. The two rules are the attribute halves of 20101, and the
+        // corpus's own documents pin both directions of each: a document that declares a Level 1
+        // level under a Level 2 namespace reports 20102 and not 20103 (`20102-fail-01-01-sev2-l1v1`),
+        // while one that declares a Level 2 version under the Level 2 Version 1 namespace reports
+        // 20103 and not 20102 (`20103-fail-01-01-sev2-l2v2`).
+        //
+        // A *missing* or unparsable attribute is reported by the type check of the root itself (the
+        // required-attribute guard maps `level` to 20102 and `version` to 20103), so these two checks
+        // only speak when the attribute has a value. They are also only meaningful when the namespace
+        // is a published SBML namespace: an unpublished one is 20101's case, and asking it what
+        // level it encodes would be reading a version out of a URL no specification defines.
+        if crate::constants::version::root_is_published_sbml_root(&self.sbml_root) {
+            let namespace = self.sbml_root.xml_element().namespace_url();
+            let (namespace_level, namespace_version) =
+                crate::constants::namespaces::level_version_of_namespace(&namespace);
+
+            let declared_level = self
+                .sbml_root
+                .xml_element()
+                .get_attribute("level")
+                .and_then(|it| it.parse::<u32>().ok());
+            if let Some(level) = declared_level {
+                if level != namespace_level {
+                    let message = format!(
+                        "The value of the 'level' attribute of the <sbml> element must be \
+                         consistent with the XML namespace of the document. The document declares \
+                         Level {level}, while the namespace '{namespace}' is that of Level \
+                         {namespace_level}."
+                    );
+                    issues.push(SbmlIssue::new("20102", &self.sbml_root, message));
+                }
+            }
+
+            let declared_version = self
+                .sbml_root
+                .xml_element()
+                .get_attribute("version")
+                .and_then(|it| it.parse::<u32>().ok());
+            if let Some(version) = declared_version {
+                let consistent = match namespace_version {
+                    // The namespace names one version, so that is the version the document is.
+                    Some(expected) => version == expected,
+                    // The namespace does not name a version (Level 1), so the question is whether the
+                    // level has published the version at all.
+                    None => crate::constants::version::published_versions(namespace_level)
+                        .contains(&version),
+                };
+                if !consistent {
+                    let message = format!(
+                        "The value of the 'version' attribute of the <sbml> element must be \
+                         consistent with the XML namespace of the document. The document declares \
+                         Version {version}, while the namespace '{namespace}' is that of \
+                         Level {namespace_level}{}.",
+                        match namespace_version {
+                            Some(expected) => format!(" Version {expected}"),
+                            None => " (which does not name a version)".to_string(),
+                        }
+                    );
+                    issues.push(SbmlIssue::new("20103", &self.sbml_root, message));
+                }
+            }
+        }
+
         if let Some(model) = self.model().get() {
             model.type_check(issues, check)?;
         }
@@ -736,6 +800,7 @@ mod tests {
         RequiredDynamicProperty, RequiredXmlChild, RequiredXmlProperty, SbmlObject, XmlChild,
         XmlChildDefault, XmlDefault, XmlElement, XmlProperty, XmlSubtype, XmlSupertype, XmlWrapper,
     };
+    use crate::RuleSet;
     use crate::{Sbml, SbmlIssueSeverity};
     use std::path::Path;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1314,6 +1379,83 @@ mod tests {
             .into_iter()
             .map(|it| it.rule().to_string())
             .collect()
+    }
+
+    /// The *specification* rule ids of a document's report, in order (the library lints are not
+    /// part of what a document is judged by).
+    fn reported_spec_rules(document: &Sbml) -> Vec<String> {
+        reported_rules(document)
+            .into_iter()
+            .filter(|it| RuleSet::CORE.is_spec_rule(it))
+            .collect()
+    }
+
+    /// The root rules, on the corpus's own documents.
+    ///
+    /// `20101` is the namespace half of the root rules and `20102`/`20103` are its two attribute
+    /// halves, so the suite's documents pin all three: a document that declares a Level 1 level
+    /// under a Level 2 namespace reports `20102` and not `20103` (`20102-fail-01-01-sev2-l1v1`),
+    /// while one that declares a Level 2 version under the Level 2 Version 1 namespace reports
+    /// `20103` and not `20102` (`20103-fail-01-01-sev2-l2v2`), and one whose root element is in no
+    /// namespace (or in a foreign one) reports `20101` alone (`20101-fail-01-01`, `-05`, `-06`).
+    ///
+    /// The two documents of the `99101` family whose expectation file lists only the reference
+    /// implementation's own `99101` are the documented differences of these rules: the crate reports
+    /// the inconsistent level/version anyway, which the suite suppresses when the declared pair is
+    /// not a published one.
+    #[test]
+    fn the_root_rules_report_what_the_namespace_and_the_attributes_disagree_about() {
+        const CASES: &[(&str, &[&str])] = &[
+            // 20101: the root element's own namespace is not a published SBML namespace.
+            ("20101/20101-fail-01-01-sev2-l2v2.xml", &["20101"]),
+            ("20101/20101-fail-01-04-sev2-l3v1.xml", &["20101"]),
+            // ... declared only under a prefix, so the root itself is in no namespace.
+            ("20101/20101-fail-01-05-sev2-l2v2.xml", &["20101"]),
+            // ... the root is in a foreign namespace.
+            ("20101/20101-fail-01-06-sev2-l3v1.xml", &["20101"]),
+            ("20101/20101-fail-01-09-sev2-l3v2.xml", &["20101"]),
+            // ... an unpublished variant of a published namespace.
+            ("99101/99101-fail-01-01-20101-sev2-l2v6.xml", &["20101"]),
+            // 20102: the declared level against the namespace's level.
+            ("20102/20102-fail-01-01-sev2-l1v1.xml", &["20102"]),
+            ("20102/20102-fail-01-03-sev2-l2v2.xml", &["20102"]),
+            ("20102/20102-fail-01-04-sev2-l2v2.xml", &["20102"]),
+            // ... and the missing attribute, which the root's own type check reports.
+            ("20102/20102-fail-01-05-sev2-l3v1.xml", &["20102"]),
+            ("20102/20102-fail-01-06-sev2-l2v1.xml", &["20102"]),
+            // 20103: the declared version against the namespace's version.
+            ("20103/20103-fail-01-01-sev2-l2v2.xml", &["20103"]),
+            ("20103/20103-fail-01-02-sev2-l2v1.xml", &["20103"]),
+            ("20103/20103-fail-01-05-sev2-l2v2.xml", &["20103"]),
+            // ... a version Level 1 never published, under the version-less Level 1 namespace.
+            ("20103/20103-fail-01-03-99101-sev2-l1v3.xml", &["20103"]),
+            ("20103/20103-fail-01-06-99101-sev2-l1v4.xml", &["20103"]),
+            ("20103/20103-fail-01-07-99101-sev2-l3v3.xml", &["20103"]),
+            ("20103/20103-fail-01-08-sev2-l3v2.xml", &["20103"]),
+            // A document that declares a Level 1 level under a Level 2 Version 3 namespace: the
+            // level half is what disagrees, so 20102 is what the suite reports too.
+            ("99101/99101-fail-01-03-20102-sev2-l1v3.xml", &["20102"]),
+        ];
+
+        // The documented differences: the suite suppresses the two attribute halves when the
+        // declared pair is not a published combination (it reports its own `99101` instead), while
+        // the crate reports the inconsistency it sees.
+        const DOCUMENTED_DIFFERENCES: &[(&str, &[&str])] = &[
+            ("99101/99101-fail-01-02-sev2-l4v2.xml", &["20102"]),
+            ("99101/99101-fail-01-04-sev2-l5v9.xml", &["20102", "20103"]),
+        ];
+
+        for (name, expected) in CASES.iter().chain(DOCUMENTED_DIFFERENCES.iter()) {
+            let Some(source) = corpus_document(name) else {
+                return;
+            };
+            let document = Sbml::read_str(&source).expect("the corpus document is well-formed");
+            assert_eq!(
+                reported_spec_rules(&document),
+                expected.iter().map(|it| it.to_string()).collect::<Vec<_>>(),
+                "{name}: the root rules of the document"
+            );
+        }
     }
 
     /// The eight published SBML document roots, and what this crate does with each of them.

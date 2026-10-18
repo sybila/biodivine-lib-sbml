@@ -151,6 +151,21 @@ pub(crate) fn element_is_in_modelled_document(element: &XmlElement) -> bool {
     }
 }
 
+/// The versions each level of SBML has published.
+///
+/// Rule `20103` asks whether the declared `version` is consistent with the namespace, and a
+/// namespace that does not name a version - Level 1's, which covers both of its versions - can only
+/// answer the question by listing them. The table is also what "a pair the crate could model" means
+/// when a level is added to [`LevelVersion`].
+pub(crate) fn published_versions(level: u32) -> &'static [u32] {
+    match level {
+        1 => &[1, 2],
+        2 => &[1, 2, 3, 4, 5],
+        3 => &[1, 2],
+        _ => &[],
+    }
+}
+
 /// The level and version the document of `element` is read as, when the crate models it.
 ///
 /// This is the accessor the validation layer uses: it resolves the root of the element's document

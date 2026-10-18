@@ -11,6 +11,7 @@ use crate::constants::version::document_level_version_or_base;
 pub(crate) use crate::constants::version::is_level_3_version_1;
 use crate::core::sbase::SId;
 use crate::core::validation::sbase::validate_sbase;
+use crate::core::validation::type_check::validate_version_required_children;
 use crate::core::{BaseUnit, MetaId, Model};
 use crate::xml::XmlElement;
 use crate::xml::XmlList;
@@ -82,6 +83,10 @@ pub(crate) trait SbmlValidable: XmlWrapper {
         check: &mut CancellationCheck,
     ) -> SbmlResult<()> {
         check.tick()?;
+        // The requirements the document's own version adds to the base tables are rules, not
+        // properties of the typed view, so they are reported here and the object is still walked:
+        // see `type_check::validate_version_required_children` for why that distinction matters.
+        validate_version_required_children(self.xml_element(), issues);
         let problems = type_check_problems(self.xml_element());
         if !problems.is_empty() {
             let element = self.xml_element().tag_name();

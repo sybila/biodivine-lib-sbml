@@ -75,10 +75,11 @@ The three snapshots that the script compares look at three different things:
     the weakest of the three, because it cannot see an issue that is added or removed
     where the suite already expects that rule.
   * `test_suite_issues.txt` (`--dump-issues`) - every issue the library reports for every
-    document of the corpus, as one `document|rule|severity` line. This covers the
-    translated Level 3 Version 1 half of the corpus as well, whose issues the mismatch
-    report ignores ("Found N issues in the translated document. Ignoring."), and it
-    reports a document that cannot be read at all as `10101`.
+    document of the corpus, as one `document|rule|severity` line. Every document the
+    harness reads is both compared and dumped, so this file is a superset of what the
+    mismatch reports can express: it is the only coverage of the reports the comparison
+    cannot express (a report beyond what an expectation file lists, and the library's own
+    diagnostics), and it reports a document that cannot be read at all as `10101`.
   * `test_suite_roundtrip.txt` (`--check-roundtrip`) - every document whose text does not
     survive `Sbml::read_str` -> serialization -> parse unchanged. The mismatch report
     never serializes a document, so this is the only gate that can see a change to how
@@ -269,12 +270,13 @@ delta for their tables, not a new entry in the constant that lists the accepted 
 
 Two consequences are worth stating plainly.
 
-  * The **harness translates namespaces**, it is not the library. The syntactic example rewrites the
-    core namespace of the older cases onto the Level 3 Version 2 one before validating them, so the
-    `l3v1` lines of a dump describe *translated* documents. The library no longer needs that
-    translation to read a Version 1 document, and the translated documents are now equivalent to the
-    originals (the version is read from the attribute in both cases); the translation stays only
-    because the comparison against the suite's `l3v1` expectation files is the next stage's work.
+  * The **harness reads every document as it is shipped**, and compares it against its own
+    expectation file: the Level 3 Version 2 half and the Level 3 Version 1 half alike. It used to
+    rewrite the core namespace of the `l3v1` documents for its own convenience, which meant their
+    lines described *translated* documents and their expectation files were never compared at all.
+    The library no longer needs that translation to read a Version 1 document, so the harness does
+    not do it: the version a document declares is the version it is validated as. The levels the
+    crate does not model yet (Level 1 and Level 2) are not read at all, and the run says so.
   * Reading an older level, and validating it, is the work of the level modules: a delta for the
     tables of that level, plus the rules whose text differs between the versions.
 
@@ -284,7 +286,7 @@ Two consequences are worth stating plainly.
 object whose own element fails the element-local type check, and skips that object and the
 subtree below it; the rest of the document is still walked. The count is a useful signal: a jump
 in it means a new check made elements type-inconsistent, not that the documents got worse. At the
-recorded baseline the whole corpus carries **1791** of them over **923** documents
+recorded baseline the whole corpus carries **341** of them over **341** documents
 (`awk -F'|' '$2=="not-validated"{s+=$1} END{print s}' scripts/full-corpus-baseline/test_suite_issues.txt.sorted`),
 and the guard exists so that the panic inventory
 (`scripts/corpus_panic_inventory.py`) is empty.

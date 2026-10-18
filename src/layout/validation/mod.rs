@@ -9,8 +9,8 @@ use crate::layout::{
     SpeciesGlyph, SpeciesReferenceGlyph, TextGlyph,
 };
 use crate::xml::{
-    OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild,
-    RequiredXmlProperty, XmlChild, XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
+    OptionalSbmlProperty, OptionalXmlChild, OptionalXmlProperty, RequiredXmlChild, XmlChild,
+    XmlElement, XmlProperty, XmlSubtype, XmlWrapper,
 };
 use crate::SbmlIssue;
 use crate::SbmlResult;
@@ -148,7 +148,7 @@ impl SbmlValidable for CompartmentGlyph {
             let element = self.find_by_sid::<Compartment>(&compartment);
 
             if element.is_none()
-                || element.clone().unwrap().xml_element().full_name() != "compartment"
+                || element.clone().unwrap().xml_element().tag_name() != "compartment"
             {
                 let message =
                     "Attribute [compartment] does not refer to an existing Compartment element!";
@@ -264,7 +264,7 @@ impl SbmlValidable for ReactionGlyph {
         if let Some(reaction) = reaction.get() {
             let element = self.find_by_sid::<Reaction>(&reaction);
 
-            if element.is_none() || element.clone().unwrap().xml_element().full_name() != "reaction"
+            if element.is_none() || element.clone().unwrap().xml_element().tag_name() != "reaction"
             {
                 let message =
                     "Attribute [reaction] does not refer to an existing Reaction element!";
@@ -342,10 +342,33 @@ impl SbmlValidable for SpeciesReferenceGlyph {
         if let Some(species_reference) = species_ref.get() {
             let element = self.find_by_sid::<SpeciesReference>(&species_reference);
 
-            if element.is_none()
-                || element.clone().unwrap().xml_element().full_name() != "speciesReference"
-            {
-                let message = "Attribute [speciesReference] does not refer to an existing SpeciesReference element!";
+            // Rule 21008: the attribute must name a `SpeciesReference` **or** a
+            // `ModifierSpeciesReference` of the model - Layout Section 3.10.1 defines it as "an
+            // optional attribute of type SIdRef that allows modelers to connect the
+            // SpeciesReferenceGlyph with a particular SpeciesReference (or
+            // ModifierSpeciesReference) of the containing model". `find_by_sid` returns whichever
+            // element carries the id, so the element's own name is what decides, and the message
+            // says which of the two cases it is: an id that names nothing and an id that names
+            // something of another type are different modelling mistakes.
+            let found = element.as_ref().map(|it| it.xml_element().tag_name());
+            if !matches!(
+                found.as_deref(),
+                Some("speciesReference" | "modifierSpeciesReference")
+            ) {
+                let message = match found {
+                    Some(found) => format!(
+                        "The value of the attribute [speciesReference] of a <speciesReferenceGlyph> \
+                         must be the identifier of an existing <speciesReference> or \
+                         <modifierSpeciesReference> object of the enclosing <model>; \
+                         '{species_reference}' is the identifier of a <{found}>."
+                    ),
+                    None => format!(
+                        "The value of the attribute [speciesReference] of a <speciesReferenceGlyph> \
+                         must be the identifier of an existing <speciesReference> or \
+                         <modifierSpeciesReference> object of the enclosing <model>; \
+                         '{species_reference}' is the identifier of no element of the document."
+                    ),
+                };
                 issues.push(SbmlIssue::new("layout-21008", self.xml_element(), message));
             }
 
@@ -359,8 +382,7 @@ impl SbmlValidable for SpeciesReferenceGlyph {
             .ok()
             .flatten()
             .and_then(|species_glyph| self.find_by_sid::<SpeciesGlyph>(&species_glyph));
-        if element.is_none()
-            || element.clone().unwrap().xml_element().full_name() != "layout:speciesGlyph"
+        if element.is_none() || element.clone().unwrap().xml_element().tag_name() != "speciesGlyph"
         {
             let message =
                 "Attribute [speciesGlyph] does not refer to an existing SpeciesGlyph element!";
@@ -500,10 +522,19 @@ impl SbmlValidable for ReferenceGlyph {
             apply_rule_20809(self, metaid_ref, reference, issues);
         }
 
-        if self.find_by_sid::<GraphicalObject>(&glyph.get()).is_none() {
-            let message =
-                "Attribute [glyph] does not refer to an existing GraphicalObject element!";
-            issues.push(SbmlIssue::new("layout-20508", self.xml_element(), message));
+        // `layout:glyph` is required and its value has to be an `SIdRef`, so the reference can only
+        // be resolved when the value is a readable identifier: the crate's property types map a
+        // value that does not convert to "no value", which is what a typed read of it panics on. A
+        // missing attribute is reported by the type check of this element (as `layout-21110`), and a
+        // value that is present but is not a valid identifier is the syntax half of the same rule,
+        // which this crate does not implement - so the reference rule is only asked about a value it
+        // can answer for.
+        if let Some(glyph) = XmlProperty::get_checked(&glyph).ok().flatten() {
+            if self.find_by_sid::<GraphicalObject>(&glyph).is_none() {
+                let message =
+                    "Attribute [glyph] does not refer to an existing GraphicalObject element!";
+                issues.push(SbmlIssue::new("layout-20508", self.xml_element(), message));
+            }
         }
         Ok(())
     }

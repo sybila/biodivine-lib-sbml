@@ -1664,9 +1664,16 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
     let (findings, checked, counts) = scan_element_names();
 
     // The scan has to have looked at every key and value, otherwise it would be vacuous. The
-    // numbers are pinned: 26 keys and 32 values in `REQUIRED_CHILDREN`, 88 keys and 294 values in
-    // `ALLOWED_CHILDREN`, 88 keys and 249 values in `UNIQUE_CHILDREN`, and the exception set below
+    // numbers are pinned: 24 keys and 25 values in `REQUIRED_CHILDREN`, 88 keys and 302 values in
+    // `ALLOWED_CHILDREN`, 87 keys and 246 values in `UNIQUE_CHILDREN`, and the exception set below
     // is empty (every exception is enumerated and asserted against what the scan finds).
+    //
+    // Re-measured when the Layout rows of two rules were corrected (`layout-20812`: a
+    // `ListOfSubGlyphs` may contain eight kinds of glyph, not one, and it does not *require* a
+    // `GraphicalObject`; `layout-21103`: a `ReferenceGlyph` may contain a `Curve` as well as a
+    // `BoundingBox`): the eight names that joined `ALLOWED_CHILDREN` (seven in the `ListOfSubGlyphs`
+    // row and one in the `ReferenceGlyph` row) and the one row that left `REQUIRED_CHILDREN` are all
+    // names the crate already knows, which is what the scan is for, so only the pinned totals move.
     //
     // Re-measured when the typed MathML layer joined the identity table: the 15 declared MathML
     // types grow the *universe* (asserted by the guard below the scan) but none of their names occurs
@@ -1675,14 +1682,14 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
     // MathML content dictionary rather than the object model. So the counts and the findings are
     // unchanged, and a delta here would mean a MathML name leaked into an SBML table.
     assert_eq!(
-        checked, 766,
-        "The element-name scan checked {checked} names instead of 766."
+        checked, 772,
+        "The element-name scan checked {checked} names instead of 772."
     );
     assert_eq!(
         counts,
         BTreeMap::from([
-            ("REQUIRED_CHILDREN", (25, 26)),
-            ("ALLOWED_CHILDREN", (88, 294)),
+            ("REQUIRED_CHILDREN", (24, 25)),
+            ("ALLOWED_CHILDREN", (88, 302)),
             ("UNIQUE_CHILDREN", (87, 246)),
         ]),
         "The per-table key/value counts changed."
@@ -1709,9 +1716,12 @@ fn the_element_name_tables_only_use_names_the_crate_knows() {
              {candidates:?}"
         );
     }
+    // 83 rather than 84 since the `ListOfSubGlyphs` row left `REQUIRED_CHILDREN`: layout-20812 says
+    // a `ListOfSubGlyphs` *may* contain eight kinds of glyph, so it has no required child at all and
+    // only its `ALLOWED_CHILDREN` row describes it.
     assert_eq!(
-        containers, 84,
-        "The container rule saw {containers} `listOf*` keys instead of 84."
+        containers, 83,
+        "The container rule saw {containers} `listOf*` keys instead of 83."
     );
 
     let found = findings

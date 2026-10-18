@@ -36,9 +36,8 @@ import re
 
 from corpus_lib import MISMATCH, read_snapshot
 
-#: The line the harness prints for every document it validates. A translated document (the
-#: Level 3 Version 1 half of the corpus) is announced with an extra word before the path.
-TESTING = re.compile(r'^ > Testing (?:translated )?"(?P<path>[^"]+)"')
+#: The line the harness prints for every document it validates.
+TESTING = re.compile(r'^ > Testing "(?P<path>[^"]+)"')
 
 
 def parse_args() -> argparse.Namespace:
@@ -100,7 +99,7 @@ def main() -> None:
     l3v2 = [document for document in suppressed if "l3v2" in document]
     l3v1 = [document for document in suppressed if "l3v1" in document]
     print(f"documents whose validate returns before the walk: {len(suppressed)}")
-    print(f"  l3v2: {len(l3v2)}   l3v1 (translated): {len(l3v1)}")
+    print(f"  l3v2: {len(l3v2)}   l3v1: {len(l3v1)}")
 
     documents = census_documents(baseline)
     affected = {document: rules for document, rules in documents.items() if document in set(suppressed)}

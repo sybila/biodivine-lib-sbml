@@ -227,8 +227,39 @@ pub(crate) static ALLOWED_CHILD_DELTAS: Map<&str, &[NameDelta]> = phf_map! {};
 
 /// The per-element deltas of the required-children table.
 ///
-/// Empty for the reason stated on [`ALLOWED_CHILD_DELTAS`].
-pub(crate) static REQUIRED_CHILD_DELTAS: Map<&str, &[NameDelta]> = phf_map! {};
+/// This is the one table where Version 1 *adds* requirements rather than relaxing them, and the
+/// additions are the "exactly one" halves of rules whose Version 2 texts read "may contain at most
+/// one". Each row names the rule it comes from:
+///
+///  * `20306` - a `FunctionDefinition` must contain exactly one `math` element;
+///  * `20804` - an `InitialAssignment` must contain exactly one `math` element;
+///  * `20907` - every rule (`assignmentRule`, `rateRule`, `algebraicRule`) must contain exactly one
+///    `math` element;
+///  * `21007` - a `Constraint` must contain exactly one `math` element;
+///  * `21130` - a `KineticLaw` must contain exactly one `math` element;
+///  * `21209`/`21210`/`21213`/`21231` - a `Trigger`/`Delay`/`EventAssignment`/`Priority` must
+///    contain exactly one `math` element;
+///  * `21201` - an `Event` must contain exactly one `Trigger`;
+///  * `20201` - an SBML document must contain a `Model`.
+///
+/// A missing required child is a type-check problem, so the element is reported and the walk does
+/// not descend into it: that is the same contract every other required child has (see
+/// `VALIDATION.md`), and the effect on the report is measured rather than assumed.
+pub(crate) static REQUIRED_CHILD_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
+    "sbml" => &[NameDelta { versions: L3V1, added: &["model"], removed: &[] }],
+    "functionDefinition" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "initialAssignment" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "assignmentRule" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "rateRule" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "algebraicRule" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "constraint" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "kineticLaw" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "trigger" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "delay" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "eventAssignment" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "priority" => &[NameDelta { versions: L3V1, added: &["math"], removed: &[] }],
+    "event" => &[NameDelta { versions: L3V1, added: &["trigger"], removed: &[] }],
+};
 
 /// The per-element deltas of the unique-children table.
 ///
@@ -331,6 +362,24 @@ pub(crate) fn attribute_types(
     Some(Cow::Owned(names))
 }
 
+/// The children the given version *adds* to the requirements of the given element.
+///
+/// These are the rule-only requirements: a missing one does not make the typed view of the element
+/// unusable (the crate reads them as optional children), so they are reported by the walk and the
+/// object is still validated - see [`base_required_children`] for the other half.
+pub(crate) fn added_required_children(
+    element: &str,
+    version: LevelVersion,
+) -> &'static [&'static str] {
+    let Some(rows) = REQUIRED_CHILD_DELTAS.get(element) else {
+        return &[];
+    };
+    let Some(row) = rows.iter().find(|it| it.versions.contains(&version)) else {
+        return &[];
+    };
+    row.added
+}
+
 /// The children the given element permits in the given version.
 pub(crate) fn allowed_children(
     element: &str,
@@ -343,16 +392,41 @@ pub(crate) fn allowed_children(
     }
 }
 
+/// The children the *base* table requires of the given element, without any version delta.
+///
+/// This is the half of `required_children` that the type check uses as a guard: a child the base
+/// table requires is one the typed view of the element reads as a required child, so a missing one
+/// makes the view unusable. The requirements a *version* adds on top (Version 1's "exactly one
+/// `math`" rules) are not like that - the crate's `math` accessors are optional children - so they
+/// are reported by the walk instead, and this function is what keeps the two apart.
+pub(crate) fn base_required_children(element: &str) -> &'static [&'static str] {
+    REQUIRED_CHILDREN.get(element).copied().unwrap_or(&[])
+}
+
 /// The children the given element requires in the given version.
+///
+/// The composition of the two halves the validation layer keeps apart, and used by the tests that
+/// pin them against each other:
+/// [`base_required_children`] (a child the typed view reads as required, so a missing one stops the
+/// walk of the element) and [`added_required_children`] (a requirement the document's own version
+/// adds, reported as a rule without stopping the walk).
+#[cfg(test)]
 pub(crate) fn required_children(
     element: &str,
     version: LevelVersion,
-) -> Option<Cow<'static, [&'static str]>> {
-    let base = *REQUIRED_CHILDREN.get(element)?;
-    match apply(element, version, &REQUIRED_CHILD_DELTAS, base) {
-        Some(names) => Some(Cow::Owned(names)),
-        None => Some(Cow::Borrowed(base)),
+) -> Cow<'static, [&'static str]> {
+    let base = base_required_children(element);
+    let added = added_required_children(element, version);
+    if added.is_empty() {
+        return Cow::Borrowed(base);
     }
+    let mut names = base.to_vec();
+    for name in added {
+        if !names.contains(name) {
+            names.push(name);
+        }
+    }
+    Cow::Owned(names)
 }
 
 /// The children that may appear at most once in the given element, in the given version.
@@ -453,8 +527,15 @@ mod tests {
         rows
     }
 
-    /// The base row a delta row claims to change.
+    /// The base row a delta row claims to change, or an empty row when the table has none.
+    ///
+    /// A missing row is only legitimate for `REQUIRED_CHILDREN`, where a delta may *introduce* a
+    /// requirement the base table does not have (Version 1's "exactly one" halves); the assertion
+    /// below pins that, so a delta naming an element no other table describes still fails.
     fn base_row(table: &str, element: &str) -> Vec<&'static str> {
+        if table == "REQUIRED_CHILDREN" && REQUIRED_CHILDREN.get(element).is_none() {
+            return Vec::new();
+        }
         match table {
             "ALLOWED_ATTRIBUTES" => ALLOWED_ATTRIBUTES.get(element).map(|it| it.to_vec()),
             "REQUIRED_ATTRIBUTES" => REQUIRED_ATTRIBUTES.get(element).map(|it| it.to_vec()),
@@ -478,6 +559,59 @@ mod tests {
     /// Without this, a delta row is a silent no-op - the failure mode that makes hand-maintained
     /// copies of a table drift - because nothing would compare it against the row it claims to
     /// describe. The test reads the same tables the accessors read, so it cannot go stale.
+    /// The one table where a version *adds* requirements: Version 1 requires the `math` child (and
+    /// the `trigger` of an `event`, and the `model` of a document) that Version 2 makes optional, and
+    /// the two halves the validation layer reads are kept apart on purpose - the base row is what
+    /// stops the walk of an element, the added names are a rule that does not.
+    #[test]
+    fn the_version_1_requirements_are_added_and_the_version_2_ones_are_not() {
+        for (element, added) in [
+            ("trigger", "math"),
+            ("delay", "math"),
+            ("eventAssignment", "math"),
+            ("priority", "math"),
+            ("functionDefinition", "math"),
+            ("initialAssignment", "math"),
+            ("assignmentRule", "math"),
+            ("rateRule", "math"),
+            ("algebraicRule", "math"),
+            ("constraint", "math"),
+            ("kineticLaw", "math"),
+            ("event", "trigger"),
+            ("sbml", "model"),
+        ] {
+            assert!(
+                !required_children(element, LevelVersion::L3V1).is_empty(),
+                "{element} requires nothing in Version 1"
+            );
+            assert!(
+                required_children(element, LevelVersion::L3V1).contains(&added),
+                "{element} does not require `{added}` in Version 1"
+            );
+            assert!(
+                !required_children(element, LevelVersion::L3V2).contains(&added),
+                "{element} requires `{added}` in Version 2, which the specification does not"
+            );
+            assert!(
+                added_required_children(element, LevelVersion::L3V1).contains(&added)
+                    && added_required_children(element, LevelVersion::L3V2).is_empty(),
+                "{element} does not keep the Version 1 addition out of the walk guard"
+            );
+            assert!(
+                !base_required_children(element).contains(&added),
+                "{element} reads `{added}` as a required child of the typed view"
+            );
+        }
+        // The other direction: a child the base table requires is required in both versions.
+        for element in ["boundingBox", "curve", "listOfLayouts"] {
+            assert_eq!(
+                base_required_children(element),
+                required_children(element, LevelVersion::L3V2).as_ref(),
+                "{element} lost its base requirement"
+            );
+        }
+    }
+
     #[test]
     fn every_delta_row_is_consistent_with_the_base_row_it_names() {
         let mut rows = 0usize;

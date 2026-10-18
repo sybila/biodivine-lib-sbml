@@ -1,8 +1,8 @@
 use crate::cancellation::CancellationCheck;
 use crate::constants::deltas;
 use crate::constants::namespaces::{
-    is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix, NS_SBML_CORE,
-    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE,
+    is_core_namespace, is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix,
+    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL,
 };
 use crate::constants::version::document_level_version_or_base;
 use crate::constraint::FbcType;
@@ -416,12 +416,14 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             );
             let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
             issues.push(SbmlIssue::new(rule_id, xml_element, message));
-        } else if child_namespace == URL_SBML_CORE
+        } else if is_core_namespace(child_namespace.as_str())
             || child_namespace == URL_PACKAGE_FBC
             || child_namespace == URL_PACKAGE_LAYOUT
         {
-            // All other children are expected to be in the SBML Core namespace. Anything else
-            // that is not in the core namespace is skipped.
+            // All other children are expected to be in the core namespace *of the document's own
+            // level and version* - a Level 3 Version 1 document's children are in the Level 3
+            // Version 1 core namespace, not in the one this crate writes with - or in a package
+            // namespace the tables describe. Anything else is skipped.
             if !allowed_children.contains(&child_name.as_str()) {
                 let message = format!(
                     "An unknown child <{}> of the element <{}> found.",
@@ -437,25 +439,57 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
 
 pub(crate) fn validate_required_children(xml_element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let element_name = xml_element.tag_name();
-    let version = document_level_version_or_base(xml_element);
-    let Some(required_children) = deltas::required_children(element_name.as_str(), version) else {
-        return;
-    };
+    // The *base* table only: a child it requires is one the typed view reads as a required child,
+    // so a missing one is a reason not to walk the element (the walk asks for this check). The
+    // requirements a version adds on top are rules and are reported by
+    // [`validate_version_required_children`] instead, which the walk calls without making the
+    // report suppress the object.
+    let required_children = deltas::base_required_children(element_name.as_str());
 
+    report_missing_children(
+        xml_element,
+        element_name.as_str(),
+        required_children,
+        issues,
+    );
+}
+
+/// Reports the required children the document's own version adds to the base table.
+///
+/// These are rules of the version, not properties of the typed view: the crate's accessors for them
+/// are optional children and lists, so a document that omits one is still walked - its own rules
+/// and the rules of everything below it are reported as usual. Reporting them from the type check
+/// instead would turn each missing `math` into a `not-validated` for the whole subtree, which loses
+/// the very reports the version's other rules are about.
+pub(crate) fn validate_version_required_children(
+    xml_element: &XmlElement,
+    issues: &mut Vec<SbmlIssue>,
+) {
+    let element_name = xml_element.tag_name();
+    let version = document_level_version_or_base(xml_element);
+    let added = deltas::added_required_children(element_name.as_str(), version);
+    report_missing_children(xml_element, element_name.as_str(), added, issues);
+}
+
+/// One report per missing child of `required`, under the rule the element's tag maps to.
+fn report_missing_children(
+    xml_element: &XmlElement,
+    element_name: &str,
+    required: &[&'static str],
+    issues: &mut Vec<SbmlIssue>,
+) {
     let mut child_tag_names = HashSet::new();
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
         child_tag_names.insert(child_name);
     }
 
-    for required in required_children.iter() {
+    for required in required.iter() {
         if !child_tag_names.contains(*required) {
-            let message = format!(
-                "Missing required child <{}> of the element <{}>.",
-                required, element_name
-            );
+            let message =
+                format!("Missing required child <{required}> of the element <{element_name}>.");
             // TODO: Check if these rule IDs are ok.
-            let rule_id = tag_to_required_child_rule_id(element_name.as_str()).unwrap_or("10102");
+            let rule_id = tag_to_required_child_rule_id(element_name).unwrap_or("10102");
             issues.push(SbmlIssue::new(rule_id, xml_element, message));
         }
     }
@@ -475,13 +509,14 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
     for child in xml_element.child_elements() {
         let child_name = child.tag_name();
         let child_namespace = child.namespace_url();
-        if child_namespace == URL_SBML_CORE
+        if is_core_namespace(child_namespace.as_str())
             || child_namespace == URL_MATHML
             || child_namespace == URL_PACKAGE_LAYOUT
             || child_namespace == URL_PACKAGE_FBC
             || child_namespace == URL_PACKAGE_QUAL
         {
-            // Right now, we are only testing core and math elements.
+            // Core children of *any* modelled level/version take part, not only the ones in the
+            // namespace this crate writes with, plus the MathML and package namespaces.
             let entry = counts.entry(child_name);
             let count = entry.or_insert(0usize);
             *count += 1;
@@ -645,6 +680,20 @@ fn tag_to_allowed_child_rule_id(tag_name: &str) -> Option<&'static str> {
 
 fn tag_to_required_child_rule_id(tag_name: &str) -> Option<&'static str> {
     match tag_name {
+        // The core requirements that differ between the two versions of Level 3: each of these
+        // elements has exactly one required child in Version 1 and no required child in Version 2,
+        // so the tag name alone identifies the rule.
+        "sbml" => Some("20201"),
+        "functionDefinition" => Some("20306"),
+        "initialAssignment" => Some("20804"),
+        "assignmentRule" | "rateRule" | "algebraicRule" => Some("20907"),
+        "constraint" => Some("21007"),
+        "kineticLaw" => Some("21130"),
+        "trigger" => Some("21209"),
+        "delay" => Some("21210"),
+        "eventAssignment" => Some("21213"),
+        "priority" => Some("21231"),
+        "event" => Some("21201"),
         "layout" => Some("layout-20315"),
         "graphicalObject" => Some("layout-20407"),
         "textGlyph" => Some("layout-20903"),
@@ -675,8 +724,19 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         (_, "annotation") => Some("10404"),
         (_, "notes") => Some("10805"),
         ("sbml", "model") => Some("20201"),
-        // This is technically too broad, but the only other options seems to be to write down
-        // all the list* objects, which is rather tedeous.
+        // The core lists of a `model` are all covered by 20205 ("There may be at most one instance
+        // of each of the following kind of object in a Model object: ListOfFunctionDefinitions,
+        // ..."), but a *package* list has a rule of its own in that package: `fbc-20201` for the
+        // Flux Balance Constraints lists, `layout-20201` for the Layout list and `qual-20201` for
+        // the Qualitative Models lists. Reporting the core id for those would be reporting the
+        // wrong rule for the object that is duplicated.
+        ("model", "listOfLayouts") => Some("layout-20201"),
+        ("model", "listOfGeneProducts")
+        | ("model", "listOfObjectives")
+        | ("model", "listOfUserDefinedConstraints") => Some("fbc-20201"),
+        ("model", "listOfTransitions") | ("model", "listOfQualitativeSpecies") => {
+            Some("qual-20201")
+        }
         ("model", _) => Some("20205"),
         ("functionDefinition", "math") => Some("20306"),
         ("unitDefinition", "listOfUnits") => Some("20414"),
@@ -686,7 +746,11 @@ fn tag_to_unique_child_rule_id(tag_name: &str, child_name: &str) -> Option<&'sta
         }
         ("constraint", "math") => Some("21007"),
         ("constraint", "message") => Some("21008"),
-        // Same as `model` above, there is a lot of unique children to enumerate...
+        // Same as `model` above, there is a lot of unique children to enumerate, and the Flux
+        // Balance Constraints package gives the `geneProductAssociation` a rule of its own
+        // (`fbc-20701`: "A Reaction object may contain one and only one instance of the
+        // GeneProductAssociation element").
+        ("reaction", "geneProductAssociation") => Some("fbc-20701"),
         ("reaction", _) => Some("21106"),
         ("kineticLaw", "listOfLocalParameters") => Some("21127"),
         ("kineticLaw", "math") => Some("21130"),
