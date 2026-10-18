@@ -78,6 +78,9 @@ EOF
 # items too, and both builds share `target/doc`.
 run cargo doc --no-deps
 run "$PYTHON" biodivine-lib-sbml-py-sys/scripts/public_surface.py --check
+# The wrappers are generated from the same inventory: this checks that the committed sources are
+# exactly what the generator produces from the current public surface.
+run "$PYTHON" biodivine-lib-sbml-py-sys/scripts/gen_wrappers.py --check
 if [ -n "$python_lib" ] && [ -e "$python_lib" ]; then
 	run cargo test -p biodivine-lib-sbml-py-sys
 	run cargo clippy -p biodivine-lib-sbml-py-sys --all-targets -- -D warnings

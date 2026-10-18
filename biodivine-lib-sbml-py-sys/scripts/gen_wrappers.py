@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 
@@ -128,6 +129,29 @@ HAND_WRITTEN: dict[str, str] = {
     }
 ''',
 }
+
+
+def format_rust(content: str) -> str:
+    """Formats generated code with `rustfmt`, so the committed sources are the formatted ones.
+
+    A generator that emits unformatted code makes `cargo fmt --check` and the freshness check
+    contradict each other: `cargo fmt` rewrites the files, and the generator then reports them as
+    stale. Formatting here means both gates agree, and the reviewable artifact is the formatted
+    source.
+    """
+    try:
+        result = subprocess.run(
+            ["rustfmt", "--edition", "2021", "--emit", "stdout"],
+            input=content,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise SystemExit(
+            f"rustfmt is needed to generate the wrappers, and it failed: {error}"
+        ) from error
+    return result.stdout
 
 
 def snake_case(name: str) -> str:
@@ -1516,6 +1540,7 @@ def main() -> int:
 
     stale: list[str] = []
     for name, content in sorted(files.items()):
+        content = format_rust(content)
         target = os.path.join(OUT_DIR, name)
         current = None
         if os.path.isfile(target):

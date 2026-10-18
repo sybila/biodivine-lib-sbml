@@ -689,8 +689,11 @@ RULES: list[Rule] = [
         "`<Owner>.element_names()` / `.matches_element()` / `.is_element()` / "
         "`.try_from_element()` / `.ELEMENT_NAME` / `.ELEMENT_NAMESPACE` / `.XSI_TYPE`",
         "The declared identity of a wrapper type, which is what lets Python ask \"is this element "
-        "a `Species`?\" the way `SbmlObject` does in Rust. `CONSTRUCT` is a Rust fn pointer and is "
-        "the one associated constant left unbound.",
+        "a `Species`?\" the way `SbmlObject` does in Rust. The members are *generated* for every "
+        "wrapper class (seven members per class: `element_names`, `matches_element`, `is_element`, "
+        "`try_from_element`, `ELEMENT_NAME`, `ELEMENT_NAMESPACE`, `XSI_TYPE`), so the family is one "
+        "expansion of `scripts/gen_wrappers.py` rather than 568 hand-written methods. `CONSTRUCT` "
+        "is a Rust fn pointer and is the one associated constant left unbound.",
         rule_sbml_object,
     ),
     Rule(
@@ -1315,8 +1318,9 @@ def classify(items: list[Item]) -> None:
         apply_rules(item)
 
 
-# Items that the ruleset cannot know about get an explicit exception here: the row says the Python
-# name, which a test in the crate then checks against the registered module.
+# Items that the ruleset cannot know about get an explicit exception here: the row states the Python
+# name, which the crate's `bindings_manifest` test checks against the registered module (run
+# `cargo test -p biodivine-lib-sbml-py-sys`; the manifest's own `--check` only proves freshness).
 EXCEPTIONS: dict[str, tuple[str, str, str]] = {
     # path -> (status, python, reason)
     "Sbml::validate": (

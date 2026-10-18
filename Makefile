@@ -34,14 +34,16 @@ docs:
 	python3 scripts/gen_rule_coverage_doc.py --check
 	RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
-# The bindings manifest: one row per public item of the crate, generated from rustdoc's output by
-# the wrapper crate's script. The documentation is rebuilt first, because the manifest describes the
-# *public* surface and the rustdoc gate of this repository documents private items too: the two
-# builds share `target/doc`, so the build has to be part of this target. `make bindings WRITE=1`
-# regenerates the file; without it, the target only checks that the committed copy is current.
+# The bindings manifest and the generated wrappers: two artifacts generated from the crate's public
+# surface, and one command that keeps both in step with it. The documentation is rebuilt first,
+# because the manifest describes the *public* surface and the rustdoc gate of this repository
+# documents private items too: the two builds share `target/doc`, so the build has to be part of this
+# target. `make bindings WRITE=1` regenerates both files; without it, the target only checks that the
+# committed copies are current (which is what `scripts/verify.sh` runs).
 bindings:
 	cargo doc --no-deps
 	python3 biodivine-lib-sbml-py-sys/scripts/public_surface.py $(if $(WRITE),,--check)
+	python3 biodivine-lib-sbml-py-sys/scripts/gen_wrappers.py $(if $(WRITE),,--check)
 
 # The three artifacts of this repository that are generated and must equal their committed copy: the
 # coverage matrix (from the specification sources), the documentation page rendered from it, and the

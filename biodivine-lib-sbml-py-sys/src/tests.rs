@@ -30,7 +30,7 @@ fn register_fills_the_module_with_every_documented_name() {
             );
         }
         // The version is the library's, not this crate's: a consumer reports one number for the
-        // library it wraps, and the two manifests are kept in step by a test below.
+        // library it wraps, and `__version__` is read from the library's own manifest.
         let version: String = module
             .getattr("__version__")
             .unwrap()
@@ -252,6 +252,28 @@ fn a_mathml_formula_is_built_and_read_back() {
             .unwrap();
         assert!(written.contains("<times/>"), "written: {written}");
         assert!(written.contains("<ci>k</ci>"), "written: {written}");
+    });
+}
+
+#[test]
+fn a_malformed_value_raises_instead_of_panicking() {
+    Python::attach(|py| {
+        let module = module(py);
+        // `level` is an integer attribute: the document is well-formed XML but the value does not
+        // convert, and the accessor must report that rather than abort the interpreter.
+        let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="three" version="2"/>"#;
+        let document = module
+            .getattr("Sbml")
+            .unwrap()
+            .call_method1("read_str", (source,))
+            .unwrap();
+        let error = document
+            .getattr("level")
+            .expect_err("a value that does not parse is an error");
+        assert!(
+            error.is_instance(py, &py.get_type::<pyo3::exceptions::PyValueError>()),
+            "error: {error}"
+        );
     });
 }
 
