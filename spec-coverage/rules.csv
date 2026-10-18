@@ -1021,7 +1021,7 @@ level,version,package,rule_id,kind,status,source,in_validated_rules,in_source,no
 3,1,fbc,fbc-20716,validation,partial,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,yes,
 3,1,fbc,fbc-20801,validation,missing,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,no,
 3,1,fbc,fbc-20802,validation,missing,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,no,
-3,1,fbc,fbc-20803,validation,partial,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,yes,
+3,1,fbc,fbc-20803,validation,implemented,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,yes,yes,
 3,1,fbc,fbc-20804,validation,missing,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,no,
 3,1,fbc,fbc-20805,validation,partial,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,yes,
 3,1,fbc,fbc-20806,validation,missing,sbml-level-3/version-1/fbc/spec/apdx-validation.tex,no,no,

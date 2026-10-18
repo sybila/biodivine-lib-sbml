@@ -221,6 +221,17 @@ belongs to one of them:
     sequence of symbols with optional counts where a parenthesised group may only be followed by the
     subscript `n`, which accepts `C2H4O2(CH2)n` and rejects `(N2)4`.
 
+**Where a package rule lives is part of the rule.** The type check of one element runs once per
+accessor that reaches it (twice for a `species` of the corpus, six times for a `qualitativeSpecies`),
+and a type-check problem makes the element `not-validated`, which stops the walk from descending into
+it. A specification rule reported from the type check therefore risks two things the corpus cannot
+see: the same report twice for one element (the comparison of a `(document, rule)` pair is a set) and
+an inner violation hidden behind the outer element's `not-validated`. `scripts/corpus_duplicates.py`
+finds the first class (11 pairs before the package rules moved, 4 after, all pre-existing), and the
+package rules of the crate are applied by the document-wide pass
+(`src/validation/package_rules.rs`) for both reasons. The type check keeps its own reports (`10102`
+and its derivatives), whose multiplicity the suite does share.
+
 A rule that is implemented but *not* complete over the corpus stays out of `validated-rules.txt` and
 says why: `#fbc-20509` is the current example — three of its five documents hide the violation of an
 inner element behind the `not-validated` report of an outer one, so it is reported for two of them
@@ -360,6 +371,9 @@ of a run in progress or against the recorded snapshots.
     reads `validated-rules.txt` and the crate's rule table to show, per rule, whether the id is
     enabled, disabled or unknown, so "implemented but not compared" is distinguishable from "not
     implemented".
+  * `scripts/corpus_duplicates.py` finds a `(document, rule)` pair the library reports more often
+    than the corpus expects — the class the census cannot see, because the comparison is
+    per-set — and counts the library lints separately.
   * `scripts/spec_ids_audit.py` re-derives the rule ids of the released specification documents by
     a second route and diffs them against `spec-coverage/rules.csv`, because a generator that drops
     an id silently turns real in-scope work into "no owning specification" in every table. It fails

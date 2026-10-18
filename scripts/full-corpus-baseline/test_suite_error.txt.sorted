@@ -464,7 +464,6 @@
       1 Test fbc-20506/fbc-20506-fail-01-03-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
       1 Test fbc-20506/fbc-20506-fail-01-04-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
       1 Test fbc-20506/fbc-20506-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20506 (severity "Error").
-      1 Test fbc-20509/fbc-20509-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20509/fbc-20509-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20509/fbc-20509-fail-01-05-sev2-l3v1.xml: Missed issue fbc-20509 (severity "Error").
       1 Test fbc-20601/fbc-20601-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20601 (severity "Error").
@@ -514,8 +513,6 @@
       1 Test fbc-20716/fbc-20716-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20716 (severity "Error").
       1 Test fbc-20801/fbc-20801-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20801 (severity "Error").
       1 Test fbc-20801/fbc-20801-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20801 (severity "Error").
-      1 Test fbc-20803/fbc-20803-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20803 (severity "Error").
-      1 Test fbc-20803/fbc-20803-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20803 (severity "Error").
       1 Test fbc-20804/fbc-20804-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20804 (severity "Error").
       1 Test fbc-20804/fbc-20804-fail-01-02-sev2-l3v1.xml: Missed issue fbc-20804 (severity "Error").
       1 Test fbc-20805/fbc-20805-fail-01-01-sev2-l3v1.xml: Missed issue fbc-20805 (severity "Error").

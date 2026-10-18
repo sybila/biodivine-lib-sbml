@@ -34,6 +34,7 @@
 use crate::constants::namespaces::Namespace;
 use crate::xml::XmlElement;
 use crate::SbmlIssue;
+use std::collections::BTreeSet;
 
 /// The attributes one element of a package permits, and the rule that says so.
 ///
@@ -127,12 +128,17 @@ pub(crate) const PACKAGE_ATTRIBUTE_RULES: &[PackageAttributeRule] = &[
 ///
 /// The check is one pass over the element's own attributes with no recursion, so it does not need a
 /// cancellation check of its own: the caller
-/// ([`internal_type_check`](crate::core::validation::type_check::internal_type_check)) runs inside
-/// the cancellable walk of [`Sbml::validate`](crate::Sbml::validate), which checks the trigger at
-/// every object it visits.
+/// ([`validate_package_rules`](crate::validation::validate_package_rules)) runs inside the
+/// cancellable walk of [`Sbml::validate`](crate::Sbml::validate), which checks the trigger at every
+/// element it visits.
+///
+/// The attribute view lists a namespaced attribute once per spelling the document gives it, so both
+/// checks collapse the spellings first: what the specification constrains is the `(namespace, local
+/// name)` pair, and that pair is what the rule reports about.
 pub(crate) fn validate_package_attributes(element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
     let tag_name = element.tag_name();
     let raw = element.element();
+    let mut seen = BTreeSet::new();
     for rule in PACKAGE_ATTRIBUTE_RULES {
         if rule.element != tag_name.as_str() {
             continue;
@@ -151,7 +157,9 @@ pub(crate) fn validate_package_attributes(element: &XmlElement, issues: &mut Vec
                 continue;
             }
             let local = name.local_name_str();
-            if rule.permitted.contains(&local) {
+            if rule.permitted.contains(&local)
+                || !seen.insert((namespace.uri().to_string(), local.to_string()))
+            {
                 continue;
             }
             let message = format!(
@@ -161,7 +169,6 @@ pub(crate) fn validate_package_attributes(element: &XmlElement, issues: &mut Vec
             issues.push(SbmlIssue::new(rule.id, element, message));
         }
     }
-    validate_chemical_formula(element, issues);
 }
 
 /// Whether `element` carries a `fbc:chemicalFormula` whose value is not a chemical formula.
@@ -280,12 +287,20 @@ pub(crate) fn validate_chemical_formula(element: &XmlElement, issues: &mut Vec<S
         return;
     }
     let raw = element.element();
+    // The attribute view lists a namespaced attribute once per spelling the document gives it, so a
+    // check that reports per attribute has to collapse the spellings: the `(namespace, local name)`
+    // pair is what the specification constrains, and it is what the rule reports about.
+    let mut seen = BTreeSet::new();
     for (name, value) in raw.attributes() {
         let Some(namespace) = name.namespace() else {
             continue;
         };
         if name.local_name_str() != "chemicalFormula"
             || !crate::constants::namespaces::is_package_namespace_of(namespace.uri(), "fbc")
+            || !seen.insert((
+                namespace.uri().to_string(),
+                name.local_name_str().to_string(),
+            ))
         {
             continue;
         }
@@ -374,6 +389,32 @@ mod tests {
                 "'{formula}' must not be reported: {issues:?}"
             );
         }
+    }
+
+    /// Each rule is reported once per element.
+    ///
+    /// The attribute view lists a namespaced attribute once per spelling, and the walk of the type
+    /// check visits an element once per accessor that reaches it, so both halves of the pass have a
+    /// way to produce the same report twice. The comparison of the suite is per `(document, rule)`
+    /// *set*, so a duplicated report moves no census number - which is exactly why it needs its own
+    /// test rather than a metric.
+    #[test]
+    fn each_package_rule_is_reported_once_per_element() {
+        let formula = issues_of(&species_document("0", 0));
+        assert_eq!(
+            formula.iter().filter(|rule| *rule == "fbc-20303").count(),
+            1,
+            "The bad formula is reported once: {formula:?}"
+        );
+        let attribute = issues_of(&document_with_sub_glyphs("layout:compartment=\"c\""));
+        assert_eq!(
+            attribute
+                .iter()
+                .filter(|rule| *rule == "layout-20813")
+                .count(),
+            1,
+            "The unpermitted attribute is reported once: {attribute:?}"
+        );
     }
 
     /// A Level 3 Version 1 document with one species carrying `fbc:chemicalFormula="formula"`, in

@@ -337,7 +337,6 @@ fn apply_rule_10102_and_derivatives(xml_element: &XmlElement, issues: &mut Vec<S
     // a whitelist consulted by name: an attribute the package defines but the element does not
     // permit is invisible to it, and the tables cannot express "this element has no attribute of
     // this package at all".
-    crate::constants::package_rules::validate_package_attributes(xml_element, issues);
 }
 
 /// Validates for a given element that its attributes (keys) are only from predefined set of
