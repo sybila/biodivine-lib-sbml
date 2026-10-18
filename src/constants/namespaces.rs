@@ -330,6 +330,33 @@ pub const NS_LAYOUT: Namespace = ("layout", URL_PACKAGE_LAYOUT);
 
 pub const NS_QUAL: Namespace = ("qual", URL_PACKAGE_QUAL);
 
+/// Whether the document that owns `element` uses the package version the crate models, i.e. binds
+/// one of the namespace URLs of that package whose name the tables use.
+///
+/// A document that declares no version of the package at all counts as using the modelled one: the
+/// callers have already established that the package is declared (through
+/// [`declared_package_prefix`](crate::Sbml::declared_package_prefix), which accepts every published
+/// version), and a package bound under a prefix other than the conventional one is still the
+/// package.
+pub(crate) fn uses_modelled_package_version(
+    xml_element: &crate::xml::XmlElement,
+    namespace: crate::xml::Namespace,
+) -> bool {
+    let Some(prefix) = package_of_namespace_url(namespace.1) else {
+        return true;
+    };
+    let Some(modelled) = written_url_of(prefix) else {
+        return true;
+    };
+    document_package_namespace_for(xml_element.element(), (prefix, modelled)).1 == modelled
+}
+pub(crate) fn separate_prefix_name(name: &str) -> (&str, &str) {
+    match name.split_once(':') {
+        Some((prefix, local)) => (prefix, local),
+        None => ("", name),
+    }
+}
+
 pub const NS_FBC: Namespace = ("fbc", URL_PACKAGE_FBC);
 
 /// The "core" HTML namespace. Default prefix for this namespace is empty.

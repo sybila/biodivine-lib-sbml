@@ -675,6 +675,7 @@ impl Sbml {
         // the type check's outcome. They are appended after the type check so that a fatal problem
         // stays the first issue of the report.
         validation::validate_unused_namespaces(&self.sbml_root, &mut issues, &mut check)?;
+        validation::validate_package_values(&self.sbml_root, &mut issues, &mut check)?;
         validation::validate_unmodelled_level(&self.sbml_root, &mut issues, &mut check)?;
 
         // The walk runs for every document. What a type-check problem means for it is decided per

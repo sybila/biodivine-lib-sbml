@@ -242,37 +242,65 @@ def resolve_argument(
     if literal is not None:
         return {literal.group(1)}, []
 
-    # A table row's `id` field (`for rule in PACKAGE_ATTRIBUTE_RULES { .. rule.id .. }`): the ids are
-    # the `id:` fields of that table, so a new row cannot name an id the rule table does not
-    # describe. The table is found by the name the `for` loop iterates, and the fields are read from
-    # its declaration, which is the same fixed-field-order convention the rule table itself uses.
-    field = re.fullmatch(r"(\w+)\.id", argument.strip())
+    # A table row's rule-id field (`row.id`, `row.rule`): the argument is the field of the binding
+    # of a `for` loop over a table of row literals, so the ids are that field's values in the table.
+    # The check resolves them so that a new row cannot name an id the table of rules does not
+    # describe.
+    field = re.fullmatch(r"(\w+)\.(\w+)", argument.strip())
     if field is not None:
+        binding, field_name = field.groups()
         loop = re.search(
-            r"for\s+" + re.escape(field.group(1)) + r"\s+in\s+([A-Za-z_][A-Za-z0-9_:]*)", text
+            r"for\s+" + re.escape(binding) + r"\s+in\s+([A-Za-z_][A-Za-z0-9_:]*)", text
         )
-        if loop is not None:
-            table = loop.group(1).split("::")[-1]
-            rows: set[str] = set()
-            for path in sorted((crate / "src").rglob("*.rs")):
-                if "tests" in path.parts:
+        if loop is None:
+            return set(), [
+                f"the expression `{argument}` reads a field of `{binding}`, which no `for` loop of "
+                f"this file binds"
+            ]
+        table = loop.group(1).split("::")[-1]
+        found = set()
+        declaration = re.compile(r"(?:pub(?:\([^)]*\))?\s+)?const\s+" + re.escape(table) + r"\b")
+        for path in sorted((crate / "src").rglob("*.rs")):
+            if "tests" in path.parts:
+                continue
+            source = drop_test_code(strip_comments(path.read_text(encoding="utf-8")))
+            for match in declaration.finditer(source):
+                # The initialiser, not the type: `const TABLE: &[Row] = &[ ... ];` has a bracket
+                # in the type as well, so the search starts after the `=`.
+                assignment = source.find("=", match.end())
+                start = source.find("[", assignment + 1) if assignment > 0 else -1
+                if start < 0:
                     continue
-                source = drop_test_code(strip_comments(path.read_text(encoding="utf-8")))
-                declaration = re.search(
-                    r"\bconst\s+" + re.escape(table) + r"\s*:[^=]*=\s*&?\s*\[", source
+                # The table's literal body: from the opening bracket to the bracket that closes
+                # it, tracked over the quotes inside it.
+                depth = 0
+                index = start
+                in_string = False
+                while index < len(source):
+                    character = source[index]
+                    if character == '"':
+                        in_string = not in_string
+                    elif not in_string and character == "[":
+                        depth += 1
+                    elif not in_string and character == "]":
+                        depth -= 1
+                        if depth == 0:
+                            break
+                    index += 1
+                body = source[start : index + 1]
+                found.update(
+                    re.findall(
+                        r"\b" + re.escape(field_name) + r"\s*:\s*\"([^\"]+)\"", body
+                    )
                 )
-                if declaration is None:
-                    continue
-                end = source.find("];", declaration.end())
-                if end < 0:
-                    continue
-                rows |= set(re.findall(r'id:\s*"([^"]+)"', source[declaration.end() : end]))
-            if rows:
-                return rows, []
+                # A row may repeat the field (one row per constraint, one rule id): the set above
+                # already collapses the repetition.
+        if found:
+            return found, []
         return set(), [
             f"the table row field `{argument}` does not resolve to any rule id (is the table "
-            "declared with `id: \"..\"` fields?); extend this script rather than assuming it is "
-            "registered"
+            f"`{table}` declared with `{field_name}: \"..\"` fields?); extend this script rather "
+            f"than assuming the argument is registered"
         ]
 
     name = argument.strip()

@@ -1,9 +1,9 @@
 use crate::cancellation::CancellationCheck;
 use crate::constants::deltas;
 use crate::constants::namespaces::{
-    document_package_namespace_for, is_core_namespace, is_foreign_namespace,
-    is_well_formed_sbml_namespace, namespace_of_prefix, package_of_namespace_url, written_url_of,
-    NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL,
+    is_core_namespace, is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix,
+    separate_prefix_name, uses_modelled_package_version, NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC,
+    URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL,
 };
 use crate::constants::version::document_level_version_or_base;
 use crate::constraint::FbcType;
@@ -274,33 +274,6 @@ fn is_package_of_the_modelled_version(url: &str) -> bool {
     url == URL_PACKAGE_FBC || url == URL_PACKAGE_LAYOUT || url == URL_PACKAGE_QUAL
 }
 
-/// Whether the document that owns `element` uses the package version the crate models, i.e. binds
-/// one of the namespace URLs of that package whose name the tables use.
-///
-/// A document that declares no version of the package at all counts as using the modelled one: the
-/// callers have already established that the package is declared (through
-/// [`declared_package_prefix`](crate::Sbml::declared_package_prefix), which accepts every published
-/// version), and a package bound under a prefix other than the conventional one is still the
-/// package.
-fn uses_modelled_package_version(
-    xml_element: &XmlElement,
-    namespace: crate::xml::Namespace,
-) -> bool {
-    let Some(prefix) = package_of_namespace_url(namespace.1) else {
-        return true;
-    };
-    let Some(modelled) = written_url_of(prefix) else {
-        return true;
-    };
-    document_package_namespace_for(xml_element.element(), (prefix, modelled)).1 == modelled
-}
-fn separate_prefix_name(name: &str) -> (&str, &str) {
-    match name.split_once(':') {
-        Some((prefix, local)) => (prefix, local),
-        None => ("", name),
-    }
-}
-
 /// Performs a type check of a value of a specific attribute.
 /// If check fails, error is logged in *issues*.
 fn type_check_of_property<T: XmlPropertyType>(
@@ -327,7 +300,9 @@ fn type_check_of_property<T: XmlPropertyType>(
     if let Some(err) = property.get_checked().err() {
         // TODO:
         //  This also maps to a lot of concrete rule IDs based on the tag/attribute and
-        //  will need a separate method to resolve.
+        //  will need a separate method to resolve - the package rules that *do* have an id are
+        //  reported by `constants::package_value_rules`, which runs once per element instead of
+        //  once per property read.
         let message = format!(
             "Sanity check failed: {0} On the attribute [{1}].",
             err, attribute_name

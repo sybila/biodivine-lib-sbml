@@ -39,12 +39,14 @@ use std::borrow::Cow;
 use crate::SbmlIssueSeverity;
 
 mod issue;
+mod package_values;
 mod rules;
 mod unmodelled_level;
 mod unused_namespace;
 
 pub use issue::SbmlIssue;
 
+pub(crate) use package_values::validate_package_values;
 pub(crate) use unmodelled_level::validate_unmodelled_level;
 pub(crate) use unused_namespace::validate_unused_namespaces;
 
