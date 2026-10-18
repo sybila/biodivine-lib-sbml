@@ -52,21 +52,33 @@ The file holds **115 lines: 107 enabled rules and 8 documented-disabled ones** (
 staying disabled in `notes/g4-report.md` and `notes/g5-report.md`), and **106 `KnownDifference`
 entries** cover the documents where a correct check is stricter than the suite's reference
 implementation. The unfiltered census of the whole corpus - both halves, compared as they are
-shipped - reports **2869 documents with a mismatch over 7694 events** (1409 error + 6285 warning,
-plus 4 informational events that only the issue dump carries); the *filtered* CI gate reports 0
-mismatches over those 107 rules. A stage that adjudicates a rule moves the denominator of the
+shipped - reports **2869 documents with a mismatch over 7694 events** (1409 error + 6285 warning);
+the four informational events of the corpus are the `spatial-23254` documents, and the pinned census
+excludes them, so a total that includes them is **2873 documents over 7698 events** and every tool
+prints which of the two it is reporting. The *filtered* CI gate reports 0 mismatches over those 107
+rules. A stage that adjudicates a rule moves the denominator of the
 filtered gate, which is why the filtered metric is always reported together with the size of the
 list that produced it.
 
 Two properties of that list are worth stating because they are easy to mistake for progress. An
-**enabled rule the corpus never exercises** moves no event at all, so its row cannot be counted
-into a pass-rate claim: `10104`, `10208`, `10210`, `10222`, `10312` and `10401` are enabled and the
-corpus carries no expectation for any of them (five of the six are rules of the standard whose test
-documents are Level 2 documents, which the comparison does not read; `10104` and `10210` are marked
-`harness-only` in the coverage matrix because the crate reports them only through the harness's own
-levels). `scripts/corpus_worklist.py` prints that list from the expectation files
-(`## Hollow enables`), and the harness prints its own, narrower version ("rules were requested but
-not found in the test suite", which is directory-level).
+**enabled rule the corpus never exercises** moves no event at all, so its row cannot be counted into
+a pass-rate claim. Six of the file's ids are in that position - `10104`, `10208`, `10210`, `10222`,
+`10312`, `10401` - and the reason is different for each of them:
+
+  * `10104` and `10312` have no rule directory at all: the suite ships no document for either. It is
+    these two that the harness names in its own warning ("rules were requested but not found in the
+    test suite"), which is *directory*-level and therefore misses the other four;
+  * `10222` and `10401` have a rule directory, but every document in it is a Level 2 document
+    (`l2v5` for `10222`, `l2v2`-`l2v5` for `10401`) and the comparison reads the two Level 3 halves;
+  * `10208` and `10210` have documents in the compared halves, and none of them *expects* the rule:
+    `10208`'s are pass documents whose expectation files list nothing, and `10210`'s list other
+    rule ids (the `995xx`/`805xx`/`807xx` families no specification defines, which is also why those
+    documents can never be clean). The documents that do expect `10208`/`10210` are Level 2 ones.
+
+The criterion `scripts/corpus_worklist.py` applies is the one that matters and it is data, not
+prose: an enabled id with **zero expected events in the compared halves and zero reported events**
+(`## Hollow enables`). `10104` and `10210` are additionally marked `harness-only` in the coverage
+matrix, because the crate reaches them only through the harness's own levels.
 
 
 ### Whole-corpus gates

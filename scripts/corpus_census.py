@@ -277,8 +277,13 @@ def print_provenance(
     print()
     print("## Per-package split of the spec-defined events (the in-scope part)")
     print(
+        "# `events` is every event of the package, the informational ones included, so a row whose "
+        "`error + warning + info` does not reach `events` is a defect of this table; the `l3v1` and "
+        "`l3v2` columns are the same events split by corpus half and therefore sum to `events`."
+    )
+    print(
         f"{'specification':<16} {'ids seen':>9} {'documents':>10} {'events':>8} "
-        f"{'error':>7} {'warning':>8} {'l3v1':>6} {'l3v2':>6}"
+        f"{'error':>7} {'warning':>8} {'info':>6} {'l3v1':>6} {'l3v2':>6}"
     )
     packages: dict[str, list[str]] = collections.defaultdict(list)
     for rule in events_per_rule:
@@ -297,7 +302,8 @@ def print_provenance(
             halves.update(events_per_rule_half[rule])
         print(
             f"{package:<16} {len(rules):>10} {len(documents):>10} {events:>8} "
-            f"{severity['error']:>7} {severity['warning']:>8} {halves['l3v1']:>6} {halves['l3v2']:>6}"
+            f"{severity['error']:>7} {severity['warning']:>8} {severity['info']:>6} "
+            f"{halves['l3v1']:>6} {halves['l3v2']:>6}"
         )
 
     # The disagreement: the ids the numeric heuristic attributes to an owner that no specification

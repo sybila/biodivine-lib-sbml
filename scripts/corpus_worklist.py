@@ -11,9 +11,15 @@ Two variants of "unlocked" are reported, because they answer different questions
   * **strict**: the rule is the document's *only* mismatch, in both directions, so implementing
     it (or fixing the spurious report it produces) makes the document clean. Nothing else has to
     happen for that document;
-  * **marginal**: the rule is one of the document's `k` mismatches, so the document becomes clean
-    once all `k` are done. The marginal count is what a plan sees when it asks "how much would a
-    fully implemented core buy", while the strict count says what the next rule should be.
+  * **marginal**: the rule accounts for one of the document's mismatches, so the document becomes
+    clean once all of them are done. The marginal count is what a plan sees when it asks "how much
+    would a fully implemented core buy", while the strict count says what the next rule should be.
+
+`marginal` counts the **missed occurrences only**: a report the library produces that the suite does
+not expect (the `unexpected` column) is not a mismatch the rule has to *implement*, and it is
+counted in the direction it belongs to. The `k` of the distribution below is the size of the
+document's whole mismatch set, both directions, so a rule that is only ever reported spuriously -
+`layout-20405`, say - has a `marginal` of 0 in a document whose `k` is 1.
 
 `marginal` counts every document a rule appears in, including documents whose *other* mismatches
 are on ids no specification defines: such a document can never become clean by in-scope work.
@@ -281,7 +287,11 @@ def main() -> None:
     limit = None if args.all_rules else args.top
 
     print("# corpus scope: every document the harness compares (the l3v2 and the l3v1 half)")
-    print(f"# documents with a mismatch: {len(report.mismatches)}")
+    print(
+        f"# documents with a mismatch: {len(report.mismatches)} - this count is over all three "
+        f"mismatch reports; the pinned census a report quotes excludes the informational ones and "
+        f"is 2869 of the current corpus (see `scripts/corpus_census.py`, which prints both)"
+    )
     print(
         "# an event is counted with multiplicity; `unlock` counts documents that become clean "
         "with this rule (strict = the rule is their only mismatch)"
@@ -298,6 +308,10 @@ def main() -> None:
     print(
         "# the `l3v1`/`l3v2` columns split the strict unlock by corpus half; every package event of "
         "the corpus is a Version 1 core document, so `l3v2 = 0` for a package rule is expected"
+    )
+    print(
+        "# `marginal` counts *missed* occurrences only (a report the suite does not expect is the "
+        "`unexpected` column); `k` in the distribution below counts both directions"
     )
     print()
 
