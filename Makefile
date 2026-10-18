@@ -9,7 +9,7 @@ help:
 	@echo "                 sources emit is registered"
 	@echo "make test        run the Rust test suite"
 	@echo "make lint        cargo fmt --check and cargo clippy (warnings denied)"
-	@echo "make docs        build rustdoc with warnings denied"
+	@echo "make docs        check the generated coverage page and build rustdoc with warnings denied"
 	@echo "make examples    run every example"
 	@echo "make coverage    regenerate the specification coverage matrix"
 	@echo "make full-corpus check the whole-corpus mismatch, issue and round-trip reports"
@@ -29,6 +29,7 @@ lint:
 	cargo clippy --all-targets --all-features -- -D warnings
 
 docs:
+	python3 scripts/gen_rule_coverage_doc.py --check
 	RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
 examples:
@@ -44,6 +45,7 @@ rules:
 	python3 scripts/check_emitted_ids.py
 	python3 scripts/spec_ids_audit.py --spec "$${SPEC:-../../sbml-specifications}" --check
 	python3 scripts/corpus_duplicates.py --dir scripts/full-corpus-baseline
+	python3 scripts/gen_rule_coverage_doc.py --check
 
 # Regenerate the coverage matrix from the SBML specification sources. Pass the checkout with
 # SPEC=/path/to/sbml-specifications.

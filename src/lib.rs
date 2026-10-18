@@ -19,6 +19,12 @@
 //! module. More advanced operations can be then performed using the XML abstraction layer
 //! described in module [xml].
 //!
+//! Three pages explain the project rather than the API: [documentation::specification] maps the
+//! SBML specification onto this crate (levels, versions, packages, the shape of a document),
+//! [documentation::design] gives the reasoning behind the library, and
+//! [documentation::rule_coverage] states which specification rules are implemented, per level and
+//! package, with the gaps named.
+//!
 //! Note that primary documentation of the SBML objects is adapted from the SBML specification,
 //! including figures.
 //!
@@ -132,6 +138,12 @@ pub mod constraint;
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
 /// by the SBML core specification.
 pub mod core;
+
+/// The documentation of the project rather than of the API: the specification this crate implements
+/// ([`specification`](documentation::specification)), the decisions behind the library
+/// ([`design`](documentation::design)) and which rules it covers
+/// ([`rule_coverage`](documentation::rule_coverage), generated from the coverage matrix).
+pub mod documentation;
 
 /// The surface an SBML *package* written outside this crate uses: the cast of a core object to the
 /// view the package adds ([`ExtensionOf`], [`ExtensionCast`]) and the injection of the package's

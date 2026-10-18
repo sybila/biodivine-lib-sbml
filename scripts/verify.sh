@@ -58,6 +58,9 @@ run cargo test --all-features --release
 run cargo build --examples
 
 # --- documentation ----------------------------------------------------------------------------
+# The coverage page of the crate's documentation is generated from the coverage matrix; this check
+# fails when it is stale, so the page cannot describe a state the matrix no longer holds.
+run "$PYTHON" scripts/gen_rule_coverage_doc.py --check
 run env RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --document-private-items
 
 # --- rule table -------------------------------------------------------------------------------
