@@ -135,10 +135,11 @@ in this documentation are adapted from the SBML specification, in particular:
 > SBML is developed and maintained by the SBML Editors, <sbml-editors@sbml.org>, <https://sbml.org>.
 
 The specification text, the rule identifiers and the figures are reused here with the permission of
-the SBML Editors: the class diagrams in `docs-images/` are the specification's own SVG sources, and
-the one figure that had to be redrawn says so in `docs-images/README.md`, next to the source of every
-other figure. Where this documentation quotes a rule, the rule identifier is the specification's, and
-the wording is a summary rather than a copy.
+the SBML Editors: the class diagrams in `docs-images/` are reproduced from the specification's own SVG
+sources (eight of the nine byte for byte; the SBML container figure is redrawn from the TikZ source
+the specification draws it with, and `docs-images/README.md` says which is which, next to the source
+of every figure). Where this documentation quotes a rule, the rule identifier is the specification's
+and the wording is a summary rather than a copy.
 
 ## Roadmap
 
