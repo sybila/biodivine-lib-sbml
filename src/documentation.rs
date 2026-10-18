@@ -14,9 +14,13 @@
 //! | [`design`](crate::documentation::design) | why the library is built the way it is: the handle model, the validation abstraction, levels as deltas, the typed MathML layer, the extension cast, the declarations, namespaces, cancellation, the walk guard, and the policy that keeps the lint gate closed |
 //! | [`rule_coverage`](crate::documentation::rule_coverage) | which specification rules this crate implements, per level, version and package, with the gaps named - generated from `spec-coverage/rules.csv`, so it cannot drift from the matrix |
 //!
-//! The informal versions of these pages, with the measurements that go with them, are the files under
-//! `/sandbox/notes` of the working repository and the crate's `VALIDATION.md`; the pages here are the
-//! ones that ship with the library. Answers to "how do I write an SBML extension" are not a page: the
+//! Every number in these pages is anchored to something the crate ships: the recorded baseline under
+//! `scripts/full-corpus-baseline/`, the scripts under `scripts/`, the coverage matrix under
+//! `spec-coverage/`, or the crate's own tests, and the page names the anchor next to the number. The
+//! few numbers that were established once while the design was being worked out (the count of
+//! documents that made the walk panic before the guard existed, for example) are marked as such and
+//! name the gate that keeps them at their value today. Answers to "how do I write an SBML extension"
+//! are not a page: the
 //! reference is `examples/extension-example.rs`, which the [`extension`] module
 //! documents, and it is compiled and run by `tests/extension-example.rs`.
 //!

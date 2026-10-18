@@ -40,7 +40,10 @@ Level 3 Version 2 is the base: the tables and the object model describe it. Ever
 * **Level 2** (Versions 1-5) is enabled as a delta of the element tables, the required children and the
   attribute defaults (`src/constants/deltas.rs`, one self-checking row per difference). The
   classification of each difference - optional-with-default, required, absent from that version - is
-  cited to the schema line that decides it in `notes/g5-report.md` 7.1.
+  cited, row by row, to the line of the schema that decides it (in the specification repository, which
+  is not shipped with this crate). `cargo test` checks the rows against each other
+  (`every_delta_row_is_consistent_with_the_base_row_it_names` and the attribute-type twin in
+  `src/constants/deltas.rs`); the schema itself is read by whoever adds a row.
 * **Level 3 Version 1** is a delta of the same tables plus the rules whose text differs (`10301`'s class
   list, the MathML subset without the five operators Version 2 added, the three `rateOf` rules). One
   helper decides the version, and a delta row is written once for both.
@@ -91,7 +94,7 @@ Every SBML object is a thin wrapper around one element, and the declarations tha
 generated: `#[derive(XmlWrapper)]` with an `#[sbml_object(..)]` attribute writes the identity (the
 element names, the namespace, the `xsi:type` of a discriminated type), the `matches_element` test, the
 checked conversion, and the `new_empty(document)` constructor - so the element a value is constructed
-from and the element its type recognizes cannot disagree. 56 wrapper types are declared this way; the
+from and the element its type recognizes cannot disagree. 71 wrapper types are declared this way; the
 scan in `src/xml/xml_object/tests.rs` pins the identity of every one of them, the creation sites and
 the element names the tables use.
 
@@ -149,9 +152,11 @@ Three consequences are worth knowing:
 
 The alternative - an early return from `validate` on the first type-check problem - is what the library
 did before this design, and it suppressed whole-document validation: 73 documents of the corpus made
-validation *panic* with the walk enabled and were reported as "no issues" without it. The guard exists
-so that the panic inventory of the corpus
-(`scripts/corpus_panic_inventory.py`) is empty, and it is.
+validation *panic* with the walk enabled and were reported as "no issues" without it. That count is a
+measurement of the design work rather than something the crate can re-derive now (it needs the guard
+removed); what *is* reproducible is the gate the guard exists for: the corpus panic inventory
+(`scripts/corpus_panic_inventory.py`) reports no document, and a document that made the walk panic
+again would be a failing test rather than a silent "no issues".
 
 ## The level/version delta mechanism
 
@@ -183,7 +188,7 @@ there is a policy rather than an accident:
   the typed accessors are re-derived from the code by a test, so a sentence that names the wrong
   attribute or the wrong element fails `cargo test` rather than misleading a reader.
 
-The three scans that keep the declarations honest - the identity/creation scan, the element-name scan
+The scans that keep the declarations honest - the identity and creation-site scans, the element-name scan
 and the doc-sentence scan - all pin the number of sites they must see, because a scan that finds
 nothing would otherwise pass.
 

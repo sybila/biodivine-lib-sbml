@@ -32,6 +32,15 @@ docs:
 	python3 scripts/gen_rule_coverage_doc.py --check
 	RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
+# The three artifacts of this repository that are generated and must equal their committed copy: the
+# coverage matrix (from the specification sources), the documentation page rendered from it, and the
+# doc sentences of the typed accessors, which a test re-derives from the code. One command, so there
+# is one place where the convention is visible.
+docs-check:
+	python3 scripts/spec_coverage.py --spec "$${SPEC:-../../sbml-specifications}" --check
+	python3 scripts/gen_rule_coverage_doc.py --check
+	cargo test --lib a_doc_sentence_names_the_xml_name_the_code_actually_uses
+
 examples:
 	@for example in $$(ls examples/*.rs | sed 's|examples/||; s|\.rs||'); do \
 		echo "== $$example"; cargo run --quiet --example $$example >/dev/null || exit 1; \
