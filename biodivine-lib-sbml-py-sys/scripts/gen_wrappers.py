@@ -992,6 +992,7 @@ class Generator:
         files["mod.rs"] = self.render_mod(by_module)
         files["enums.rs"] = self.render_enums()
         files["math_names.rs"] = self.render_math_names()
+        files["manifest.rs"] = self.render_manifest()
         return files
 
     def render_module(
@@ -1171,6 +1172,92 @@ class Generator:
                 found[name].append(item.path.rpartition("::")[2])
         return {name: sorted(variants) for name, variants in found.items() if variants}
 
+    def class_members(self) -> dict[str, dict[str, list[str]]]:
+        """`class -> {attributes, children, lists, methods}`, from the generated members.
+
+        The categories are read off the *generated code* rather than off the rule names, so the
+        manifest describes what the wrapper actually is: a `#[getter]` is an attribute (or, for a
+        child accessor, a child or a list of children), and anything else is a method. This is the
+        data the Python layer needs and cannot read from the native module by introspection alone:
+        whether an accessor is an attribute, a single child or a list of children is a fact of the
+        SBML object model, not of the Python class.
+        """
+        found: dict[str, dict[str, list[str]]] = {}
+        for klass in self.classes.values():
+            members: dict[str, list[str]] = {
+                "attributes": [],
+                "children": [],
+                "lists": [],
+                "methods": [],
+                "static_methods": [],
+            }
+            for member in klass.members:
+                name = member.item.path.rpartition("::")[2]
+                code = member.code
+                if "#[getter]" in code:
+                    parsed = (
+                        child_type(member.item.signature)
+                        if "Child" in member.item.signature
+                        else None
+                    )
+                    if parsed is None:
+                        members["attributes"].append(name)
+                    elif parsed[1]:
+                        members["lists"].append(name)
+                    else:
+                        members["children"].append(name)
+                elif name.startswith("create_"):
+                    # The Python layer pairs a child accessor with its creation method, so the
+                    # creation method is not listed separately.
+                    continue
+                elif "&self" in member.item.signature:
+                    members["methods"].append(name)
+                else:
+                    # An associated function (`new_empty`, `try_from_element`, ...): Python gets a
+                    # static method, so it must not be bound to an instance.
+                    members["static_methods"].append(name)
+            found[klass.py_name] = {key: sorted(value) for key, value in members.items()}
+        return found
+
+    def render_manifest(self) -> str:
+        """The member kinds of every generated class, as a Python dictionary of the module.
+
+        The Python layer of `biodivine-py` generates its classes from this: the native module is the
+        only input it needs, so a standalone checkout of that repository can build the same Python
+        layer, and a class the native module gains without a Python wrapper makes the layer's
+        freshness gate fail rather than going unnoticed.
+        """
+        header = GENERATED_HEADER.format(
+            what="the member kinds of the generated classes, as module data"
+        )
+        lines = [header]
+        lines.append("use pyo3::prelude::*;")
+        lines.append("use pyo3::types::{PyDict, PyList};")
+        lines.append("")
+        lines.append("/// Adds `__sbml_manifest__` to `module`: for every generated class, its attribute")
+        lines.append("/// accessors, its single-child accessors and its list accessors.")
+        lines.append("pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {")
+        lines.append("    let py = module.py();")
+        lines.append('    let manifest = PyDict::new(py);')
+        for name, members in sorted(self.class_members().items()):
+            # The entry is built as a value and stored once, so the generated code needs no
+            # downcast of a value it just created.
+            # The binding name is derived from the class, so it is snake case.
+            binding = snake_case(name)
+            lines.append(f"    let entry_{binding} = PyDict::new(py);")
+            for key, values in sorted(members.items()):
+                # An empty list still needs its item type, so the type is spelled out.
+                literal = ", ".join(f'"{value}"' for value in values)
+                lines.append(
+                    f'    entry_{binding}.set_item("{key}", '
+                    f'PyList::new(py, vec![{literal}].into_iter().map(|it: &str| it.to_string()))?)?;'
+                )
+            lines.append(f'    manifest.set_item("{name}", entry_{binding})?;')
+        lines.append('    module.add("__sbml_manifest__", manifest)?;')
+        lines.append("    Ok(())")
+        lines.append("}")
+        return "\n".join(lines)
+
     def render_math_names(self) -> str:
         """The names of the MathML enumerations, as class attributes of the hand-written classes.
 
@@ -1211,9 +1298,37 @@ class Generator:
                 lines.append(f"    // {name}::{variant}")
                 value = self.math_variant_value(name, variant)
                 lines.append(f'    class.setattr("{constant}", {value})?;')
+                if name in {"MathOperator", "MathConstant"}:
+                    # An operator or a constant element has a *kind* as well: a caller that compares
+                    # `node.kind` wants `MathNodeKind.PLUS` to be the kind of a `<plus/>` element.
+                    lines.append("    // ... and the same name as the kind of that element")
+                    lines.append(
+                        "    module.getattr(\"MathNodeKind\")?.setattr("
+                        f'"{constant}", Py::new(py, PyMathNodeKind::generic('
+                        f'{self.math_variant_element_name(name, variant)}, false))?)?;'
+                    )
         lines.append("    Ok(())")
         lines.append("}")
         return "\n".join(lines)
+
+    def math_variant_element_name(self, name: str, variant: str) -> str:
+        """The element name of a MathML name-set variant (`MathOperator::Plus` -> `"plus"`)."""
+        # The enumeration derives the element name from the variant, and the generator knows it from
+        # the source: the macro writes `Variant => "element"`.
+        pattern = re.compile(
+            rf"\b{variant}\s*=>\s*\"([a-z0-9-]+)\""
+        )
+        for item in self.items.values():
+            if item.kind == "enum" and item.path.rpartition("::")[2] == name:
+                page = ps.item_page(ps.DEFAULT_DOC, item)
+                if page is None:
+                    continue
+                text = ps.read_text(page)
+                match = pattern.search(text)
+                if match is not None:
+                    return f'"{match.group(1)}"'
+        # A fallback that is right for every single-word variant.
+        return f'"{variant.lower()}"'
 
     def math_variant_value(self, name: str, variant: str) -> str:
         """The Python value of one variant of a hand-written MathML enumeration."""
@@ -1251,7 +1366,7 @@ class Generator:
         header = GENERATED_HEADER.format(what="the wrapper classes of the SBML object model")
         modules = sorted({file_name_stem(module) for module in by_module})
         lines = [header]
-        for stem in [*modules, "enums", "math_names"]:
+        for stem in [*modules, "enums", "math_names", "manifest"]:
             lines.append(f"pub(crate) mod {stem};")
         lines.append("")
         lines.append("use pyo3::prelude::*;")
@@ -1263,6 +1378,7 @@ class Generator:
             for klass in sorted(by_module[module], key=lambda it: it.py_name):
                 lines.append(f"    module.add_class::<{stem}::{klass.name}>()?;")
         lines.append("    enums::register(module)?;")
+        lines.append("    manifest::register(module)?;")
         lines.append("    Ok(())")
         lines.append("}")
         return "\n".join(lines)

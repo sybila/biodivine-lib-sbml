@@ -42,6 +42,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "EXPONENTIAL_E",
+        Py::new(py, PyMathNodeKind::generic("exponentiale", false))?,
+    )?;
     // MathConstant::False
     class.setattr(
         "FALSE",
@@ -51,6 +56,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathConstant::False,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "FALSE",
+        Py::new(py, PyMathNodeKind::generic("false", false))?,
     )?;
     // MathConstant::Infinity
     class.setattr(
@@ -62,6 +72,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "INFINITY",
+        Py::new(py, PyMathNodeKind::generic("infinity", false))?,
+    )?;
     // MathConstant::NotANumber
     class.setattr(
         "NOT_A_NUMBER",
@@ -71,6 +86,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathConstant::NotANumber,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "NOT_A_NUMBER",
+        Py::new(py, PyMathNodeKind::generic("notanumber", false))?,
     )?;
     // MathConstant::Pi
     class.setattr(
@@ -82,6 +102,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("PI", Py::new(py, PyMathNodeKind::generic("pi", false))?)?;
     // MathConstant::True
     class.setattr(
         "TRUE",
@@ -92,6 +116,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("TRUE", Py::new(py, PyMathNodeKind::generic("true", false))?)?;
     let class = module.getattr("MathNode")?;
     // MathNode::Annotation
     class.setattr(
@@ -267,6 +295,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("ABS", Py::new(py, PyMathNodeKind::generic("abs", false))?)?;
     // MathOperator::And
     class.setattr(
         "AND",
@@ -277,6 +309,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("AND", Py::new(py, PyMathNodeKind::generic("and", false))?)?;
     // MathOperator::Arccos
     class.setattr(
         "ARCCOS",
@@ -286,6 +322,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arccos,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCOS",
+        Py::new(py, PyMathNodeKind::generic("arccos", false))?,
     )?;
     // MathOperator::Arccosh
     class.setattr(
@@ -297,6 +338,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCOSH",
+        Py::new(py, PyMathNodeKind::generic("arccosh", false))?,
+    )?;
     // MathOperator::Arccot
     class.setattr(
         "ARCCOT",
@@ -306,6 +352,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arccot,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCOT",
+        Py::new(py, PyMathNodeKind::generic("arccot", false))?,
     )?;
     // MathOperator::Arccoth
     class.setattr(
@@ -317,6 +368,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCOTH",
+        Py::new(py, PyMathNodeKind::generic("arccoth", false))?,
+    )?;
     // MathOperator::Arccsc
     class.setattr(
         "ARCCSC",
@@ -326,6 +382,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arccsc,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCSC",
+        Py::new(py, PyMathNodeKind::generic("arccsc", false))?,
     )?;
     // MathOperator::Arccsch
     class.setattr(
@@ -337,6 +398,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCCSCH",
+        Py::new(py, PyMathNodeKind::generic("arccsch", false))?,
+    )?;
     // MathOperator::Arcsec
     class.setattr(
         "ARCSEC",
@@ -346,6 +412,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arcsec,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCSEC",
+        Py::new(py, PyMathNodeKind::generic("arcsec", false))?,
     )?;
     // MathOperator::Arcsech
     class.setattr(
@@ -357,6 +428,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCSECH",
+        Py::new(py, PyMathNodeKind::generic("arcsech", false))?,
+    )?;
     // MathOperator::Arcsin
     class.setattr(
         "ARCSIN",
@@ -366,6 +442,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arcsin,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCSIN",
+        Py::new(py, PyMathNodeKind::generic("arcsin", false))?,
     )?;
     // MathOperator::Arcsinh
     class.setattr(
@@ -377,6 +458,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCSINH",
+        Py::new(py, PyMathNodeKind::generic("arcsinh", false))?,
+    )?;
     // MathOperator::Arctan
     class.setattr(
         "ARCTAN",
@@ -386,6 +472,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Arctan,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCTAN",
+        Py::new(py, PyMathNodeKind::generic("arctan", false))?,
     )?;
     // MathOperator::Arctanh
     class.setattr(
@@ -397,6 +488,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "ARCTANH",
+        Py::new(py, PyMathNodeKind::generic("arctanh", false))?,
+    )?;
     // MathOperator::Ceiling
     class.setattr(
         "CEILING",
@@ -406,6 +502,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Ceiling,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "CEILING",
+        Py::new(py, PyMathNodeKind::generic("ceiling", false))?,
     )?;
     // MathOperator::Cos
     class.setattr(
@@ -417,6 +518,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("COS", Py::new(py, PyMathNodeKind::generic("cos", false))?)?;
     // MathOperator::Cosh
     class.setattr(
         "COSH",
@@ -427,6 +532,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("COSH", Py::new(py, PyMathNodeKind::generic("cosh", false))?)?;
     // MathOperator::Cot
     class.setattr(
         "COT",
@@ -437,6 +546,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("COT", Py::new(py, PyMathNodeKind::generic("cot", false))?)?;
     // MathOperator::Coth
     class.setattr(
         "COTH",
@@ -447,6 +560,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("COTH", Py::new(py, PyMathNodeKind::generic("coth", false))?)?;
     // MathOperator::Csc
     class.setattr(
         "CSC",
@@ -457,6 +574,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("CSC", Py::new(py, PyMathNodeKind::generic("csc", false))?)?;
     // MathOperator::Csch
     class.setattr(
         "CSCH",
@@ -467,6 +588,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("CSCH", Py::new(py, PyMathNodeKind::generic("csch", false))?)?;
     // MathOperator::Divide
     class.setattr(
         "DIVIDE",
@@ -476,6 +601,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Divide,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "DIVIDE",
+        Py::new(py, PyMathNodeKind::generic("divide", false))?,
     )?;
     // MathOperator::Eq
     class.setattr(
@@ -487,6 +617,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("EQ", Py::new(py, PyMathNodeKind::generic("eq", false))?)?;
     // MathOperator::Exp
     class.setattr(
         "EXP",
@@ -497,6 +631,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("EXP", Py::new(py, PyMathNodeKind::generic("exp", false))?)?;
     // MathOperator::Factorial
     class.setattr(
         "FACTORIAL",
@@ -506,6 +644,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Factorial,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "FACTORIAL",
+        Py::new(py, PyMathNodeKind::generic("factorial", false))?,
     )?;
     // MathOperator::Floor
     class.setattr(
@@ -517,6 +660,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "FLOOR",
+        Py::new(py, PyMathNodeKind::generic("floor", false))?,
+    )?;
     // MathOperator::Geq
     class.setattr(
         "GEQ",
@@ -527,6 +675,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("GEQ", Py::new(py, PyMathNodeKind::generic("geq", false))?)?;
     // MathOperator::Gt
     class.setattr(
         "GT",
@@ -537,6 +689,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("GT", Py::new(py, PyMathNodeKind::generic("gt", false))?)?;
     // MathOperator::Implies
     class.setattr(
         "IMPLIES",
@@ -546,6 +702,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Implies,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "IMPLIES",
+        Py::new(py, PyMathNodeKind::generic("implies", false))?,
     )?;
     // MathOperator::Leq
     class.setattr(
@@ -557,6 +718,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("LEQ", Py::new(py, PyMathNodeKind::generic("leq", false))?)?;
     // MathOperator::Ln
     class.setattr(
         "LN",
@@ -567,6 +732,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("LN", Py::new(py, PyMathNodeKind::generic("ln", false))?)?;
     // MathOperator::Log
     class.setattr(
         "LOG",
@@ -577,6 +746,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("LOG", Py::new(py, PyMathNodeKind::generic("log", false))?)?;
     // MathOperator::Lt
     class.setattr(
         "LT",
@@ -587,6 +760,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("LT", Py::new(py, PyMathNodeKind::generic("lt", false))?)?;
     // MathOperator::Max
     class.setattr(
         "MAX",
@@ -597,6 +774,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("MAX", Py::new(py, PyMathNodeKind::generic("max", false))?)?;
     // MathOperator::Min
     class.setattr(
         "MIN",
@@ -607,6 +788,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("MIN", Py::new(py, PyMathNodeKind::generic("min", false))?)?;
     // MathOperator::Minus
     class.setattr(
         "MINUS",
@@ -616,6 +801,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Minus,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "MINUS",
+        Py::new(py, PyMathNodeKind::generic("minus", false))?,
     )?;
     // MathOperator::Neq
     class.setattr(
@@ -627,6 +817,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("NEQ", Py::new(py, PyMathNodeKind::generic("neq", false))?)?;
     // MathOperator::Not
     class.setattr(
         "NOT",
@@ -637,6 +831,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("NOT", Py::new(py, PyMathNodeKind::generic("not", false))?)?;
     // MathOperator::Or
     class.setattr(
         "OR",
@@ -647,6 +845,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("OR", Py::new(py, PyMathNodeKind::generic("or", false))?)?;
     // MathOperator::Plus
     class.setattr(
         "PLUS",
@@ -657,6 +859,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("PLUS", Py::new(py, PyMathNodeKind::generic("plus", false))?)?;
     // MathOperator::Power
     class.setattr(
         "POWER",
@@ -666,6 +872,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Power,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "POWER",
+        Py::new(py, PyMathNodeKind::generic("power", false))?,
     )?;
     // MathOperator::Quotient
     class.setattr(
@@ -677,6 +888,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "QUOTIENT",
+        Py::new(py, PyMathNodeKind::generic("quotient", false))?,
+    )?;
     // MathOperator::Rem
     class.setattr(
         "REM",
@@ -687,6 +903,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("REM", Py::new(py, PyMathNodeKind::generic("rem", false))?)?;
     // MathOperator::Root
     class.setattr(
         "ROOT",
@@ -697,6 +917,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("ROOT", Py::new(py, PyMathNodeKind::generic("root", false))?)?;
     // MathOperator::Sec
     class.setattr(
         "SEC",
@@ -707,6 +931,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("SEC", Py::new(py, PyMathNodeKind::generic("sec", false))?)?;
     // MathOperator::Sech
     class.setattr(
         "SECH",
@@ -717,6 +945,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("SECH", Py::new(py, PyMathNodeKind::generic("sech", false))?)?;
     // MathOperator::Sin
     class.setattr(
         "SIN",
@@ -727,6 +959,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("SIN", Py::new(py, PyMathNodeKind::generic("sin", false))?)?;
     // MathOperator::Sinh
     class.setattr(
         "SINH",
@@ -737,6 +973,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("SINH", Py::new(py, PyMathNodeKind::generic("sinh", false))?)?;
     // MathOperator::Tan
     class.setattr(
         "TAN",
@@ -747,6 +987,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("TAN", Py::new(py, PyMathNodeKind::generic("tan", false))?)?;
     // MathOperator::Tanh
     class.setattr(
         "TANH",
@@ -757,6 +1001,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("TANH", Py::new(py, PyMathNodeKind::generic("tanh", false))?)?;
     // MathOperator::Times
     class.setattr(
         "TIMES",
@@ -766,6 +1014,11 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
                 inner: MathOperator::Times,
             },
         )?,
+    )?;
+    // ... and the same name as the kind of that element
+    module.getattr("MathNodeKind")?.setattr(
+        "TIMES",
+        Py::new(py, PyMathNodeKind::generic("times", false))?,
     )?;
     // MathOperator::Xor
     class.setattr(
@@ -777,6 +1030,10 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
             },
         )?,
     )?;
+    // ... and the same name as the kind of that element
+    module
+        .getattr("MathNodeKind")?
+        .setattr("XOR", Py::new(py, PyMathNodeKind::generic("xor", false))?)?;
     let class = module.getattr("MathSymbol")?;
     // MathSymbol::Avogadro
     class.setattr(

@@ -105,6 +105,7 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyIssueSeverity>()?;
     module.add_class::<PyRuleDescriptor>()?;
     module.add_class::<PyRuleSet>()?;
+    module.add_class::<PySbmlList>()?;
 
     error::register(module)?;
     validation::register(module)?;
@@ -129,6 +130,7 @@ fn all_names() -> Vec<&'static str> {
         "SbmlIssueSeverity",
         "RuleDescriptor",
         "RuleSet",
+        "SbmlList",
         "SbmlError",
         "SbmlXmlError",
         "SbmlCancelledError",

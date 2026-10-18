@@ -10,6 +10,7 @@ pub(crate) mod constraint;
 pub(crate) mod core;
 pub(crate) mod enums;
 pub(crate) mod layout;
+pub(crate) mod manifest;
 pub(crate) mod math_elements;
 pub(crate) mod math_names;
 pub(crate) mod qual;
@@ -89,5 +90,6 @@ pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<qual::PyQualitativeSpecies>()?;
     module.add_class::<qual::PyTransition>()?;
     enums::register(module)?;
+    manifest::register(module)?;
     Ok(())
 }
