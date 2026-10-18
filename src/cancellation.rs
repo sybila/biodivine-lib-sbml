@@ -39,12 +39,15 @@ use crate::SbmlResult;
 /// How many steps of a walk pass between two consultations of the cancellation triggers.
 pub(crate) const CHECK_INTERVAL: u32 = 1024;
 
-/// A countdown that consults the cancellation triggers of the current thread every
-/// [`CHECK_INTERVAL`] calls of [`CancellationCheck::tick`].
+/// A countdown that consults the cancellation triggers of the current thread every fixed number of
+/// calls of [`CancellationCheck::tick`].
 ///
 /// A walk creates one check for the whole operation and passes it down, so the countdown is shared
-/// by every phase of that operation instead of being restarted by each nested walk.
-pub(crate) struct CancellationCheck {
+/// by every phase of that operation instead of being restarted by each nested walk. This is the type
+/// a package's validation check receives, so that the package's own walk is part of the same
+/// cancellable operation as the checks of this crate; see
+/// [`ExtensionValidation`](crate::ExtensionValidation) for the contract.
+pub struct CancellationCheck {
     /// `false` for operations that must not be cancelled (see
     /// [`CancellationCheck::disabled`]).
     enabled: bool,
@@ -86,12 +89,18 @@ impl CancellationCheck {
     /// The returned error names the trigger that fired, so the report of a cancelled operation
     /// tells the caller *why* it stopped.
     ///
+    /// This is the one operation of the type: a check is created by the library (by the operation
+    /// that is being cancelled) and handed to the code that walks the document, which accounts for
+    /// its own steps with this method. A package's check may call it once per element it visits, or
+    /// not at all when its own work is bounded - the countdown of the surrounding operation is
+    /// unaffected either way.
+    ///
     /// # Errors
     ///
     /// Returns [`SbmlError::Cancelled`](crate::SbmlError::Cancelled) if this step consults the
     /// triggers and one of them has fired.
     #[inline]
-    pub(crate) fn tick(&mut self) -> SbmlResult<()> {
+    pub fn tick(&mut self) -> SbmlResult<()> {
         if !self.enabled {
             return Ok(());
         }

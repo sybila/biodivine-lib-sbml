@@ -972,6 +972,16 @@ fn strip_test_modules(source: &str) -> String {
         .join("\n")
 }
 
+/// Whether a source file of the crate is a test source.
+///
+/// The scans here are about what the **crate** does, and test code is allowed to build whatever
+/// element it likes to exercise a failure. A test module that lives in its own file is named
+/// `tests.rs` (the convention `xml/xml_object/tests.rs` follows); the test-suite harness is the one
+/// other source that is test code.
+fn is_test_source(short_path: &str) -> bool {
+    short_path.ends_with("tests.rs") || short_path == "test_suite.rs"
+}
+
 /// The `T::new_empty(<document>)` sites of a source, as the names of the types they construct.
 ///
 /// The argument is matched as an identifier rather than as the literal `document`, because a caller
@@ -1115,7 +1125,7 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
             .expect("The path is inside the source tree.")
             .display()
             .to_string();
-        if short == "xml/xml_object/tests.rs" || short == "test_suite.rs" {
+        if is_test_source(&short) {
             // Test sources: they build elements to exercise failures, so they are not part of the
             // surface this check pins.
             continue;
@@ -1197,8 +1207,8 @@ fn the_creation_paths_of_the_crate_are_enumerated() {
         "The child-accessor scan found {read_pairs} sites instead of 30: a changed count is either          a new accessor (add it to the pins and to the identity table) or a lost one."
     );
     assert_eq!(
-        identity_sites, 50,
-        "The creation scan found {identity_sites} identity-derived creation sites instead of 50: a          changed count is either a new constructor or a site that stopped deriving its element          from its identity."
+        identity_sites, 49,
+        "The creation scan found {identity_sites} identity-derived creation sites instead of 49: a          changed count is either a new constructor or a site that stopped deriving its element          from its identity. The count was 50 while only `xml/xml_object/tests.rs` was skipped by          name; the scan now skips every `tests.rs` (test sources are not the surface it pins), so          the one site of `math/tests.rs` no longer takes part in it."
     );
 }
 

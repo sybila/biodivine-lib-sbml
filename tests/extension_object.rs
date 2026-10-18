@@ -1,5 +1,14 @@
 //! An SBML extension declared *outside* the crate.
 //!
+//! The extension's namespace URL is written in the shape a package of the SBML standard uses
+//! (`.../level3/version2/<package>/version1`). The shape matters: an element or an attribute in a
+//! namespace that is neither a namespace of the standard nor a foreign one is reported by rule
+//! 10102, so a URL such as `http://example.org/myext` would make every element this declaration
+//! builds an "undefined SBML namespace" *when it is attached to an SBML document*. The documents
+//! here are probes that exist only to exercise the declaration, which is why the earlier form of
+//! this test could use one; `examples/extension-example.rs` is the package that adds content to a
+//! real document and it uses the shape below.
+//!
 //! The point of this test is that everything an extension needs is public API: the `XmlWrapper`
 //! derive, the `#[sbml_object(..)]` attribute, the identity traits (`SbmlObject`, `XmlWrapper`) and
 //! the generated constructor. The declarations here are compiled as a separate crate that depends on
@@ -20,7 +29,10 @@ use sbml_macros::{SBase, XmlWrapper};
 
 /// The namespace of the extension, as the declaration writes it: a conventional prefix and the URL
 /// that identifies the namespace.
-const MY_EXTENSION: (&str, &str) = ("myext", "http://example.org/myext");
+const MY_EXTENSION: (&str, &str) = (
+    "myext",
+    "http://www.sbml.org/sbml/level3/version2/myext/version1",
+);
 
 /// A wrapper declared by the extension, with its own element name and namespace.
 #[derive(Clone, Debug, XmlWrapper, SBase)]

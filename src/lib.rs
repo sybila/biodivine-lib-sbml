@@ -113,7 +113,6 @@ use embed_doc_image::embed_doc_image;
 
 use xml::RequiredProperty;
 
-use crate::cancellation::CancellationCheck;
 use crate::constants::namespaces::Namespace;
 use crate::core::validation::sbase::validate_sbase;
 use crate::core::validation::type_check::{type_check_problems, CanTypeCheck};
@@ -126,6 +125,11 @@ pub mod constraint;
 /// [`FunctionDefinition`][core::FunctionDefinition] and other data objects prescribed
 /// by the SBML core specification.
 pub mod core;
+
+/// The surface an SBML *package* written outside this crate uses: the cast of a core object to the
+/// view the package adds ([`ExtensionOf`], [`ExtensionCast`]) and the injection of the package's
+/// validation rules into a document's validation ([`ExtensionValidation`]).
+pub mod extension;
 pub mod layout;
 
 /// Defines [`Math`][math::Math], the typed layer over the MathML subset that SBML formulas use:
@@ -144,6 +148,18 @@ pub mod xml;
 mod validation;
 pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 
+/// The cast of a core SBML object to the view an SBML package adds to it.
+pub use crate::extension::ExtensionCast;
+/// The error a cast to an extension view produces.
+pub use crate::extension::ExtensionError;
+/// The view an SBML package adds to a core SBML object.
+pub use crate::extension::ExtensionOf;
+/// The validation rules of an SBML package.
+pub use crate::extension::ExtensionValidation;
+
+/// The periodic cancellation check a long-running operation of this crate consults.
+pub use crate::cancellation::CancellationCheck;
+
 /// The SBML namespaces, as the `(prefix, url)` pairs this crate writes with, and the root
 /// namespace set of the documents it recognizes.
 ///
@@ -152,7 +168,7 @@ pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 /// way. An SBML extension needs three things from this list: [`NS_SBML_CORE`] (the namespace of the
 /// elements it extends and of the attributes a core element carries), its own namespace (declared
 /// with [`SbmlObject`] as a pair of its own, for example
-/// `#[sbml_object(name = "myGraph", namespace = ("myext", "http://example.org/myext"))]`), and
+/// `#[sbml_object(name = "myGraph", namespace = ("myext", "http://www.sbml.org/sbml/level3/version2/myext/version1"))]`), and
 /// [`NS_XSI`] when one of its types is discriminated by `xsi:type` rather than by its local name.
 ///
 /// The value type of these constants is [`Namespace`], which lives in the [`xml`]
@@ -162,10 +178,11 @@ pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 /// [`SBML_ROOT_NAMESPACES`] is the set of SBML document roots, which is data a later level module
 /// extends; see its own documentation for exactly what a membership in that set means.
 pub use crate::constants::namespaces::{
-    package_of_namespace_url, package_urls_of, written_url_of, COMP_NAMESPACE_URLS,
-    FBC_NAMESPACE_URLS, LAYOUT_NAMESPACE_URLS, NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_MATHML,
-    NS_QUAL, NS_SBML_CORE, NS_XSI, QUAL_NAMESPACE_URLS, SBML_ROOT_NAMESPACES, URL_EMPTY, URL_HTML,
-    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE, URL_XSI,
+    is_package_namespace_of, package_of_namespace_url, package_urls_of, written_url_of,
+    COMP_NAMESPACE_URLS, FBC_NAMESPACE_URLS, LAYOUT_NAMESPACE_URLS, NS_EMPTY, NS_FBC, NS_HTML,
+    NS_LAYOUT, NS_MATHML, NS_QUAL, NS_SBML_CORE, NS_XSI, QUAL_NAMESPACE_URLS, SBML_ROOT_NAMESPACES,
+    URL_EMPTY, URL_HTML, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL,
+    URL_SBML_CORE, URL_XSI,
 };
 
 /// Writes the `xsi:type` attribute of an element, declaring the XML Schema instance namespace on it
@@ -660,7 +677,105 @@ impl Sbml {
     /// Returns [`SbmlError::Cancelled`] if a cancellation trigger registered on the current thread
     /// has fired. A document that violates rules of the specification is *not* an error: it is
     /// reported through the returned issues.
+    ///
+    /// ## SBML packages
+    ///
+    /// This method validates the rules of this crate. The rules of an SBML *package* are the
+    /// package's own, and they take part in the validation of a document through
+    /// [`Sbml::validate_with`], which runs the checks of every
+    /// [`ExtensionValidation`](crate::ExtensionValidation) it is given after the checks below:
+    ///
+    /// ```
+    /// # use biodivine_lib_sbml::extension::ExtensionValidation;
+    /// # use biodivine_lib_sbml::CancellationCheck;
+    /// # use biodivine_lib_sbml::xml::{Document, OptionalXmlChild, XmlWrapper};
+    /// # use biodivine_lib_sbml::{
+    /// #     RuleDescriptor, RuleKind, RuleSet, Sbml, SbmlIssue, SbmlIssueSeverity, SbmlResult,
+    /// #     URL_SBML_CORE,
+    /// # };
+    /// # struct MyExtensionRules { rules: RuleSet }
+    /// # impl MyExtensionRules {
+    /// #     fn new() -> Self { MyExtensionRules { rules: RuleSet::new(vec![RuleDescriptor::new(
+    /// #         "myext-10101", RuleKind::SpecRule, SbmlIssueSeverity::Error, "A model must not be empty.")]) } }
+    /// # }
+    /// # impl ExtensionValidation for MyExtensionRules {
+    /// #     fn rules(&self) -> &RuleSet { &self.rules }
+    /// #     fn validate(&self, document: &Sbml, issues: &mut Vec<SbmlIssue>, _check: &mut CancellationCheck) -> SbmlResult<()> {
+    /// #         if let Some(model) = document.model().get() {
+    /// #             if model.xml_element().child_elements().is_empty() {
+    /// #                 issues.push(SbmlIssue::new_in(self.rules(), "myext-10101", &model, "Empty model."));
+    /// #             }
+    /// #         }
+    /// #         Ok(())
+    /// #     }
+    /// # }
+    /// let document = Sbml::read_str(&format!(
+    ///     r#"<sbml xmlns="{URL_SBML_CORE}" level="3" version="2"><model/></sbml>"#
+    /// ))?;
+    /// let extension = MyExtensionRules::new();
+    ///
+    /// // The package's rule is not part of this method's report ...
+    /// assert!(document.validate()?.iter().all(|it| it.rule() != "myext-10101"));
+    ///
+    /// // ... and runs when the package is passed to `validate_with`.
+    /// let issues = document.validate_with(&[&extension])?;
+    /// assert!(issues.iter().any(|it| it.rule() == "myext-10101"));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// So a caller that wants the rules of a package to run passes the package explicitly. This is
+    /// a property of the call rather than of the document on purpose: the report of a validation is
+    /// then a function of the document and of the extensions the caller asked about, and not of a
+    /// process-wide registry (two documents in one process, or the SBML test-suite harness, would
+    /// otherwise disagree about what "the rules" are). A package that is relevant only for the
+    /// documents that *declare* it asks
+    /// [`declared_package_prefix`](Sbml::declared_package_prefix) itself, which is also what
+    /// [`ExtensionCast`](crate::ExtensionCast) does.
     pub fn validate(&self) -> SbmlResult<Vec<SbmlIssue>> {
+        self.validate_with(&[])
+    }
+
+    /// Validates the document as [`Sbml::validate`] and then runs the checks of the SBML packages in
+    /// `extensions`, in order, adding their issues to the same report.
+    ///
+    /// The result is the report of the whole document: the issues of this crate's rules (all of
+    /// which are checked, exactly as [`Sbml::validate`] does) followed by the issues the package
+    /// checks pushed. Each issue names its own rule, and the id, the kind and the severity of a rule
+    /// of a package are the ones its
+    /// [`RuleDescriptor`](crate::RuleDescriptor) gives it - a package rule is reported through
+    /// [`SbmlIssue::new_in`] with the package's [rule set](crate::ExtensionValidation::rules), which
+    /// is what makes an injected rule indistinguishable from a built-in one at the report.
+    ///
+    /// The packages are described by [`ExtensionValidation`](crate::ExtensionValidation), which is
+    /// also where the contract of a check (the order of the phases, the shared cancellation
+    /// countdown, the documents a check can be called on) is written down. A package's checks are
+    /// called for **every** document, including the ones that do not declare the package, because
+    /// whether the package's content is relevant is a question only the package can answer.
+    ///
+    /// ## Cancellation
+    ///
+    /// The extension checks are part of the same cancellable operation as the built-in phases: they
+    /// receive the countdown of the call, so the walk of a package honours a request to stop, and a
+    /// trigger that has fired aborts the call before the next package check starts. A cancelled call
+    /// reports [`SbmlError::Cancelled`] instead of a partial report, exactly as [`Sbml::validate`]
+    /// does.
+    ///
+    /// ## The rules of a validation run
+    ///
+    /// The rules a call compares against are the union of this crate's rules and the rules of the
+    /// extensions, [`RuleSet::CORE`].`with`(extension's set). A caller that has to classify an id -
+    /// the SBML test-suite harness asks whether a reported id is a specification rule, so that a
+    /// library lint cannot turn a document the suite expects to pass into a mismatch - builds that
+    /// union itself and asks it, in the same way the built-in run does.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SbmlError::Cancelled`] if a cancellation trigger registered on the current thread
+    /// has fired, including one that fires inside a package's check.
+    pub fn validate_with(
+        &self,
+        extensions: &[&dyn ExtensionValidation],
+    ) -> SbmlResult<Vec<SbmlIssue>> {
         let mut check = CancellationCheck::new();
         let mut issues: Vec<SbmlIssue> = vec![];
 
@@ -689,6 +804,15 @@ impl Sbml {
 
         if let Some(model) = self.model().get() {
             model.validate(&mut issues, &mut identifiers, &mut meta_ids, &mut check)?;
+        }
+
+        // The SBML packages take part after the walk of the object model: a package's check is
+        // written against what this crate has already established about the document (the issues
+        // above), and the countdown is shared, so a request to stop reaches the package's own walk
+        // as well. A trigger that has already fired aborts before the next check starts.
+        for extension in extensions {
+            check.tick()?;
+            extension.validate(self, &mut issues, &mut check)?;
         }
 
         Ok(issues)

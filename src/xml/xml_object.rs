@@ -60,12 +60,15 @@ use crate::xml::{Document, XmlElement, XmlWrapper};
 /// use sbml_macros::XmlWrapper;
 ///
 /// #[derive(Clone, Debug, XmlWrapper)]
-/// #[sbml_object(name = "myGraph", namespace = ("myext", "http://example.org/myext"))]
+/// #[sbml_object(name = "myGraph", namespace = ("myext", "http://www.sbml.org/sbml/level3/version2/myext/version1"))]
 /// pub struct MyGraph(XmlElement);
 ///
 /// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAME, "myGraph");
 /// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAMESPACE.0, "myext");
-/// assert_eq!(<MyGraph as SbmlObject>::ELEMENT_NAMESPACE.1, "http://example.org/myext");
+/// assert_eq!(
+///     <MyGraph as SbmlObject>::ELEMENT_NAMESPACE.1,
+///     "http://www.sbml.org/sbml/level3/version2/myext/version1"
+/// );
 /// ```
 ///
 /// The attribute is a *declaration*, not a validation: it records the fact that this crate's

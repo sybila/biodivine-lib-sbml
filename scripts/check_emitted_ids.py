@@ -20,8 +20,16 @@ How an id is collected:
 The check is one-directional (`emitted ⊆ registered`): a registered rule that nothing emits is
 legitimate, an emitted rule that is not registered is not. It is deliberately loud: an argument it
 cannot classify is a failure, never a warning, because a silent pass would hide the very panic this
-check exists to prevent. Code gated by `#[cfg(test)]` and files under a `tests/` directory are
-skipped, so a test may use an id that is not a rule of the crate (for example to test the panic).
+check exists to prevent. Code gated by `#[cfg(test)]`, files under a `tests/` directory and files
+named `tests.rs` (the crate's own convention for a test module that lives in its own file) are
+skipped, so a test may use an id that is not a rule of the crate (for example to test the panic, or
+to exercise the rules of an SBML package).
+
+The check is about the **table of this crate**. A call that reports an id through
+`SbmlIssue::new_in` with a rule set of its own - the rules of an SBML package, which is what
+`new_in` exists for - resolves the id against that set, which no file of this crate describes, so
+the check cannot verify it; such a call must not appear in production code without the package's own
+check of its ids. Today every `new_in` call of the crate is in a test source.
 
 Usage::
 
@@ -208,6 +216,19 @@ def function_parameters(text: str) -> dict[str, list[str]]:
     return parameters
 
 
+def is_test_source(path: Path) -> bool:
+    """Whether a source file of the crate is a test source.
+
+    Test code may report an id that is not a rule of this crate - to exercise the panic of an
+    unregistered id, or to exercise the rules of an SBML package - so it is outside what this check
+    looks at. Two conventions of the crate mark it: a file under a `tests/` directory, and a file
+    named `tests.rs` (a test module that lives in its own file, declared as `#[cfg(test)] mod
+    tests;`). Items gated by an inline `#[cfg(test)]` are removed by `drop_test_code` instead.
+    """
+
+    return "tests" in path.parts or path.name == "tests.rs"
+
+
 def literals_in_expression(expression: str, bodies: dict[str, list[str]], depth: int = 0) -> set[str]:
     """Every id-shaped literal of an expression, including the bodies it calls (bounded depth)."""
 
@@ -261,7 +282,7 @@ def resolve_argument(
         found = set()
         declaration = re.compile(r"(?:pub(?:\([^)]*\))?\s+)?const\s+" + re.escape(table) + r"\b")
         for path in sorted((crate / "src").rglob("*.rs")):
-            if "tests" in path.parts:
+            if is_test_source(path):
                 continue
             source = drop_test_code(strip_comments(path.read_text(encoding="utf-8")))
             for match in declaration.finditer(source):
@@ -321,7 +342,7 @@ def resolve_argument(
     if function is not None and name in parameters.get(function, []):
         index = parameters[function].index(name)
         for path in sorted((crate / "src").rglob("*.rs")):
-            if "tests" in path.parts:
+            if is_test_source(path):
                 continue
             caller = drop_test_code(strip_comments(path.read_text(encoding="utf-8")))
             call_bodies = function_bodies(caller)
@@ -377,7 +398,7 @@ def main() -> int:
 
     sources = {}
     for path in sorted((args.crate / "src").rglob("*.rs")):
-        if "tests" in path.parts:
+        if is_test_source(path):
             continue
         sources[path] = drop_test_code(strip_comments(path.read_text(encoding="utf-8")))
 
