@@ -11,12 +11,12 @@
 //!    caller cannot read package data out of a document that does not have the package in the first
 //!    place. [`ExtensionCast::cast_or_activate`] is the editing-side conversion: it declares the
 //!    package on the `<sbml>` element (through the public
-//!    [`Sbml::activate_package`](crate::Sbml::activate_package)) when the document does not declare
+//!    [`Sbml::activate_package`]) when the document does not declare
 //!    it yet, and then succeeds.
 //!  * **Rule injection** ([`ExtensionValidation`]). A package describes its rules in a [`RuleSet`]
 //!    and checks them in the same way this crate does - one function per rule, reporting through
-//!    [`SbmlIssue::new_in`](crate::SbmlIssue::new_in) - and
-//!    [`Sbml::validate_with`](crate::Sbml::validate_with) runs those checks as part of the
+//!    [`SbmlIssue::new_in`] - and
+//!    [`Sbml::validate_with`] runs those checks as part of the
 //!    document's validation, so a package rule appears in the report exactly as a rule of this
 //!    crate does, with its own id, kind and severity.
 //!
@@ -37,15 +37,15 @@
 //!    it is the same derive this crate uses for its own types, so an extension type is a first-class
 //!    SBML object;
 //!  * the **accessors** of the objects it extends, built from
-//!    [`OptionalSbmlChild`](crate::xml::OptionalSbmlChild),
+//!    [`OptionalSbmlChild`],
 //!    [`OptionalSbmlProperty`](crate::xml::OptionalSbmlProperty), [`XmlList`](crate::xml::XmlList)
-//!    and the other types of the [`xml`](crate::xml) module - or from the helpers of
+//!    and the other types of the [`xml`] module - or from the helpers of
 //!    [`ExtensionOf`], which apply the package namespace for the package;
 //!  * optionally, a [`RuleSet`] and the checks that report it ([`ExtensionValidation`]).
 //!
-//! Everything else a package needs is already public: [`Sbml`](crate::Sbml) is the document handle,
-//! [`Sbml::declared_package_prefix`](crate::Sbml::declared_package_prefix) answers which prefix the
-//! document uses for a package, and the raw [`XmlElement`](crate::xml::XmlElement) of any object is
+//! Everything else a package needs is already public: [`Sbml`] is the document handle,
+//! [`Sbml::declared_package_prefix`] answers which prefix the
+//! document uses for a package, and the raw [`XmlElement`] of any object is
 //! always reachable, so a package can also work on the document directly.
 //!
 //! ## A package that is not in this crate

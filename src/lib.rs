@@ -683,7 +683,7 @@ impl Sbml {
     /// This method validates the rules of this crate. The rules of an SBML *package* are the
     /// package's own, and they take part in the validation of a document through
     /// [`Sbml::validate_with`], which runs the checks of every
-    /// [`ExtensionValidation`](crate::ExtensionValidation) it is given after the checks below:
+    /// [`ExtensionValidation`] it is given after the checks below:
     ///
     /// ```
     /// # use biodivine_lib_sbml::extension::ExtensionValidation;
@@ -730,7 +730,7 @@ impl Sbml {
     /// otherwise disagree about what "the rules" are). A package that is relevant only for the
     /// documents that *declare* it asks
     /// [`declared_package_prefix`](Sbml::declared_package_prefix) itself, which is also what
-    /// [`ExtensionCast`](crate::ExtensionCast) does.
+    /// [`ExtensionCast`] does.
     pub fn validate(&self) -> SbmlResult<Vec<SbmlIssue>> {
         self.validate_with(&[])
     }
@@ -742,11 +742,11 @@ impl Sbml {
     /// which are checked, exactly as [`Sbml::validate`] does) followed by the issues the package
     /// checks pushed. Each issue names its own rule, and the id, the kind and the severity of a rule
     /// of a package are the ones its
-    /// [`RuleDescriptor`](crate::RuleDescriptor) gives it - a package rule is reported through
+    /// [`RuleDescriptor`] gives it - a package rule is reported through
     /// [`SbmlIssue::new_in`] with the package's [rule set](crate::ExtensionValidation::rules), which
     /// is what makes an injected rule indistinguishable from a built-in one at the report.
     ///
-    /// The packages are described by [`ExtensionValidation`](crate::ExtensionValidation), which is
+    /// The packages are described by [`ExtensionValidation`], which is
     /// also where the contract of a check (the order of the phases, the shared cancellation
     /// countdown, the documents a check can be called on) is written down. A package's checks are
     /// called for **every** document, including the ones that do not declare the package, because
