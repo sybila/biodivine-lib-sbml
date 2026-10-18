@@ -27,6 +27,23 @@ Besides the moved lines, the tool reports, per rule, how many documents moved fr
 one mismatch" to "has no mismatch" - the number the worklist ranking of `corpus_worklist.py`
 re-runs from after a change.
 
+## The expectation cross-check of the added lines
+
+A `walk-only-added` line is the shape a change is *not* expected to produce: it says the library
+reports something new. Whether that is a detection or a false positive cannot be read off the
+census, because the translated Level 3 Version 1 half of the corpus is not compared against the
+suite's expectation files at all (`sbml-test-suite` dumps its issues and ignores them). The suite
+ships an expectation file for every document, though, including the ones it does not compare, so the
+file is the authority - and the tool therefore reads it for every added line and prints
+
+    lists the rule / does not list the rule / no expectation file
+
+next to the line. `no expectation file` is the normal answer for a library lint (no specification
+rule id, so no expectation file can list it); `does not list the rule` is the answer that has to be
+explained before the snapshot is re-recorded, either as a correct-but-unlisted report (a documented
+difference) or as a defect. `--corpus DIR` selects the test suite (default `./syntactic`); the
+cross-check is skipped when the directory is absent, like the other corpus gates.
+
 Usage::
 
     python3 scripts/snapshot_diff.py BEFORE AFTER [--label 10301=fixed-false-positive]
@@ -44,7 +61,14 @@ import argparse
 import collections
 import os
 
-from corpus_lib import MISMATCH, family_of, read_report, read_snapshot, scope_label
+from corpus_lib import (
+    MISMATCH,
+    family_of,
+    parse_expectation,
+    read_report,
+    read_snapshot,
+    scope_label,
+)
 
 #: The five snapshots, with the report file they are the sorted form of.
 SNAPSHOTS = ("error", "warning", "info", "issues", "roundtrip")
@@ -70,6 +94,13 @@ def parse_args() -> argparse.Namespace:
         "--quiet",
         action="store_true",
         help="print only the summary tables, not every moved line",
+    )
+    parser.add_argument(
+        "--corpus",
+        default="./syntactic",
+        metavar="DIR",
+        help="the unpacked syntactic test suite, for the expectation cross-check "
+        "(default: ./syntactic); the cross-check is skipped when the directory is absent",
     )
     return parser.parse_args()
 
@@ -131,6 +162,28 @@ def rule_of(name: str, line: str) -> str:
     return match.group("rule")
 
 
+def expectation_verdict(corpus: str, document: str, rule: str) -> str:
+    """Whether the document's own expectation file lists the rule a dump line reports.
+
+    A dump line of the *translated* half of the corpus is not compared against the suite today, so a
+    line the suite does not expect is invisible in the census - and the census is what a change is
+    usually judged by. This column makes it visible: the suite ships an expectation file for every
+    document, including the ones the harness ignores for comparison, so the file is the authority on
+    whether a newly reported issue is a detection or a false positive.
+
+    The three answers are `lists the rule`, `does not list the rule` and `no expectation file` (a
+    library lint has no expectation file to be listed in, by construction: the suite lists
+    specification rule ids).
+    """
+    expectation = os.path.join(
+        corpus, document.replace(".xml", ".txt")
+    )
+    expected = parse_expectation(expectation)
+    if expected is None:
+        return "no expectation file"
+    return "lists the rule" if rule in expected else "does not list the rule"
+
+
 def mismatch_index(snapshots: dict[str, collections.Counter]) -> dict[str, set[tuple[str, str]]]:
     """The mismatch index (document -> {(direction, rule)}) of the three census snapshots."""
     index: dict[str, set[tuple[str, str]]] = collections.defaultdict(set)
@@ -183,6 +236,28 @@ def main() -> None:
                 continue
             if document not in after_index:
                 clean_per_rule[rule] += 1
+
+    # The expectation cross-check: every *added* dump line, against the expectation file of the
+    # document it belongs to. Only the added direction needs it - a removed line is the one a
+    # change is expected to justify by itself.
+    cross_check = not args.quiet and os.path.isdir(args.corpus)
+    verdicts_per_line: list[tuple[str, str, str]] = []
+    if os.path.isdir(args.corpus):
+        for rule, entries in lines_per_rule.items():
+            for label, line, _before, _after in entries:
+                if not label.startswith("walk-only-added"):
+                    continue
+                document, reported, _severity = line.split("|", 2)
+                verdicts_per_line.append(
+                    (document, reported, expectation_verdict(args.corpus, document, reported))
+                )
+    if verdicts_per_line:
+        print()
+        print("## Expectation cross-check of the added dump lines")
+        for document, rule, verdict in sorted(verdicts_per_line):
+            print(f"   {verdict:<24} {document}|{rule}")
+        counts = collections.Counter(verdict for _document, _rule, verdict in verdicts_per_line)
+        print("   -- " + ", ".join(f"{count} {verdict}" for verdict, count in sorted(counts.items())))
 
     print()
     print("## Moved lines per rule")

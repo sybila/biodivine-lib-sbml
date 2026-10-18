@@ -24,11 +24,11 @@ impl SbmlValidable for FbcReaction {
             gene_product_association.validate(issues, identifiers, meta_ids, check)?;
         }
         if let Some(lower_bound) = self.lower_flux_bound().get() {
-            apply_rule_fbc_20705(self, issues, lower_bound);
+            apply_rule_fbc_flux_bound(self, issues, lower_bound, "fbc-20705", "fbc:lowerFluxBound");
         }
 
         if let Some(upper_bound) = self.upper_flux_bound().get() {
-            apply_rule_fbc_20705(self, issues, upper_bound);
+            apply_rule_fbc_flux_bound(self, issues, upper_bound, "fbc-20706", "fbc:upperFluxBound");
         }
 
         if self.sbml_root().model().get().unwrap().strict().get() {
@@ -58,7 +58,18 @@ impl SbmlValidable for FbcReaction {
                 {
                     let message = "When attribute [strict] is se to true <Parameter> elements referenced by bounds have to be set and can not be NaN".to_string();
                     issues.push(SbmlIssue::new("fbc-20709", self, message))
-                } else if lower_bound_parameter.value().get().unwrap().is_infinite() {
+                } else if lower_bound_parameter.value().get().unwrap().is_infinite()
+                    && !lower_bound_parameter
+                        .value()
+                        .get()
+                        .unwrap()
+                        .is_sign_negative()
+                {
+                    // Rule fbc-20711 is about the value `INF`, not about either infinity: a lower
+                    // bound of `-INF` is the most permissive bound there is, and the SBML test suite
+                    // has a pass document that sets it (`fbc-20711-pass-00-01-sev1-l3v1.xml`). The
+                    // sibling rule fbc-20712 is about `-INF` on the upper bound, and the sign test
+                    // below is the same one this rule needs.
                     let message = "When attribute [strict] is se to true [lowerFluxBound] value can not be INF".to_string();
                     issues.push(SbmlIssue::new("fbc-20711", self, message))
                 } else if upper_bound_parameter.value().get().unwrap().is_infinite()
@@ -96,41 +107,49 @@ impl SbmlValidable for FbcReaction {
 
             let reaction = self.upcast();
 
-            if let Some(reactants) = reaction.reactants().get() {
-                let is_invalid = reactants.iter().any(|reactant| {
-                    apply_rule_fbc_20716(&reactant, &initial_assignments_sid, issues);
-                    let stoichiometry = reactant.stoichiometry().get();
+            // The three rules about the species references of a reaction are distinct rules of the
+            // specification, so they are reported separately:
+            //
+            //  * fbc-20714: "the `constant` attribute of `SpeciesReference` elements of a `Reaction`
+            //    must be set to `true`";
+            //  * fbc-20715: "the value of a `SpeciesReference`'s `stoichiometry` attribute must not
+            //    be set to `NaN`, `-INF` or `INF`";
+            //  * fbc-20716: "the `SpeciesReference` elements of a `Reaction` may not be targeted by
+            //    an `InitialAssignment`".
+            //
+            // They used to share one report (under fbc-20714) and one short-circuiting iteration,
+            // which reported the *first* rule and hid the others: the corpus has a document per rule
+            // (`fbc-20714-fail-01-01` has a non-constant reference, `fbc-20715-fail-01-0*` have a
+            // non-finite stoichiometry) and each expects its own id. The references are walked once
+            // and the two list-level conditions are reported at most once per list, which is the
+            // granularity the suite's expectation files use.
+            for references in [reaction.reactants().get(), reaction.products().get()]
+                .into_iter()
+                .flatten()
+            {
+                let mut has_non_constant = false;
+                let mut has_non_finite_stoichiometry = false;
+                for reference in references.iter() {
+                    apply_rule_fbc_20716(&reference, &initial_assignments_sid, issues);
+                    has_non_constant |= !reference.constant().get();
+                    has_non_finite_stoichiometry |= reference
+                        .stoichiometry()
+                        .get()
+                        .is_some_and(|it| it.is_nan() || it.is_infinite());
+                }
 
-                    !reactant.constant().get()
-                        || stoichiometry.is_some_and(|s| {
-                            s.is_nan()
-                                || s.is_infinite()
-                                || (s.is_sign_negative() && s.is_infinite())
-                        })
-                });
-
-                if is_invalid {
-                    let message = "When attribute [strict] is se to true the [constant] attribute of <speciesReference> elements have to be set to true and [stoichiometry] can not be non-finite.".to_string();
+                if has_non_constant {
+                    let message = "When attribute [strict] is se to true the [constant] attribute \
+                                   of <speciesReference> elements have to be set to true."
+                        .to_string();
                     issues.push(SbmlIssue::new("fbc-20714", self, message))
                 }
-            }
 
-            if let Some(products) = reaction.products().get() {
-                let is_invalid = products.iter().any(|product| {
-                    apply_rule_fbc_20716(&product, &initial_assignments_sid, issues);
-                    let stoichiometry = product.stoichiometry().get();
-
-                    !product.constant().get()
-                        || stoichiometry.is_some_and(|s| {
-                            s.is_nan()
-                                || s.is_infinite()
-                                || (s.is_sign_negative() && s.is_infinite())
-                        })
-                });
-
-                if is_invalid {
-                    let message = "When attribute [strict] is se to true the [constant] attribute of <speciesReference> elements have to be set to true and [stoichiometry] can not be non-finite.".to_string();
-                    issues.push(SbmlIssue::new("fbc-20714", self, message))
+                if has_non_finite_stoichiometry {
+                    let message = "When attribute [strict] is se to true the [stoichiometry] of \
+                                   <speciesReference> elements can not be non-finite."
+                        .to_string();
+                    issues.push(SbmlIssue::new("fbc-20715", self, message))
                 }
             }
         }
@@ -154,13 +173,36 @@ impl CanTypeCheck for FbcReaction {
     }
 }
 
-pub fn apply_rule_fbc_20705(element: &FbcReaction, issues: &mut Vec<SbmlIssue>, sid_ref: SId) {
+/// ### Rules fbc-20705 and fbc-20706
+///
+/// "The value of the attribute `fbc:lowerFluxBound` (`fbc-20705`) / `fbc:upperFluxBound`
+/// (`fbc-20706`) of a `Reaction` object must be the identifier of an existing `Parameter` object
+/// defined in the enclosing `Model` object."
+///
+/// The two rules are the same requirement about two attributes, so they share one check and differ
+/// only in the rule id and the attribute the message names - which is what makes the report
+/// actionable, and what the SBML test suite compares: `fbc-20705-fail-01-01` has a `lowerFluxBound`
+/// that names no parameter and `fbc-20706-fail-01-01` an `upperFluxBound` that does, and each
+/// document expects the rule of the attribute it breaks.
+///
+/// The identifier is resolved through `find_by_sid`, which reports the reference as unresolved when
+/// the element it finds is not a `Parameter` at all (the suite has documents where the bound names a
+/// species, which is a `Parameter`-shaped reference to the wrong class).
+pub fn apply_rule_fbc_flux_bound(
+    element: &FbcReaction,
+    issues: &mut Vec<SbmlIssue>,
+    sid_ref: SId,
+    rule: &'static str,
+    attribute: &str,
+) {
     let found = element.find_by_sid::<Parameter>(&sid_ref);
 
     if found.is_none() || found.unwrap().xml_element().tag_name() != "parameter" {
-        let message =
-            "Attribute of Flux Bound does not refer to the existing Parameter element!".to_string();
-        issues.push(SbmlIssue::new("fbc-20705", element.xml_element(), message))
+        let message = format!(
+            "The value of the attribute [{attribute}] of a <reaction> object must be the \
+             identifier of an existing <parameter> object defined in the enclosing <model>."
+        );
+        issues.push(SbmlIssue::new(rule, element.xml_element(), message))
     }
 }
 

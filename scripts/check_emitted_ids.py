@@ -102,10 +102,17 @@ def drop_test_code(text: str) -> str:
 
 
 def call_arguments(text: str, name: str) -> list[tuple[list[str], int]]:
-    """Return `(arguments, offset of the first argument)` for every `name(..)` call."""
+    """Return `(arguments, offset of the first argument)` for every `name(..)` call.
+
+    The definition of `name` itself is not a call: `fn name(..)` has a parameter *list*, not
+    arguments, and a rule id passed as a parameter is resolved from the call sites instead. The
+    check would otherwise fail on the definition of every helper that takes an id.
+    """
 
     calls = []
     for match in re.finditer(r"(?<![\w.])" + re.escape(name) + r"\s*\(", text):
+        if re.search(r"\bfn\s+$", text[: match.start()]):
+            continue
         start = match.end() - 1
         depth = 0
         in_string = False
