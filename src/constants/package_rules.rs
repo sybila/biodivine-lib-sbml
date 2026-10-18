@@ -122,7 +122,8 @@ pub(crate) const PACKAGE_ATTRIBUTE_RULES: &[PackageAttributeRule] = &[
     },
 ];
 
-/// Reports the package attributes of `element` that its rules do not permit.
+/// Reports the package attributes of `element` that its rules do not permit, and the
+/// `chemicalFormula` values that are not chemical formulas.
 ///
 /// The check is one pass over the element's own attributes with no recursion, so it does not need a
 /// cancellation check of its own: the caller
@@ -159,6 +160,146 @@ pub(crate) fn validate_package_attributes(element: &XmlElement, issues: &mut Vec
             );
             issues.push(SbmlIssue::new(rule.id, element, message));
         }
+    }
+    validate_chemical_formula(element, issues);
+}
+
+/// Whether `element` carries a `fbc:chemicalFormula` whose value is not a chemical formula.
+///
+/// ### Rule `fbc-20303`
+/// "The attribute `fbc:chemicalFormula` on a `Species` must have a value of data type `string`", and
+/// the attribute's own section of the specification says what that string is: a formula "consists
+/// only of atomic names (as in the Periodic Table) ... and their occurrence", the generic components
+/// are the symbols `R` and `X`, and "the undefined parenthesised group index `(…)n` may also be
+/// used ... a parenthesized group may only be followed by the subscript `n`; integer values, for
+/// example `(…)2`, and expressions such as `(…)n-1` are considered invalid chemical formula".
+///
+/// The grammar that sentence describes is therefore
+///
+/// ```text
+/// formula := part+
+/// part    := symbol count? | '(' formula ')' 'n'
+/// symbol  := [A-Z][a-z]*
+/// count   := [0-9]+
+/// ```
+///
+/// and it is what this function implements, with the two lexical details the specification's
+/// examples settle: a symbol has to begin with a capital letter (`S2o1`, `a0` and `asC1` are
+/// invalid), and the only character a parenthesised group may be followed by is a lower-case `n`
+/// (`(N2)4` is invalid, `(CH2)n` - the specification's own example - is valid).
+///
+/// The check applies to the `chemicalFormula` attribute in *any* published FBC namespace, so it
+/// reaches the Version 1 and Version 3 documents too: the syntax of the attribute is the same in
+/// all three, which is why this rule is version-independent and sits on the declaration gate rather
+/// than behind the modelled version.
+fn chemical_formula_is_valid(formula: &str) -> bool {
+    let bytes = formula.as_bytes();
+    if bytes.is_empty() {
+        return false;
+    }
+    let mut index = 0;
+    let mut parser = FormulaParser {
+        bytes,
+        index: &mut index,
+    };
+    parser.formula().is_some() && index == bytes.len()
+}
+
+/// The position of the parser in [`chemical_formula_is_valid`].
+///
+/// A tiny recursive-descent parser, so that the grammar above is the code rather than a comment
+/// about the code. `None` means "the input does not continue as a formula from here", which is the
+/// only failure the grammar has.
+struct FormulaParser<'a> {
+    bytes: &'a [u8],
+    index: &'a mut usize,
+}
+
+impl FormulaParser<'_> {
+    /// `formula := part+`.
+    fn formula(&mut self) -> Option<()> {
+        self.part()?;
+        while self
+            .peek()
+            .is_some_and(|it| it.is_ascii_uppercase() || it == b'(')
+        {
+            self.part()?;
+        }
+        Some(())
+    }
+
+    /// `part := symbol count? | '(' formula ')' 'n'`.
+    fn part(&mut self) -> Option<()> {
+        if self.peek() == Some(b'(') {
+            self.advance(1);
+            self.formula()?;
+            if self.peek() != Some(b')') {
+                return None;
+            }
+            self.advance(1);
+            // "a parenthesized group may only be followed by the subscript n": the whole token is
+            // `(…)n`, so a group that is not followed by the `n` is not a part.
+            if self.peek() != Some(b'n') {
+                return None;
+            }
+            self.advance(1);
+            return Some(());
+        }
+        let symbol = self.peek()?;
+        if !symbol.is_ascii_uppercase() {
+            return None;
+        }
+        self.advance(1);
+        while self.peek().is_some_and(|it| it.is_ascii_lowercase()) {
+            self.advance(1);
+        }
+        while self.peek().is_some_and(|it| it.is_ascii_digit()) {
+            self.advance(1);
+        }
+        Some(())
+    }
+
+    /// The byte at the current position, if the input has not ended.
+    fn peek(&self) -> Option<u8> {
+        self.bytes.get(*self.index).copied()
+    }
+
+    /// Moves the position forward by `count` bytes.
+    fn advance(&mut self, count: usize) {
+        *self.index += count;
+    }
+}
+
+/// Reports every `fbc:chemicalFormula` of `element` that is not a formula, under rule `fbc-20303`.
+///
+/// The attribute is looked up in every published FBC namespace, so the rule reaches a document that
+/// declares any of them; the check is one attribute read per element and needs no cancellation of
+/// its own (see [`validate_package_attributes`]).
+pub(crate) fn validate_chemical_formula(element: &XmlElement, issues: &mut Vec<SbmlIssue>) {
+    if element.tag_name() != "species" {
+        return;
+    }
+    let raw = element.element();
+    for (name, value) in raw.attributes() {
+        let Some(namespace) = name.namespace() else {
+            continue;
+        };
+        if name.local_name_str() != "chemicalFormula"
+            || !crate::constants::namespaces::is_package_namespace_of(namespace.uri(), "fbc")
+        {
+            continue;
+        }
+        if chemical_formula_is_valid(value.as_str()) {
+            continue;
+        }
+        let message = format!(
+            "The value '{}' of the attribute [fbc:chemicalFormula] of <species> is not a chemical \
+             formula. A formula consists of the atomic names of the periodic table (and the generic \
+             symbols R and X) followed by their occurrence, and a parenthesised group may only be \
+             followed by the subscript 'n'.",
+            value.as_str()
+        );
+        issues.push(SbmlIssue::new("fbc-20303", element, message));
     }
 }
 
@@ -215,6 +356,57 @@ mod tests {
     }
 
     #[test]
+    fn a_bad_chemical_formula_is_reported_under_fbc_20303_and_a_good_one_is_not() {
+        // The rule has to reach a document of *any* published FBC version, because the syntax of the
+        // attribute is the same in all of them; the corpus's 17 failing documents bind the Version 1
+        // URL and its 3 passing ones do too.
+        for formula in ["S2o1", "(N2)4", "H 2 O", "_H2O", "a0"] {
+            let issues = issues_of(&species_document(formula, 0));
+            assert!(
+                issues.contains(&"fbc-20303".to_string()),
+                "'{formula}' must be reported: {issues:?}"
+            );
+        }
+        for formula in ["AsC1", "C2H4O2(CH2)n", "H2O"] {
+            let issues = issues_of(&species_document(formula, 0));
+            assert!(
+                !issues.contains(&"fbc-20303".to_string()),
+                "'{formula}' must not be reported: {issues:?}"
+            );
+        }
+    }
+
+    /// A Level 3 Version 1 document with one species carrying `fbc:chemicalFormula="formula"`, in
+    /// the FBC version the corpus uses (`version` is the index into `FBC_NAMESPACE_URLS`).
+    fn species_document(formula: &str, version: usize) -> String {
+        format!(
+            r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1"
+                     xmlns:fbc="{}" fbc:required="false">
+                 <model id="m">
+                   <listOfCompartments><compartment id="c" constant="true"/></listOfCompartments>
+                   <listOfSpecies>
+                     <species id="s" compartment="c" constant="false"
+                              fbc:chemicalFormula="{formula}"/>
+                   </listOfSpecies>
+                 </model>
+               </sbml>"#,
+            crate::FBC_NAMESPACE_URLS[version]
+        )
+    }
+
+    #[test]
+    fn the_formula_rule_reaches_every_published_fbc_version() {
+        for version in 0..crate::FBC_NAMESPACE_URLS.len() {
+            let issues = issues_of(&species_document("S2o1", version));
+            assert!(
+                issues.contains(&"fbc-20303".to_string()),
+                "The rule must reach version {}: {issues:?}",
+                crate::FBC_NAMESPACE_URLS[version]
+            );
+        }
+    }
+
+    #[test]
     fn the_core_attributes_the_element_permits_are_not_reported() {
         let issues = issues_of(&document_with_sub_glyphs(
             r#"metaid="m1" sboTerm="SBO:0000001""#,
@@ -224,6 +416,42 @@ mod tests {
             !issues.contains(&"layout-20813".to_string()),
             "The row permits the two core attributes: {issues:?}"
         );
+    }
+
+    #[test]
+    fn the_formula_grammar_accepts_the_specifications_own_examples() {
+        // The specification's section on the attribute lists these as formulas (`C10H12N5O13P3`,
+        // `RCONH2` and `COX` are Hill-system and generic-symbol examples, `C2H4O2(CH2)n` is the
+        // parenthesised group), and the corpus's passing documents use `AsC1` and `S20`.
+        for formula in [
+            "C10H12N5O13P3",
+            "RCONH2",
+            "COX",
+            "C2H4O2(CH2)n",
+            "AsC1",
+            "S20",
+            "H2O",
+        ] {
+            assert!(
+                super::chemical_formula_is_valid(formula),
+                "'{formula}' is a chemical formula."
+            );
+        }
+    }
+
+    #[test]
+    fn the_formula_grammar_rejects_what_the_specification_calls_invalid() {
+        // "Integer values, for example (…)2, and expressions such as (…)n-1 are considered invalid
+        // chemical formula", and a symbol has to begin with a capital letter.
+        for formula in [
+            "(N2)4", "(N2)n-1", "H 2 O", "a0", "_H2O", "S2o1", "0", "asC1", "aS2o1", "", "()n",
+            "(H2O)",
+        ] {
+            assert!(
+                !super::chemical_formula_is_valid(formula),
+                "'{formula}' is not a chemical formula."
+            );
+        }
     }
 
     #[test]

@@ -204,6 +204,28 @@ This lint covers the *declared-but-unused* half of namespace handling. The other
 whose namespace is not declared in scope, and a declaration that binds a used prefix to the wrong
 namespace — is decided by the XML layer and reported as a specification rule.
 
+#### The package-attribute rules and the formula rule
+
+Two mechanisms report a package rule that the element tables cannot express, and every new rule
+belongs to one of them:
+
+  * `src/constants/package_rules.rs` holds `PACKAGE_ATTRIBUTE_RULES`, one row per rule: the element,
+    the package the element belongs to, the attributes the rule permits in *that package's*
+    namespace, and the specification sentence the message comes from. One evaluator walks the rows,
+    so a rule is one row and no other file changes. The row mechanism is for the rules whose
+    violation is an attribute of the package's own namespace (a `layout:compartment` on a
+    `listOfSubGlyphs`, an `fbc:spatialDimensions` on a `species`), including the case where an
+    element of the *core* carries an attribute of a package.
+  * The same module holds the value checks a row cannot express, one function per rule, and
+    `fbc-20303` (the syntax of `fbc:chemicalFormula`) is the first: the specification's grammar is a
+    sequence of symbols with optional counts where a parenthesised group may only be followed by the
+    subscript `n`, which accepts `C2H4O2(CH2)n` and rejects `(N2)4`.
+
+A rule that is implemented but *not* complete over the corpus stays out of `validated-rules.txt` and
+says why: `#fbc-20509` is the current example — three of its five documents hide the violation of an
+inner element behind the `not-validated` report of an outer one, so it is reported for two of them
+and the other three need the walk to descend into a type-inconsistent subtree.
+
 #### What counts as a use: the QName-valued attribute
 
 The lint counts a declaration as used when an element or attribute name in its scope resolves to the

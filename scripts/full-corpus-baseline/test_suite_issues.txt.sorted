@@ -775,6 +775,40 @@
       2 fbc-20301/fbc-20301-fail-01-02-sev2-l3v1.xml|not-validated|Informational
       1 fbc-20301/fbc-20301-fail-01-03-sev2-l3v1.xml|fbc-20301|Error
       1 fbc-20301/fbc-20301-fail-01-03-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-01-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-01-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-02-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-02-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-03-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-03-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-04-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-04-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-05-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-05-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-06-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-06-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-07-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-07-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-08-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-08-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-09-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-09-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-10-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-10-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-11-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-11-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-12-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-12-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-13-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-13-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-14-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-14-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-15-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-15-sev2-l3v1.xml|not-validated|Informational
+      2 fbc-20303/fbc-20303-fail-01-16-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-16-sev2-l3v1.xml|not-validated|Informational
+      1 fbc-20303/fbc-20303-fail-01-17-sev2-l3v1.xml|fbc-20303|Error
+      1 fbc-20303/fbc-20303-fail-01-17-sev2-l3v1.xml|not-validated|Informational
       1 fbc-20501/fbc-20501-fail-01-02-sev2-l3v1.xml|fbc-20503|Error
       1 fbc-20501/fbc-20501-fail-01-02-sev2-l3v1.xml|not-validated|Informational
       1 fbc-20503/fbc-20503-fail-01-04-sev2-l3v1.xml|fbc-20503|Error
