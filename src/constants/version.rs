@@ -52,6 +52,16 @@ use crate::xml::XmlElement;
 /// delta rows, never a new code path.
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Ord)]
 pub(crate) enum LevelVersion {
+    /// SBML Level 2 Version 1.
+    L2V1,
+    /// SBML Level 2 Version 2.
+    L2V2,
+    /// SBML Level 2 Version 3.
+    L2V3,
+    /// SBML Level 2 Version 4.
+    L2V4,
+    /// SBML Level 2 Version 5.
+    L2V5,
     /// SBML Level 3 Version 1.
     L3V1,
     /// SBML Level 3 Version 2, the version the base tables are written for.
@@ -60,11 +70,24 @@ pub(crate) enum LevelVersion {
 
 impl LevelVersion {
     /// Every pair this crate models, in ascending order.
-    pub(crate) const ALL: &'static [LevelVersion] = &[LevelVersion::L3V1, LevelVersion::L3V2];
+    pub(crate) const ALL: &'static [LevelVersion] = &[
+        LevelVersion::L2V1,
+        LevelVersion::L2V2,
+        LevelVersion::L2V3,
+        LevelVersion::L2V4,
+        LevelVersion::L2V5,
+        LevelVersion::L3V1,
+        LevelVersion::L3V2,
+    ];
 
     /// The SBML level.
     pub(crate) const fn level(self) -> u32 {
         match self {
+            LevelVersion::L2V1
+            | LevelVersion::L2V2
+            | LevelVersion::L2V3
+            | LevelVersion::L2V4
+            | LevelVersion::L2V5 => 2,
             LevelVersion::L3V1 | LevelVersion::L3V2 => 3,
         }
     }
@@ -72,6 +95,11 @@ impl LevelVersion {
     /// The SBML version within the level.
     pub(crate) const fn version(self) -> u32 {
         match self {
+            LevelVersion::L2V1 => 1,
+            LevelVersion::L2V2 => 2,
+            LevelVersion::L2V3 => 3,
+            LevelVersion::L2V4 => 4,
+            LevelVersion::L2V5 => 5,
             LevelVersion::L3V1 => 1,
             LevelVersion::L3V2 => 2,
         }
@@ -80,6 +108,11 @@ impl LevelVersion {
     /// The pair for a `level`/`version` pair, or `None` when this crate does not model it.
     pub(crate) const fn from_pair(level: u32, version: u32) -> Option<LevelVersion> {
         match (level, version) {
+            (2, 1) => Some(LevelVersion::L2V1),
+            (2, 2) => Some(LevelVersion::L2V2),
+            (2, 3) => Some(LevelVersion::L2V3),
+            (2, 4) => Some(LevelVersion::L2V4),
+            (2, 5) => Some(LevelVersion::L2V5),
             (3, 1) => Some(LevelVersion::L3V1),
             (3, 2) => Some(LevelVersion::L3V2),
             _ => None,
@@ -291,9 +324,19 @@ mod tests {
             )),
             None
         );
+        // ... and a declared pair of a level the crate *does* model wins over the namespace, which
+        // is the attribute-over-namespace half of the rule (the pair (2, 1) is modelled, the
+        // namespace says Level 3 Version 2).
         assert_eq!(
             root_level_version(&root(
                 r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="2" version="1"/>"#
+            )),
+            Some(LevelVersion::L2V1)
+        );
+        // A pair the crate does not model resolves nothing.
+        assert_eq!(
+            root_level_version(&root(
+                r#"<sbml xmlns="http://www.sbml.org/sbml/level2/version2" level="2" version="6"/>"#
             )),
             None
         );

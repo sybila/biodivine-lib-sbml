@@ -1,5 +1,5 @@
 use crate::constants::namespaces::{qualified_name, Namespace, URL_SBML_CORE};
-use crate::xml::{XmlElement, XmlPropertyType};
+use crate::xml::{XmlElement, XmlProperty, XmlPropertyType};
 use crate::Sbml;
 use biodivine_lib_xml_dom::QualifiedName;
 use std::marker::PhantomData;
@@ -190,4 +190,35 @@ impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for RequiredSbmlProperty<'_,
 }
 
 impl<T: XmlPropertyType> crate::xml::OptionalXmlProperty<T> for OptionalSbmlProperty<'_, T> {}
-impl<T: XmlPropertyType> crate::xml::RequiredXmlProperty<T> for RequiredSbmlProperty<'_, T> {}
+impl<T: XmlPropertyType> crate::xml::RequiredXmlProperty<T> for RequiredSbmlProperty<'_, T> {
+    /// Reads the value, falling back to the *default* the document's version gives the attribute.
+    ///
+    /// The crate's typed views are shared between the levels, and the levels disagree about which
+    /// attributes are required: `species@constant` is required by Level 3 and optional with the
+    /// default `false` in Level 2. A read of a required property therefore cannot be a plain
+    /// "the attribute is missing" panic - that would make a *valid* Level 2 document unusable for
+    /// every caller that follows the documented read. When the document's level and version give
+    /// the attribute a default (`constants::deltas::ATTRIBUTE_DEFAULTS`, one entry per schema
+    /// declaration), the read answers with it; when they do not, the documented panic stands,
+    /// because then the attribute really is missing for the version the document declares.
+    fn get(&self) -> T {
+        if let Ok(Some(value)) = self.get_checked() {
+            return value;
+        }
+        let element = self.element().tag_name();
+        let name = self.simple_name();
+        let version = crate::constants::version::document_level_version_or_base(self.element());
+        if let Some(default) = crate::constants::deltas::attribute_default(&element, name, version)
+        {
+            if let Ok(Some(value)) = T::try_get(Some(default)) {
+                return value;
+            }
+        }
+        // The same messages the default implementation produces, so that a caller which does not
+        // read the specification's defaults sees exactly the diagnostics it saw before.
+        match self.get_checked() {
+            Err(error) => panic!("Invalid value for attribute `{}`: {}", name, error),
+            Ok(_) => panic!("Missing value for attribute `{}`.", name),
+        }
+    }
+}

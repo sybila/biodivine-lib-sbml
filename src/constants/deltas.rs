@@ -79,6 +79,42 @@ pub(crate) struct TypeDelta {
 
 /// The version group of a Level 3 Version 1-only delta, spelled once so the rows stay one line.
 const L3V1: &[LevelVersion] = &[LevelVersion::L3V1];
+const L2_V1_AND_V2: &[LevelVersion] = &[LevelVersion::L2V1, LevelVersion::L2V2];
+const L2_V1_TO_V3: &[LevelVersion] = &[LevelVersion::L2V1, LevelVersion::L2V2, LevelVersion::L2V3];
+const L2_V2_TO_V5: &[LevelVersion] = &[
+    LevelVersion::L2V2,
+    LevelVersion::L2V3,
+    LevelVersion::L2V4,
+    LevelVersion::L2V5,
+];
+/// Level 2 Version 1 alone.
+const L2_V1: &[LevelVersion] = &[LevelVersion::L2V1];
+/// Every modelled version of Level 2.
+const L2_ALL: &[LevelVersion] = &[
+    LevelVersion::L2V1,
+    LevelVersion::L2V2,
+    LevelVersion::L2V3,
+    LevelVersion::L2V4,
+    LevelVersion::L2V5,
+];
+/// Level 2 Version 4 and Version 5 (the versions that have `useValuesFromTriggerTime`).
+const L2_V4_AND_V5: &[LevelVersion] = &[LevelVersion::L2V4, LevelVersion::L2V5];
+const L2_DEFAULT_FALSE: &[AttributeDefault] = &[AttributeDefault {
+    versions: L2_ALL,
+    value: "false",
+}];
+const L2_DEFAULT_TRUE: &[AttributeDefault] = &[AttributeDefault {
+    versions: L2_ALL,
+    value: "true",
+}];
+const L2_DEFAULT_ONE: &[AttributeDefault] = &[AttributeDefault {
+    versions: L2_ALL,
+    value: "1",
+}];
+const L2_DEFAULT_ZERO: &[AttributeDefault] = &[AttributeDefault {
+    versions: L2_ALL,
+    value: "0",
+}];
 
 /// The elements whose Level 3 Version 1 text lists only `metaid` and `sboTerm` as attributes.
 ///
@@ -160,7 +196,11 @@ const ID_AND_NAME: &[&str] = &["id", "name"];
 ///  * the elements whose Version 1 text lists only `metaid` and `sboTerm` (the rule ids in
 ///    the table below), which lose `id` and `name`.
 pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
-    "reaction" => &[NameDelta { versions: L3V1, added: &["fast"], removed: &[] }],
+    "reaction" => &[NameDelta { versions: L3V1, added: &["fast"], removed: &[] },
+        // Level 2: a `Reaction` has `fast` (optional, default `false`) and no `compartment`
+        // (added by Level 3 Version 1). `sbml-level-2/version-4/schema/sbml.xsd`, Reaction.
+        NameDelta { versions: L2_ALL, added: &["fast"], removed: &["compartment"] },
+    ],
     "sbml" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfFunctionDefinitions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfUnitDefinitions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
@@ -173,7 +213,10 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
     "listOfReactions" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfEvents" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfUnits" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
-    "unit" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
+    "unit" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
+        // Level 2: a `Unit` has no `id` and no `name`.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["id", "name"] },
+    ],
     "initialAssignment" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "assignmentRule" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "rateRule" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
@@ -186,9 +229,32 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
     "listOfModifiers" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "eventAssignment" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "listOfEventAssignments" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
-    "trigger" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
+    "trigger" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME },
+        // Level 2 Versions 1-3: a `Trigger` has no attributes at all (`persistent` and
+        // `initialValue` were added in Version 4).
+        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["initialValue", "persistent"] },
+    ],
     "delay" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
     "priority" => &[NameDelta { versions: L3V1, added: &[], removed: ID_AND_NAME }],
+    "species" => &[
+        // Level 2: `charge` is declared optional in every version of the level (deprecated in
+        // Version 2), `speciesType` exists from Version 2, `spatialSizeUnits` in Versions 1-2.
+        NameDelta { versions: L2_ALL, added: &["charge"], removed: &[] },
+        NameDelta { versions: L2_V2_TO_V5, added: &["speciesType"], removed: &[] },
+        NameDelta { versions: L2_V1_AND_V2, added: &["spatialSizeUnits"], removed: &[] },
+    ],
+    "speciesReference" => &[
+        // Level 2: no `constant` attribute in any of the five schemas (removed, not defaulted),
+        // and no `id` in Version 1.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["constant"] },
+        NameDelta { versions: L2_V1, added: &[], removed: &["id"] },
+    ],
+    "event" => &[
+        // Level 2: `timeUnits` is optional in every version; `useValuesFromTriggerTime` exists
+        // from Version 4 only.
+        NameDelta { versions: L2_ALL, added: &["timeUnits"], removed: &[] },
+        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["useValuesFromTriggerTime"] },
+    ],
 };
 
 /// The per-element deltas of the required-attribute table.
@@ -202,7 +268,40 @@ pub(crate) static ALLOWED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
 /// (Version 1 marks only optional attributes, so `id: SId` without a marker means *required*, and
 /// `components.tex` of Version 1 says "`Compartment` has one required attribute, `id`").
 pub(crate) static REQUIRED_ATTRIBUTE_DELTAS: Map<&str, &[NameDelta]> = phf_map! {
-    "reaction" => &[NameDelta { versions: L3V1, added: &["fast"], removed: &[] }],
+    "reaction" => &[NameDelta { versions: L3V1, added: &["fast"], removed: &[] },
+        // Level 2: `reversible` is optional with the default `true`.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["reversible"] },
+    ],
+    "species" => &[
+        // Level 2: `hasOnlySubstanceUnits`, `boundaryCondition` and `constant` are optional with
+        // the default `false`; `compartment` is required from Version 2 only.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["hasOnlySubstanceUnits", "boundaryCondition", "constant"] },
+        NameDelta { versions: L2_V1, added: &[], removed: &["compartment"] },
+    ],
+    "compartment" => &[
+        // Level 2: `constant` is optional with the default `true`.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["constant"] },
+    ],
+    "parameter" => &[
+        // Level 2: `constant` is optional with the default `true`.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["constant"] },
+    ],
+    "speciesReference" => &[
+        // Level 2: no `constant` attribute (see the allowed-attribute row).
+        NameDelta { versions: L2_ALL, added: &[], removed: &["constant"] },
+    ],
+    "event" => &[
+        // Level 2 Versions 1-3: `useValuesFromTriggerTime` does not exist.
+        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["useValuesFromTriggerTime"] },
+    ],
+    "unit" => &[
+        // Level 2: `exponent`, `scale` and `multiplier` are optional with the defaults 1, 0, 1.
+        NameDelta { versions: L2_ALL, added: &[], removed: &["exponent", "scale", "multiplier"] },
+    ],
+    "trigger" => &[
+        // Level 2 Versions 1-3: a `Trigger` has no attributes.
+        NameDelta { versions: L2_V1_TO_V3, added: &[], removed: &["initialValue", "persistent"] },
+    ],
 };
 
 /// The per-element deltas of the attribute-type table.
@@ -223,7 +322,74 @@ pub(crate) static ATTRIBUTE_TYPE_DELTAS: Map<&str, &[TypeDelta]> = phf_map! {
 /// unit that landed this module, with their ids (`20201`, `20203`, `20306`, `20804`, `20907`,
 /// `21007`, `21101`, `21103`, `21123`, `21130`, `21201`, `21203`, `21209`, `21210`, `21213`,
 /// `21231`).
-pub(crate) static ALLOWED_CHILD_DELTAS: Map<&str, &[NameDelta]> = phf_map! {};
+pub(crate) static ALLOWED_CHILD_DELTAS: Map<&str, &[NameDelta]> = phf_map! {    "kineticLaw" => &[
+        // Level 2 calls the list of a `KineticLaw` `listOfParameters`; Level 3 renamed it.
+        NameDelta { versions: L2_ALL, added: &["listOfParameters"], removed: &["listOfLocalParameters"] },
+    ],
+    "model" => &[
+        // Level 2 Version 2 added the species and compartment types.
+        NameDelta { versions: L2_V2_TO_V5, added: &["listOfSpeciesTypes", "listOfCompartmentTypes"], removed: &[] },
+    ],
+    "speciesReference" => &[
+        // Level 2 gives a species reference an optional `stoichiometryMath` child.
+        NameDelta { versions: L2_ALL, added: &["stoichiometryMath"], removed: &[] },
+    ],
+};
+
+/// A value a version gives to an attribute the version makes optional.
+///
+/// This is the third case of the Level 2 classification, and the one the typed reads need: the
+/// attribute is *absent* from the document, but the specification says what its value is
+/// (`species@constant` is `false`, `compartment@constant` is `true`, `unit@exponent` is `1`, ...),
+/// so a read that would otherwise be a missing value answers with the default instead. The table is
+/// data with a version predicate, exactly like the name deltas, and the schema line of each entry is
+/// in the comment above it.
+pub(crate) struct AttributeDefault {
+    /// The versions the default applies to.
+    pub versions: &'static [LevelVersion],
+    /// The value, written the way the document would write it.
+    pub value: &'static str,
+}
+
+/// The defaults the modelled versions give to the attributes they make optional.
+///
+/// Level 2 is the level that needs this: its `species`, `compartment`, `parameter`,
+/// `speciesReference`, `reaction`, `unit` and `event` attributes are optional with a default where
+/// Level 3 requires them, and the crate's typed reads are shared between the two. Every entry cites
+/// the schema declaration it comes from (`sbml-level-2/version-N/schema/sbml.xsd`); an attribute a
+/// version does not have at all is *not* here - it is removed from the tables instead, because
+/// defaulting a value a document cannot carry would make a rule fire on a document that cannot
+/// violate it.
+pub(crate) static ATTRIBUTE_DEFAULTS: Map<&str, &[AttributeDefault]> = phf_map! {
+    // <xsd:attribute name="hasOnlySubstanceUnits" type="boolean" use="optional" default="false"/>
+    "species@hasOnlySubstanceUnits" => L2_DEFAULT_FALSE,
+    "species@boundaryCondition" => L2_DEFAULT_FALSE,
+    "species@constant" => L2_DEFAULT_FALSE,
+    "compartment@constant" => L2_DEFAULT_TRUE,
+    "parameter@constant" => L2_DEFAULT_TRUE,
+    "reaction@reversible" => L2_DEFAULT_TRUE,
+    "unit@exponent" => L2_DEFAULT_ONE,
+    "unit@scale" => L2_DEFAULT_ZERO,
+    "unit@multiplier" => L2_DEFAULT_ONE,
+    // The `stoichiometry` of a `SpeciesReference` is optional with the default 1 in every Level 2
+    // version, and `useValuesFromTriggerTime` exists from Level 2 Version 4 on with the default
+    // `true`.
+    "speciesReference@stoichiometry" => L2_DEFAULT_ONE,
+    "event@useValuesFromTriggerTime" => &[AttributeDefault { versions: L2_V4_AND_V5, value: "true" }],
+};
+
+/// The default of an attribute, when the given version gives it one.
+pub(crate) fn attribute_default(
+    element: &str,
+    attribute: &str,
+    version: LevelVersion,
+) -> Option<&'static str> {
+    let key = format!("{element}@{attribute}");
+    let rows = ATTRIBUTE_DEFAULTS.get(key.as_str())?;
+    rows.iter()
+        .find(|it| it.versions.contains(&version))
+        .map(|it| it.value)
+}
 
 /// The per-element deltas of the required-children table.
 ///

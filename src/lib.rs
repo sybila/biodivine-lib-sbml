@@ -568,7 +568,7 @@ impl Sbml {
     ///
     /// // A document of a published level this crate does not model resolves no model, and the
     /// // `unmodelled-level` lint says so instead of reporting an empty result.
-    /// let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4"><model/></sbml>"#;
+    /// let source = r#"<sbml xmlns="http://www.sbml.org/sbml/level1" level="1" version="2"><model/></sbml>"#;
     /// let document = Sbml::read_str(source)?;
     /// assert!(document.model().get().is_none());
     /// let rules: Vec<String> = document.validate()?.into_iter().map(|it| it.rule().to_string()).collect();
@@ -1472,11 +1472,11 @@ mod tests {
         const ROOTS: &[(&str, &str, &str, bool)] = &[
             ("http://www.sbml.org/sbml/level1", "1", "1", false),
             ("http://www.sbml.org/sbml/level1", "1", "2", false),
-            ("http://www.sbml.org/sbml/level2", "2", "1", false),
-            ("http://www.sbml.org/sbml/level2/version2", "2", "2", false),
-            ("http://www.sbml.org/sbml/level2/version3", "2", "3", false),
-            ("http://www.sbml.org/sbml/level2/version4", "2", "4", false),
-            ("http://www.sbml.org/sbml/level2/version5", "2", "5", false),
+            ("http://www.sbml.org/sbml/level2", "2", "1", true),
+            ("http://www.sbml.org/sbml/level2/version2", "2", "2", true),
+            ("http://www.sbml.org/sbml/level2/version3", "2", "3", true),
+            ("http://www.sbml.org/sbml/level2/version4", "2", "4", true),
+            ("http://www.sbml.org/sbml/level2/version5", "2", "5", true),
             (
                 "http://www.sbml.org/sbml/level3/version1/core",
                 "3",
