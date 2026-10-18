@@ -282,6 +282,12 @@ pub enum SbmlError {
 /// A [`Result`] whose error is an [`SbmlError`].
 pub type SbmlResult<T> = Result<T, SbmlError>;
 
+/// The version of this crate, as its `Cargo.toml` declares it.
+///
+/// It is exposed so that a consumer which reports it (the Python bindings report it as
+/// `biodivine.sbml.__version__`) reads the number from the crate itself instead of repeating it.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Convert an error from the underlying XML layer into an [`SbmlError`].
 ///
 /// Cancellation is pulled out into its own variant so that a caller can distinguish "the
@@ -357,6 +363,15 @@ pub struct Sbml {
 
 /// The SBML-defined components of the [`Sbml`] container class.
 impl Sbml {
+    /// The `<sbml>` element this container describes.
+    ///
+    /// The container is a document plus the root element of that document; this accessor is the
+    /// escape hatch between the two, for a caller that needs the XML view of a document (its
+    /// children, its attributes, its text, or the document it belongs to).
+    pub fn root(&self) -> &XmlElement {
+        &self.sbml_root
+    }
+
     /// The `model` child of the `<sbml>` container, if the document has one.
     pub fn model(&self) -> OptionalSbmlChild<'_, Model> {
         OptionalSbmlChild::new_object_model(&self.sbml_root, "model", NS_SBML_CORE)

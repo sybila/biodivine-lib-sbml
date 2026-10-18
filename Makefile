@@ -1,6 +1,6 @@
 # Convenience entry points for building and checking this repository. Everything here is also
 # runnable by hand; `make verify` runs every gate and prints each command with its exit code.
-.PHONY: help build test lint docs examples rules coverage full-corpus verify
+.PHONY: help build test lint docs bindings examples rules coverage full-corpus verify
 
 help:
 	@echo "make build       build the crate (and the workspace member crates)"
@@ -10,6 +10,8 @@ help:
 	@echo "make test        run the Rust test suite"
 	@echo "make lint        cargo fmt --check and cargo clippy (warnings denied)"
 	@echo "make docs        check the generated coverage page and build rustdoc with warnings denied"
+	@echo "make bindings    regenerate (RUSTDOC=1) or check the bindings manifest of the Python"
+	@echo "                 wrappers in biodivine-lib-sbml-py-sys/BINDINGS.md"
 	@echo "make examples    run every example"
 	@echo "make coverage    regenerate the specification coverage matrix"
 	@echo "make full-corpus check the whole-corpus mismatch, issue and round-trip reports"
@@ -31,6 +33,15 @@ lint:
 docs:
 	python3 scripts/gen_rule_coverage_doc.py --check
 	RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+
+# The bindings manifest: one row per public item of the crate, generated from rustdoc's output by
+# the wrapper crate's script. The documentation is rebuilt first, because the manifest describes the
+# *public* surface and the rustdoc gate of this repository documents private items too: the two
+# builds share `target/doc`, so the build has to be part of this target. `make bindings WRITE=1`
+# regenerates the file; without it, the target only checks that the committed copy is current.
+bindings:
+	cargo doc --no-deps
+	python3 biodivine-lib-sbml-py-sys/scripts/public_surface.py $(if $(WRITE),,--check)
 
 # The three artifacts of this repository that are generated and must equal their committed copy: the
 # coverage matrix (from the specification sources), the documentation page rendered from it, and the

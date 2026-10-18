@@ -2,6 +2,33 @@
 name = "biodivine-lib-sbml"
 version = "0.1.0"
 edition = "2021"
+# Keep the published crate to the files the library needs: the Python wrappers, the development
+# tooling and the test-suite harness are part of the repository, not of the crate.
+exclude = [
+    ".github",
+    ".gitignore",
+    "Makefile",
+    "VALIDATION.md",
+    "biodivine-lib-sbml-py-sys",
+    "syntactic",
+    "scripts",
+    "sbml-test-suite",
+    "spec-coverage",
+    "test-inputs",
+    "docs",
+    "venv",
+    "test_suite_*.txt",
+    "validated-rules.txt",
+]
+
+# The Python wrappers of this library live in a crate of their own so that the library itself
+# contains no PyO3 code. The member is a development-only crate: it does not change this package's
+# dependencies or features, and the two helper crates of the repository (`sbml-macros`,
+# `sbml-test-suite`) become members with it, because a path dependency inside the workspace
+# directory cannot be excluded. `cargo test` in the repository root still tests this package alone;
+# `scripts/verify.sh` runs the members' gates separately.
+[workspace]
+members = ["biodivine-lib-sbml-py-sys"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

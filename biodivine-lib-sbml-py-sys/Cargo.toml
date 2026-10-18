@@ -1,0 +1,35 @@
+[package]
+name = "biodivine-lib-sbml-py-sys"
+version = "0.1.0"
+edition = "2021"
+description = "Thin PyO3 wrapper around biodivine-lib-sbml (the `_sys` layer)."
+license = "MIT"
+authors = ["Samuel Pastva <sam.pastva@gmail.com>", "Sybila Laboratory <sybila@fi.muni.cz>"]
+repository = "https://github.com/sybila/biodivine-lib-sbml"
+# The wrappers reach Python through the `biodivine-sys` extension (the `biodivine-py` repository),
+# which depends on this crate; it is never published, exactly like the `_sys` crate of
+# `biodivine-lib-xml-dom`. `BINDINGS.md` states what every public item of the library maps to.
+publish = false
+
+[lib]
+name = "biodivine_lib_sbml_sys"
+
+[dependencies]
+# The library this crate wraps.
+biodivine-lib-sbml = { path = ".." }
+# The XML layer keeps exactly one Python class per XML type, so the SBML wrappers return and accept
+# the XML DOM classes instead of declaring a second `Element`/`Document`. Inside the workspace both
+# sides are `path` dependencies on the checkouts next to each other (the way `biodivine-lib-sbml`
+# itself depends on `biodivine-lib-xml-dom`); after a release of both libraries this becomes the
+# same git dependency the `biodivine-sys` extension uses, pinned to a tag.
+biodivine-lib-xml-dom-py-sys = { path = "../../biodivine-lib-xml-dom/biodivine-lib-xml-dom-py-sys" }
+pyo3 = { version = "0.29", features = ["macros"] }
+# The same cancellation crate the library uses; the bindings register a trigger around a long
+# operation, exactly as the XML DOM wrappers do.
+cancel-this = { version = "0.6", default-features = false }
+
+[dev-dependencies]
+# `auto-initialize` is what lets `cargo test` start an interpreter in-process. The `extension-module`
+# and `abi3` features belong to the aggregate extension (`biodivine-py-sys`), not here: this crate is
+# a library of wrapper types, and its tests link libpython like any other Rust test binary.
+pyo3 = { version = "0.29", features = ["auto-initialize"] }

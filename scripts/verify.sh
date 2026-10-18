@@ -48,11 +48,28 @@ cargo --version
 "$PYTHON" -V
 
 # --- Rust: format, lint, test -----------------------------------------------------------------
+# The workspace has two kinds of members. The library, `sbml-macros` and `sbml-test-suite` are the
+# crates of the repository; `biodivine-lib-sbml-py-sys` is the thin PyO3 wrapper crate, whose tests
+# need an embedded Python interpreter (they link libpython, so `libpython3.x-dev` has to be
+# installed). The library's own gates below do not include the wrappers: `cargo test` in the
+# repository root tests the root package alone, which keeps the numbers this file reports the
+# library's own.
 run cargo fmt --all -- --check
 run cargo clippy --all-targets --all-features -- -D warnings
 run cargo clippy --all-targets --all-features --release -- -D warnings
 run cargo test --all-features
 run cargo test --all-features --release
+
+# --- Python wrappers --------------------------------------------------------------------------
+# `BINDINGS.md` states what every public item of the crate maps to; it is generated from rustdoc's
+# output, so it cannot lose an item silently, and this gate keeps it in step with the code. The
+# documentation is rebuilt from the public surface first: the rustdoc gate above documents private
+# items too, and both builds share `target/doc`.
+run cargo doc --no-deps
+run "$PYTHON" biodivine-lib-sbml-py-sys/scripts/public_surface.py --check
+run cargo test -p biodivine-lib-sbml-py-sys
+run cargo clippy -p biodivine-lib-sbml-py-sys --all-targets -- -D warnings
+run env RUSTDOCFLAGS="-D warnings" cargo doc -p biodivine-lib-sbml-py-sys --no-deps
 
 # --- examples ---------------------------------------------------------------------------------
 run cargo build --examples
