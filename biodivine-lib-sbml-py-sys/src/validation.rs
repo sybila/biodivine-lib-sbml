@@ -6,11 +6,13 @@
 //! the classes below) become Python classes with the variants as attributes, so a Python caller
 //! compares `issue.severity == SbmlIssueSeverity.ERROR` rather than a magic string.
 
+use biodivine_lib_sbml::xml::XmlElement;
 use biodivine_lib_sbml::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue, SbmlIssueSeverity};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
 use crate::element::PyElement;
+use crate::error::value_err;
 
 /// What an issue means: a rule of the SBML standard, or a diagnostic of this library.
 #[pyclass(
@@ -149,6 +151,55 @@ pub struct PySbmlIssue {
 
 #[pymethods]
 impl PySbmlIssue {
+    /// Creates an issue of a rule of the core rule set.
+    ///
+    /// The kind and the severity come from the rule's descriptor, so an issue cannot be reported
+    /// with a severity its rule does not have.
+    ///
+    /// Raises:
+    ///     ValueError: if the rule id is not in `RuleSet.CORE`.
+    #[staticmethod]
+    #[pyo3(signature = (rule, element, message))]
+    fn new(rule: &str, element: &PyElement, message: &str) -> PyResult<PySbmlIssue> {
+        let rules = RuleSet::CORE;
+        if rules.get(rule).is_none() {
+            return Err(value_err(format!(
+                "the core rule set has no rule `{rule}`; pass a rule set that describes it"
+            )));
+        }
+        // `XmlElement` is itself a wrapper, so the raw element can carry the issue.
+        let element = XmlElement::new(element.rust_element().clone());
+        Ok(PySbmlIssue {
+            inner: SbmlIssue::new_in(rules, rule, &element, message),
+        })
+    }
+
+    /// Creates an issue that `rules` attributes to `rule`.
+    ///
+    /// This is the constructor for rules that are not in the core rule set: an SBML extension
+    /// describes its rules with a `RuleSet` and reports through this method.
+    ///
+    /// Raises:
+    ///     ValueError: if `rules` does not describe `rule`.
+    #[staticmethod]
+    #[pyo3(signature = (rules, rule, element, message))]
+    fn new_in(
+        rules: &PyRuleSet,
+        rule: &str,
+        element: &PyElement,
+        message: &str,
+    ) -> PyResult<PySbmlIssue> {
+        if rules.inner.get(rule).is_none() {
+            return Err(value_err(format!(
+                "the rule set does not describe the rule `{rule}`"
+            )));
+        }
+        let element = XmlElement::new(element.rust_element().clone());
+        Ok(PySbmlIssue {
+            inner: SbmlIssue::new_in(&rules.inner, rule, &element, message),
+        })
+    }
+
     /// The id of the rule that found the issue.
     ///
     /// It is a rule id of the SBML specification for a specification rule, and a word such as
@@ -225,6 +276,26 @@ pub struct PyRuleDescriptor {
 
 #[pymethods]
 impl PyRuleDescriptor {
+    /// Creates a descriptor from its parts (the Rust constructor).
+    #[staticmethod]
+    #[pyo3(signature = (id, kind, severity, summary))]
+    fn new(
+        id: String,
+        kind: &PyRuleKind,
+        severity: &PyIssueSeverity,
+        summary: String,
+    ) -> PyResult<PyRuleDescriptor> {
+        // The Rust constructor takes `&'static str`s, and a Python string is not one: the descriptor
+        // therefore interns the two strings for the lifetime of the process. A rule descriptor is
+        // created once, so this is a bounded, deliberate leak of two short strings.
+        let id: &'static str = Box::leak(id.into_boxed_str());
+        let summary: &'static str = Box::leak(summary.into_boxed_str());
+        let _ = &kind.inner;
+        Ok(PyRuleDescriptor {
+            inner: RuleDescriptor::new(id, kind.inner, severity.inner, summary),
+        })
+    }
+
     /// The rule id.
     #[getter]
     fn id(&self) -> &'static str {
@@ -297,10 +368,26 @@ impl PyRuleSet {
 
     /// Builds a rule set from a list of descriptors.
     #[new]
-    fn new(rules: Vec<PyRuleDescriptor>) -> Self {
+    fn create(rules: Vec<PyRuleDescriptor>) -> Self {
         PyRuleSet {
             inner: RuleSet::new(rules.into_iter().map(|it| it.inner).collect()),
         }
+    }
+
+    /// Builds a rule set from a list of descriptors (the Rust constructor).
+    #[staticmethod]
+    fn new(rules: Vec<PyRuleDescriptor>) -> PyRuleSet {
+        PyRuleSet::create(rules)
+    }
+
+    /// The number of rules in this set (the Rust accessor; `len(rule_set)` is the same).
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    /// Whether this set describes no rules.
+    fn is_empty(&self) -> bool {
+        self.inner.is_empty()
     }
 
     /// The descriptor of `rule_id`, or `None` when this set does not describe it.

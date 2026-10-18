@@ -55,9 +55,15 @@
 mod document;
 mod element;
 mod error;
+mod extra;
+mod generated;
 mod interrupt;
+mod list;
+mod math;
 mod validation;
 
+#[cfg(test)]
+mod bindings_manifest;
 #[cfg(test)]
 mod tests;
 
@@ -66,6 +72,11 @@ use pyo3::types::PyList;
 
 pub use crate::document::PySbml;
 pub use crate::element::PyElement;
+pub use crate::list::{PySbmlClass, PySbmlList};
+pub use crate::math::{
+    PyMath, PyMathArity, PyMathConstant, PyMathNode, PyMathNodeKind, PyMathOperator, PyMathSymbol,
+    PySbmlUnits,
+};
 pub use crate::validation::{
     PyIssueSeverity, PyRuleDescriptor, PyRuleKind, PyRuleSet, PySbmlIssue,
 };
@@ -98,6 +109,11 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     error::register(module)?;
     validation::register(module)?;
     document::register(module)?;
+    generated::register(module)?;
+    math::register(module)?;
+    // The names of the MathML enumerations belong to the classes the line above adds.
+    generated::math_names::register(module)?;
+    extra::register(module)?;
 
     module.add("__all__", PyList::new(module.py(), all_names())?)?;
     Ok(())

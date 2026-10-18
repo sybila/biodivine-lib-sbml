@@ -240,6 +240,26 @@ def parse_members(doc_root: str, item: Item) -> list[Item]:
     impl_positions = [(m.start(), m) for m in IMPL_HEADER.finditer(html)]
     if not impl_positions:
         return []
+    # Variants and fields are not inside an impl block: rustdoc lists them on the item's own page,
+    # above the impls, so they are collected separately.
+    seen = set()
+    for member in MEMBER_HEADER.finditer(html):
+        if member.group(1) not in {"variant", "structfield"}:
+            continue
+        name = member.group(2)
+        if name in seen:
+            continue
+        seen.add(name)
+        segment = html[member.end() : member.end() + 1200]
+        header_match = CODE_HEADER.search(segment)
+        members.append(
+            Item(
+                path=f"{item.path}::{name}",
+                kind=MEMBER_SECTIONS[member.group(1)],
+                signature=strip_html(header_match.group(1)) if header_match else "",
+                owner=item.path.rpartition("::")[2],
+            )
+        )
     for index, (start, match) in enumerate(impl_positions):
         end = impl_positions[index + 1][0] if index + 1 < len(impl_positions) else len(html)
         header = strip_html(match.group(1))
@@ -378,7 +398,12 @@ class Rule:
 
 
 def is_accessor(item: Item) -> bool:
-    return item.kind == "method" and item.signature.startswith(("pub fn", "fn "))
+    """Whether the item is an inherent method of a wrapper type (not a trait-provided one)."""
+    return (
+        item.kind == "method"
+        and not item.impl_trait
+        and item.signature.startswith(("pub fn", "fn "))
+    )
 
 
 def returns(item: Item, *names: str) -> bool:
@@ -387,6 +412,29 @@ def returns(item: Item, *names: str) -> bool:
         if re.search(rf"->\s*{name}\b", signature) or re.search(rf"->\s*Option<{name}", signature):
             return True
     return False
+
+
+SUBTYPE_SUPERS: dict[str, str] = {}
+
+
+def read_inheritance(src_root: str) -> dict[str, str]:
+    """The `Sub -> Super` map of the crate, from its own inheritance declarations.
+
+    Rustdoc lists the blanket `XmlSubtype` implementation on *every* wrapper type page, so the
+    documentation alone cannot tell a subtype from a supertype: the source can, and it is the same
+    fact the Rust compiler checks.
+    """
+    found: dict[str, str] = {}
+    pattern = re.compile(
+        r"impl(?:<[^>]*>)?\s*Xml(?:Named)?Subtype<([A-Za-z_0-9:]+)>\s*for\s+([A-Za-z_0-9]+)"
+    )
+    for directory, _dirs, files in os.walk(src_root):
+        for name in files:
+            if not name.endswith(".rs"):
+                continue
+            for match in pattern.finditer(read_text(os.path.join(directory, name))):
+                found[match.group(2)] = match.group(1)
+    return found
 
 
 def owner_is(item: Item, *names: str) -> bool:
@@ -427,21 +475,33 @@ CHILD_MARKERS = (
 )
 
 
+def has_property_return(item: Item) -> bool:
+    return item.kind == "method" and returns(item, *PROPERTY_MARKERS)
+
+
+def has_child_return(item: Item) -> bool:
+    return item.kind == "method" and returns(item, *CHILD_MARKERS)
+
+
+def has_math_return(item: Item) -> bool:
+    return item.kind == "method" and returns(item, "MathNode", "Vec<MathNode>", "SbmlUnits")
+
+
 def rule_property(item: Item) -> bool:
-    return is_accessor(item) and returns(item, *PROPERTY_MARKERS)
+    return is_accessor(item) and has_property_return(item)
 
 
 def rule_child(item: Item) -> bool:
-    return is_accessor(item) and returns(item, *CHILD_MARKERS)
+    return is_accessor(item) and has_child_return(item)
 
 
 def rule_math_accessor(item: Item) -> bool:
-    return is_accessor(item) and returns(item, "MathNode", "Vec<MathNode>", "SbmlUnits")
+    return is_accessor(item) and has_math_return(item)
 
 
 def rule_constructor(item: Item) -> bool:
     """`new(..)`, `new_empty(..)`, `default(..)`: construct a wrapper for a document."""
-    if item.kind != "method":
+    if item.kind != "method" or item.impl_trait:
         return False
     name = item.path.rpartition("::")[2]
     return name in {"new", "new_empty", "default", "new_empty_named"} or name.endswith("_new")
@@ -449,7 +509,7 @@ def rule_constructor(item: Item) -> bool:
 
 def rule_lookup(item: Item) -> bool:
     """`for_child_element` / `search_in_parents`: find a wrapper from an element."""
-    if item.kind != "method":
+    if item.kind != "method" or item.impl_trait:
         return False
     name = item.path.rpartition("::")[2]
     return name in {"for_child_element", "search_in_parents", "find_by_sid", "find_by_meta_id",
@@ -461,7 +521,12 @@ def rule_sbase_accessor(item: Item) -> bool:
 
 
 def rule_xml_wrapper(item: Item) -> bool:
-    return item.impl_trait == "XmlWrapper" and item.kind == "method"
+    """The `element` accessor of a wrapper type (not of the wrapper *machinery* types)."""
+    return (
+        item.impl_trait == "XmlWrapper"
+        and item.kind == "method"
+        and not item.path.startswith(("xml::XmlElement::", "xml::XmlList::"))
+    )
 
 
 def rule_sbml_object(item: Item) -> bool:
@@ -493,7 +558,8 @@ RULES: list[Rule] = [
         "bound",
         "`Sbml` / `Sbml.<member>`",
         "The document handle: reading, writing, level/version, the model child and validation.",
-        lambda item: item.path == "Sbml" or item.path.startswith("Sbml::"),
+        lambda item: (item.path == "Sbml" or item.path.startswith("Sbml::"))
+        and not item.impl_trait,
     ),
     Rule(
         "wrapper-type",
@@ -534,6 +600,20 @@ RULES: list[Rule] = [
         rule_math_accessor,
     ),
     Rule(
+        "supertype-constructor",
+        "the omitted constructor of a supertype",
+        "not bound",
+        "- (the concrete classes have constructors)",
+        "`AbstractRule`, `AbstractTerm` and `Association` are supertypes whose first declared name "
+        "is that of a concrete sibling, so the crate deliberately omits their generated identity "
+        "constructor: a bare element of such a type is not what a caller wants. The concrete classes "
+        "(`AlgebraicRule`, `DefaultTerm`, `GeneProductRef`, ...) have their constructors, and the "
+        "declared form of the omitted one is still reachable through those.",
+        lambda item: item.path.rpartition("::")[0].rpartition("::")[2]
+        in {"AbstractRule", "AbstractTerm", "Association"}
+        and item.path.rpartition("::")[2] in {"new_empty", "new_empty_named", "default"},
+    ),
+    Rule(
         "constructor",
         "a constructor",
         "bound",
@@ -550,6 +630,19 @@ RULES: list[Rule] = [
         "Answers a question about an element or a document; the element argument is the xml-dom "
         "`Element` the binding already exposes.",
         rule_lookup,
+    ),
+    Rule(
+        "trait-accessor",
+        "an accessor provided by one of the crate's object traits",
+        "bound",
+        "<Owner>.<name>",
+        "A trait of this crate that provides an accessor to every implementor (`SBase`, "
+        "`SimpleSpeciesReference`, `Rule`): the binding generates the accessor for each class that "
+        "implements the trait, exactly as Rust provides it for each implementor.",
+        lambda item: item.impl_trait in {"SBase", "SimpleSpeciesReference", "Rule"}
+        and (
+            has_property_return(item) or has_child_return(item) or has_math_return(item)
+        ),
     ),
     Rule(
         "sbase",
@@ -569,6 +662,25 @@ RULES: list[Rule] = [
         "The element handle: Python exposes the xml-dom `Element` of the object, which is the "
         "escape hatch to the raw XML (attributes, children, text).",
         rule_xml_wrapper,
+    ),
+    Rule(
+        "associated-fn-pointer",
+        "`SbmlObject::CONSTRUCT`",
+        "not bound",
+        "-",
+        "An `Option<fn(Document) -> Self>`: a Rust function pointer has no Python value. The same "
+        "capability is `new_empty(document)` / `try_from_element(element)` on the class, both of "
+        "which are bound.",
+        lambda item: item.kind == "associatedconstant" and item.signature.startswith("const CONSTRUCT"),
+    ),
+    Rule(
+        "xml-default",
+        "the `XmlDefault` constructor",
+        "bound",
+        "<Owner>.default",
+        "The trait's `default(document)` is the same as the generated `new_empty(document)`; the "
+        "binding exposes it under the name the Rust API gives it.",
+        lambda item: item.impl_trait == "XmlDefault" and item.kind == "method",
     ),
     Rule(
         "sbml-object-identity",
@@ -632,6 +744,18 @@ RULES: list[Rule] = [
         "`<Sub>.expected_tag_name()`",
         "A cast between related object types where the target is the class itself, so Python can "
         "use it directly: it is the checked way to ask \"is this `SBase` really a `Species`?\"",
+        lambda item: item.impl_trait in {"XmlSubtype", "XmlNamedSubtype"}
+        and item.path.rpartition("::")[0].rpartition("::")[2] in SUBTYPE_SUPERS,
+    ),
+    Rule(
+        "blanket-listing",
+        "a member of the blanket `XmlSubtype` implementation on a supertype",
+        "not bound",
+        "- (the cast belongs to the subtypes)",
+        "Rustdoc lists the blanket `XmlSubtype` implementation on every wrapper type page, but it "
+        "applies only to the *subtypes*: this type is a supertype (`impl XmlSupertype for it`), so "
+        "the cast has no target. The same operations are bound on each subtype class (rule "
+        "`subtype-cast`), which is where Python calls them.",
         lambda item: item.impl_trait in {"XmlSubtype", "XmlNamedSubtype"},
     ),
     Rule(
@@ -901,6 +1025,17 @@ RULES: list[Rule] = [
         lambda item: item.path == "SbmlError" or item.path.startswith("SbmlError::"),
     ),
     Rule(
+        "error-variant",
+        "a variant of the extension error",
+        "not bound",
+        "- (the class exposes the questions, not the variants)",
+        "The variants carry data and are built by the library when a cast fails; a Python caller "
+        "asks `ExtensionError.package` and `ExtensionError.is_not_declared` instead of comparing "
+        "variants.",
+        lambda item: item.kind == "variant"
+        and owner_is(item, "ExtensionError"),
+    ),
+    Rule(
         "enum-variant",
         "a variant of a bound enumeration",
         "bound",
@@ -917,6 +1052,17 @@ RULES: list[Rule] = [
         "`MathNode` is one node of the formula tree, with its kind, its children and the "
         "construction helpers.",
         lambda item: item.path.split("::")[0] in {"MathNode", "Math", "MathNodeKind"},
+    ),
+    Rule(
+        "units-plumbing",
+        "a property-view plumbing member of `SbmlUnits`",
+        "not bound",
+        "- (`SbmlUnits` performs the same call)",
+        "How the Rust view resolves its attribute (`qualified_name`, `simple_name`, `get_raw`, "
+        "`set_raw`). The Python class offers `get`, `set`, `set_raw`, `get_raw`, `is_set`, `clear` "
+        "and `element` instead, so nothing is lost and no namespace machinery leaks into Python.",
+        lambda item: item.path.rpartition("::")[0].rpartition("::")[2] == "SbmlUnits"
+        and item.path.rpartition("::")[2] in {"qualified_name", "simple_name"},
     ),
     Rule(
         "sbml-units",
@@ -948,6 +1094,16 @@ RULES: list[Rule] = [
         "(`Sbml::validate` creates its own), so there is nothing for Python to hold: a Python user "
         "interrupts a long call with a signal instead, which the bindings wire to this mechanism.",
         lambda item: item.path == "CancellationCheck" or item.path.startswith("CancellationCheck::"),
+    ),
+    Rule(
+        "math-node-type",
+        "`MathNode`",
+        "bound",
+        "`MathNode`",
+        "The sum type over the node kinds of the subset: the typed formula layer the crate exists to "
+        "provide. Its members are bound by the rules below; the class itself is the handle Python "
+        "holds a formula node in.",
+        lambda item: item.path.rpartition("::")[2] == "MathNode",
     ),
     Rule(
         "structural-enum",
@@ -1018,6 +1174,11 @@ ERROR_CLASSES = {
 }
 
 
+def screaming_snake(name: str) -> str:
+    """`UnaryOrBinary` -> `UNARY_OR_BINARY`: the spelling a Python class uses for a value."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).upper()
+
+
 def owner_name(item: Item) -> str:
     """The type an item is a member of, as it appears in the Python class name."""
     return item.path.rpartition("::")[0].rpartition("::")[2]
@@ -1027,6 +1188,8 @@ def python_for(item: Item) -> str:
     """The concrete Python name (or names) an item is bound to."""
     name = item.path.rpartition("::")[2]
     rule = item.rule
+    if item.kind in {"struct", "enum", "trait", "type"} and rule != "foreign":
+        return name
     if rule == "foreign":
         return f"xml_dom.{name}"
     if rule == "version-const":
@@ -1036,7 +1199,8 @@ def python_for(item: Item) -> str:
     if rule in {
         "property", "math-accessor", "constructor", "lookup", "sbase", "wrapper-accessor",
         "bound-type-member", "extension-error", "sbml-units", "validation-issue", "rule-set",
-        "subtype-cast", "document", "math-node",
+        "subtype-cast", "document", "math-node", "trait-accessor", "xml-default",
+        "math-node-type",
     }:
         return f"{owner_name(item)}.{name}"
     if rule == "child":
@@ -1054,7 +1218,7 @@ def python_for(item: Item) -> str:
     if rule == "value-enum":
         return name
     if rule == "enum-variant":
-        return f"{owner_name(item)}.{name}"
+        return f"{owner_name(item)}.{screaming_snake(name)}"
     if rule == "error-enum":
         if item.kind == "variant":
             return ERROR_CLASSES.get(name, "SbmlError")
@@ -1064,21 +1228,91 @@ def python_for(item: Item) -> str:
     return "-"
 
 
+#: The types whose members the bindings expose. It is filled in by the first phase of `classify`, so
+#: a member of a type that is itself not bound (a view struct, the element newtype, a list container,
+#: a re-exported type) is classified by the rule for that type instead of by an accessor rule.
+BOUND_TYPES: set[str] = set()
+
+#: The rules whose type rows provide the Python class that holds the type's members. A member is
+#: bound only when its owner is one of these: a re-exported type, a view struct, the element newtype
+#: and the list container have no class of their own, so their members inherit their status.
+MEMBER_OWNER_RULES = {
+    "wrapper-type",
+    "document",
+    "math-node-type",
+    "value-enum",
+    "rule-set",
+    "validation-issue",
+    "extension-error",
+    "sbml-units",
+    "error-enum",
+}
+
+#: The item kinds that are a member of a type rather than a type of their own.
+MEMBER_KINDS = {
+    "method",
+    "tymethod",
+    "associatedconstant",
+    "associatedtype",
+    "structfield",
+    "variant",
+}
+
+
+def apply_rules(item: Item) -> None:
+    """Classifies one item with the first rule that matches it."""
+    for rule in RULES:
+        if rule.matches(item):
+            item.status = rule.status
+            item.python = rule.python
+            item.reason = rule.reason
+            item.rule = rule.ident
+            rule.matched.append(item.path)
+            return
+    item.status = ""
+    item.rule = ""
+
+
 def classify(items: list[Item]) -> None:
+    """Classifies the whole inventory, types before their members.
+
+    The two phases are what makes the table consistent: a member is only bound if the type it
+    belongs to is bound, so a rule cannot claim, say, `OptionalChild.new` while the view struct
+    itself is not exposed. A member of an unbound type inherits its owner's status and reason.
+    """
     _ALL_ITEMS.clear()
     _ALL_ITEMS.extend(items)
+    if not SUBTYPE_SUPERS:
+        SUBTYPE_SUPERS.update(read_inheritance(DEFAULT_SRC))
+    BOUND_TYPES.clear()
+    by_path = {item.path: item for item in items}
     for item in items:
-        for rule in RULES:
-            if rule.matches(item):
+        if item.kind in MEMBER_KINDS:
+            continue
+        apply_rules(item)
+        if item.status == "bound" and item.rule in MEMBER_OWNER_RULES:
+            BOUND_TYPES.add(item.path)
+    for item in items:
+        if item.kind not in MEMBER_KINDS:
+            continue
+        owner = by_path.get(item.path.rpartition("::")[0])
+        if owner is not None and owner.path not in BOUND_TYPES:
+            if owner.rule == "foreign":
+                # The type is another crate's, so its members are that crate's bindings; the row
+                # names the type the Python caller uses instead.
+                rule = next(rule for rule in RULES if rule.ident == "foreign-member")
                 item.status = rule.status
-                item.python = rule.python
                 item.reason = rule.reason
                 item.rule = rule.ident
+                item.python = "-"
                 rule.matched.append(item.path)
-                break
-        else:
-            item.status = ""
-            item.rule = ""
+                continue
+            item.status = owner.status
+            item.reason = owner.reason
+            item.rule = owner.rule
+            item.python = "-"
+            continue
+        apply_rules(item)
 
 
 # Items that the ruleset cannot know about get an explicit exception here: the row says the Python
@@ -1104,7 +1338,18 @@ EXCEPTIONS: dict[str, tuple[str, str, str]] = {
     "Sbml::to_xml_string": ("bound", "`Sbml.to_xml_string()`", "Serializes the document into a string."),
     "Sbml::level": ("bound", "`Sbml.level`", "The declared SBML level (property)."),
     "Sbml::version": ("bound", "`Sbml.version`", "The declared SBML version (property)."),
-    "Sbml::model": ("bound", "`Sbml.model` / `Sbml.create_model()`", "The optional `model` child."),
+    "Sbml::model": (
+        "bound",
+        "Sbml.model; Sbml.create_model",
+        "The optional `model` child: a getter and the get-or-create method of the flattened child "
+        "accessor.",
+    ),
+    "math::MathNode::xml_element": (
+        "bound",
+        "MathNode.element",
+        "The Rust accessor is `xml_element` (the `XmlWrapper` name), while every object class of "
+        "the bindings exposes the element as `element`; the class keeps that one spelling.",
+    ),
     "Sbml::try_for_child": ("bound", "`Sbml.try_for_child()`", "The document of a child object."),
     "Sbml::try_for_child_element": (
         "bound",
@@ -1219,7 +1464,7 @@ def emit(items: list[Item], rules: list[Rule], rustdoc_version: str, source_coun
     lines.append("| --- | --- | --- | --- | --- |")
     for item in sorted(items, key=lambda it: it.sort_key):
         status = item.status or "**unclassified**"
-        python = python_for(item)
+        python = python_for(item) if item.status == "bound" else "-"
         impl = (
             f" ({item.impl_trait})"
             if item.impl_trait and not item.impl_trait.startswith("@")
