@@ -149,7 +149,16 @@ impl Sbml {
     /// child of `<model>` in the Version 2 table. A document that declares another published version
     /// of the package is therefore not validated against this version's tables; its content is that
     /// version's business, and supporting a second version is a per-version delta in the tables
-    /// (measured in `notes/g42-report.md`, together with what happens when the deltas are missing).
+    /// (measured in `notes/g42-report.md` section 4.1, together with what happens when the deltas are
+    /// missing).
+    ///
+    /// This gate and the requirement gate of the type check (`20222` and its siblings) are a pair,
+    /// and that is worth knowing before relaxing either: the required *read* of a package attribute
+    /// (`Model::strict`, for example) panics when the attribute is absent, and what keeps it away from
+    /// such a document is the `not-validated` short-circuit that the requirement report triggers.
+    /// Relaxing this gate alone therefore turns a report into a panic (587 documents of the corpus),
+    /// and relaxing the tables alone reports every requirement of this version on every other version
+    /// of the package (147 unexpected reports of the corpus, 0 gained).
     ///
     /// # Example
     ///
