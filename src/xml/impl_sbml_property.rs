@@ -136,7 +136,20 @@ impl<T: XmlPropertyType> crate::xml::XmlProperty<T> for SbmlProperty<'_, T> {
             sbml_root.activate_package(self.property_namespace)?;
         }
 
-        let prefixed = qualified_name(self.property_namespace, self.name)?;
+        // A read follows the *document's* version of the package: the accessors are written against
+        // the URL this crate writes with, and a Version 1 or Version 3 FBC document keeps the same
+        // attribute in a different URL, so a lookup in the written URL would find nothing and
+        // report a present attribute as missing. A write keeps the crate's own URL (the property
+        // namespace), because a written document is this crate's output.
+        let resolved = if write_doc {
+            self.property_namespace
+        } else {
+            crate::constants::namespaces::document_package_namespace_for(
+                self.element.element(),
+                self.property_namespace,
+            )
+        };
+        let prefixed = qualified_name(resolved, self.name)?;
 
         if !self.is_the_same_package_as_element() {
             // In an element from a different package (or core), a package property must

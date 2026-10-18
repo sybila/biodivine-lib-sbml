@@ -24,7 +24,7 @@
 //! under a different prefix resolves to the same elements and attributes. Validation of the
 //! package declarations themselves is a separate concern and lives in the validation layer.
 
-use crate::constants::namespaces::{qualified_name, to_xml_namespace, Namespace};
+use crate::constants::namespaces::{package_urls_of, qualified_name, to_xml_namespace, Namespace};
 use crate::xml::XmlWrapper;
 use crate::Sbml;
 
@@ -65,14 +65,45 @@ impl Sbml {
     /// assert_eq!(document.declared_package_prefix(NS_FBC), Ok("fbc".to_string()));
     /// // `qual` is not declared, so it has no prefix in this document.
     /// assert!(document.declared_package_prefix(NS_QUAL).is_err());
+    ///
+    /// // An FBC Version 3 document declares the FBC package too, even though the crate writes the
+    /// // Version 2 URL: the accepted set of the package is what the lookup uses.
+    /// use biodivine_lib_sbml::FBC_NAMESPACE_URLS;
+    /// let fbc_v3 = FBC_NAMESPACE_URLS[2];
+    /// let document = Sbml::read_str(&format!(
+    ///     r#"<?xml version="1.0" encoding="UTF-8"?>
+    ///        <sbml xmlns="{URL_SBML_CORE}" xmlns:flux="{fbc_v3}" flux:required="false"
+    ///              level="3" version="2"/>"#
+    /// ))
+    /// .expect("The document is well formed.");
+    /// // The prefix the document uses is reported as it is written.
+    /// assert_eq!(document.declared_package_prefix(NS_FBC), Ok("flux".to_string()));
     /// ```
     pub fn declared_package_prefix(&self, package: Namespace) -> Result<String, String> {
         let element = self.xml_element().element();
-        let Some((prefix, _binding)) = element
-            .namespace_declarations()
-            .into_iter()
-            .find(|(_prefix, binding)| binding.as_ref().is_some_and(|it| it.uri() == package.1))
-        else {
+
+        // A package has one accepted URL per published *version* (`FBC_NAMESPACE_URLS`), and a
+        // document declares the version it uses: a Version 1 or Version 3 FBC document declares the
+        // FBC package as much as a Version 2 one does. The declaration is therefore looked up among
+        // the accepted URLs of the package, not against the one URL this crate writes with, and
+        // everything below follows the URL that *matched* - an accepted Version 1 document carries
+        // `fbc:required` in *its* namespace, so looking for the attribute in the Version 2 one
+        // would reject a document that declares the package correctly.
+        let accepted = package_urls_of(package.0);
+        let declaration =
+            element
+                .namespace_declarations()
+                .into_iter()
+                .find(|(_prefix, binding)| {
+                    let Some(binding) = binding.as_ref() else {
+                        return false;
+                    };
+                    match accepted {
+                        Some(urls) => urls.contains(&binding.uri()),
+                        None => binding.uri() == package.1,
+                    }
+                });
+        let Some((prefix, binding)) = declaration else {
             return Err(format!(
                 "Namespace for SBML package {} does not exist.",
                 package.1
@@ -80,15 +111,70 @@ impl Sbml {
         };
 
         let prefix = prefix.map(|it| it.as_str().to_string()).unwrap_or_default();
-        let required_name = qualified_name(package, "required")?;
-        if element.attribute(&required_name).is_none() {
+        let matched = binding
+            .as_ref()
+            .expect("The declaration was found through its binding.")
+            .uri()
+            .to_string();
+        // The `required` attribute is looked up by its *expanded* name, i.e. by the local name
+        // `required` in the namespace that matched, rather than through
+        // `qualified_name(package, "required")`: the document may spell the name with any prefix it
+        // likes (the example in the documentation uses `flux`), and it may bind a version of the
+        // package whose URL is not the one this crate writes with.
+        let has_required = element.attributes().keys().any(|name| {
+            name.local_name_str() == "required"
+                && name
+                    .namespace()
+                    .is_some_and(|namespace| namespace.uri() == matched)
+        });
+        if !has_required {
             return Err(format!(
-                "Namespace of SBML package {} does not have a `required` attribute on the `<sbml>` element.",
-                package.1
+                "Namespace of SBML package {matched} does not have a `required` attribute on the \
+                 `<sbml>` element."
             ));
         }
 
         Ok(prefix)
+    }
+
+    /// Whether this document declares `package` the way this crate validates a package: under the
+    /// package's conventional prefix and in the version whose tables this crate holds.
+    ///
+    /// [`declared_package_prefix`](Self::declared_package_prefix) answers the first half for *any*
+    /// published version of the package, because a Version 1 or Version 3 FBC document declares the
+    /// FBC package; this method answers the question the package *checks* need. Their tables, their
+    /// requirements and their content models are those of one version, and a package versions its
+    /// own attributes - `model@fbc:strict` is required by FBC Version 2, does not exist in
+    /// Version 1 and was removed in Version 3, and FBC Version 1's `listOfFluxBounds` is an unknown
+    /// child of `<model>` in the Version 2 table. A document that declares another published version
+    /// of the package is therefore not validated against this version's tables; its content is that
+    /// version's business, and supporting a second version is a per-version delta in the tables
+    /// (measured in `notes/g42-report.md`, together with what happens when the deltas are missing).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use biodivine_lib_sbml::{FBC_NAMESPACE_URLS, Sbml, NS_FBC, URL_SBML_CORE};
+    ///
+    /// let document = Sbml::read_str(&format!(
+    ///     r#"<?xml version="1.0" encoding="UTF-8"?>
+    ///        <sbml xmlns="{URL_SBML_CORE}" xmlns:fbc="{}" fbc:required="false"
+    ///              level="3" version="1"/>"#,
+    ///     FBC_NAMESPACE_URLS[2]
+    /// ))
+    /// .expect("The document is well formed.");
+    /// // The FBC package is declared ...
+    /// assert!(document.declared_package_prefix(NS_FBC).is_ok());
+    /// // ... in a version whose content model and requirements this crate does not hold.
+    /// assert!(!document.declares_modelled_package(NS_FBC));
+    /// ```
+    pub fn declares_modelled_package(&self, package: Namespace) -> bool {
+        self.declared_package_prefix(package) == Ok(package.0.to_string())
+            && crate::constants::namespaces::document_package_namespace_for(
+                self.xml_element().element(),
+                package,
+            )
+            .1 == package.1
     }
 
     /// Make sure that the given SBML package is declared on the `<sbml>` element of this document.

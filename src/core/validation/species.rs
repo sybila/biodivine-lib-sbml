@@ -48,7 +48,7 @@ impl CanTypeCheck for Species {
         check.tick()?;
         issues.extend(type_check_problems(self.xml_element()));
 
-        if self.sbml_root().declared_package_prefix(NS_FBC) == Ok("fbc".to_string()) {
+        if self.sbml_root().declares_modelled_package(NS_FBC) {
             if let Some(fbc_species) = FbcSpecies::try_cast_from_super(self) {
                 fbc_species.type_check(issues, check)?;
             }

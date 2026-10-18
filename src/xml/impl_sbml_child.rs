@@ -186,6 +186,17 @@ impl<'a, T: XmlWrapper> XmlChild<T> for SbmlChild<'a, T> {
             sbml_root.activate_package(self.element_namespace)?;
         }
 
-        qualified_name(self.element_namespace, self.name)
+        // A read follows the *document's* version of the package, exactly as the property layer
+        // does and for the same reason (see `impl_sbml_property.rs`); a write uses the crate's own
+        // URL.
+        let resolved = if write_doc {
+            self.element_namespace
+        } else {
+            crate::constants::namespaces::document_package_namespace_for(
+                self.parent.element(),
+                self.element_namespace,
+            )
+        };
+        qualified_name(resolved, self.name)
     }
 }

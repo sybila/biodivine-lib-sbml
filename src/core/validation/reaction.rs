@@ -39,7 +39,7 @@ impl SbmlValidable for Reaction {
         if let Some(kinetic_law) = self.kinetic_law().get() {
             kinetic_law.validate(issues, identifiers, meta_ids, check)?;
         }
-        if self.sbml_root().declared_package_prefix(NS_FBC) == Ok("fbc".to_string()) {
+        if self.sbml_root().declares_modelled_package(NS_FBC) {
             if let Some(fbc_reaction) = FbcReaction::try_cast_from_super(self) {
                 fbc_reaction.validate(issues, identifiers, meta_ids, check)?;
             }
@@ -69,7 +69,7 @@ impl CanTypeCheck for Reaction {
         if let Some(kinetic_law) = self.kinetic_law().get() {
             kinetic_law.type_check(issues, check)?;
         }
-        if self.sbml_root().declared_package_prefix(NS_FBC) == Ok("fbc".to_string()) {
+        if self.sbml_root().declares_modelled_package(NS_FBC) {
             if let Some(fbc_reaction) = FbcReaction::try_cast_from_super(self) {
                 fbc_reaction.type_check(issues, check)?;
             }

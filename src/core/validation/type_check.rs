@@ -1,7 +1,8 @@
 use crate::cancellation::CancellationCheck;
 use crate::constants::deltas;
 use crate::constants::namespaces::{
-    is_core_namespace, is_foreign_namespace, is_well_formed_sbml_namespace, namespace_of_prefix,
+    document_package_namespace_for, is_core_namespace, is_foreign_namespace,
+    is_well_formed_sbml_namespace, namespace_of_prefix, package_of_namespace_url, written_url_of,
     NS_SBML_CORE, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL,
 };
 use crate::constants::version::document_level_version_or_base;
@@ -93,6 +94,15 @@ pub(crate) fn internal_type_check(xml_element: &XmlElement, issues: &mut Vec<Sbm
                     .declared_package_prefix(namespace);
                 if package_declaration.is_err() {
                     // This package is not declared, hence it's required attributes are not relevant.
+                    continue;
+                }
+                // A package versions its own attributes: `model@fbc:strict` is required by FBC
+                // Version 2, does not exist in Version 1, and was removed in Version 3. The
+                // requirement below is the requirement of the version this crate models, so it is
+                // imposed only on a document that *uses* that version; a document that declares
+                // another published version of the same package is bound by that version's rules,
+                // which are not the tables used here.
+                if !uses_modelled_package_version(xml_element, namespace) {
                     continue;
                 }
             }
@@ -249,8 +259,41 @@ fn attribute_namespace(
         .and_then(|(_prefix, binding)| binding)
 }
 
-/// Splits an attribute or element name written as `prefix:local` into its prefix and local
-/// part. A name without a prefix is returned with an empty prefix.
+/// Whether `namespace` is the namespace of a package *version* whose content model the crate's
+/// tables describe.
+///
+/// The tables of this crate are the tables of one version of each package (the one its namespace
+/// constants name), and a package's versions differ in their attributes, their children and their
+/// requirements. A document that declares another published version of the same package therefore
+/// keeps its content out of the content-model checks: what the tables would report about it would be
+/// the *other* version's opinion.
+///
+/// See `validate_allowed_children` and the required-attribute loop for what each of the two
+/// directions costs; both are measured in `notes/g42-report.md`.
+fn is_package_of_the_modelled_version(url: &str) -> bool {
+    url == URL_PACKAGE_FBC || url == URL_PACKAGE_LAYOUT || url == URL_PACKAGE_QUAL
+}
+
+/// Whether the document that owns `element` uses the package version the crate models, i.e. binds
+/// one of the namespace URLs of that package whose name the tables use.
+///
+/// A document that declares no version of the package at all counts as using the modelled one: the
+/// callers have already established that the package is declared (through
+/// [`declared_package_prefix`](crate::Sbml::declared_package_prefix), which accepts every published
+/// version), and a package bound under a prefix other than the conventional one is still the
+/// package.
+fn uses_modelled_package_version(
+    xml_element: &XmlElement,
+    namespace: crate::xml::Namespace,
+) -> bool {
+    let Some(prefix) = package_of_namespace_url(namespace.1) else {
+        return true;
+    };
+    let Some(modelled) = written_url_of(prefix) else {
+        return true;
+    };
+    document_package_namespace_for(xml_element.element(), (prefix, modelled)).1 == modelled
+}
 fn separate_prefix_name(name: &str) -> (&str, &str) {
     match name.split_once(':') {
         Some((prefix, local)) => (prefix, local),
@@ -272,6 +315,12 @@ fn type_check_of_property<T: XmlPropertyType>(
         .declared_package_prefix(namespace);
     if package_declaration.is_err() {
         // This package is not declared, hence it's required attributes are not relevant.
+        return;
+    }
+    if !uses_modelled_package_version(xml_element, namespace) {
+        // The attribute's *type* is described by the version this crate models; a document that
+        // declares another published version is not checked against it (see the required-attribute
+        // loop for the measured reason).
         return;
     }
     let property = OptionalSbmlProperty::<T>::new(xml_element, name, namespace, namespace);
@@ -417,13 +466,18 @@ pub(crate) fn validate_allowed_children(xml_element: &XmlElement, issues: &mut V
             let rule_id = tag_to_allowed_child_rule_id(element_name.as_str()).unwrap_or("10102");
             issues.push(SbmlIssue::new(rule_id, xml_element, message));
         } else if is_core_namespace(child_namespace.as_str())
-            || child_namespace == URL_PACKAGE_FBC
-            || child_namespace == URL_PACKAGE_LAYOUT
+            || is_package_of_the_modelled_version(child_namespace.as_str())
         {
             // All other children are expected to be in the core namespace *of the document's own
             // level and version* - a Level 3 Version 1 document's children are in the Level 3
-            // Version 1 core namespace, not in the one this crate writes with - or in a package
-            // namespace the tables describe. Anything else is skipped.
+            // Version 1 core namespace, not in the one this crate writes with - or in the package
+            // namespace whose content model the tables describe. The second test is deliberately
+            // *not* `is_modelled_package_namespace`: the tables are the tables of the version this
+            // crate models (`FBC_NAMESPACE_URLS[1]`, layout and qual Version 1), and a document that
+            // declares another published version of the same package keeps its content there, so
+            // applying this version's content model to it would report the other version's legal
+            // elements as unknown (FBC Version 1's `listOfFluxBounds` is the measured example, 81
+            // events, and the coarse fix was a regression). Anything else is skipped.
             if !allowed_children.contains(&child_name.as_str()) {
                 let message = format!(
                     "An unknown child <{}> of the element <{}> found.",
@@ -516,7 +570,9 @@ pub(crate) fn validate_unique_children(xml_element: &XmlElement, issues: &mut Ve
             || child_namespace == URL_PACKAGE_QUAL
         {
             // Core children of *any* modelled level/version take part, not only the ones in the
-            // namespace this crate writes with, plus the MathML and package namespaces.
+            // namespace this crate writes with, plus the MathML namespace and the package
+            // namespaces whose content model the tables describe (see the comment in
+            // `validate_allowed_children` for why the modelled *version* is the test).
             let entry = counts.entry(child_name);
             let count = entry.or_insert(0usize);
             *count += 1;

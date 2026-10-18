@@ -82,6 +82,47 @@ pub(crate) fn validate_unused_namespaces(
     Ok(())
 }
 
+/// The namespace URIs an attribute *value* refers to, by resolving the prefixes it uses.
+///
+/// XML Schema gives the name of a type (`xsi:type`), of a substitution group and of a few other
+/// attributes a *qualified* name as their value, so the value of such an attribute mentions a
+/// namespace by prefix. The lint has to count that mention: in a Layout document,
+/// `<curveSegment xsi:type="layout:CubicBezier">` is the only place a `layout:` prefix can occur,
+/// because the attribute names of the element are unprefixed, and reporting the Layout declaration
+/// there would be a false positive.
+///
+/// The scan is deliberately conservative in the direction the module documents as the acceptable
+/// error: any token of the value that is shaped like `prefix:local` and whose prefix resolves
+/// through the bindings in scope counts, whatever the attribute is. A value that merely *looks* like
+/// a qualified name therefore only ever hides a dead declaration - never invents one - and a prefix
+/// that nothing declares resolves to nothing. The alternative (a fixed list of the known
+/// QName-valued attributes) would miss every attribute a package defines as a QName, which is
+/// exactly the case this lint is about.
+fn qualified_names_in(value: &str, declarations: &[(Option<String>, String)]) -> Vec<String> {
+    let mut uris = Vec::new();
+    // A value is a whitespace-separated list of tokens in XML Schema (a `QNameList`), and each
+    // token is a qualified name; splitting on the whitespace keeps a `local` part that happens to
+    // contain an underscore or a digit intact.
+    for token in value.split_whitespace() {
+        let Some((prefix, _local)) = token.split_once(':') else {
+            continue;
+        };
+        if prefix.is_empty() || _local.is_empty() {
+            continue;
+        }
+        // The nearest binding of the prefix is the one in scope at the element; a prefix declared
+        // twice in the same scope list is reported once per declaration and the first is the
+        // innermost, which is the order `namespaces_in_scope` documents.
+        if let Some((_prefix, uri)) = declarations
+            .iter()
+            .find(|(declared, _uri)| declared.as_deref() == Some(prefix))
+        {
+            uris.push(uri.clone());
+        }
+    }
+    uris
+}
+
 /// Reports the unused namespace declarations of `element` and returns the namespace URIs that
 /// `element` and its descendants use.
 ///
@@ -104,10 +145,26 @@ fn used_namespaces(
     if let Some(namespace) = raw.namespace() {
         used.insert(namespace.uri().to_string());
     }
-    for name in raw.attributes().keys() {
+    let declarations: Vec<(Option<String>, String)> = raw
+        .namespaces_in_scope()
+        .into_iter()
+        .filter_map(|(prefix, binding)| {
+            let binding = binding?;
+            Some((
+                prefix.map(|it| it.as_str().to_string()),
+                binding.uri().to_string(),
+            ))
+        })
+        .collect();
+    for (name, value) in raw.attributes() {
         if let Some(namespace) = name.namespace() {
             used.insert(namespace.uri().to_string());
         }
+        // An attribute *value* can name a namespace too: a QName-valued attribute such as
+        // `xsi:type="layout:CubicBezier"` refers to the namespace of the type it names, and that
+        // reference is what makes the declaration used. A prefix used that way is resolved through
+        // the bindings in scope at this element, which is where a QName is resolved.
+        used.extend(qualified_names_in(value.as_str(), &declarations));
     }
     for child in element.child_elements() {
         used.append(&mut used_namespaces(&child, issues, check)?);
@@ -169,6 +226,7 @@ mod tests {
     }
 
     const LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/layout/version1";
+    const XSI: &str = "http://www.w3.org/2001/XMLSchema-instance";
 
     #[test]
     fn declaration_used_by_an_element_name_is_not_reported() {
@@ -257,6 +315,65 @@ mod tests {
             "{}",
             issue.message()
         );
+    }
+
+    #[test]
+    fn declaration_used_only_by_a_qualified_name_in_an_attribute_value_is_not_reported() {
+        // `xsi:type` is a QName-valued attribute: its value names the namespace of the type, and
+        // that is the only place the declaration is used. The corpus writes its `xsi:type` values
+        // without a prefix, which is why it cannot exercise this case (measured: 1128 values, none
+        // prefixed); the case is pinned here instead.
+        let document = document(
+            &format!(r#"xmlns:my="{LAYOUT}" xmlns:xsi="{XSI}""#),
+            r#"<parameter id="p" xsi:type="my:CubicBezier"/>"#,
+        );
+
+        assert!(lint_issues(&document).is_empty());
+    }
+
+    #[test]
+    fn a_qualified_name_on_a_descendant_uses_the_declaration_of_its_ancestor() {
+        // The declaration is on `<model>`, the attribute that resolves through it is on a
+        // grandchild, and a QName is resolved against the bindings *in scope* at the element that
+        // carries it - which is exactly the direction the accumulate-up walk of this lint runs in.
+        let document = format!(
+            r#"<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+                 <model id="m" xmlns:my="{LAYOUT}" xmlns:xsi="{XSI}">
+                   <listOfParameters>
+                     <parameter id="p" xsi:type="my:Thing"/>
+                   </listOfParameters>
+                 </model></sbml>"#
+        );
+
+        assert!(lint_issues(&document).is_empty());
+    }
+
+    #[test]
+    fn a_qualified_name_whose_prefix_is_not_declared_uses_nothing() {
+        // `other` is not declared, so it resolves to no namespace and the dead declaration stays
+        // reported: the resolution cannot silence a report through a name it cannot resolve.
+        let document = document(
+            &format!(r#"xmlns:dead="{LAYOUT}" xmlns:xsi="{XSI}""#),
+            r#"<parameter id="p" xsi:type="other:CubicBezier"/>"#,
+        );
+
+        assert_eq!(lint_issues(&document).len(), 1);
+    }
+
+    #[test]
+    fn a_value_that_merely_looks_like_a_qualified_name_hides_a_dead_declaration() {
+        // The acceptable error of this lint, pinned so that flipping the direction is a decision
+        // rather than an accident: `dead:0` is not a QName (an SBO term is a CURIE, and this lint
+        // deliberately does not know which attributes are QName-valued), and counting it only ever
+        // *hides* a declaration that nothing uses. Reporting it, by contrast, would need a fixed
+        // list of the QName-valued attributes of every package, and a package's own QName-valued
+        // attribute - which is the case the lint exists for - would be missed by that list.
+        let document = document(
+            &format!(r#"xmlns:dead="{LAYOUT}""#),
+            r#"<parameter id="p" sboTerm="dead:0"/>"#,
+        );
+
+        assert!(lint_issues(&document).is_empty());
     }
 
     #[test]

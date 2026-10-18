@@ -21,8 +21,9 @@ counted in the direction it belongs to. The `k` of the distribution below is the
 document's whole mismatch set, both directions, so a rule that is only ever reported spuriously -
 `layout-20405`, say - has a `marginal` of 0 in a document whose `k` is 1.
 
-`marginal` counts every document a rule appears in, including documents whose *other* mismatches
-are on ids no specification defines: such a document can never become clean by in-scope work.
+`marginal` counts every document the rule is *missed* in, including documents whose *other*
+mismatches are on ids no specification defines: such a document can never become clean by in-scope
+work.
 The `marginal-in-scope` column counts only the documents whose entire mismatch set is on
 specification-defined ids, and the tool prints the measured inflation of the unrestricted column
 next to it, so a plan does not budget for documents that cannot move.
@@ -199,6 +200,7 @@ def main() -> None:
     strict_missing: collections.Counter = collections.Counter()
     strict_spurious: collections.Counter = collections.Counter()
     strict_half: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
+    strict_documents: dict[str, str] = {}
     marginal: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     marginal_in_scope: collections.Counter = collections.Counter()
     for document, entries in report.mismatches.items():
@@ -217,6 +219,9 @@ def main() -> None:
             else:
                 unexpected_events[rule] += 1
         size = len(entries)
+        if size == 1:
+            _kind, only = next(iter(entries))
+            strict_documents[document] = only
         for kind, rule in entries:
             if size == 1:
                 if kind == "Missed":
@@ -415,6 +420,28 @@ def main() -> None:
             f"{row['status']:>9}"
         )
 
+    if box:
+        print()
+        print("## The reachable yield: which package *version* each strict-unlock document binds")
+        print(
+            "# A rule can only clean a document whose content the walk reaches. The crate's package "
+            "tables and requirements are the tables of ONE version of each package (for `fbc`, "
+            "Version 2 - the URL `NS_FBC` names), and `Sbml::declares_modelled_package` is what the "
+            "typed package validation asks, so a document that binds another published version of "
+            "the same package is reached only by a check written to be version-independent. The "
+            "column counts the strict-unlock documents of each package by the namespace URL they "
+            "declare (a document that binds none is `none`); layout, qual, groups and comp declare "
+            "their only published version, so their rows are single-valued by construction."
+        )
+        versions = box_version_counts(corpus, box, strict_documents)
+        print(f"{'package':<12} {'version (URL suffix)':<28} {'documents':>10}")
+        for package in sorted(box):
+            rows = versions.get(package)
+            if not rows:
+                continue
+            for version, count in sorted(rows.items(), key=lambda item: -item[1]):
+                print(f"{package:<12} {version:<28} {count:>10}")
+
     print()
     print("## Hollow enables: an enabled rule the corpus never exercises")
     print(
@@ -489,6 +516,65 @@ def main() -> None:
             f"{row['rule']:<12} {' '.join(f'{cell:>4}' for cell in cells):<24} "
             f"{row['marginal']:>9} {row['marginal_in_scope']:>11}"
         )
+
+
+#: The namespace URL of a package version, as the specification documents name it. The keys are
+#: the conventional prefixes of the box, so the table is data and a new version is a data change.
+PACKAGE_VERSION_URLS: dict[str, tuple[str, ...]] = {
+    "fbc": (
+        "http://www.sbml.org/sbml/level3/version1/fbc/version1",
+        "http://www.sbml.org/sbml/level3/version1/fbc/version2",
+        "http://www.sbml.org/sbml/level3/version1/fbc/version3",
+    ),
+    "layout": ("http://www.sbml.org/sbml/level3/version1/layout/version1",),
+    "qual": ("http://www.sbml.org/sbml/level3/version1/qual/version1",),
+    "groups": ("http://www.sbml.org/sbml/level3/version1/groups/version1",),
+    "req": ("http://www.sbml.org/sbml/level3/version1/req/version1",),
+    "comp": (
+        "http://www.sbml.org/sbml/level3/version1/comp/version1",
+        "http://www.sbml.org/sbml/level3/version2/comp/version2",
+    ),
+}
+
+
+def box_version_counts(
+    corpus: str, box, strict_documents: dict[str, str]
+) -> dict[str, collections.Counter]:
+    """Count the strict-unlock documents of each box package by the package URL they declare.
+
+    `strict_documents` maps a document to the rule that is its *only* mismatch (the strict unlock of
+    the ranking above). The version a document binds is read from its own text: binding one of the
+    URLs above on the document's root is the whole test, and a document that binds none is counted as
+    `none`. A document that binds more than one version of the same package (the corpus has none) is
+    counted once per version it binds.
+    """
+    counts: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
+    for document, rule in strict_documents.items():
+        if not has_spec_provenance(rule):
+            # An id no specification defines belongs to no package's work, whatever its prefix: the
+            # `fbc-204xx` family is the FBC spelling of a *core* rule and no FBC rule at all.
+            continue
+        key = scope_of(rule)
+        package = next(
+            (part for part in key.split(":", 1)[-1].split("+") if part in box), None
+        )
+        if package is None:
+            continue
+        try:
+            text = open(
+                os.path.join(corpus, document), encoding="utf-8", errors="replace"
+            ).read()
+        except OSError:
+            continue
+        urls = PACKAGE_VERSION_URLS[package]
+        bound = [url for url in urls if f'"{url}"' in text]
+        if not bound:
+            counts[package]["none"] += 1
+            continue
+        for url in bound:
+            segments = url.split("/")
+            counts[package][f"{segments[-2]}/{segments[-1]}"] += 1
+    return counts
 
 
 def half_of(document: str) -> str:

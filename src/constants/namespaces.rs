@@ -92,6 +92,48 @@ pub(crate) fn document_core_namespace_for(document: &biodivine_lib_xml_dom::Docu
         .unwrap_or(NS_SBML_CORE)
 }
 
+/// The namespace of the *package* `namespace` names, as **this document** binds it.
+///
+/// A package has one accepted URL per published version ([`FBC_NAMESPACE_URLS`]), so a document
+/// that uses FBC Version 1 has its FBC attributes and elements in the Version 1 URL while the
+/// crate's accessors are written against the Version 2 one. A read has to follow the document - a
+/// lookup by expanded name compares namespace *URLs*, so reading the attribute in the URL this
+/// crate writes with would find nothing and report a present attribute as missing.
+///
+/// The resolution is the package analogue of [`document_core_namespace_for`]: it looks at the
+/// namespace bindings that are in scope *at `element`* (a package may be declared on the root or,
+/// less commonly, on a nested element), keeps the ones whose URL is an accepted URL of that
+/// package, and prefers the binding under the package's conventional prefix. The returned namespace
+/// carries the conventional prefix, which is what the crate writes with and what a read can ignore.
+///
+/// `namespace` that names no package the crate publishes a URL set for is returned unchanged, so a
+/// caller cannot lose a core, MathML or foreign namespace by routing it through this function.
+pub(crate) fn document_package_namespace_for(
+    element: &biodivine_lib_xml_dom::Element,
+    namespace: Namespace,
+) -> Namespace {
+    let Some(prefix) = package_of_namespace_url(namespace.1) else {
+        return namespace;
+    };
+    let Some(urls) = package_urls_of(prefix) else {
+        return namespace;
+    };
+    let mut fallback = None;
+    for (declared, binding) in element.namespaces_in_scope() {
+        let Some(binding) = binding else {
+            continue;
+        };
+        let Some(url) = urls.iter().copied().find(|it| *it == binding.uri()) else {
+            continue;
+        };
+        if declared.as_ref().map(|it| it.as_str()) == Some(prefix) {
+            return (prefix, url);
+        }
+        fallback.get_or_insert((prefix, url));
+    }
+    fallback.unwrap_or(namespace)
+}
+
 /// The level and the (optional) version a published core namespace encodes.
 ///
 /// The version is optional because two published namespaces cover more than one version: Level 1
@@ -132,6 +174,138 @@ pub const URL_PACKAGE_LAYOUT: &str = "http://www.sbml.org/sbml/level3/version1/l
 pub const URL_PACKAGE_QUAL: &str = "http://www.sbml.org/sbml/level3/version1/qual/version1";
 
 pub const URL_PACKAGE_FBC: &str = "http://www.sbml.org/sbml/level3/version1/fbc/version2";
+
+/// The accepted namespace URL set of the **FBC** package, one entry per published version.
+///
+/// A package is identified by the URL of its namespace, and a package *version* has its own URL: a
+/// document that uses FBC Version 1 or Version 3 content is as much an FBC document as one that
+/// uses Version 2, and the crate therefore has to accept all three URLs wherever it asks "is this
+/// the FBC package?".
+///
+/// Every URL is taken from the released specification document of that version in the SBML
+/// specification repository. The parenthesis names the file the URL was read from and the number of
+/// occurrences it has there:
+///
+/// | version | URL | source |
+/// | --- | --- | --- |
+/// | 1 | `…/level3/version1/fbc/version1` | `sbml-level-3/version-1/fbc/spec/sbml-fbc-version-1-release-1.pdf` (5) |
+/// | 2 | `…/level3/version1/fbc/version2` | `sbml-level-3/version-1/fbc/spec/sbml-fbc-version-2-release-1.pdf` (6) |
+/// | 3 | `…/level3/version1/fbc/version3` | `sbml-level-3/version-1/fbc/spec/sbml-fbc-version-3-release-1.pdf` (5) |
+///
+/// The two older versions are also the `ns` of the RelaxNG schemas of the package
+/// (`RelaxNG/sbml-fbc/sbml-fbc.rng` and `RelaxNG/sbml-fbc-v2/sbml-fbc-v2.rng`, both on line 13).
+///
+/// Of the SBML syntactic test corpus, 65 documents bind Version 1, 120 bind Version 2 and 78 bind
+/// Version 3 (measured over the two Level 3 halves the harness compares, a document counted once).
+/// [`URL_PACKAGE_FBC`] is the version this crate *writes* with, i.e. the entry of
+/// [`NS_FBC`].
+pub const FBC_NAMESPACE_URLS: &[&str] = &[
+    "http://www.sbml.org/sbml/level3/version1/fbc/version1",
+    URL_PACKAGE_FBC,
+    "http://www.sbml.org/sbml/level3/version1/fbc/version3",
+];
+
+/// The accepted namespace URL set of the **Layout** package.
+///
+/// Layout Version 1 is the only published version; its URL is the `ns` of every rule of the
+/// package's validation appendix (`sbml-level-3/version-1/layout/apdx-validation.tex`) and of the
+/// released specification document
+/// (`sbml-level-3/version-1/layout/sbml-layout-version-1-release-1.pdf`, 16 occurrences). 247
+/// documents of the compared corpus halves bind it.
+pub const LAYOUT_NAMESPACE_URLS: &[&str] = &[URL_PACKAGE_LAYOUT];
+
+/// The accepted namespace URL set of the **Qualitative Models** package.
+///
+/// Qual Version 1 is the only published version; its URL is the `ns` of every rule of the
+/// package's validation appendix (`sbml-level-3/version-1/qual/spec/apdx-validation.tex`) and of its
+/// released specification document (`sbml-level-3/version-1/qual/spec/qual-spec.pdf`, 7
+/// occurrences). 91 documents of the compared corpus halves bind it.
+pub const QUAL_NAMESPACE_URLS: &[&str] = &[URL_PACKAGE_QUAL];
+
+/// The accepted namespace URL set of **Whole Model Hierarchical Composition** (`comp`), one entry
+/// per published version.
+///
+/// The crate does not model the content of this package yet, so these URLs are published as part of
+/// the extension surface and for the unit that implements it:
+///
+/// | version | URL | source |
+/// | --- | --- | --- |
+/// | 1 | `…/level3/version1/comp/version1` | `sbml-level-3/version-1/comp/spec/sbml-l3v1-comp-v1r3.pdf` (9) |
+/// | 2 | `…/level3/version2/comp/version2` | `sbml-level-3/version-2/comp/spec/sbml-l3v2-comp-v2.pdf` (9) |
+///
+/// The Version 2 URL is the one place where the naming convention misleads: the package version is
+/// `2` and the core level/version is `level3/version2`, so the URL ends in `comp/version2`, not in
+/// `comp/version1` (the released PDF states it, which is what settles it). 246 documents of the
+/// compared corpus halves bind Version 1; **no document binds Version 2**, so that entry is pinned
+/// by its own test rather than by the corpus.
+pub const COMP_NAMESPACE_URLS: &[&str] = &[
+    "http://www.sbml.org/sbml/level3/version1/comp/version1",
+    "http://www.sbml.org/sbml/level3/version2/comp/version2",
+];
+
+/// The accepted namespace URLs of the package whose conventional prefix is `prefix`.
+///
+/// The lookup is the *version-aware* one, and it is deliberately separate from the crate-internal
+/// `namespace_of_prefix`: that function answers "which namespace does this prefix denote when the
+/// crate writes a name", which has exactly one answer per prefix, while this one answers "which
+/// URLs does this package accept when the crate reads a document", which has one answer per
+/// published version.
+///
+/// Returns `None` for a prefix the crate does not publish a URL set for. The callers then treat the
+/// single URL of the namespace they were given as the whole set, which is what they did before the
+/// sets existed.
+pub fn package_urls_of(prefix: &str) -> Option<&'static [&'static str]> {
+    match prefix {
+        "fbc" => Some(FBC_NAMESPACE_URLS),
+        "layout" => Some(LAYOUT_NAMESPACE_URLS),
+        "qual" => Some(QUAL_NAMESPACE_URLS),
+        "comp" => Some(COMP_NAMESPACE_URLS),
+        _ => None,
+    }
+}
+
+/// The package whose accepted URL set contains `url`, as its conventional prefix.
+///
+/// This is the read-side counterpart of the crate-internal `namespace_of_prefix`: a document that
+/// binds the namespace of *any* published version of a package resolves to that package.
+pub fn package_of_namespace_url(url: &str) -> Option<&'static str> {
+    ["fbc", "layout", "qual", "comp"]
+        .into_iter()
+        .find(|prefix| is_package_namespace_of(url, prefix))
+}
+
+/// Whether `url` is an accepted namespace URL of the package whose conventional prefix is `prefix`.
+///
+/// A prefix the crate publishes no URL set for accepts only its own namespace URL, so a package
+/// that grows a second version is a data change ([`FBC_NAMESPACE_URLS`] and friends), not a code
+/// change at every call site.
+pub fn is_package_namespace_of(url: &str, prefix: &str) -> bool {
+    match package_urls_of(prefix) {
+        Some(urls) => urls.contains(&url),
+        None => {
+            // A package without a published URL set: `namespace_of_prefix` panics for an unknown
+            // prefix, so an unknown one accepts nothing.
+            KNOWN_NAMESPACES
+                .iter()
+                .any(|namespace| namespace.0 == prefix && namespace.1 == url)
+        }
+    }
+}
+
+/// The URL of the package `prefix` that the crate writes with, i.e. the URL of its namespace
+/// constant ([`NS_FBC`], [`NS_LAYOUT`], [`NS_QUAL`], and [`URL_SBML_CORE`] for the core).
+///
+/// A write always uses this URL and the conventional prefix; the accepted sets above are for reading
+/// a document somebody else wrote. The two questions are separate on purpose: an extension that
+/// builds a new element of a package it does not model has to know which URL this crate writes for
+/// that package, and it must not confuse it with the set of URLs a document may use.
+pub fn written_url_of(prefix: &str) -> Option<&'static str> {
+    KNOWN_NAMESPACES
+        .iter()
+        .find(|namespace| namespace.0 == prefix)
+        .map(|namespace| namespace.1)
+}
+
 /// The URL of the HTML namespace.
 pub const URL_HTML: &str = "http://www.w3.org/1999/xhtml";
 
@@ -260,6 +434,14 @@ pub(crate) fn is_foreign_namespace(url: &str) -> bool {
 
 /// The namespaces this crate knows about, i.e. the SBML core namespace and the namespaces of the
 /// SBML packages with support in this crate.
+///
+/// The table is keyed by a namespace's *conventional prefix*, one namespace per prefix, and
+/// [`namespace_of_prefix`] relies on that: it answers "what does this prefix denote when the crate
+/// writes a name", which has exactly one answer. The URLs a package *accepts* on the read path are a
+/// different question with one answer per published version, and they live in the URL sets above
+/// ([`FBC_NAMESPACE_URLS`], ...), reached through [`package_urls_of`] and
+/// [`package_of_namespace_url`]. A package version therefore does not take a second entry here; it
+/// takes one in the URL set of its package.
 const KNOWN_NAMESPACES: [Namespace; 4] = [NS_SBML_CORE, NS_LAYOUT, NS_QUAL, NS_FBC];
 
 /// The namespace whose conventional prefix is `prefix`.
@@ -269,9 +451,11 @@ const KNOWN_NAMESPACES: [Namespace; 4] = [NS_SBML_CORE, NS_LAYOUT, NS_QUAL, NS_F
 /// lookup is derived from [KNOWN_NAMESPACES], so a namespace and its conventional prefix cannot
 /// drift apart.
 ///
-/// The table is keyed by the conventional prefix of a namespace, one namespace per prefix, so a
-/// package version with its own namespace URL takes its own entry next to its constant (`NS_FBC`
-/// denotes the `version2` URL of the FBC package).
+/// The table is keyed by the conventional prefix of a namespace, one namespace per prefix, and
+/// `NS_FBC` denotes the `version2` URL of the FBC package - the one this crate *writes*. A
+/// document may bind another published version of the same package (see [`FBC_NAMESPACE_URLS`]); the
+/// read path resolves that through [`package_urls_of`], not through this function, because one
+/// prefix cannot denote two URLs here.
 ///
 /// # Panics
 ///
@@ -283,4 +467,127 @@ pub(crate) fn namespace_of_prefix(prefix: &str) -> Namespace {
         .copied()
         .find(|it| it.0 == prefix)
         .unwrap_or_else(|| panic!("Unknown SBML namespace prefix `{prefix}`."))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_published_package_version_has_its_url_in_the_set_of_its_package() {
+        // One assertion per published version, so a set cannot lose an entry silently. The version
+        // numbers are part of the assertion: a URL that does not name the version it is filed under
+        // is a typo, not a smaller set.
+        assert!(
+            FBC_NAMESPACE_URLS.contains(&"http://www.sbml.org/sbml/level3/version1/fbc/version1")
+        );
+        assert!(FBC_NAMESPACE_URLS.contains(&URL_PACKAGE_FBC));
+        assert_eq!(
+            FBC_NAMESPACE_URLS
+                .iter()
+                .filter(|url| url.ends_with("fbc/version3"))
+                .count(),
+            1
+        );
+        assert!(LAYOUT_NAMESPACE_URLS.contains(&URL_PACKAGE_LAYOUT));
+        assert!(QUAL_NAMESPACE_URLS.contains(&URL_PACKAGE_QUAL));
+        assert!(
+            COMP_NAMESPACE_URLS.contains(&"http://www.sbml.org/sbml/level3/version1/comp/version1")
+        );
+        // The Version 2 URL of COMP ends in `comp/version2`: the package version is what the last
+        // segment names, not the core version. This entry is the one the corpus cannot pin (no
+        // document binds it), so its own assertion is the whole evidence.
+        assert!(
+            COMP_NAMESPACE_URLS.contains(&"http://www.sbml.org/sbml/level3/version2/comp/version2")
+        );
+        assert_eq!(COMP_NAMESPACE_URLS.len(), 2);
+    }
+
+    #[test]
+    fn the_url_sets_are_the_documented_sets_and_nothing_else() {
+        // Exact membership, both directions: a set that grew an entry nobody documented would fail
+        // here, and so would one that lost an entry.
+        assert_eq!(
+            FBC_NAMESPACE_URLS,
+            &[
+                "http://www.sbml.org/sbml/level3/version1/fbc/version1",
+                "http://www.sbml.org/sbml/level3/version1/fbc/version2",
+                "http://www.sbml.org/sbml/level3/version1/fbc/version3",
+            ]
+        );
+        assert_eq!(LAYOUT_NAMESPACE_URLS, &[URL_PACKAGE_LAYOUT]);
+        assert_eq!(QUAL_NAMESPACE_URLS, &[URL_PACKAGE_QUAL]);
+        assert_eq!(COMP_NAMESPACE_URLS.len(), 2);
+        // Every URL of a set resolves back to the package that owns it, and no URL of another
+        // package or of another namespace does.
+        for (prefix, urls) in [
+            ("fbc", FBC_NAMESPACE_URLS),
+            ("layout", LAYOUT_NAMESPACE_URLS),
+            ("qual", QUAL_NAMESPACE_URLS),
+            ("comp", COMP_NAMESPACE_URLS),
+        ] {
+            for url in urls {
+                assert_eq!(package_of_namespace_url(url), Some(prefix), "{url}");
+                assert!(is_package_namespace_of(url, prefix), "{url}");
+            }
+            assert_eq!(package_urls_of(prefix), Some(urls));
+        }
+        assert_eq!(package_of_namespace_url(URL_SBML_CORE), None);
+        assert_eq!(package_of_namespace_url(URL_MATHML), None);
+        // A package the crate models is not a package of *another* package's set.
+        assert!(!is_package_namespace_of(URL_PACKAGE_FBC, "layout"));
+        assert!(!is_package_namespace_of(URL_PACKAGE_LAYOUT, "fbc"));
+    }
+
+    #[test]
+    fn the_package_version_a_document_binds_does_not_change_the_namespace_the_crate_writes() {
+        // The two questions this module answers are separate: `NS_FBC` is the version the crate
+        // writes with, and it is the second entry of the accepted set (a data change would move both
+        // together); the read path accepts all three.
+        assert_eq!(namespace_of_prefix("fbc"), NS_FBC);
+        assert_eq!(written_url_of("fbc"), Some(URL_PACKAGE_FBC));
+        assert_eq!(FBC_NAMESPACE_URLS[1], URL_PACKAGE_FBC);
+        assert_eq!(written_url_of("layout"), Some(URL_PACKAGE_LAYOUT));
+        assert_eq!(written_url_of("qual"), Some(URL_PACKAGE_QUAL));
+        // A package without a written representation (the crate models no COMP types) has none.
+        assert_eq!(written_url_of("comp"), None);
+        assert_eq!(package_urls_of("spatial"), None);
+    }
+
+    #[test]
+    fn the_document_namespace_of_a_package_follows_the_document_and_keeps_other_ones() {
+        // A document that binds FBC Version 1: the read path resolves the package to the URL the
+        // document uses, so a lookup by expanded name finds the attribute where the document put it.
+        let document = biodivine_lib_xml_dom::Document::parse_string(&format!(
+            r#"<sbml xmlns="{URL_SBML_CORE}" xmlns:fbc="{}" fbc:required="false" level="3"
+                    version="1"/>"#,
+            FBC_NAMESPACE_URLS[0]
+        ))
+        .expect("The test document is well formed.");
+        let root = document.root().expect("The document has a root element.");
+        assert_eq!(
+            document_package_namespace_for(&root, NS_FBC),
+            ("fbc", FBC_NAMESPACE_URLS[0])
+        );
+
+        // A document that binds the package under a prefix of its own: the URL is what a read
+        // compares, so the resolution still finds it.
+        let document = biodivine_lib_xml_dom::Document::parse_string(&format!(
+            r#"<sbml xmlns="{URL_SBML_CORE}" xmlns:flux="{}" flux:required="false" level="3"
+                    version="1"/>"#,
+            FBC_NAMESPACE_URLS[0]
+        ))
+        .expect("The test document is well formed.");
+        let root = document.root().expect("The document has a root element.");
+        assert_eq!(
+            document_package_namespace_for(&root, NS_FBC),
+            ("fbc", FBC_NAMESPACE_URLS[0])
+        );
+
+        // A namespace that names no packaged the crate publishes a set for is returned unchanged:
+        // the function cannot lose a core, MathML or foreign namespace.
+        for namespace in [NS_SBML_CORE, NS_MATHML, NS_XSI, NS_EMPTY] {
+            assert_eq!(document_package_namespace_for(&root, namespace), namespace);
+        }
+    }
 }

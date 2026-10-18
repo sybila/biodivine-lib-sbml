@@ -162,9 +162,10 @@ pub use validation::{RuleDescriptor, RuleKind, RuleSet, SbmlIssue};
 /// [`SBML_ROOT_NAMESPACES`] is the set of SBML document roots, which is data a later level module
 /// extends; see its own documentation for exactly what a membership in that set means.
 pub use crate::constants::namespaces::{
-    NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_MATHML, NS_QUAL, NS_SBML_CORE, NS_XSI,
-    SBML_ROOT_NAMESPACES, URL_EMPTY, URL_HTML, URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT,
-    URL_PACKAGE_QUAL, URL_SBML_CORE, URL_XSI,
+    package_of_namespace_url, package_urls_of, written_url_of, COMP_NAMESPACE_URLS,
+    FBC_NAMESPACE_URLS, LAYOUT_NAMESPACE_URLS, NS_EMPTY, NS_FBC, NS_HTML, NS_LAYOUT, NS_MATHML,
+    NS_QUAL, NS_SBML_CORE, NS_XSI, QUAL_NAMESPACE_URLS, SBML_ROOT_NAMESPACES, URL_EMPTY, URL_HTML,
+    URL_MATHML, URL_PACKAGE_FBC, URL_PACKAGE_LAYOUT, URL_PACKAGE_QUAL, URL_SBML_CORE, URL_XSI,
 };
 
 /// Writes the `xsi:type` attribute of an element, declaring the XML Schema instance namespace on it

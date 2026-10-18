@@ -204,6 +204,72 @@ This lint covers the *declared-but-unused* half of namespace handling. The other
 whose namespace is not declared in scope, and a declaration that binds a used prefix to the wrong
 namespace — is decided by the XML layer and reported as a specification rule.
 
+#### What counts as a use: the QName-valued attribute
+
+The lint counts a declaration as used when an element or attribute name in its scope resolves to the
+declared URI - and also when a **prefix inside an attribute value** resolves to it. The second case
+is the QName-valued attribute: XML Schema gives the value of `xsi:type` (and of a few other
+attributes a package may define) a *qualified name*, so a value such as `xsi:type="layout:CubicBezier"`
+mentions the Layout namespace, and the declaration that binds `layout` is used even though no
+attribute or element name carries the prefix.
+
+The scan is deliberately conservative in the direction this module documents as the acceptable
+error. Any whitespace-separated token of any attribute value that is shaped like `prefix:local` and
+whose prefix resolves through the bindings in scope counts as a use, whatever the attribute is. A
+value that merely *looks* like a qualified name can therefore only ever **hide** a dead declaration,
+never invent one, and a prefix that nothing declares resolves to nothing (so it silences no report
+either). The alternative - a fixed list of the known QName-valued attributes - would miss every
+QName-valued attribute a package defines, which is exactly the case the rule exists for.
+
+The corpus cannot exercise this case, and the measurement says why rather than leaving it to a
+comment: all 1128 `xsi:type` values of the compared corpus are written **unprefixed**
+(`xsi:type="CubicBezier"`, `xsi:type="LineSegment"`), and no attribute value of any document
+contains a prefixed name whose prefix a declaration binds to an SBML namespace
+(`grep -rhoE 'xsi:type="[^"]*"' syntactic --include=*.xml | sort | uniq -c`). The dump snapshot is
+therefore unmoved by this change, and the case is pinned by tests instead:
+`declaration_used_only_by_a_qualified_name_in_an_attribute_value_is_not_reported`,
+`a_qualified_name_on_a_descendant_uses_the_declaration_of_its_ancestor` (the QName is resolved at the
+element that carries the attribute, while the report is still made once on the element that declares
+it) and `a_value_that_merely_looks_like_a_qualified_name_hides_a_dead_declaration` (which pins the
+direction of the acceptable error). Each of the three fails when the resolution is removed.
+
+#### Package namespaces: the accepted URL set of a package version
+
+A package is identified by the namespace URL of one of its *versions*, and a document declares the
+version it uses, so "is this the FBC package?" has one answer per published version. The sets live
+in the crate's public API next to the namespace constants:
+
+| constant | URLs | corpus documents binding each |
+| --- | --- | --- |
+| `FBC_NAMESPACE_URLS` | `fbc/version1`, `fbc/version2`, `fbc/version3` | 65 / 120 / 78 |
+| `LAYOUT_NAMESPACE_URLS` | `layout/version1` | 247 |
+| `QUAL_NAMESPACE_URLS` | `qual/version1` | 91 |
+| `COMP_NAMESPACE_URLS` | `comp/version1`, `.../level3/version2/comp/version2` | 246 / **0** |
+
+Every URL is cited to the released specification document it was read from, and each is pinned by a
+test (see the constants' documentation; the corpus document counts above are measured over the two
+Level 3 halves the harness compares, a document counted once). `written_url_of` answers the other
+question, "which URL does this crate write for this package", which is `NS_FBC`'s URL for `fbc`.
+
+Two consequences are worth stating explicitly, because they are the boundary of what the sets buy.
+
+  * **Reading follows the document.** A property or child read resolves the package through the
+    bindings that are in scope at the element, so the FBC attributes of a Version 1 document are
+    found even though the accessors are written against the Version 2 URL. `NS_FBC` keeps its
+    meaning: it is the namespace this crate *writes* with.
+  * **Validation follows the model.** The crate's tables and requirements are the tables and
+    requirements of one version of each package, so a document that declares another published
+    version of the same package is validated as a document of that other version - i.e. its content
+    is that version's business and the package checks of this crate do not apply to it
+    (`Sbml::declares_modelled_package`). Relaxing that gate without per-version deltas in the tables
+    is a measured regression: with the gate relaxed, the corpus reports **146 new unexpected events
+    against 13 missed events that disappear** (65 of them `model@fbc:strict`, which FBC Version 1
+    does not have and Version 3 removed, and 81 of them `listOfFluxBounds`, which is an unknown child
+    of `<model>` in the Version 2 table but legal in Version 1), and one document **panics** on the
+    required read of `fbc:strict`. Supporting a second version of a package is therefore the same
+    work as supporting a second version of the core: a per-version delta for the tables, its
+    requirements and its content model.
+
 The rule table is checked against the specification by `python3 scripts/check_rule_ids.py`
 (`make rules`): every rule the table calls a specification rule must be a rule the
 specification defines, so a rule id cannot be invented (a typo in the table would be
