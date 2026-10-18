@@ -223,7 +223,7 @@ use sbml_macros::{SBase, XmlWrapper};
 /// to be children of these lists, and for these child elements to be used without the
 /// requirement that at least one SBML Level 3 Core element always be present.
 ///
-#[embed_doc_image("sbml-model", "docs-images/uml-model.png")]
+#[embed_doc_image("sbml-model", "docs-images/uml-model.svg")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "model", namespace = NS_SBML_CORE)]
 pub struct Model(XmlElement);

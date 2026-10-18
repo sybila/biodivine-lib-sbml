@@ -105,6 +105,18 @@
 //! println!("{} ... ", &xml_string[..200]);
 //! ```
 //!
+//! # The SBML specification and its authors
+//!
+//! The object model this crate implements, the summaries of its rules and the figures of this
+//! documentation are adapted from the SBML specification: *The Systems Biology Markup Language
+//! (SBML): Language Specification for Level 3 Version 2 Core*, Release 2, 29 March 2019, by
+//! Michael Hucka (Chair), Frank T. Bergmann, Claudine Chaouiya, Andreas Dräger, Stefan Hoops,
+//! Sarah M. Keating, Matthias König, Nicolas Le Novère, Chris J. Myers, Brett G. Olivier,
+//! Sven Sahle, James C. Schaff, Rahuman Sheriff, Lucian P. Smith, Dagmar Waltemath,
+//! Darren J. Wilkinson and Fengkai Zhang - the SBML Editors, `sbml-editors@sbml.org`,
+//! <https://sbml.org>. The material is reused with their permission; `README.md` and
+//! `docs-images/README.md` name the provenance of every figure.
+//!
 
 // The public surface of this crate is documented item by item, and the gate denies warnings, so an
 // undocumented public item is a build failure rather than a hole in the reference.
@@ -336,7 +348,7 @@ fn sbml_error(error: biodivine_lib_xml_dom::XmlError) -> SbmlError {
 /// class element. The structure of this object and its use are described in Section 4.2.
 /// An SBML document may contain at most one model definition.
 ///
-#[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.png")]
+#[embed_doc_image("sbml-container", "docs-images/uml-sbml-container.svg")]
 #[derive(Clone, Debug)]
 pub struct Sbml {
     xml: Document,

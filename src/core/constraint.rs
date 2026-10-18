@@ -2,9 +2,13 @@ use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::math::{Math, MathNode};
 use crate::xml::{Document, OptionalChild, OptionalXmlChild, XmlDefault, XmlElement};
+use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The `<constraint>` element of the SBML core specification.
+///
+/// ![UML][sbml-constraint]
+#[embed_doc_image("sbml-constraint", "docs-images/uml-constraint.svg")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "constraint", namespace = NS_SBML_CORE)]
 pub struct Constraint(XmlElement);

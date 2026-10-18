@@ -6,6 +6,7 @@ use crate::xml::{
     Document, OptionalChild, OptionalXmlChild, RequiredSbmlProperty, RequiredXmlProperty,
     XmlDefault, XmlElement, XmlNamedSubtype, XmlSupertype,
 };
+use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The kind of a rule, as [`AbstractRule::cast`] decides it from the element it wraps.
@@ -49,12 +50,15 @@ pub trait Rule: SBase {
 /// here would silently build an `<algebraicRule>`, which is what [`AlgebraicRule::new_empty`] is
 /// for. A rule whose kind the caller chooses is built through [`AbstractRule::default`], which
 /// takes the element name explicitly.
+///
+/// ![UML][sbml-rule]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(
     names = ["algebraicRule", "assignmentRule", "rateRule"],
     namespace = NS_SBML_CORE,
     constructor = false
 )]
+#[embed_doc_image("sbml-rule", "docs-images/uml-rule.svg")]
 pub struct AbstractRule(XmlElement);
 
 impl Rule for AbstractRule {}

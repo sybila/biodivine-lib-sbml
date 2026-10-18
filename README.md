@@ -119,18 +119,42 @@ The code above is also available in `examples/basic_example.rs`. Hence, you can 
 
 You can learn more about the library API in the official documentation.
 
+## The SBML specification and its authors
+
+The object model this crate implements, the summaries of the validation rules, and the class diagrams
+in this documentation are adapted from the SBML specification, in particular:
+
+> **The Systems Biology Markup Language (SBML): Language Specification for Level 3 Version 2 Core**,
+> Release 2, 29 March 2019.
+>
+> Michael Hucka (Chair), Frank T. Bergmann, Claudine Chaouiya, Andreas Dräger, Stefan Hoops,
+> Sarah M. Keating, Matthias König, Nicolas Le Novère, Chris J. Myers, Brett G. Olivier, Sven Sahle,
+> James C. Schaff, Rahuman Sheriff, Lucian P. Smith, Dagmar Waltemath, Darren J. Wilkinson and
+> Fengkai Zhang.
+>
+> SBML is developed and maintained by the SBML Editors, <sbml-editors@sbml.org>, <https://sbml.org>.
+
+The specification text, the rule identifiers and the figures are reused here with the permission of
+the SBML Editors: the class diagrams in `docs-images/` are the specification's own SVG sources, and
+the one figure that had to be redrawn says so in `docs-images/README.md`, next to the source of every
+other figure. Where this documentation quotes a rule, the rule identifier is the specification's, and
+the wording is a summary rather than a copy.
+
 ## Roadmap
 
 Future roadmap, including estimated development priorities:
 
- - [ ] **[high]** Idiomatic MathML support.
- - [ ] **[high]** Python bindings using `pyo3` (currently under development).
+ - [ ] **[high]** Python bindings using `pyo3` (the `sys` layer is under development).
  - [ ] **[medium]** WASM/JS bindings using `wasm-bindgen`.
- - [ ] **[medium]** Hooks for incorporating packages into the validation flow.
  - [ ] **[medium]** Validation of the *recommendation* SBML conformance rules.
  - [ ] **[low]** Validation of the *good practice* SBML conformance rules.
- - [ ] **[low]** Support for SBML Level 1 and SBML Level 2.
+ - [ ] **[low]** Support for SBML Level 1 (documents are read and named by the `unmodelled-level` lint).
  - [ ] **[low]** Automated Level 1 => Level 2 => Level 3 migrations.
+ - [x] **[high]** SBML Level 2 (Versions 1-5) and Level 3 Version 1, as deltas on the Level 3 Version 2
+   model (see `documentation::design`).
+ - [x] **[high]** Idiomatic MathML support for the subset SBML uses (`math::MathNode`).
+ - [x] **[medium]** Hooks for incorporating packages into the validation flow (`documentation::design`
+   and the `extension` module: the cast and the injected rule set).
  - [ ] Support for SBML packages.
    * [ ] **[low]** Arrays
    * [ ] **[medium]** Hierarchical model composition

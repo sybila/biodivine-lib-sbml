@@ -1,8 +1,3 @@
-// TODO:
-//      At some point, we should probably have an `SId` type instead of using a string here,
-//      because IDs have a special format that should be enforced. This is also related to other
-//      types that are "string like", e.g. meta id and sboTerm.
-
 use crate::constants::namespaces::{Namespace, NS_HTML, NS_MATHML, NS_SBML_CORE};
 use crate::core::validation::{
     matches_sboterm_pattern, matches_sid_pattern, matches_xml_id_pattern,
@@ -12,6 +7,7 @@ use crate::xml::{
     RequiredSbmlProperty, XmlElement, XmlPropertyType, XmlWrapper,
 };
 use crate::Sbml;
+use embed_doc_image::embed_doc_image;
 use std::fmt::Display;
 
 /// The value of an `id` attribute: the identifier of an SBML object inside its model
@@ -216,6 +212,9 @@ impl XmlPropertyType for SboTerm {
 
 /// Abstract class SBase that is the parent of most of the elements in SBML.
 /// Thus, there is no need to implement concrete structure.
+///
+/// ![UML][sbml-sbase]
+#[embed_doc_image("sbml-sbase", "docs-images/uml-sbase.svg")]
 pub trait SBase: XmlWrapper {
     /// The `id` attribute of this object: its identifier inside the model.
     fn id(&self) -> OptionalSbmlProperty<'_, SId> {

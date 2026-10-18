@@ -6,9 +6,13 @@ use crate::xml::{
     Document, OptionalChild, OptionalSbmlChild, OptionalXmlChild, RequiredSbmlProperty,
     RequiredXmlProperty, XmlDefault, XmlElement, XmlList,
 };
+use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The `<event>` element of the SBML core specification.
+///
+/// ![UML][sbml-event]
+#[embed_doc_image("sbml-event", "docs-images/uml-event.svg")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "event", namespace = NS_SBML_CORE)]
 pub struct Event(XmlElement);

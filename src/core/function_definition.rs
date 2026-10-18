@@ -2,9 +2,13 @@ use crate::constants::namespaces::NS_SBML_CORE;
 use crate::core::sbase::SbmlUtils;
 use crate::math::{Math, MathNode};
 use crate::xml::{Document, OptionalChild, OptionalXmlChild, XmlDefault, XmlElement};
+use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
 /// Individual function definition
+///
+/// ![UML][sbml-functiondefinition]
+#[embed_doc_image("sbml-functiondefinition", "docs-images/uml-functiondefinition.svg")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "functionDefinition", namespace = NS_SBML_CORE)]
 pub struct FunctionDefinition(XmlElement);

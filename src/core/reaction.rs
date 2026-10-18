@@ -7,9 +7,13 @@ use crate::xml::{
     RequiredSbmlProperty, RequiredXmlProperty, XmlDefault, XmlElement, XmlList, XmlProperty,
     XmlSupertype,
 };
+use embed_doc_image::embed_doc_image;
 use sbml_macros::{SBase, XmlWrapper};
 
 /// The `<reaction>` element of the SBML core specification.
+///
+/// ![UML][sbml-reaction]
+#[embed_doc_image("sbml-reaction", "docs-images/uml-reaction.svg")]
 #[derive(Clone, Debug, XmlWrapper, SBase)]
 #[sbml_object(name = "reaction", namespace = NS_SBML_CORE)]
 pub struct Reaction(XmlElement);
